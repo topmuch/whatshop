@@ -10,10 +10,22 @@ import { AdminDashboard } from '@/components/admin/admin-dashboard'
 import { PublicShop } from '@/components/shop/public-shop'
 
 export default function Home() {
-  const { view, setView, isAuthenticated, setUser } = useAppStore()
+  const { view, setView, setUser, setShopSlug, shopSlug } = useAppStore()
 
-  // Check for existing session on mount
   useEffect(() => {
+    // Handle direct shop URL (middleware rewrites /amina-shop → /)
+    // Check the browser's actual pathname for a shop slug
+    const pathname = window.location.pathname
+    if (pathname !== '/' && pathname.startsWith('/')) {
+      const slug = pathname.slice(1)
+      // Validate slug format (alphanumeric + hyphens, not a known route)
+      if (/^[a-zA-Z0-9][a-zA-Z0-9-]*$/.test(slug) && shopSlug !== slug) {
+        setShopSlug(slug)
+        return // Don't run session check when loading a shop
+      }
+    }
+
+    // Check for existing session on mount
     async function checkSession() {
       try {
         const res = await fetch('/api/auth/session')
@@ -23,9 +35,6 @@ export default function Home() {
             setUser(data.user)
             if (data.user.role === 'ADMIN') {
               setView('admin')
-            } else if (!data.shop) {
-              // New user needs to create a shop
-              setView('dashboard')
             } else {
               setView('dashboard')
             }
@@ -35,8 +44,11 @@ export default function Home() {
         // Not authenticated, stay on landing
       }
     }
-    checkSession()
-  }, [setUser, setView])
+
+    if (pathname === '/') {
+      checkSession()
+    }
+  }, [shopSlug, setShopSlug, setUser, setView])
 
   return (
     <div className="min-h-screen flex flex-col">
