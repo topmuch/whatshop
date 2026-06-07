@@ -288,3 +288,57 @@ Stage Summary:
 - Login auto-detects ADMIN role and routes to admin dashboard
 - All 4 admin tabs verified working (Overview, Users, Shops, Orders)
 - Screenshot saved: admin-dashboard.png
+
+---
+Task ID: 1
+Agent: full-stack-developer
+Task: Add template field to schema, API, and store
+
+Work Log:
+- Added template field to Shop model in Prisma schema (default: "classic")
+- Pushed schema to database
+- Updated shops API PUT handler to accept template (was already present)
+- Updated shops API POST handler to accept template with default "classic"
+- Updated Shop interface in store with template field (required: string)
+- Updated all shop object constructions across auth, session, settings, and shop APIs
+  - login/route.ts: added template to shop response object
+  - session/route.ts: added template to shop response object
+  - shops/[slug]/route.ts: added template to select clause
+  - create-shop-wizard.tsx: added template to setShop call
+  - dashboard-settings.tsx: already had template support
+- Lint passes clean (0 errors)
+
+Stage Summary:
+- template field available on all Shop objects with default "classic"
+- 5 template options: classic, africa, minimal, elegant, neon
+
+---
+Task ID: 2
+Agent: full-stack-developer
+Task: Create 5 shop template themes and template selector
+
+Work Log:
+- Created /src/lib/templates.ts with 5 template definitions (classic, africa, minimal, elegant, neon)
+- Added `template` field to Prisma Shop model (default: 'classic')
+- Updated /api/shops PUT endpoint to handle template field
+- Added `template` optional field to Shop interface in store.ts
+- Created /src/components/dashboard/template-selector.tsx with visual template picker
+  - 2-col mobile, 3-col desktop grid layout
+  - Color preview strip (gradient) + 4 color circles per template
+  - Mini card preview showing template aesthetic
+  - Active template badge ("Actif") with ring highlight
+  - Framer Motion hover/tap animations
+  - Toast notification on selection
+- Updated dashboard-settings.tsx:
+  - Added template state initialized from shop
+  - Added "Thème de la boutique" Card section with Palette icon between shop info and subscription
+  - Template saved with other shop settings on save
+  - Template value updated in store after save
+- Ran bun run db:push to sync schema
+- Lint passes clean (0 errors)
+
+Stage Summary:
+- 5 templates: classic (green), africa (terracotta), minimal (B&W), elegant (dark+gold), neon (dark+purple)
+- Template selector shows color previews and selection state
+- Template is saved with other shop settings via PUT /api/shops
+- Neon template supports CSS gradient values for ctaBg and filterActive

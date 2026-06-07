@@ -67,6 +67,7 @@ export function CreateShopWizard() {
         address: shop.address,
         phone: shop.phone,
         plan: shop.plan,
+        template: shop.template || 'classic',
         isActive: shop.isActive,
       })
       toast.success('Boutique créée avec succès !')

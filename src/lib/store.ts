@@ -32,6 +32,7 @@ export interface Shop {
   address?: string
   phone?: string
   plan: string
+  template: string
   isActive: boolean
 }
 

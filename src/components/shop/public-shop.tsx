@@ -32,6 +32,7 @@ import {
 import { toast } from 'sonner'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ShopHeroCarousel } from './shop-hero-carousel'
+import { TemplateProvider } from './template-provider'
 
 type SortOption = 'recent' | 'price-asc' | 'price-desc'
 
@@ -251,9 +252,10 @@ Merci ! 🙏`
   const isSearching = searchQuery.trim().length > 0
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <TemplateProvider templateId={publicShop.template || 'classic'}>
+    <div className="min-h-screen pb-20" style={{ background: 'var(--tpl-bg)', color: 'var(--tpl-text)' }}>
       {/* Sticky Header */}
-      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b">
+      <header className="sticky top-0 z-40 backdrop-blur-sm border-b" style={{ background: 'var(--tpl-header-bg)', borderColor: 'var(--tpl-border)' }}>
         <div className="max-w-5xl mx-auto px-4 py-2.5 flex items-center gap-3">
           <Button
             variant="ghost"
@@ -290,7 +292,7 @@ Merci ! 🙏`
           >
             <ShoppingCart className="h-5 w-5" />
             {cart.length > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 bg-primary text-primary-foreground text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center">
+              <span className="absolute -top-0.5 -right-0.5 text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center" style={{ background: 'var(--tpl-primary)', color: 'var(--tpl-primary-fg)' }}>
                 {itemCount > 9 ? '9+' : itemCount}
               </span>
             )}
@@ -302,7 +304,7 @@ Merci ! 🙏`
       <ShopHeroCarousel shopName={publicShop.name} whatsapp={publicShop.whatsapp} />
 
       {/* Shop Info Bar */}
-      <div className="bg-gradient-to-r from-primary/5 to-primary/10 border-b">
+      <div className="border-b" style={{ background: 'var(--tpl-primary)', opacity: 0.06, borderColor: 'var(--tpl-border)' }}>
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
             {publicShop.logo ? (
@@ -312,7 +314,7 @@ Merci ! 🙏`
                 className="w-10 h-10 rounded-lg object-cover shadow-sm shrink-0"
               />
             ) : (
-              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary text-primary-foreground shadow-sm shrink-0">
+              <div className="flex items-center justify-center w-10 h-10 rounded-lg shadow-sm shrink-0" style={{ background: 'var(--tpl-primary)', color: 'var(--tpl-primary-fg)' }}>
                 <Store className="h-5 w-5" />
               </div>
             )}
@@ -323,10 +325,10 @@ Merci ! 🙏`
               )}
             </div>
           </div>
-          <div className="flex items-center gap-3 sm:gap-4 text-xs text-muted-foreground shrink-0">
+          <div className="flex items-center gap-3 sm:gap-4 text-xs shrink-0" style={{ color: 'var(--tpl-text-muted)' }}>
             {publicShop.whatsapp && (
               <div className="flex items-center gap-1">
-                <MessageCircle className="h-3.5 w-3.5 text-primary" />
+                <MessageCircle className="h-3.5 w-3.5" style={{ color: 'var(--tpl-primary)' }} />
                 <span className="hidden sm:inline">WhatsApp</span>
               </div>
             )}
@@ -353,11 +355,12 @@ Merci ! 🙏`
           <div className="flex gap-2 overflow-x-auto pb-4 mb-2 no-scrollbar">
             <button
               onClick={() => handleCategoryClick(null)}
-              className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
+              className="shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200"
+              style={
                 !activeCategory
-                  ? 'bg-primary text-primary-foreground shadow-sm'
-                  : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-              }`}
+                  ? { background: 'var(--tpl-filter-active)', color: 'var(--tpl-filter-active-fg)', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }
+                  : { background: 'var(--tpl-card)', color: 'var(--tpl-text-muted)', border: '1px solid var(--tpl-border)' }
+              }
             >
               Tous ({totalProductCount})
             </button>
@@ -368,11 +371,12 @@ Merci ! 🙏`
                 <button
                   key={cat.id}
                   onClick={() => handleCategoryClick(cat.id)}
-                  className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
+                  className="shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-1.5"
+                  style={
                     activeCategory === cat.id
-                      ? 'bg-primary text-primary-foreground shadow-sm'
-                      : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-                  }`}
+                      ? { background: 'var(--tpl-filter-active)', color: 'var(--tpl-filter-active-fg)', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }
+                      : { background: 'var(--tpl-card)', color: 'var(--tpl-text-muted)', border: '1px solid var(--tpl-border)' }
+                  }
                 >
                   {cat.name}
                   <span
@@ -390,7 +394,7 @@ Merci ! 🙏`
 
         {/* Search results count & Sort */}
         <div className="flex items-center justify-between mb-4 gap-4">
-          <div className="text-sm text-muted-foreground">
+          <div className="text-sm" style={{ color: 'var(--tpl-text-muted)' }}>
             {isSearching ? (
               <span>
                 {filteredProducts.length} résultat{filteredProducts.length !== 1 ? 's' : ''} pour
@@ -429,9 +433,9 @@ Merci ! 🙏`
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.25 }}
                 >
-                  <Card className="group overflow-hidden hover:shadow-md transition-all duration-200 h-full flex flex-col">
+                  <Card className="group h-full flex flex-col" style={{ background: 'var(--tpl-card)', borderRadius: 'var(--tpl-card-rounded)', boxShadow: 'var(--tpl-card-shadow)', overflow: 'var(--tpl-image-rounded)' }}>
                     {/* Image */}
-                    <div className="aspect-square bg-muted relative overflow-hidden">
+                    <div className="aspect-square bg-muted relative overflow-hidden" style={{ borderRadius: 'var(--tpl-image-rounded)' }}>
                       {product.image ? (
                         <img
                           src={product.image}
@@ -447,13 +451,13 @@ Merci ! 🙏`
                       {/* Badges */}
                       <div className="absolute top-2 left-2 flex flex-col gap-1">
                         {isNew && (
-                          <Badge className="bg-emerald-500 text-white text-[10px] px-1.5 py-0 h-5 font-medium gap-0.5">
+                          <Badge className="text-white text-[10px] px-1.5 py-0 h-5 font-medium gap-0.5" style={{ background: 'var(--tpl-badge-new)' }}>
                             <Sparkles className="h-3 w-3" />
                             Nouveau
                           </Badge>
                         )}
                         {isPromo && !isNew && (
-                          <Badge className="bg-orange-500 text-white text-[10px] px-1.5 py-0 h-5 font-medium gap-0.5">
+                          <Badge className="text-white text-[10px] px-1.5 py-0 h-5 font-medium gap-0.5" style={{ background: 'var(--tpl-badge-promo)' }}>
                             <Flame className="h-3 w-3" />
                             Promo
                           </Badge>
@@ -463,15 +467,15 @@ Merci ! 🙏`
 
                     {/* Content */}
                     <CardContent className="p-3 flex flex-col flex-1">
-                      <h3 className="font-semibold text-sm line-clamp-1">{product.name}</h3>
+                      <h3 className="font-semibold text-sm line-clamp-1" style={{ color: 'var(--tpl-text)' }}>{product.name}</h3>
                       {product.categoryName && (
-                        <span className="text-[11px] text-muted-foreground mt-0.5">
+                        <span className="text-[11px] mt-0.5" style={{ color: 'var(--tpl-text-muted)' }}>
                           {product.categoryName}
                         </span>
                       )}
 
                       <div className="mt-auto pt-3">
-                        <p className="font-bold text-primary text-sm">{formatPrice(product.price)}</p>
+                        <p className="font-bold text-sm" style={{ color: 'var(--tpl-price)' }}>{formatPrice(product.price)}</p>
 
                         {lowStock && (
                           <div className="flex items-center gap-1 mt-1.5 text-amber-600">
@@ -487,13 +491,14 @@ Merci ! 🙏`
                             <Button
                               size="sm"
                               className="w-full h-8 text-xs gap-1"
+                              style={{ background: 'var(--tpl-cta-bg)', color: 'var(--tpl-cta-fg)' }}
                               onClick={() => handleAddToCart(product)}
                             >
                               <Plus className="h-3 w-3" />
                               Ajouter au panier
                             </Button>
                           ) : (
-                            <div className="flex items-center justify-between gap-1 bg-secondary rounded-lg p-0.5">
+                            <div className="flex items-center justify-between gap-1 rounded-lg p-0.5" style={{ background: 'var(--tpl-card)', border: '1px solid var(--tpl-border)' }}>
                               <Button
                                 variant="ghost"
                                 size="icon"
@@ -672,19 +677,20 @@ Merci ! 🙏`
                     ) : (
                       <ChevronUp className="h-4 w-4" />
                     )}
-                    <Badge variant="secondary" className="bg-primary text-primary-foreground px-1.5 h-5 text-xs">
+                    <Badge variant="secondary" className="px-1.5 h-5 text-xs" style={{ background: 'var(--tpl-primary)', color: 'var(--tpl-primary-fg)' }}>
                       {itemCount}
                     </Badge>
                     <span className="hidden sm:inline">panier</span>
                   </Button>
 
                   <div className="flex-1">
-                    <p className="text-xs text-muted-foreground">Total</p>
-                    <p className="font-bold text-primary text-sm">{formatPrice(total)}</p>
+                    <p className="text-xs" style={{ color: 'var(--tpl-text-muted)' }}>Total</p>
+                    <p className="font-bold text-sm" style={{ color: 'var(--tpl-price)' }}>{formatPrice(total)}</p>
                   </div>
 
                   <Button
                     className="h-10 gap-2 shrink-0"
+                    style={{ background: 'var(--tpl-cta-bg)', color: 'var(--tpl-cta-fg)' }}
                     onClick={handleWhatsAppCheckout}
                   >
                     <MessageCircle className="h-4 w-4" />
@@ -698,5 +704,6 @@ Merci ! 🙏`
         )}
       </AnimatePresence>
     </div>
+    </TemplateProvider>
   )
 }

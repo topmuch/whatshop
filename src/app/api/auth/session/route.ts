@@ -32,6 +32,7 @@ export async function GET(request: NextRequest) {
         address: user.shop.address,
         phone: user.shop.phone,
         plan: user.shop.plan,
+        template: user.shop.template || 'classic',
         isActive: user.shop.isActive,
       } : null,
     })

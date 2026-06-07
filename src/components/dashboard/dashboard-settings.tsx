@@ -17,6 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { TemplateSelector } from '@/components/dashboard/template-selector'
 import {
   Check,
   X,
@@ -28,6 +29,7 @@ import {
   Globe,
   Instagram,
   ExternalLink,
+  Palette,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -62,6 +64,7 @@ export function DashboardSettings() {
   const [phone, setPhone] = useState('')
   const [logo, setLogo] = useState('')
   const [banner, setBanner] = useState('')
+  const [template, setTemplate] = useState('classic')
 
   useEffect(() => {
     if (shop) {
@@ -72,6 +75,7 @@ export function DashboardSettings() {
       setPhone(shop.phone || '')
       setLogo(shop.logo || '')
       setBanner(shop.banner || '')
+      setTemplate(shop.template || 'classic')
 
       // Fetch product count
       fetch(`/api/products?shopId=${shop.id}`)
@@ -97,6 +101,7 @@ export function DashboardSettings() {
           phone,
           logo,
           banner,
+          template,
         }),
       })
 
@@ -117,6 +122,7 @@ export function DashboardSettings() {
         address: updatedShop.address,
         phone: updatedShop.phone,
         plan: updatedShop.plan,
+        template: updatedShop.template || 'classic',
         isActive: updatedShop.isActive,
       })
       toast.success('Boutique mise à jour !')
@@ -230,6 +236,22 @@ export function DashboardSettings() {
             )}
             Enregistrer
           </Button>
+        </CardContent>
+      </Card>
+
+      {/* Template Theme */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Palette className="h-5 w-5 text-primary" />
+            Thème de la boutique
+          </CardTitle>
+          <CardDescription>
+            Choisissez un thème pour personnaliser l&apos;apparence de votre boutique publique
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <TemplateSelector currentTemplate={template} onSelect={setTemplate} />
         </CardContent>
       </Card>
 

@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json()
-    const { id, name, description, whatsapp, address, phone, logo, banner } = body
+    const { id, name, description, whatsapp, address, phone, logo, banner, template } = body
 
     if (!id) {
       return NextResponse.json({ error: 'ID requis' }, { status: 400 })
@@ -45,6 +45,7 @@ export async function PUT(request: NextRequest) {
     if (phone !== undefined) data.phone = phone || null
     if (logo !== undefined) data.logo = logo || null
     if (banner !== undefined) data.banner = banner || null
+    if (template !== undefined) data.template = template || 'classic'
 
     const shop = await db.shop.update({
       where: { id },
@@ -62,7 +63,7 @@ export async function PUT(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, slug, description, whatsapp, ownerId } = body
+    const { name, slug, description, whatsapp, ownerId, template } = body
 
     if (!name || !slug || !whatsapp || !ownerId) {
       return NextResponse.json({ error: 'Champs requis manquants' }, { status: 400 })
@@ -81,6 +82,7 @@ export async function POST(request: NextRequest) {
         description: description || null,
         whatsapp,
         ownerId,
+        template: template || 'classic',
       },
     })
 

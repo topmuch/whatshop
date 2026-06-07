@@ -33,6 +33,7 @@ model Shop {
   address     String?
   phone       String?
   plan        String   @default("FREE") // FREE | STANDARD | PREMIUM
+  template    String   @default("classic") // classic | africa | minimal | elegant | neon
   isActive    Boolean  @default(true)
   ownerId     String   @unique
   createdAt   DateTime @default(now())
