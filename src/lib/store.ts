@@ -1,0 +1,160 @@
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
+
+export type AppView = 'landing' | 'login' | 'register' | 'dashboard' | 'shop'
+export type DashboardTab = 'overview' | 'products' | 'categories' | 'orders' | 'settings'
+
+export interface CartItem {
+  id: string
+  productId: string
+  name: string
+  price: number
+  image?: string
+  quantity: number
+}
+
+export interface User {
+  id: string
+  email: string
+  name: string
+  role: string
+}
+
+export interface Shop {
+  id: string
+  name: string
+  slug: string
+  description?: string
+  logo?: string
+  banner?: string
+  whatsapp: string
+  address?: string
+  phone?: string
+  plan: string
+  isActive: boolean
+}
+
+export interface Product {
+  id: string
+  name: string
+  description?: string
+  price: number
+  image?: string
+  stock?: number
+  isAvailable: boolean
+  categoryId?: string
+  categoryName?: string
+}
+
+export interface Category {
+  id: string
+  name: string
+  description?: string
+  productCount?: number
+}
+
+interface AppState {
+  // Navigation
+  view: AppView
+  setView: (view: AppView) => void
+  dashboardTab: DashboardTab
+  setDashboardTab: (tab: DashboardTab) => void
+  shopSlug: string
+  setShopSlug: (slug: string) => void
+
+  // Auth
+  user: User | null
+  shop: Shop | null
+  setUser: (user: User | null) => void
+  setShop: (shop: Shop | null) => void
+  isAuthenticated: boolean
+
+  // Cart (for public shop)
+  cart: CartItem[]
+  addToCart: (item: Omit<CartItem, 'id'>) => void
+  removeFromCart: (productId: string) => void
+  updateCartQuantity: (productId: string, quantity: number) => void
+  clearCart: () => void
+  getCartTotal: () => number
+
+  // Public shop data
+  publicShop: Shop | null
+  publicProducts: Product[]
+  publicCategories: Category[]
+  setPublicShop: (shop: Shop | null) => void
+  setPublicProducts: (products: Product[]) => void
+  setPublicCategories: (categories: Category[]) => void
+}
+
+export const useAppStore = create<AppState>()(
+  persist(
+    (set, get) => ({
+      // Navigation
+      view: 'landing',
+      setView: (view) => set({ view }),
+      dashboardTab: 'overview',
+      setDashboardTab: (tab) => set({ dashboardTab: tab }),
+      shopSlug: '',
+      setShopSlug: (slug) => {
+        set({ shopSlug: slug, view: 'shop' })
+      },
+
+      // Auth
+      user: null,
+      shop: null,
+      setUser: (user) => set({ user, isAuthenticated: !!user }),
+      setShop: (shop) => set({ shop }),
+      isAuthenticated: false,
+
+      // Cart
+      cart: [],
+      addToCart: (item) => {
+        const { cart } = get()
+        const existing = cart.find((c) => c.productId === item.productId)
+        if (existing) {
+          set({
+            cart: cart.map((c) =>
+              c.productId === item.productId
+                ? { ...c, quantity: c.quantity + item.quantity }
+                : c
+            ),
+          })
+        } else {
+          set({ cart: [...cart, { ...item, id: crypto.randomUUID() }] })
+        }
+      },
+      removeFromCart: (productId) => {
+        set({ cart: get().cart.filter((c) => c.productId !== productId) })
+      },
+      updateCartQuantity: (productId, quantity) => {
+        if (quantity <= 0) {
+          get().removeFromCart(productId)
+        } else {
+          set({
+            cart: get().cart.map((c) =>
+              c.productId === productId ? { ...c, quantity } : c
+            ),
+          })
+        }
+      },
+      clearCart: () => set({ cart: [] }),
+      getCartTotal: () => {
+        return get().cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
+      },
+
+      // Public shop data
+      publicShop: null,
+      publicProducts: [],
+      publicCategories: [],
+      setPublicShop: (shop) => set({ publicShop: shop }),
+      setPublicProducts: (products) => set({ publicProducts: products }),
+      setPublicCategories: (categories) => set({ publicCategories: categories }),
+    }),
+    {
+      name: 'whatsshop-storage',
+      partialize: (state) => ({
+        cart: state.cart,
+      }),
+    }
+  )
+)

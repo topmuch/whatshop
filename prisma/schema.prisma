@@ -1,0 +1,100 @@
+// WhatsShop SaaS - Multi-tenant e-commerce for African merchants
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("SELLER") // SELLER | ADMIN
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  shop   Shop?
+  orders Order[]
+}
+
+model Shop {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  logo        String?
+  banner      String?
+  whatsapp    String
+  address     String?
+  phone       String?
+  plan        String   @default("FREE") // FREE | STANDARD | PREMIUM
+  isActive    Boolean  @default(true)
+  ownerId     String   @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  owner     User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  categories Category[]
+  products   Product[]
+  visits     Visit[]
+  orders     Order[]
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  shopId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  shop     Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  products Product[]
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  price       Float
+  image       String?
+  stock       Int?
+  isAvailable Boolean  @default(true)
+  shopId      String
+  categoryId  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  shop     Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  category Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+}
+
+model Order {
+  id              String   @id @default(cuid())
+  shopId          String
+  items           String   // JSON array of {productId, name, price, quantity}
+  total           Float
+  customerName    String?
+  customerPhone   String?
+  customerAddress String?
+  status          String   @default("PENDING") // PENDING | CONFIRMED | DELIVERED | CANCELLED
+  createdAt       DateTime @default(now())
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id])
+  userId String? 
+}
+
+model Visit {
+  id        String   @id @default(cuid())
+  shopId    String
+  date      DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+}

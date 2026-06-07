@@ -1,0 +1,201 @@
+'use client'
+
+import { useAppStore, type DashboardTab } from '@/lib/store'
+import { useEffect, useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Separator } from '@/components/ui/separator'
+import {
+  LayoutDashboard,
+  Package,
+  Tags,
+  ShoppingCart,
+  Settings,
+  LogOut,
+  Menu,
+  Store,
+} from 'lucide-react'
+import { DashboardOverview } from './dashboard-overview'
+import { DashboardProducts } from './dashboard-products'
+import { DashboardCategories } from './dashboard-categories'
+import { DashboardOrders } from './dashboard-orders'
+import { DashboardSettings } from './dashboard-settings'
+import { CreateShopWizard } from './create-shop-wizard'
+
+const navItems: { id: DashboardTab; label: string; icon: React.ReactNode }[] = [
+  { id: 'overview', label: 'Vue d\'ensemble', icon: <LayoutDashboard className="h-5 w-5" /> },
+  { id: 'products', label: 'Produits', icon: <Package className="h-5 w-5" /> },
+  { id: 'categories', label: 'Catégories', icon: <Tags className="h-5 w-5" /> },
+  { id: 'orders', label: 'Commandes', icon: <ShoppingCart className="h-5 w-5" /> },
+  { id: 'settings', label: 'Paramètres', icon: <Settings className="h-5 w-5" /> },
+]
+
+function SidebarContent() {
+  const { dashboardTab, setDashboardTab, setUser, setShop, setView, shop } = useAppStore()
+
+  async function handleLogout() {
+    try { await fetch('/api/auth/session', { method: 'DELETE' }) } catch { /* ignore */ }
+    setUser(null)
+    setShop(null)
+    setView('landing')
+  }
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Logo */}
+      <div className="flex items-center gap-2 px-6 py-5">
+        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary text-primary-foreground">
+          <Store className="h-5 w-5" />
+        </div>
+        <span className="text-lg font-bold text-foreground">WhatsShop</span>
+      </div>
+
+      <Separator />
+
+      {/* Shop name */}
+      {shop && (
+        <div className="px-6 py-3">
+          <p className="text-sm text-muted-foreground truncate">{shop.name}</p>
+        </div>
+      )}
+
+      {/* Navigation */}
+      <ScrollArea className="flex-1 px-3 py-2">
+        <nav className="flex flex-col gap-1">
+          {navItems.map((item) => (
+            <Button
+              key={item.id}
+              variant={dashboardTab === item.id ? 'secondary' : 'ghost'}
+              className={`w-full justify-start gap-3 h-11 px-3 ${
+                dashboardTab === item.id
+                  ? 'bg-primary/10 text-primary font-medium hover:bg-primary/15'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+              onClick={() => setDashboardTab(item.id)}
+            >
+              {item.icon}
+              <span>{item.label}</span>
+            </Button>
+          ))}
+        </nav>
+      </ScrollArea>
+
+      <Separator />
+
+      {/* Logout */}
+      <div className="px-3 py-4">
+        <Button
+          variant="ghost"
+          className="w-full justify-start gap-3 h-11 px-3 text-muted-foreground hover:text-destructive"
+          onClick={handleLogout}
+        >
+          <LogOut className="h-5 w-5" />
+          <span>Déconnexion</span>
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+export function SellerDashboard() {
+  const { user, shop, setUser, setView, setShop } = useAppStore()
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function loadSession() {
+      try {
+        const res = await fetch('/api/auth/session')
+        if (res.ok) {
+          const data = await res.json()
+          if (data.user) {
+            setUser(data.user)
+            if (data.shop) {
+              setShop(data.shop)
+            }
+          } else {
+            setView('landing')
+          }
+        }
+      } catch {
+        // Error fetching session
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadSession()
+  }, [setUser, setShop, setView])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-muted/30">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-muted-foreground">Chargement...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // If user has no shop, show the create shop wizard
+  if (user && !shop) {
+    return <CreateShopWizard />
+  }
+
+  return (
+    <div className="min-h-screen flex bg-muted/30">
+      {/* Desktop sidebar */}
+      <aside className="hidden lg:flex lg:w-64 lg:flex-col bg-card border-r min-h-screen sticky top-0">
+        <SidebarContent />
+      </aside>
+
+      {/* Mobile + Main area */}
+      <div className="flex-1 flex flex-col min-h-screen">
+        {/* Mobile header */}
+        <header className="lg:hidden h-14 bg-card border-b flex items-center gap-3 px-4 sticky top-0 z-40">
+          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-9 w-9">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-64 p-0">
+              <SidebarContent />
+            </SheetContent>
+          </Sheet>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center justify-center w-7 h-7 rounded-md bg-primary text-primary-foreground">
+              <Store className="h-4 w-4" />
+            </div>
+            <span className="font-semibold text-sm">{shop?.name || 'WhatsShop'}</span>
+          </div>
+        </header>
+
+        {/* Main content */}
+        <main className="flex-1 p-4 md:p-6 lg:p-8">
+          <DashboardContent />
+        </main>
+      </div>
+    </div>
+  )
+}
+
+function DashboardContent() {
+  const { dashboardTab } = useAppStore()
+
+  switch (dashboardTab) {
+    case 'overview':
+      return <DashboardOverview />
+    case 'products':
+      return <DashboardProducts />
+    case 'categories':
+      return <DashboardCategories />
+    case 'orders':
+      return <DashboardOrders />
+    case 'settings':
+      return <DashboardSettings />
+    default:
+      return <DashboardOverview />
+  }
+}
