@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
 export type AppView = 'landing' | 'login' | 'register' | 'dashboard' | 'shop'
-export type DashboardTab = 'overview' | 'products' | 'categories' | 'orders' | 'settings'
+export type DashboardTab = 'overview' | 'products' | 'categories' | 'orders' | 'settings' | 'ai-tools'
 
 export interface CartItem {
   id: string
@@ -44,6 +44,7 @@ export interface Product {
   isAvailable: boolean
   categoryId?: string
   categoryName?: string
+  createdAt?: string
 }
 
 export interface Category {

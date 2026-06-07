@@ -51,6 +51,7 @@ import {
   ImageIcon,
   Loader2,
   AlertCircle,
+  Sparkles,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -96,7 +97,7 @@ function formatPrice(price: number) {
 }
 
 export function DashboardProducts() {
-  const { shop } = useAppStore()
+  const { shop, setDashboardTab } = useAppStore()
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
@@ -414,6 +415,17 @@ export function DashboardProducts() {
                           <div className="flex justify-end gap-1">
                             <Button
                               variant="ghost"
+                              size="sm"
+                              className="h-8 gap-1 text-xs text-primary hover:text-primary"
+                              onClick={() => {
+                                setDashboardTab('ai-tools')
+                              }}
+                            >
+                              <Sparkles className="h-3.5 w-3.5" />
+                              <span className="hidden xl:inline">IA</span>
+                            </Button>
+                            <Button
+                              variant="ghost"
                               size="icon"
                               className="h-8 w-8"
                               onClick={() => openEditDialog(product)}
@@ -479,23 +491,34 @@ export function DashboardProducts() {
                       <div className="flex items-center justify-between mt-2">
                         <p className="font-semibold text-primary">{formatPrice(product.price)}</p>
                         <div className="flex gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => openEditDialog(product)}
-                          >
-                            <Edit2 className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-destructive hover:text-destructive"
-                            onClick={() => openDeleteDialog(product)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 gap-1 text-xs text-primary hover:text-primary"
+                              onClick={() => {
+                                setDashboardTab('ai-tools')
+                              }}
+                            >
+                              <Sparkles className="h-3.5 w-3.5" />
+                              <span>IA</span>
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => openEditDialog(product)}
+                            >
+                              <Edit2 className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-destructive hover:text-destructive"
+                              onClick={() => openDeleteDialog(product)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                       </div>
                       {product.stock !== null && (
                         <p className="text-xs text-muted-foreground mt-1">

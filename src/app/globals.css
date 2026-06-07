@@ -141,6 +141,16 @@
   background-color: oklch(0.7 0 0);
 }
 
+/* Hide scrollbar for horizontal scroll containers */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* Gradient animations */
 @keyframes gradient-shift {
   0%, 100% { background-position: 0% 50%; }

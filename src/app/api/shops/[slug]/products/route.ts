@@ -43,6 +43,7 @@ export async function GET(
       isAvailable: p.isAvailable,
       categoryId: p.categoryId,
       categoryName: p.category?.name,
+      createdAt: p.createdAt,
     }))
 
     return NextResponse.json(formatted)

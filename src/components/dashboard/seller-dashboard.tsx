@@ -15,12 +15,14 @@ import {
   LogOut,
   Menu,
   Store,
+  Sparkles,
 } from 'lucide-react'
 import { DashboardOverview } from './dashboard-overview'
 import { DashboardProducts } from './dashboard-products'
 import { DashboardCategories } from './dashboard-categories'
 import { DashboardOrders } from './dashboard-orders'
 import { DashboardSettings } from './dashboard-settings'
+import { DashboardAiTools } from './dashboard-ai-tools'
 import { CreateShopWizard } from './create-shop-wizard'
 
 const navItems: { id: DashboardTab; label: string; icon: React.ReactNode }[] = [
@@ -28,6 +30,7 @@ const navItems: { id: DashboardTab; label: string; icon: React.ReactNode }[] = [
   { id: 'products', label: 'Produits', icon: <Package className="h-5 w-5" /> },
   { id: 'categories', label: 'Catégories', icon: <Tags className="h-5 w-5" /> },
   { id: 'orders', label: 'Commandes', icon: <ShoppingCart className="h-5 w-5" /> },
+  { id: 'ai-tools', label: 'Outils IA', icon: <Sparkles className="h-5 w-5" /> },
   { id: 'settings', label: 'Paramètres', icon: <Settings className="h-5 w-5" /> },
 ]
 
@@ -195,6 +198,8 @@ function DashboardContent() {
       return <DashboardOrders />
     case 'settings':
       return <DashboardSettings />
+    case 'ai-tools':
+      return <DashboardAiTools />
     default:
       return <DashboardOverview />
   }
