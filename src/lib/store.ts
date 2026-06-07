@@ -1,8 +1,9 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-export type AppView = 'landing' | 'login' | 'register' | 'dashboard' | 'shop'
+export type AppView = 'landing' | 'login' | 'register' | 'dashboard' | 'shop' | 'admin'
 export type DashboardTab = 'overview' | 'products' | 'categories' | 'orders' | 'settings' | 'ai-tools'
+export type AdminTab = 'admin-overview' | 'admin-users' | 'admin-shops' | 'admin-orders'
 
 export interface CartItem {
   id: string
@@ -60,6 +61,8 @@ interface AppState {
   setView: (view: AppView) => void
   dashboardTab: DashboardTab
   setDashboardTab: (tab: DashboardTab) => void
+  adminTab: AdminTab
+  setAdminTab: (tab: AdminTab) => void
   shopSlug: string
   setShopSlug: (slug: string) => void
 
@@ -95,6 +98,8 @@ export const useAppStore = create<AppState>()(
       setView: (view) => set({ view }),
       dashboardTab: 'overview',
       setDashboardTab: (tab) => set({ dashboardTab: tab }),
+      adminTab: 'admin-overview' as AdminTab,
+      setAdminTab: (tab) => set({ adminTab: tab }),
       shopSlug: '',
       setShopSlug: (slug) => {
         set({ shopSlug: slug, view: 'shop' })

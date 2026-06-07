@@ -6,6 +6,7 @@ import { LandingPage } from '@/components/landing'
 import { AuthLogin } from '@/components/auth/auth-login'
 import { AuthRegister } from '@/components/auth/auth-register'
 import { SellerDashboard } from '@/components/dashboard/seller-dashboard'
+import { AdminDashboard } from '@/components/admin/admin-dashboard'
 import { PublicShop } from '@/components/shop/public-shop'
 
 export default function Home() {
@@ -20,7 +21,9 @@ export default function Home() {
           const data = await res.json()
           if (data.user) {
             setUser(data.user)
-            if (!data.shop) {
+            if (data.user.role === 'ADMIN') {
+              setView('admin')
+            } else if (!data.shop) {
               // New user needs to create a shop
               setView('dashboard')
             } else {
@@ -41,6 +44,7 @@ export default function Home() {
       {view === 'login' && <AuthLogin />}
       {view === 'register' && <AuthRegister />}
       {view === 'dashboard' && <SellerDashboard />}
+      {view === 'admin' && <AdminDashboard />}
       {view === 'shop' && <PublicShop />}
     </div>
   )

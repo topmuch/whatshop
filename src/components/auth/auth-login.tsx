@@ -31,7 +31,11 @@ export function AuthLogin() {
       }
       setUser(data.user)
       if (data.shop) setShop(data.shop)
-      setView('dashboard')
+      if (data.user.role === 'ADMIN') {
+        setView('admin')
+      } else {
+        setView('dashboard')
+      }
       toast.success('Connexion réussie !')
     } catch {
       toast.error('Erreur de connexion')
@@ -70,9 +74,10 @@ export function AuthLogin() {
                 Créer un compte
               </button>
             </p>
-            <div className="mt-4 rounded-lg border bg-muted/50 p-3 text-center">
-              <p className="text-xs text-muted-foreground mb-1">Démo :</p>
-              <p className="text-xs font-mono">demo@whatsshop.com / demo123</p>
+            <div className="mt-4 rounded-lg border bg-muted/50 p-3 space-y-1">
+              <p className="text-xs text-muted-foreground font-medium">Comptes démo :</p>
+              <p className="text-xs font-mono">Vendeur : demo@whatsshop.com / demo123</p>
+              <p className="text-xs font-mono">Admin : admin@whatsshop.com / admin123</p>
             </div>
           </form>
         </CardContent>

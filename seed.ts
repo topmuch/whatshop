@@ -122,9 +122,22 @@ async function seed() {
     })
   }
 
+  // Create super admin user
+  await db.user.upsert({
+    where: { email: 'admin@whatsshop.com' },
+    update: {},
+    create: {
+      email: 'admin@whatsshop.com',
+      password: 'admin123',
+      name: 'Super Administrateur',
+      role: 'ADMIN',
+    },
+  })
+
   console.log('Seed completed!')
-  console.log(`- User: demo@whatsshop.com / demo123`)
+  console.log(`- Demo Seller: demo@whatsshop.com / demo123`)
   console.log(`- Shop: ${shop.slug}`)
+  console.log(`- Super Admin: admin@whatsshop.com / admin123`)
   console.log(`- ${products.length} products, 3 categories, 3 orders, 47 visits`)
 }
 
