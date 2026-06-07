@@ -31,6 +31,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { AnimatePresence, motion } from 'framer-motion'
+import { ShopHeroCarousel } from './shop-hero-carousel'
 
 type SortOption = 'recent' | 'price-asc' | 'price-desc'
 
@@ -297,79 +298,53 @@ Merci ! 🙏`
         </div>
       </header>
 
-      {/* Banner Section */}
-      {publicShop.banner ? (
-        <div className="w-full h-48 md:h-64 bg-cover bg-center relative">
-          <div className="absolute inset-0 bg-black/30" />
-          <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-            <div className="max-w-5xl mx-auto flex items-center gap-3">
-              {publicShop.logo ? (
-                <img
-                  src={publicShop.logo}
-                  alt={publicShop.name}
-                  className="w-12 h-12 rounded-lg object-cover bg-white shadow-lg"
-                />
-              ) : (
-                <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-white/20 backdrop-blur-sm">
-                  <Store className="h-6 w-6 text-white" />
-                </div>
-              )}
-              <div>
-                <h1 className="text-2xl font-bold drop-shadow-md">{publicShop.name}</h1>
-                {publicShop.description && (
-                  <p className="text-sm opacity-90 line-clamp-1">{publicShop.description}</p>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-background">
-          <div className="max-w-5xl mx-auto px-4 py-8">
-            <div className="flex items-center gap-4">
-              {publicShop.logo ? (
-                <img
-                  src={publicShop.logo}
-                  alt={publicShop.name}
-                  className="w-14 h-14 rounded-xl object-cover shadow-md"
-                />
-              ) : (
-                <div className="flex items-center justify-center w-14 h-14 rounded-xl bg-primary text-primary-foreground shadow-md">
-                  <Store className="h-7 w-7" />
-                </div>
-              )}
-              <div>
-                <h1 className="text-2xl font-bold">{publicShop.name}</h1>
-                {publicShop.description && (
-                  <p className="text-sm text-muted-foreground mt-0.5">{publicShop.description}</p>
-                )}
-              </div>
-            </div>
+      {/* Hero Carousel */}
+      <ShopHeroCarousel shopName={publicShop.name} whatsapp={publicShop.whatsapp} />
 
-            {/* Contact info */}
-            <div className="flex flex-wrap items-center gap-4 mt-4 text-sm text-muted-foreground">
-              {publicShop.whatsapp && (
-                <div className="flex items-center gap-1.5">
-                  <MessageCircle className="h-3.5 w-3.5 text-primary" />
-                  <span>WhatsApp</span>
-                </div>
-              )}
-              {publicShop.phone && (
-                <div className="flex items-center gap-1.5">
-                  <Phone className="h-3.5 w-3.5" />
-                  <span>{publicShop.phone}</span>
-                </div>
-              )}
-              {publicShop.address && (
-                <div className="flex items-center gap-1.5">
-                  <MapPin className="h-3.5 w-3.5" />
-                  <span className="line-clamp-1 max-w-xs">{publicShop.address}</span>
-                </div>
+      {/* Shop Info Bar */}
+      <div className="bg-gradient-to-r from-primary/5 to-primary/10 border-b">
+        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            {publicShop.logo ? (
+              <img
+                src={publicShop.logo}
+                alt={publicShop.name}
+                className="w-10 h-10 rounded-lg object-cover shadow-sm shrink-0"
+              />
+            ) : (
+              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary text-primary-foreground shadow-sm shrink-0">
+                <Store className="h-5 w-5" />
+              </div>
+            )}
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-lg font-bold truncate">{publicShop.name}</h1>
+              {publicShop.description && (
+                <p className="text-xs text-muted-foreground truncate hidden sm:block">{publicShop.description}</p>
               )}
             </div>
           </div>
+          <div className="flex items-center gap-3 sm:gap-4 text-xs text-muted-foreground shrink-0">
+            {publicShop.whatsapp && (
+              <div className="flex items-center gap-1">
+                <MessageCircle className="h-3.5 w-3.5 text-primary" />
+                <span className="hidden sm:inline">WhatsApp</span>
+              </div>
+            )}
+            {publicShop.phone && (
+              <div className="flex items-center gap-1">
+                <Phone className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">{publicShop.phone}</span>
+              </div>
+            )}
+            {publicShop.address && (
+              <div className="flex items-center gap-1">
+                <MapPin className="h-3.5 w-3.5" />
+                <span className="hidden md:inline line-clamp-1 max-w-[180px]">{publicShop.address}</span>
+              </div>
+            )}
+          </div>
         </div>
-      )}
+      </div>
 
       {/* Main Content */}
       <div className="max-w-5xl mx-auto px-4 pt-4" ref={scrollRef}>
