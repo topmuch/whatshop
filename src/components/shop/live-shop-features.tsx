@@ -358,6 +358,11 @@ export function LiveShopFeatures() {
     fetchLiveState()
   }, [shopSlug])
 
+  // Get pinned product data
+  const pinnedProduct = pinnedProductId
+    ? publicProducts.find((p) => p.id === pinnedProductId) || null
+    : null
+
   // Show lead form when live starts (computed, not via effect)
   const showLeadForm = isActive || !!pinnedProduct
 
@@ -380,11 +385,6 @@ export function LiveShopFeatures() {
     const interval = setInterval(tick, 1000)
     return () => clearInterval(interval)
   }, [isActive, endTime])
-
-  // Get pinned product data
-  const pinnedProduct = pinnedProductId
-    ? publicProducts.find((p) => p.id === pinnedProductId) || null
-    : null
 
   // Track WhatsApp click
   const trackWhatsAppClick = useCallback(() => {
