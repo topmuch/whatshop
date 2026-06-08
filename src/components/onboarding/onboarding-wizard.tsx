@@ -34,7 +34,7 @@ import {
 /* ──────────────────────────── CONSTANTS ──────────────────────────── */
 
 const sectorTemplateMap: Record<string, TemplateId> = {
-  beaute: 'rose',
+  beaute: 'jameela',
   mode: 'africa',
   electronique: 'neon',
   alimentation: 'classic',

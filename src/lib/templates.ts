@@ -1,4 +1,4 @@
-export type TemplateId = 'classic' | 'africa' | 'minimal' | 'elegant' | 'neon' | 'rose' | 'ocean' | 'sunset'
+export type TemplateId = 'classic' | 'africa' | 'minimal' | 'elegant' | 'neon' | 'rose' | 'ocean' | 'sunset' | 'jameela'
 
 export interface ShopTemplate {
   id: TemplateId
@@ -36,11 +36,12 @@ export interface ShopTemplate {
     border: string
     hoverBorder: string
     hoverScale: string
+    hoverY?: number
   }
   layout: {
     gridCols: string // Tailwind grid classes
-    headerStyle: 'standard' | 'centered' | 'minimal' | 'dark' | 'gradient' | 'elevated'
-    cardLayout: 'grid' | 'list' | 'masonry' | 'compact' | 'featured'
+    headerStyle: 'standard' | 'centered' | 'minimal' | 'dark' | 'gradient' | 'elevated' | 'luxury-dark'
+    cardLayout: 'grid' | 'list' | 'masonry' | 'compact' | 'featured' | 'beauty'
     showCardBorder: boolean
     cardPadding: string
     imageSize: string // aspect ratio class
@@ -48,7 +49,7 @@ export interface ShopTemplate {
     badgeStyle: 'pill' | 'rounded' | 'tag'
     categoryStyle: 'pill' | 'underline' | 'button'
     heroStyle: 'full' | 'contained' | 'minimal' | 'dark' | 'gradient'
-    priceStyle: 'bold' | 'elegant' | 'minimal' | 'tag'
+    priceStyle: 'bold' | 'elegant' | 'minimal' | 'tag' | 'beauty-elegant'
     buttonStyle: 'filled' | 'outlined' | 'ghost' | 'rounded' | 'pill'
     footerStyle: 'standard' | 'dark' | 'minimal' | 'gradient'
   }
@@ -471,6 +472,66 @@ export const templates: Record<TemplateId, ShopTemplate> = {
       pattern: 'waves',
       gradientBg: 'linear-gradient(180deg, #F0F9FF 0%, #E0F2FE 100%)',
       divider: 'line',
+      headerDecoration: null,
+    },
+  },
+  jameela: {
+    id: 'jameela',
+    name: 'Jameela Beauty',
+    description: 'Luxe épuré, accents dorés, beauté professionnelle',
+    emoji: '💎',
+    colors: {
+      primary: '#C8A882',
+      primaryFg: '#1a1a1a',
+      accent: '#b8956a',
+      bg: '#ffffff',
+      card: '#ffffff',
+      cardHover: '#fafafa',
+      text: '#1a1a1a',
+      textMuted: '#666666',
+      border: '#f0f0f0',
+      badgeNew: '#ffa502',
+      badgePromo: '#ff4757',
+      cartBg: '#ffffff',
+      headerBg: '#1a1a1a',
+      filterActive: '#C8A882',
+      filterActiveFg: '#1a1a1a',
+      priceColor: '#C8A882',
+      ctaBg: '#4ADE80',
+      ctaFg: '#ffffff',
+      heroOverlay: 'linear-gradient(135deg, rgba(26,26,26,0.75) 0%, rgba(200,168,130,0.6) 100%)',
+      heroBadge: 'rgba(200,168,130,0.3)',
+      heroText: '#ffffff',
+    },
+    cardStyle: {
+      rounded: '8px',
+      shadow: '0 2px 8px rgba(0,0,0,0.06)',
+      imageRounded: '8px 8px 0 0',
+      overflow: 'hidden',
+      border: 'none',
+      hoverBorder: 'none',
+      hoverScale: 'scale(1)',
+      hoverY: -5,
+    },
+    layout: {
+      gridCols: 'grid-cols-2 md:grid-cols-4',
+      headerStyle: 'luxury-dark',
+      cardLayout: 'beauty',
+      showCardBorder: false,
+      cardPadding: 'p-3',
+      imageSize: 'aspect-square',
+      badgePosition: 'top-left',
+      badgeStyle: 'pill',
+      categoryStyle: 'underline',
+      heroStyle: 'full',
+      priceStyle: 'beauty-elegant',
+      buttonStyle: 'rounded',
+      footerStyle: 'standard',
+    },
+    decorative: {
+      pattern: 'none',
+      gradientBg: null,
+      divider: 'none',
       headerDecoration: null,
     },
   },

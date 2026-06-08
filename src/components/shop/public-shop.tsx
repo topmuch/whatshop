@@ -259,6 +259,18 @@ function TemplatePrice({ price, style }: { price: number; style: string }) {
       </span>
     )
   }
+  if (style === 'beauty-elegant') {
+    return (
+      <div className="flex items-baseline gap-1.5">
+        <span className="text-[9px] uppercase tracking-[0.15em] font-medium" style={{ color: 'var(--tpl-text-muted)' }}>
+          à partir de
+        </span>
+        <span className="text-sm font-bold" style={{ color: 'var(--tpl-price)' }}>
+          {formatPrice(price)}
+        </span>
+      </div>
+    )
+  }
   if (style === 'tag') {
     return (
       <span
@@ -482,6 +494,7 @@ function ShopContent() {
       rose: <Heart className="h-5 w-5" />,
       ocean: <Waves className="h-5 w-5" />,
       sunset: <Sun className="h-5 w-5" />,
+      jameela: <Gem className="h-5 w-5" />,
     }
     return icons[template.id] || <Store className="h-5 w-5" />
   }, [template.id])
@@ -686,6 +699,51 @@ function ShopContent() {
               )}
               {publicShop.address && (
                 <span className="hidden md:flex items-center gap-1">
+                  <MapPin className="h-3.5 w-3.5" />
+                  {publicShop.address}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : layout.headerStyle === 'luxury-dark' ? (
+        <div className="px-4 py-6" style={{ background: '#1a1a1a', borderBottom: '1px solid #333' }}>
+          <div className="max-w-5xl mx-auto text-center">
+            {publicShop.logo ? (
+              <img
+                src={publicShop.logo}
+                alt={publicShop.name}
+                className="w-14 h-14 rounded-2xl object-cover shadow-sm mx-auto mb-3"
+              />
+            ) : (
+              <div
+                className="flex items-center justify-center w-14 h-14 rounded-2xl shadow-sm mx-auto mb-3"
+                style={{ background: '#C8A882', color: '#1a1a1a' }}
+              >
+                {templateIcon}
+              </div>
+            )}
+            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-wide">{publicShop.name}</h1>
+            {publicShop.description && (
+              <p className="text-sm mt-1.5 max-w-lg mx-auto" style={{ color: '#999' }}>
+                {publicShop.description}
+              </p>
+            )}
+            <div className="flex items-center justify-center gap-5 mt-3 text-xs" style={{ color: '#999' }}>
+              {publicShop.whatsapp && (
+                <span className="flex items-center gap-1.5">
+                  <MessageCircle className="h-3.5 w-3.5" style={{ color: '#C8A882' }} />
+                  <span>WhatsApp</span>
+                </span>
+              )}
+              {publicShop.phone && (
+                <span className="flex items-center gap-1.5">
+                  <Phone className="h-3.5 w-3.5" />
+                  {publicShop.phone}
+                </span>
+              )}
+              {publicShop.address && (
+                <span className="flex items-center gap-1.5">
                   <MapPin className="h-3.5 w-3.5" />
                   {publicShop.address}
                 </span>
@@ -1014,7 +1072,7 @@ function ShopContent() {
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.25 }}
-                  whileHover={{ scale: cardStyle.hoverScale, transition: { duration: 0.2 } }}
+                  whileHover={{ scale: cardStyle.hoverScale, y: cardStyle.hoverY || 0, transition: { duration: 0.2 } }}
                 >
                   <Card
                     className="group h-full flex flex-col transition-all duration-300 cursor-pointer"

@@ -3,7 +3,7 @@ import { db } from '@/lib/db'
 
 // Sector → Template mapping
 const sectorTemplateMap: Record<string, string> = {
-  beaute: 'rose',
+  beaute: 'jameela',
   mode: 'africa',
   electronique: 'neon',
   alimentation: 'classic',
