@@ -75,7 +75,7 @@ interface JameelaGridProps {
 const JAMEELA = {
   headerDark: '#1a1a1a',
   beigeGold: '#C8A882',
-  greenCta: '#4ADE80',
+  roseCta: '#C9788F',
   white: '#ffffff',
   saleRed: '#ff4757',
   newOrange: '#ffa502',
@@ -250,7 +250,7 @@ function JameelaProductCard({
               onClick={handleAdd}
               className="mt-1 flex h-8 w-full items-center justify-center gap-1.5 rounded-md text-xs font-semibold transition-all hover:shadow-md active:scale-95"
               style={{
-                backgroundColor: JAMEELA.greenCta,
+                backgroundColor: JAMEELA.roseCta,
                 color: JAMEELA.headerDark,
               }}
             >
@@ -374,7 +374,7 @@ function PromoBanner({ shopName }: { shopName: string }) {
             />
             <div
               className="absolute -bottom-6 -right-6 size-32 rounded-full opacity-15 blur-2xl"
-              style={{ backgroundColor: JAMEELA.greenCta }}
+              style={{ backgroundColor: JAMEELA.roseCta }}
             />
             <Gem className="size-16 relative z-10" style={{ color: JAMEELA.beigeGold }} />
             <p

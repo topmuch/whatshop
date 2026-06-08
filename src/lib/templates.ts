@@ -497,7 +497,7 @@ export const templates: Record<TemplateId, ShopTemplate> = {
       filterActive: '#C8A882',
       filterActiveFg: '#1a1a1a',
       priceColor: '#C8A882',
-      ctaBg: '#4ADE80',
+      ctaBg: '#C9788F',
       ctaFg: '#ffffff',
       heroOverlay: 'linear-gradient(135deg, rgba(26,26,26,0.75) 0%, rgba(200,168,130,0.6) 100%)',
       heroBadge: 'rgba(200,168,130,0.3)',
