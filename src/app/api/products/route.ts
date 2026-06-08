@@ -1,6 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 
+// Helper: parse JSON images field into string[]
+function parseImages(imagesRaw: unknown): string[] {
+  if (!imagesRaw) return []
+  if (Array.isArray(imagesRaw)) return imagesRaw
+  if (typeof imagesRaw === 'string') {
+    try {
+      const parsed = JSON.parse(imagesRaw)
+      return Array.isArray(parsed) ? parsed : []
+    } catch {
+      return []
+    }
+  }
+  return []
+}
+
+// Helper: format product with parsed images
+function formatProduct(p: Record<string, unknown>) {
+  return {
+    ...p,
+    images: parseImages(p.images),
+  }
+}
+
 // GET /api/products?shopId=xxx
 export async function GET(request: NextRequest) {
   try {
@@ -23,7 +46,7 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     })
 
-    return NextResponse.json(products)
+    return NextResponse.json(products.map(formatProduct))
   } catch (error) {
     console.error('Products GET error:', error)
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
@@ -34,7 +57,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { shopId, name, description, price, image, stock, categoryId, isAvailable } = body
+    const { shopId, name, description, price, image, images, stock, categoryId, isAvailable } = body
 
     if (!shopId || !name || price === undefined) {
       return NextResponse.json({ error: 'Champs requis manquants' }, { status: 400 })
@@ -52,6 +75,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const parsedImages = Array.isArray(images) ? images : []
+
     const product = await db.product.create({
       data: {
         shopId,
@@ -59,6 +84,7 @@ export async function POST(request: NextRequest) {
         description: description || null,
         price: parseFloat(price),
         image: image || null,
+        images: JSON.stringify(parsedImages),
         stock: stock !== undefined ? parseInt(stock) : null,
         categoryId: categoryId || null,
         isAvailable: isAvailable !== undefined ? isAvailable : true,
@@ -66,7 +92,7 @@ export async function POST(request: NextRequest) {
       include: { category: { select: { id: true, name: true } } },
     })
 
-    return NextResponse.json(product, { status: 201 })
+    return NextResponse.json(formatProduct(product as unknown as Record<string, unknown>), { status: 201 })
   } catch (error) {
     console.error('Products POST error:', error)
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
@@ -77,7 +103,7 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json()
-    const { id, name, description, price, image, stock, categoryId, isAvailable } = body
+    const { id, name, description, price, image, images, stock, categoryId, isAvailable } = body
 
     if (!id) {
       return NextResponse.json({ error: 'ID requis' }, { status: 400 })
@@ -88,6 +114,9 @@ export async function PUT(request: NextRequest) {
     if (description !== undefined) data.description = description || null
     if (price !== undefined) data.price = parseFloat(price)
     if (image !== undefined) data.image = image || null
+    if (images !== undefined) {
+      data.images = Array.isArray(images) ? JSON.stringify(images) : '[]'
+    }
     if (stock !== undefined) data.stock = parseInt(stock) || null
     if (categoryId !== undefined) data.categoryId = categoryId || null
     if (isAvailable !== undefined) data.isAvailable = isAvailable
@@ -98,7 +127,7 @@ export async function PUT(request: NextRequest) {
       include: { category: { select: { id: true, name: true } } },
     })
 
-    return NextResponse.json(product)
+    return NextResponse.json(formatProduct(product as unknown as Record<string, unknown>))
   } catch (error) {
     console.error('Products PUT error:', error)
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })

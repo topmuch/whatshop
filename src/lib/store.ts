@@ -42,6 +42,7 @@ export interface Product {
   description?: string
   price: number
   image?: string
+  images?: string[]
   stock?: number
   isAvailable: boolean
   categoryId?: string

@@ -52,6 +52,7 @@ import {
   Loader2,
   AlertCircle,
   Sparkles,
+  X,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -61,6 +62,7 @@ interface Product {
   description?: string | null
   price: number
   image?: string | null
+  images?: string[]
   stock?: number | null
   isAvailable: boolean
   categoryId?: string | null
@@ -77,6 +79,7 @@ interface ProductFormData {
   description: string
   price: string
   image: string
+  images: string[]
   stock: string
   categoryId: string
   isAvailable: boolean
@@ -87,6 +90,7 @@ const emptyForm: ProductFormData = {
   description: '',
   price: '',
   image: '',
+  images: [],
   stock: '',
   categoryId: '',
   isAvailable: true,
@@ -168,6 +172,7 @@ export function DashboardProducts() {
       description: product.description || '',
       price: String(product.price),
       image: product.image || '',
+      images: Array.isArray(product.images) ? [...product.images] : [],
       stock: String(product.stock || ''),
       categoryId: product.categoryId || '',
       isAvailable: product.isAvailable,
@@ -189,12 +194,15 @@ export function DashboardProducts() {
 
     setSaving(true)
     try {
+      // Build images array: include the legacy image field as first image, then additional images
+      const allImages = form.images.filter((img) => img.trim())
       const body = {
         shopId: shop!.id,
         name: form.name,
         description: form.description,
         price: form.price,
         image: form.image || null,
+        images: allImages,
         stock: form.stock || null,
         categoryId: form.categoryId || null,
         isAvailable: form.isAvailable,
@@ -590,13 +598,64 @@ export function DashboardProducts() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="product-image">URL de l'image</Label>
+              <Label htmlFor="product-image">URL de l'image principale</Label>
               <Input
                 id="product-image"
                 value={form.image}
                 onChange={(e) => setForm({ ...form, image: e.target.value })}
                 placeholder="https://example.com/image.jpg"
               />
+            </div>
+            <div className="space-y-2">
+              <Label>Photos supplémentaires</Label>
+              <div className="space-y-2">
+                {form.images.map((img, idx) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    {img ? (
+                      <img
+                        src={img}
+                        alt={`Photo ${idx + 1}`}
+                        className="w-10 h-10 rounded-md object-cover bg-muted shrink-0"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center shrink-0">
+                        <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                    )}
+                    <Input
+                      value={img}
+                      onChange={(e) => {
+                        const newImages = [...form.images]
+                        newImages[idx] = e.target.value
+                        setForm({ ...form, images: newImages })
+                      }}
+                      placeholder={`URL de la photo ${idx + 2}`}
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive"
+                      onClick={() => {
+                        setForm({ ...form, images: form.images.filter((_, i) => i !== idx) })
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full gap-2"
+                  onClick={() => setForm({ ...form, images: [...form.images, ''] })}
+                >
+                  <Plus className="h-4 w-4" />
+                  Ajouter une photo
+                </Button>
+              </div>
             </div>
             <div className="space-y-2">
               <Label>Catégorie</Label>

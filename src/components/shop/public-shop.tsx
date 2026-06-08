@@ -70,7 +70,7 @@ function DecorativeBackground({ pattern, gradientBg }: { pattern: string; gradie
   if (pattern === 'dots') {
     return (
       <div
-        className="fixed inset-0 pointer-events-none z-0"
+        className="absolute inset-0 pointer-events-none z-0"
         style={{
           backgroundImage: 'radial-gradient(circle, var(--tpl-primary) 0.5px, transparent 0.5px)',
           backgroundSize: '24px 24px',
@@ -82,7 +82,7 @@ function DecorativeBackground({ pattern, gradientBg }: { pattern: string; gradie
   if (pattern === 'kente') {
     return (
       <div
-        className="fixed inset-0 pointer-events-none z-0"
+        className="absolute inset-0 pointer-events-none z-0"
         style={{
           backgroundImage: `
             repeating-linear-gradient(45deg, var(--tpl-primary), var(--tpl-primary) 1px, transparent 1px, transparent 12px),
@@ -96,7 +96,7 @@ function DecorativeBackground({ pattern, gradientBg }: { pattern: string; gradie
   if (pattern === 'waves') {
     return (
       <div
-        className="fixed inset-0 pointer-events-none z-0"
+        className="absolute inset-0 pointer-events-none z-0"
         style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%230891B2' fill-opacity='0.03' d='M0,96L48,112C96,128,192,160,288,186.7C384,213,480,235,576,213.3C672,192,768,128,864,128C960,128,1056,192,1152,208C1248,224,1344,192,1392,176L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'/%3E%3C/svg%3E")`,
           backgroundRepeat: 'no-repeat',
@@ -107,12 +107,12 @@ function DecorativeBackground({ pattern, gradientBg }: { pattern: string; gradie
     )
   }
   if (pattern === 'gradient' && gradientBg) {
-    return <div className="fixed inset-0 pointer-events-none z-0" style={{ background: gradientBg }} />
+    return <div className="absolute inset-0 pointer-events-none z-0" style={{ background: gradientBg }} />
   }
   if (pattern === 'lines') {
     return (
       <div
-        className="fixed inset-0 pointer-events-none z-0"
+        className="absolute inset-0 pointer-events-none z-0"
         style={{
           backgroundImage: `repeating-linear-gradient(0deg, var(--tpl-border) 0px, var(--tpl-border) 1px, transparent 1px, transparent 40px)`,
           opacity: 0.3,
@@ -362,6 +362,7 @@ function ShopContent() {
   const [cartExpanded, setCartExpanded] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [detailQty, setDetailQty] = useState(1)
+  const [detailImageIndex, setDetailImageIndex] = useState(0)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const fetchShop = useCallback(async () => {
@@ -417,7 +418,8 @@ function ShopContent() {
   const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0)
 
   function handleAddToCart(product: Product) {
-    addToCart({ productId: product.id, name: product.name, price: product.price, image: product.image || undefined, quantity: 1 })
+    const cartImage = (product.images && product.images[0]) || product.image || undefined
+    addToCart({ productId: product.id, name: product.name, price: product.price, image: cartImage, quantity: 1 })
     toast.success(`${product.name} ajouté au panier`)
   }
 
@@ -444,8 +446,20 @@ function ShopContent() {
     if (selectedProduct) {
       window.scrollTo({ top: 0, behavior: 'smooth' })
       setDetailQty(1)
+      setDetailImageIndex(0)
     }
   }, [selectedProduct])
+
+  // Derive all product images: images array first, fallback to single image
+  function getProductImages(product: Product): string[] {
+    if (product.images && product.images.length > 0) {
+      return product.images
+    }
+    if (product.image) {
+      return [product.image]
+    }
+    return []
+  }
 
   function handleSingleProductWhatsApp(product: Product, qty: number) {
     if (!publicShop) return
@@ -517,7 +531,7 @@ function ShopContent() {
   const isSearching = searchQuery.trim().length > 0
 
   return (
-    <div className="min-h-0 pb-20 relative" style={{ background: 'var(--tpl-bg)', color: 'var(--tpl-text)' }}>
+    <div className="min-h-screen pb-20 relative" style={{ background: 'var(--tpl-bg)', color: 'var(--tpl-text)' }}>
       {/* Decorative background pattern */}
       <DecorativeBackground pattern={decorative.pattern} gradientBg={decorative.gradientBg} />
 
@@ -775,16 +789,54 @@ function ShopContent() {
               Retour à la boutique
             </button>
 
-            {/* Product image */}
-            <div className="aspect-[4/3] rounded-xl overflow-hidden bg-muted mb-6" style={{ borderRadius: 'var(--tpl-card-rounded)' }}>
-              {selectedProduct.image ? (
-                <img src={selectedProduct.image} alt={selectedProduct.name} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
-                  <Package className="h-16 w-16 text-muted-foreground/20" />
-                </div>
-              )}
-            </div>
+            {/* Product image gallery */}
+            {(() => {
+              const productImages = getProductImages(selectedProduct)
+              const currentImage = productImages[detailImageIndex] || null
+              return (
+                <>
+                  <div
+                    className="aspect-[4/3] rounded-xl overflow-hidden bg-muted mb-3"
+                    style={{ borderRadius: 'var(--tpl-card-rounded)' }}
+                  >
+                    {currentImage ? (
+                      <img
+                        src={currentImage}
+                        alt={selectedProduct.name}
+                        className="w-full h-full object-cover transition-opacity duration-200"
+                        key={currentImage}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
+                        <Package className="h-16 w-16 text-muted-foreground/20" />
+                      </div>
+                    )}
+                  </div>
+                  {/* Thumbnail strip */}
+                  {productImages.length > 1 && (
+                    <div className="flex gap-2 overflow-x-auto pb-4 mb-2 no-scrollbar">
+                      {productImages.map((img, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => setDetailImageIndex(idx)}
+                          className="shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all duration-200"
+                          style={{
+                            borderColor: idx === detailImageIndex ? 'var(--tpl-primary)' : 'var(--tpl-border)',
+                            opacity: idx === detailImageIndex ? 1 : 0.6,
+                          }}
+                        >
+                          <img
+                            src={img}
+                            alt={`${selectedProduct.name} - Photo ${idx + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )
+            })()}
 
             {/* Badges + Name + Price */}
             <div className="mb-6">
@@ -863,7 +915,8 @@ function ShopContent() {
                 style={{ background: 'var(--tpl-cta-bg)', color: 'var(--tpl-cta-fg)' }}
                 disabled={selectedProduct.stock !== undefined && selectedProduct.stock !== null && selectedProduct.stock === 0}
                 onClick={() => {
-                  addToCart({ productId: selectedProduct.id, name: selectedProduct.name, price: selectedProduct.price, image: selectedProduct.image || undefined, quantity: detailQty })
+                  const cartImg = (selectedProduct.images && selectedProduct.images[0]) || selectedProduct.image || undefined
+                  addToCart({ productId: selectedProduct.id, name: selectedProduct.name, price: selectedProduct.price, image: cartImg, quantity: detailQty })
                   toast.success(`${selectedProduct.name} (x${detailQty}) ajouté au panier`)
                 }}
               >
@@ -972,9 +1025,9 @@ function ShopContent() {
                   >
                     {/* Image */}
                     <div className={`${layout.imageSize} bg-muted relative overflow-hidden`} style={{ borderRadius: cardStyle.imageRounded }}>
-                      {product.image ? (
+                      {(product.images && product.images.length > 0) || product.image ? (
                         <img
-                          src={product.image}
+                          src={(product.images && product.images[0]) || product.image || ''}
                           alt={product.name}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />

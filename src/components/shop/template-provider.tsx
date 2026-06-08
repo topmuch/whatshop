@@ -61,7 +61,7 @@ export function TemplateProvider({ templateId, children }: TemplateProviderProps
 
   return (
     <TemplateContext.Provider value={contextValue}>
-      <div style={cssVars} data-template={template.id}>
+      <div style={{ ...cssVars, isolation: 'isolate' as const }} data-template={template.id}>
         {children}
       </div>
     </TemplateContext.Provider>

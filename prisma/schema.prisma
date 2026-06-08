@@ -64,6 +64,7 @@ model Product {
   description String?
   price       Float
   image       String?
+  images      String   @default("[]") // JSON array of image URLs
   stock       Int?
   isAvailable Boolean  @default(true)
   shopId      String

@@ -1,6 +1,21 @@
 import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
 
+// Helper: parse JSON images field into string[]
+function parseImages(imagesRaw: unknown): string[] {
+  if (!imagesRaw) return []
+  if (Array.isArray(imagesRaw)) return imagesRaw
+  if (typeof imagesRaw === 'string') {
+    try {
+      const parsed = JSON.parse(imagesRaw)
+      return Array.isArray(parsed) ? parsed : []
+    } catch {
+      return []
+    }
+  }
+  return []
+}
+
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ slug: string }> }
@@ -39,6 +54,7 @@ export async function GET(
       description: p.description,
       price: p.price,
       image: p.image,
+      images: parseImages(p.images),
       stock: p.stock,
       isAvailable: p.isAvailable,
       categoryId: p.categoryId,
