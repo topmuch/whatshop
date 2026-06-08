@@ -30,6 +30,9 @@ import {
   Instagram,
   ExternalLink,
   Palette,
+  QrCode,
+  Download,
+  RefreshCw,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -55,6 +58,8 @@ export function DashboardSettings() {
   const { shop, setShop } = useAppStore()
   const [saving, setSaving] = useState(false)
   const [productCount, setProductCount] = useState(0)
+  const [qrSvg, setQrSvg] = useState<string | null>(null)
+  const [qrLoading, setQrLoading] = useState(false)
 
   // Shop form state
   const [name, setName] = useState('')
@@ -82,8 +87,71 @@ export function DashboardSettings() {
         .then((res) => res.ok ? res.json() : [])
         .then((products) => setProductCount(products.length))
         .catch(() => {})
+
+      // Generate QR code
+      generateQrCode()
     }
   }, [shop])
+
+  async function generateQrCode() {
+    if (!shop) return
+    setQrLoading(true)
+    try {
+      const shopUrl = `https://whatsshop.com/${shop.slug}`
+      const res = await fetch('/api/ai/qr-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: shopUrl, shopName: shop.name }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setQrSvg(data.svg)
+      }
+    } catch {
+      // fallback: generate via direct URL
+    } finally {
+      setQrLoading(false)
+    }
+  }
+
+  function downloadQrCode() {
+    if (!qrSvg || !shop) return
+    // Convert SVG to PNG using canvas
+    const svgBlob = new Blob([qrSvg], { type: 'image/svg+xml;charset=utf-8' })
+    const url = URL.createObjectURL(svgBlob)
+    const img = new Image()
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      canvas.width = 800
+      canvas.height = 800
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
+      // White background
+      ctx.fillStyle = '#FFFFFF'
+      ctx.fillRect(0, 0, 800, 800)
+      // Center the QR code
+      const padding = 60
+      const qrSize = 800 - padding * 2
+      ctx.drawImage(img, padding, padding, qrSize, qrSize)
+      // Add shop name at bottom
+      ctx.fillStyle = '#25D366'
+      ctx.font = 'bold 32px system-ui, sans-serif'
+      ctx.textAlign = 'center'
+      ctx.fillText(shop.name, 400, 780 - 20)
+      // Download
+      canvas.toBlob((blob) => {
+        if (!blob) return
+        const pngUrl = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = pngUrl
+        a.download = `qr-${shop.slug}.png`
+        a.click()
+        URL.revokeObjectURL(pngUrl)
+        URL.revokeObjectURL(url)
+      }, 'image/png')
+    }
+    img.src = url
+  }
 
   async function handleSave() {
     if (!shop) return
@@ -371,6 +439,93 @@ export function DashboardSettings() {
                 Passer au Premium
               </Button>
             )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* QR Code */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <QrCode className="h-5 w-5 text-primary" />
+            QR Code de ma boutique
+          </CardTitle>
+          <CardDescription>
+            Partagez ce QR code pour que vos clients accèdent à votre boutique
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col sm:flex-row gap-6 items-center sm:items-start">
+            {/* QR Code display */}
+            <div className="relative flex-shrink-0">
+              {qrLoading ? (
+                <div className="w-48 h-48 rounded-2xl border-2 border-dashed border-muted-foreground/20 flex items-center justify-center bg-muted/30">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+              ) : qrSvg ? (
+                <div className="w-48 h-48 rounded-2xl bg-white border shadow-sm flex items-center justify-center p-4 hover:shadow-md transition-shadow">
+                  <div dangerouslySetInnerHTML={{ __html: qrSvg }} className="w-full h-full [&>svg]:w-full [&>svg]:h-full" />
+                </div>
+              ) : (
+                <div className="w-48 h-48 rounded-2xl border-2 border-dashed border-muted-foreground/20 flex flex-col items-center justify-center gap-2 bg-muted/30">
+                  <QrCode className="h-8 w-8 text-muted-foreground/40" />
+                  <span className="text-xs text-muted-foreground">QR Code</span>
+                </div>
+              )}
+            </div>
+
+            {/* Info & actions */}
+            <div className="flex-1 space-y-4 text-center sm:text-left">
+              <div>
+                <p className="text-sm text-muted-foreground">Boutique</p>
+                <p className="text-lg font-semibold">{shop?.name}</p>
+                <p className="text-sm text-muted-foreground mt-1 font-mono">
+                  whatsshop.com/{shop?.slug}
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-3 justify-center sm:justify-start">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={downloadQrCode}
+                  disabled={!qrSvg}
+                >
+                  <Download className="h-4 w-4" />
+                  Télécharger PNG
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={copyShopUrl}
+                >
+                  <Copy className="h-4 w-4" />
+                  Copier le lien
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={generateQrCode}
+                  disabled={qrLoading}
+                >
+                  <RefreshCw className={`h-4 w-4 ${qrLoading ? 'animate-spin' : ''}`} />
+                  Régénérer
+                </Button>
+              </div>
+
+              <div className="bg-muted/50 rounded-lg p-3 space-y-1">
+                <p className="text-xs font-medium text-muted-foreground">💡 Idées d&apos;utilisation</p>
+                <ul className="text-xs text-muted-foreground space-y-0.5">
+                  <li>• Imprimez-le sur vos cartes de visite</li>
+                  <li>• Ajoutez-le à vos affiches et flyers</li>
+                  <li>• Partagez-le sur Instagram et WhatsApp</li>
+                  <li>• Affichez-le dans votre magasin physique</li>
+                </ul>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
