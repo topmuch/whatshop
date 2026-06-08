@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-export type AppView = 'landing' | 'login' | 'register' | 'dashboard' | 'shop' | 'admin'
+export type AppView = 'landing' | 'login' | 'register' | 'onboarding' | 'dashboard' | 'shop' | 'admin'
 export type DashboardTab = 'overview' | 'products' | 'categories' | 'orders' | 'live' | 'settings' | 'ai-tools'
 export type AdminTab = 'admin-overview' | 'admin-users' | 'admin-shops' | 'admin-orders'
 
@@ -32,6 +32,7 @@ export interface Shop {
   address?: string
   phone?: string
   plan: string
+  sector?: string
   template: string
   isActive: boolean
 }

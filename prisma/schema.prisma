@@ -33,6 +33,7 @@ model Shop {
   address     String?
   phone       String?
   plan        String   @default("FREE") // FREE | STANDARD | PREMIUM
+  sector      String?  // beaute, mode, electronique, alimentation, artisanat, sport, bijoux, maison, auto, autre
   template    String   @default("classic") // classic | africa | minimal | elegant | neon | rose | ocean | sunset
   isActive    Boolean  @default(true)
   ownerId     String   @unique

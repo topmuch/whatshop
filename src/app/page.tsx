@@ -5,6 +5,7 @@ import { useEffect } from 'react'
 import { LandingPage } from '@/components/landing'
 import { AuthLogin } from '@/components/auth/auth-login'
 import { AuthRegister } from '@/components/auth/auth-register'
+import { OnboardingWizard } from '@/components/onboarding/onboarding-wizard'
 import { SellerDashboard } from '@/components/dashboard/seller-dashboard'
 import { AdminDashboard } from '@/components/admin/admin-dashboard'
 import { PublicShop } from '@/components/shop/public-shop'
@@ -55,6 +56,7 @@ export default function Home() {
       {view === 'landing' && <LandingPage />}
       {view === 'login' && <AuthLogin />}
       {view === 'register' && <AuthRegister />}
+      {view === 'onboarding' && <OnboardingWizard />}
       {view === 'dashboard' && <SellerDashboard />}
       {view === 'admin' && <AdminDashboard />}
       {view === 'shop' && <PublicShop />}

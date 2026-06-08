@@ -31,7 +31,7 @@ export function AuthRegister() {
         return
       }
       setUser(data.user)
-      setView('dashboard')
+      setView('onboarding')
       toast.success('Compte créé avec succès !')
     } catch {
       toast.error('Erreur de connexion')
