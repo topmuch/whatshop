@@ -40,10 +40,11 @@ model Shop {
   updatedAt   DateTime @updatedAt
 
   owner     User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  categories Category[]
-  products   Product[]
-  visits     Visit[]
-  orders     Order[]
+  categories   Category[]
+  products     Product[]
+  visits       Visit[]
+  orders       Order[]
+  liveSession  LiveSession?
 }
 
 model Category {
@@ -99,4 +100,43 @@ model Visit {
   createdAt DateTime @default(now())
 
   shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+}
+
+model LiveSession {
+  id              String   @id @default(cuid())
+  shopId          String   @unique
+  isActive        Boolean  @default(false)
+  endTime         DateTime?
+  pinnedProductId String?
+  whatsappClicks  Int      @default(0)
+  startedAt       DateTime @default(now())
+  endedAt         DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  shop        Shop           @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  promoCodes  LivePromoCode[]
+  leads       Lead[]
+}
+
+model LivePromoCode {
+  id              String   @id @default(cuid())
+  sessionId       String
+  code            String
+  discountPercent Int
+  isActive        Boolean  @default(true)
+  usedCount       Int      @default(0)
+  createdAt       DateTime @default(now())
+
+  session     LiveSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
+
+model Lead {
+  id        String   @id @default(cuid())
+  sessionId String
+  phone     String
+  name      String?
+  createdAt DateTime @default(now())
+
+  session LiveSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 }

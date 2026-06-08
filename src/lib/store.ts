@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
 export type AppView = 'landing' | 'login' | 'register' | 'dashboard' | 'shop' | 'admin'
-export type DashboardTab = 'overview' | 'products' | 'categories' | 'orders' | 'settings' | 'ai-tools'
+export type DashboardTab = 'overview' | 'products' | 'categories' | 'orders' | 'live' | 'settings' | 'ai-tools'
 export type AdminTab = 'admin-overview' | 'admin-users' | 'admin-shops' | 'admin-orders'
 
 export interface CartItem {

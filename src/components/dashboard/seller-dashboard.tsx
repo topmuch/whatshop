@@ -18,6 +18,7 @@ import {
   Sparkles,
   Sun,
   Moon,
+  Radio,
 } from 'lucide-react'
 import { useThemeMode } from '@/lib/use-theme'
 import { DashboardOverview } from './dashboard-overview'
@@ -26,6 +27,7 @@ import { DashboardCategories } from './dashboard-categories'
 import { DashboardOrders } from './dashboard-orders'
 import { DashboardSettings } from './dashboard-settings'
 import { DashboardAiTools } from './dashboard-ai-tools'
+import { DashboardLive } from './dashboard-live'
 import { CreateShopWizard } from './create-shop-wizard'
 
 const navItems: { id: DashboardTab; label: string; icon: React.ReactNode }[] = [
@@ -33,6 +35,7 @@ const navItems: { id: DashboardTab; label: string; icon: React.ReactNode }[] = [
   { id: 'products', label: 'Produits', icon: <Package className="h-5 w-5" /> },
   { id: 'categories', label: 'Catégories', icon: <Tags className="h-5 w-5" /> },
   { id: 'orders', label: 'Commandes', icon: <ShoppingCart className="h-5 w-5" /> },
+  { id: 'live', label: 'Live TikTok', icon: <Radio className="h-5 w-5" /> },
   { id: 'ai-tools', label: 'Outils IA', icon: <Sparkles className="h-5 w-5" /> },
   { id: 'settings', label: 'Paramètres', icon: <Settings className="h-5 w-5" /> },
 ]
@@ -225,6 +228,8 @@ function DashboardContent() {
       return <DashboardCategories />
     case 'orders':
       return <DashboardOrders />
+    case 'live':
+      return <DashboardLive />
     case 'settings':
       return <DashboardSettings />
     case 'ai-tools':

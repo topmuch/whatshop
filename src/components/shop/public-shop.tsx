@@ -42,6 +42,7 @@ import { toast } from 'sonner'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ShopHeroCarousel } from './shop-hero-carousel'
 import { TemplateProvider } from './template-provider'
+import { LiveShopFeatures } from './live-shop-features'
 
 type SortOption = 'recent' | 'price-asc' | 'price-desc'
 
@@ -534,6 +535,9 @@ function ShopContent() {
     <div className="min-h-screen pb-20 relative" style={{ background: 'var(--tpl-bg)', color: 'var(--tpl-text)' }}>
       {/* Decorative background pattern */}
       <DecorativeBackground pattern={decorative.pattern} gradientBg={decorative.gradientBg} />
+
+      {/* ─── TikTok Live Features (Banner, Flash Pin, Lead Capture) ─── */}
+      <LiveShopFeatures />
 
       {/* ─── Sticky Header ─── */}
       <header
