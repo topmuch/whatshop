@@ -1,4 +1,4 @@
-export type TemplateId = 'classic' | 'africa' | 'minimal' | 'elegant' | 'neon' | 'rose' | 'ocean' | 'sunset' | 'jameela'
+export type TemplateId = 'classic' | 'africa' | 'minimal' | 'elegant' | 'neon' | 'rose' | 'ocean' | 'sunset' | 'jameela' | 'xstore-fashion' | 'xstore-electro' | 'xstore-grocery'
 
 export interface ShopTemplate {
   id: TemplateId
@@ -40,16 +40,16 @@ export interface ShopTemplate {
   }
   layout: {
     gridCols: string // Tailwind grid classes
-    headerStyle: 'standard' | 'centered' | 'minimal' | 'dark' | 'gradient' | 'elevated' | 'luxury-dark'
-    cardLayout: 'grid' | 'list' | 'masonry' | 'compact' | 'featured' | 'beauty'
+    headerStyle: 'standard' | 'centered' | 'minimal' | 'dark' | 'gradient' | 'elevated' | 'luxury-dark' | 'fashion-clean' | 'electro-tech' | 'grocery-fresh'
+    cardLayout: 'grid' | 'list' | 'masonry' | 'compact' | 'featured' | 'beauty' | 'fashion-card' | 'electro-card' | 'grocery-card'
     showCardBorder: boolean
     cardPadding: string
     imageSize: string // aspect ratio class
     badgePosition: 'top-left' | 'top-right' | 'overlay'
     badgeStyle: 'pill' | 'rounded' | 'tag'
-    categoryStyle: 'pill' | 'underline' | 'button'
-    heroStyle: 'full' | 'contained' | 'minimal' | 'dark' | 'gradient'
-    priceStyle: 'bold' | 'elegant' | 'minimal' | 'tag' | 'beauty-elegant'
+    categoryStyle: 'pill' | 'underline' | 'button' | 'circle' | 'circle-image'
+    heroStyle: 'full' | 'contained' | 'minimal' | 'dark' | 'gradient' | 'fashion-split' | 'grocery-banner'
+    priceStyle: 'bold' | 'elegant' | 'minimal' | 'tag' | 'beauty-elegant' | 'fashion-bold' | 'electro-highlight'
     buttonStyle: 'filled' | 'outlined' | 'ghost' | 'rounded' | 'pill'
     footerStyle: 'standard' | 'dark' | 'minimal' | 'gradient'
   }
@@ -532,6 +532,185 @@ export const templates: Record<TemplateId, ShopTemplate> = {
       pattern: 'none',
       gradientBg: null,
       divider: 'none',
+      headerDecoration: null,
+    },
+  },
+  'xstore-fashion': {
+    id: 'xstore-fashion',
+    name: 'Fashion Store',
+    description: 'Style élégant, accents rouges, mode et tendance',
+    emoji: '👗',
+    colors: {
+      primary: '#C8102E',
+      primaryFg: '#ffffff',
+      accent: '#333333',
+      bg: '#ffffff',
+      card: '#ffffff',
+      cardHover: '#f9f9f9',
+      text: '#222222',
+      textMuted: '#777777',
+      border: '#e8e8e8',
+      badgeNew: '#C8102E',
+      badgePromo: '#ff4757',
+      cartBg: '#ffffff',
+      headerBg: '#ffffff',
+      filterActive: '#C8102E',
+      filterActiveFg: '#ffffff',
+      priceColor: '#C8102E',
+      ctaBg: '#222222',
+      ctaFg: '#ffffff',
+      heroOverlay: 'linear-gradient(135deg, rgba(200,16,46,0.8) 0%, rgba(34,34,34,0.6) 100%)',
+      heroBadge: 'rgba(200,16,46,0.2)',
+      heroText: '#ffffff',
+    },
+    cardStyle: {
+      rounded: '4px',
+      shadow: '0 1px 4px rgba(0,0,0,0.06)',
+      imageRounded: '4px 4px 0 0',
+      overflow: 'hidden',
+      border: '1px solid #e8e8e8',
+      hoverBorder: '1px solid #C8102E',
+      hoverScale: 'scale(1)',
+      hoverY: -3,
+    },
+    layout: {
+      gridCols: 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4',
+      headerStyle: 'fashion-clean',
+      cardLayout: 'fashion-card',
+      showCardBorder: true,
+      cardPadding: 'p-3',
+      imageSize: 'aspect-[3/4]',
+      badgePosition: 'top-left',
+      badgeStyle: 'pill',
+      categoryStyle: 'circle-image',
+      heroStyle: 'fashion-split',
+      priceStyle: 'fashion-bold',
+      buttonStyle: 'filled',
+      footerStyle: 'minimal',
+    },
+    decorative: {
+      pattern: 'none',
+      gradientBg: null,
+      divider: 'line',
+      headerDecoration: null,
+    },
+  },
+  'xstore-electro': {
+    id: 'xstore-electro',
+    name: 'Electro Store',
+    description: 'Tech moderne, accents teal, étoiles et compte à rebours',
+    emoji: '📱',
+    colors: {
+      primary: '#10B981',
+      primaryFg: '#ffffff',
+      accent: '#059669',
+      bg: '#f8fafc',
+      card: '#ffffff',
+      cardHover: '#f0fdf4',
+      text: '#1e293b',
+      textMuted: '#64748b',
+      border: '#e2e8f0',
+      badgeNew: '#10B981',
+      badgePromo: '#ef4444',
+      cartBg: '#ffffff',
+      headerBg: '#ffffff',
+      filterActive: '#10B981',
+      filterActiveFg: '#ffffff',
+      priceColor: '#10B981',
+      ctaBg: '#10B981',
+      ctaFg: '#ffffff',
+      heroOverlay: 'linear-gradient(135deg, rgba(16,185,129,0.85) 0%, rgba(5,150,105,0.7) 100%)',
+      heroBadge: 'rgba(16,185,129,0.2)',
+      heroText: '#ffffff',
+    },
+    cardStyle: {
+      rounded: '8px',
+      shadow: '0 1px 6px rgba(16,185,129,0.08)',
+      imageRounded: '8px 8px 0 0',
+      overflow: 'hidden',
+      border: '1px solid #e2e8f0',
+      hoverBorder: '1px solid #10B981',
+      hoverScale: 'scale(1)',
+      hoverY: 0,
+    },
+    layout: {
+      gridCols: 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4',
+      headerStyle: 'electro-tech',
+      cardLayout: 'electro-card',
+      showCardBorder: true,
+      cardPadding: 'p-3',
+      imageSize: 'aspect-square',
+      badgePosition: 'top-left',
+      badgeStyle: 'pill',
+      categoryStyle: 'pill',
+      heroStyle: 'contained',
+      priceStyle: 'electro-highlight',
+      buttonStyle: 'filled',
+      footerStyle: 'standard',
+    },
+    decorative: {
+      pattern: 'none',
+      gradientBg: 'linear-gradient(180deg, #f8fafc 0%, #f0fdf4 50%, #f8fafc 100%)',
+      divider: 'line',
+      headerDecoration: null,
+    },
+  },
+  'xstore-grocery': {
+    id: 'xstore-grocery',
+    name: 'Grocery Store',
+    description: 'Fraîcheur alimentaire, vert vibrant, livraison et promotions',
+    emoji: '🥬',
+    colors: {
+      primary: '#00A651',
+      primaryFg: '#ffffff',
+      accent: '#ff4757',
+      bg: '#ffffff',
+      card: '#ffffff',
+      cardHover: '#f0fdf4',
+      text: '#1a1a1a',
+      textMuted: '#666666',
+      border: '#e0e0e0',
+      badgeNew: '#00A651',
+      badgePromo: '#ff4757',
+      cartBg: '#ffffff',
+      headerBg: '#ffffff',
+      filterActive: '#00A651',
+      filterActiveFg: '#ffffff',
+      priceColor: '#00A651',
+      ctaBg: '#00A651',
+      ctaFg: '#ffffff',
+      heroOverlay: 'linear-gradient(135deg, rgba(0,166,81,0.85) 0%, rgba(0,120,60,0.7) 100%)',
+      heroBadge: 'rgba(0,166,81,0.25)',
+      heroText: '#ffffff',
+    },
+    cardStyle: {
+      rounded: '12px',
+      shadow: '0 2px 8px rgba(0,166,81,0.08)',
+      imageRounded: '12px 12px 0 0',
+      overflow: 'hidden',
+      border: '1px solid #e0e0e0',
+      hoverBorder: '1px solid #00A651',
+      hoverScale: 'scale(1.02)',
+    },
+    layout: {
+      gridCols: 'grid-cols-2 md:grid-cols-3',
+      headerStyle: 'grocery-fresh',
+      cardLayout: 'grocery-card',
+      showCardBorder: true,
+      cardPadding: 'p-3',
+      imageSize: 'aspect-square',
+      badgePosition: 'top-right',
+      badgeStyle: 'rounded',
+      categoryStyle: 'circle',
+      heroStyle: 'grocery-banner',
+      priceStyle: 'bold',
+      buttonStyle: 'rounded',
+      footerStyle: 'standard',
+    },
+    decorative: {
+      pattern: 'none',
+      gradientBg: null,
+      divider: 'line',
       headerDecoration: null,
     },
   },

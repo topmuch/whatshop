@@ -4,9 +4,9 @@ import { db } from '@/lib/db'
 // Sector → Template mapping
 const sectorTemplateMap: Record<string, string> = {
   beaute: 'jameela',
-  mode: 'africa',
-  electronique: 'neon',
-  alimentation: 'classic',
+  mode: 'xstore-fashion',
+  electronique: 'xstore-electro',
+  alimentation: 'xstore-grocery',
   artisanat: 'elegant',
   sport: 'ocean',
   bijoux: 'elegant',

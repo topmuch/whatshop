@@ -43,6 +43,10 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { ShopHeroCarousel } from './shop-hero-carousel'
 import { TemplateProvider } from './template-provider'
 import { LiveShopFeatures } from './live-shop-features'
+import { JameelaGrid } from './themes/jameela-grid'
+import { FashionGrid } from './themes/fashion-grid'
+import { ElectroGrid } from './themes/electro-grid'
+import { GroceryGrid } from './themes/grocery-grid'
 
 type SortOption = 'recent' | 'price-asc' | 'price-desc'
 
@@ -495,6 +499,9 @@ function ShopContent() {
       ocean: <Waves className="h-5 w-5" />,
       sunset: <Sun className="h-5 w-5" />,
       jameela: <Gem className="h-5 w-5" />,
+      'xstore-fashion': <Heart className="h-5 w-5" />,
+      'xstore-electro': <Zap className="h-5 w-5" />,
+      'xstore-grocery': <Globe className="h-5 w-5" />,
     }
     return icons[template.id] || <Store className="h-5 w-5" />
   }, [template.id])
@@ -744,6 +751,135 @@ function ShopContent() {
               )}
               {publicShop.address && (
                 <span className="flex items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5" />
+                  {publicShop.address}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : layout.headerStyle === 'fashion-clean' ? (
+        <div className="px-4 py-5" style={{ background: '#ffffff', borderBottom: '1px solid #e8e8e8' }}>
+          <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              {publicShop.logo ? (
+                <img
+                  src={publicShop.logo}
+                  alt={publicShop.name}
+                  className="w-10 h-10 rounded object-cover"
+                />
+              ) : (
+                <div
+                  className="flex items-center justify-center w-10 h-10 rounded"
+                  style={{ background: '#C8102E', color: '#ffffff' }}
+                >
+                  {templateIcon}
+                </div>
+              )}
+              <div>
+                <h1 className="text-base font-bold" style={{ color: '#222222' }}>{publicShop.name}</h1>
+                {publicShop.description && (
+                  <p className="text-xs" style={{ color: '#777' }}>
+                    {publicShop.description}
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-3 text-xs" style={{ color: '#777' }}>
+              {publicShop.whatsapp && (
+                <span className="flex items-center gap-1">
+                  <MessageCircle className="h-3.5 w-3.5" style={{ color: '#C8102E' }} />
+                  <span className="hidden sm:inline">WhatsApp</span>
+                </span>
+              )}
+              {publicShop.address && (
+                <span className="hidden md:flex items-center gap-1">
+                  <MapPin className="h-3.5 w-3.5" />
+                  {publicShop.address}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : layout.headerStyle === 'electro-tech' ? (
+        <div className="px-4 py-4" style={{ background: '#ffffff', borderBottom: '2px solid #10B981' }}>
+          <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              {publicShop.logo ? (
+                <img
+                  src={publicShop.logo}
+                  alt={publicShop.name}
+                  className="w-10 h-10 rounded-lg object-cover"
+                />
+              ) : (
+                <div
+                  className="flex items-center justify-center w-10 h-10 rounded-lg"
+                  style={{ background: '#10B981', color: '#ffffff' }}
+                >
+                  {templateIcon}
+                </div>
+              )}
+              <div>
+                <h1 className="text-base font-bold" style={{ color: '#1e293b' }}>{publicShop.name}</h1>
+                {publicShop.description && (
+                  <p className="text-xs" style={{ color: '#64748b' }}>
+                    {publicShop.description}
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-3 text-xs" style={{ color: '#64748b' }}>
+              {publicShop.whatsapp && (
+                <span className="flex items-center gap-1">
+                  <MessageCircle className="h-3.5 w-3.5" style={{ color: '#10B981' }} />
+                  <span className="hidden sm:inline">WhatsApp</span>
+                </span>
+              )}
+              {publicShop.address && (
+                <span className="hidden md:flex items-center gap-1">
+                  <MapPin className="h-3.5 w-3.5" />
+                  {publicShop.address}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : layout.headerStyle === 'grocery-fresh' ? (
+        <div className="px-4 py-4" style={{ background: '#00A651', borderBottom: '2px solid #008c44' }}>
+          <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              {publicShop.logo ? (
+                <img
+                  src={publicShop.logo}
+                  alt={publicShop.name}
+                  className="w-10 h-10 rounded-lg object-cover border-2 border-white/30"
+                />
+              ) : (
+                <div
+                  className="flex items-center justify-center w-10 h-10 rounded-lg"
+                  style={{ background: 'rgba(255,255,255,0.2)', color: '#ffffff' }}
+                >
+                  {templateIcon}
+                </div>
+              )}
+              <div>
+                <h1 className="text-base font-bold text-white">{publicShop.name}</h1>
+                {publicShop.description && (
+                  <p className="text-xs text-white/80">
+                    {publicShop.description}
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-3 text-xs text-white/80">
+              {publicShop.whatsapp && (
+                <span className="flex items-center gap-1">
+                  <MessageCircle className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">WhatsApp</span>
+                </span>
+              )}
+              {publicShop.address && (
+                <span className="hidden md:flex items-center gap-1">
                   <MapPin className="h-3.5 w-3.5" />
                   {publicShop.address}
                 </span>
@@ -1007,6 +1143,96 @@ function ShopContent() {
             className="max-w-5xl mx-auto px-4 pt-4 relative z-10"
             ref={scrollRef}
           >
+        {/* ─── Theme-specific or Generic Product Grid ─── */}
+        {(template.id === 'jameela' || template.id === 'xstore-fashion' || template.id === 'xstore-electro' || template.id === 'xstore-grocery') ? (
+          <div className="relative z-10" ref={scrollRef}>
+            {template.id === 'jameela' && (
+              <JameelaGrid
+                filteredProducts={filteredProducts}
+                publicCategories={publicCategories}
+                publicProducts={publicProducts}
+                activeCategory={activeCategory}
+                searchQuery={searchQuery}
+                sortBy={sortBy}
+                isSearching={isSearching}
+                totalProductCount={totalProductCount}
+                onCategoryClick={handleCategoryClick}
+                onProductClick={setSelectedProduct}
+                onAddToCart={handleAddToCart}
+                getCartQuantity={getCartQuantity}
+                updateCartQuantity={updateCartQuantity}
+                onSortChange={setSortBy}
+                onSearchChange={setSearchQuery}
+                shopName={publicShop.name}
+                whatsapp={publicShop.whatsapp}
+              />
+            )}
+            {template.id === 'xstore-fashion' && (
+              <FashionGrid
+                filteredProducts={filteredProducts}
+                publicCategories={publicCategories}
+                publicProducts={publicProducts}
+                activeCategory={activeCategory}
+                searchQuery={searchQuery}
+                sortBy={sortBy}
+                isSearching={isSearching}
+                totalProductCount={totalProductCount}
+                onCategoryClick={handleCategoryClick}
+                onProductClick={setSelectedProduct}
+                onAddToCart={handleAddToCart}
+                getCartQuantity={getCartQuantity}
+                updateCartQuantity={updateCartQuantity}
+                onSortChange={setSortBy}
+                onSearchChange={setSearchQuery}
+                shopName={publicShop.name}
+                whatsapp={publicShop.whatsapp}
+              />
+            )}
+            {template.id === 'xstore-electro' && (
+              <ElectroGrid
+                filteredProducts={filteredProducts}
+                publicCategories={publicCategories}
+                publicProducts={publicProducts}
+                activeCategory={activeCategory}
+                searchQuery={searchQuery}
+                sortBy={sortBy}
+                isSearching={isSearching}
+                totalProductCount={totalProductCount}
+                onCategoryClick={handleCategoryClick}
+                onProductClick={setSelectedProduct}
+                onAddToCart={handleAddToCart}
+                getCartQuantity={getCartQuantity}
+                updateCartQuantity={updateCartQuantity}
+                onSortChange={setSortBy}
+                onSearchChange={setSearchQuery}
+                shopName={publicShop.name}
+                whatsapp={publicShop.whatsapp}
+              />
+            )}
+            {template.id === 'xstore-grocery' && (
+              <GroceryGrid
+                filteredProducts={filteredProducts}
+                publicCategories={publicCategories}
+                publicProducts={publicProducts}
+                activeCategory={activeCategory}
+                searchQuery={searchQuery}
+                sortBy={sortBy}
+                isSearching={isSearching}
+                totalProductCount={totalProductCount}
+                onCategoryClick={handleCategoryClick}
+                onProductClick={setSelectedProduct}
+                onAddToCart={handleAddToCart}
+                getCartQuantity={getCartQuantity}
+                updateCartQuantity={updateCartQuantity}
+                onSortChange={setSortBy}
+                onSearchChange={setSearchQuery}
+                shopName={publicShop.name}
+                whatsapp={publicShop.whatsapp}
+              />
+            )}
+          </div>
+        ) : (
+        <>
         {/* Category Filter */}
         {publicCategories.length > 0 && (
           <div className="flex gap-2 overflow-x-auto pb-4 mb-2 no-scrollbar">
@@ -1200,6 +1426,8 @@ function ShopContent() {
               </Button>
             )}
           </div>
+        )}
+        </>
         )}
           </motion.div>
         )}
