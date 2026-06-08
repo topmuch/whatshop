@@ -59,3 +59,15 @@ db/*.db-journal
 
 # Worklog
 worklog.md
+
+# Dev environment artifacts
+agent-ctx/
+.zscripts/
+examples/
+mini-services/
+download/
+*.png
+!public/**/*.png
+!public/**/*.jpg
+!public/**/*.svg
+!public/**/*.ico
