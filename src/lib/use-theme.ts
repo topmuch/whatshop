@@ -7,8 +7,6 @@ function subscribeToTheme(callback: () => void) {
     callback(document.documentElement.classList.contains('dark'))
   })
   observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
-  // Initial callback
-  callback(document.documentElement.classList.contains('dark'))
   return () => observer.disconnect()
 }
 
@@ -28,7 +26,8 @@ function toggleThemeStorage() {
 }
 
 export function useThemeMode() {
-  const isDark = useSyncExternalStore(getThemeSnapshot, subscribeToTheme)
+  // Correct order: subscribe first, getSnapshot second
+  const isDark = useSyncExternalStore(subscribeToTheme, getThemeSnapshot)
 
   const toggleTheme = useCallback(() => {
     toggleThemeStorage()
