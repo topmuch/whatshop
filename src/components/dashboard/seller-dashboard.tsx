@@ -16,7 +16,10 @@ import {
   Menu,
   Store,
   Sparkles,
+  Sun,
+  Moon,
 } from 'lucide-react'
+import { useThemeMode } from '@/lib/use-theme'
 import { DashboardOverview } from './dashboard-overview'
 import { DashboardProducts } from './dashboard-products'
 import { DashboardCategories } from './dashboard-categories'
@@ -36,6 +39,7 @@ const navItems: { id: DashboardTab; label: string; icon: React.ReactNode }[] = [
 
 function SidebarContent() {
   const { dashboardTab, setDashboardTab, setUser, setShop, setView, shop } = useAppStore()
+  const { isDark, toggleTheme } = useThemeMode()
 
   async function handleLogout() {
     try { await fetch('/api/auth/session', { method: 'DELETE' }) } catch { /* ignore */ }
@@ -48,7 +52,7 @@ function SidebarContent() {
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="flex items-center gap-2 px-6 py-5">
-        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary text-primary-foreground">
+        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-pink-500 text-primary-foreground">
           <Store className="h-5 w-5" />
         </div>
         <span className="text-lg font-bold text-foreground">WhatsShop</span>
@@ -72,7 +76,7 @@ function SidebarContent() {
               variant={dashboardTab === item.id ? 'secondary' : 'ghost'}
               className={`w-full justify-start gap-3 h-11 px-3 ${
                 dashboardTab === item.id
-                  ? 'bg-primary/10 text-primary font-medium hover:bg-primary/15'
+                  ? 'bg-pink-500/10 text-pink-600 font-medium hover:bg-pink-500/15'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
               onClick={() => setDashboardTab(item.id)}
@@ -83,6 +87,20 @@ function SidebarContent() {
           ))}
         </nav>
       </ScrollArea>
+
+      <Separator />
+
+      {/* Theme Toggle */}
+      <div className="px-3 py-2">
+        <Button
+          variant="ghost"
+          className="w-full justify-start gap-3 h-11 px-3 text-muted-foreground hover:text-purple-600"
+          onClick={toggleTheme}
+        >
+          {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          <span>{isDark ? 'Mode clair' : 'Mode sombre'}</span>
+        </Button>
+      </div>
 
       <Separator />
 
@@ -105,6 +123,7 @@ export function SellerDashboard() {
   const { user, shop, setUser, setView, setShop } = useAppStore()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [loading, setLoading] = useState(true)
+  const { isDark, toggleTheme } = useThemeMode()
 
   useEffect(() => {
     async function loadSession() {
@@ -134,7 +153,7 @@ export function SellerDashboard() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-muted/30">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <div className="w-10 h-10 border-4 border-pink-500 border-t-transparent rounded-full animate-spin" />
           <p className="text-sm text-muted-foreground">Chargement...</p>
         </div>
       </div>
@@ -168,10 +187,20 @@ export function SellerDashboard() {
             </SheetContent>
           </Sheet>
           <div className="flex items-center gap-2">
-            <div className="flex items-center justify-center w-7 h-7 rounded-md bg-primary text-primary-foreground">
+            <div className="flex items-center justify-center w-7 h-7 rounded-md bg-pink-500 text-primary-foreground">
               <Store className="h-4 w-4" />
             </div>
             <span className="font-semibold text-sm">{shop?.name || 'WhatsShop'}</span>
+            <div className="ml-auto">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-purple-600"
+                onClick={toggleTheme}
+              >
+                {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              </Button>
+            </div>
           </div>
         </header>
 

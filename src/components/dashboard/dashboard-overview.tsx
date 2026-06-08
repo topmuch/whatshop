@@ -47,12 +47,16 @@ function StatCard({
   value,
   badge,
   badgeColor,
+  iconBg,
+  iconColor,
 }: {
   icon: React.ReactNode
   label: string
   value: number | string
   badge?: string
   badgeColor?: string
+  iconBg?: string
+  iconColor?: string
 }) {
   return (
     <Card>
@@ -67,7 +71,7 @@ function StatCard({
               </Badge>
             )}
           </div>
-          <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 text-primary">
+          <div className={`flex items-center justify-center w-12 h-12 rounded-xl ${iconBg || 'bg-primary/10'} ${iconColor || 'text-primary'}`}>
             {icon}
           </div>
         </div>
@@ -194,16 +198,22 @@ export function DashboardOverview() {
           icon={<Package className="h-6 w-6" />}
           label="Total produits"
           value={stats?.products ?? 0}
+          iconBg="bg-blue-500/10"
+          iconColor="text-blue-600"
         />
         <StatCard
           icon={<ShoppingCart className="h-6 w-6" />}
           label="Commandes"
           value={stats?.orders ?? 0}
+          iconBg="bg-emerald-500/10"
+          iconColor="text-emerald-600"
         />
         <StatCard
           icon={<Tags className="h-6 w-6" />}
           label="Catégories"
           value={stats?.categories ?? 0}
+          iconBg="bg-amber-500/10"
+          iconColor="text-amber-600"
         />
         <StatCard
           icon={<Crown className="h-6 w-6" />}
@@ -211,6 +221,8 @@ export function DashboardOverview() {
           value={planInfo.label}
           badge={planInfo.label}
           badgeColor={planInfo.color}
+          iconBg="bg-purple-500/10"
+          iconColor="text-purple-600"
         />
       </div>
 

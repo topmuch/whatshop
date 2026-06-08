@@ -61,7 +61,7 @@ export function TemplateProvider({ templateId, children }: TemplateProviderProps
 
   return (
     <TemplateContext.Provider value={contextValue}>
-      <div style={cssVars} className="min-h-screen" data-template={template.id}>
+      <div style={cssVars} data-template={template.id}>
         {children}
       </div>
     </TemplateContext.Provider>

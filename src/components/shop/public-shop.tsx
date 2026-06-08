@@ -360,6 +360,8 @@ function ShopContent() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [sortBy, setSortBy] = useState<SortOption>('recent')
   const [cartExpanded, setCartExpanded] = useState(false)
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  const [detailQty, setDetailQty] = useState(1)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const fetchShop = useCallback(async () => {
@@ -437,6 +439,23 @@ function ShopContent() {
     scrollRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
+  // Scroll to top & reset qty when selecting a product
+  useEffect(() => {
+    if (selectedProduct) {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      setDetailQty(1)
+    }
+  }, [selectedProduct])
+
+  function handleSingleProductWhatsApp(product: Product, qty: number) {
+    if (!publicShop) return
+    const itemText = `\ud83d\uded2 ${product.name} x${qty} \u2014 ${(product.price * qty).toLocaleString('fr-FR')} FCFA`
+    const msg = `Bonjour ${publicShop.name} ! \ud83d\udc4b\n\nJe souhaite commander :\n\n${itemText}\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcb0 Total : ${(product.price * qty).toLocaleString('fr-FR')} FCFA\n\n\ud83d\udcdd Mes informations :\nNom :\nAdresse :\nT\u00e9l\u00e9phone :\n\nMerci ! \ud83d\ude4f`
+    const encoded = encodeURIComponent(msg)
+    const phone = publicShop.whatsapp?.replace(/\D/g, '') || ''
+    window.open(`https://wa.me/${phone}?text=${encoded}`, '_blank')
+  }
+
   // Template-specific icon for header
   const templateIcon = useMemo(() => {
     const icons: Record<string, React.ReactNode> = {
@@ -498,7 +517,7 @@ function ShopContent() {
   const isSearching = searchQuery.trim().length > 0
 
   return (
-    <div className="min-h-screen pb-20 relative" style={{ background: 'var(--tpl-bg)', color: 'var(--tpl-text)' }}>
+    <div className="min-h-0 pb-20 relative" style={{ background: 'var(--tpl-bg)', color: 'var(--tpl-text)' }}>
       {/* Decorative background pattern */}
       <DecorativeBackground pattern={decorative.pattern} gradientBg={decorative.gradientBg} />
 
@@ -511,7 +530,7 @@ function ShopContent() {
         }}
       >
         <div className="max-w-5xl mx-auto px-4 py-2.5 flex items-center gap-3">
-          <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => setView('landing')}>
+          <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => selectedProduct ? setSelectedProduct(null) : setView('landing')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
 
@@ -736,7 +755,143 @@ function ShopContent() {
       <DecorativeDivider style={decorative.divider} />
 
       {/* ─── Main Content ─── */}
-      <div className="max-w-5xl mx-auto px-4 pt-4 relative z-10" ref={scrollRef}>
+      <AnimatePresence mode="wait">
+        {selectedProduct ? (
+          <motion.div
+            key="product-detail"
+            initial={{ opacity: 0, x: 40 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -40 }}
+            transition={{ duration: 0.25 }}
+            className="max-w-3xl mx-auto px-4 pt-4 pb-24 relative z-10"
+          >
+            {/* Back button */}
+            <button
+              onClick={() => setSelectedProduct(null)}
+              className="flex items-center gap-2 text-sm font-medium mb-4 transition-colors hover:opacity-80"
+              style={{ color: 'var(--tpl-primary)' }}
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Retour à la boutique
+            </button>
+
+            {/* Product image */}
+            <div className="aspect-[4/3] rounded-xl overflow-hidden bg-muted mb-6" style={{ borderRadius: 'var(--tpl-card-rounded)' }}>
+              {selectedProduct.image ? (
+                <img src={selectedProduct.image} alt={selectedProduct.name} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
+                  <Package className="h-16 w-16 text-muted-foreground/20" />
+                </div>
+              )}
+            </div>
+
+            {/* Badges + Name + Price */}
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                {selectedProduct.categoryName && (
+                  <Badge className="text-xs" style={{ background: 'var(--tpl-primary)', color: 'var(--tpl-primary-fg)' }}>
+                    {selectedProduct.categoryName}
+                  </Badge>
+                )}
+                {isProductNew(selectedProduct.createdAt) && (
+                  <Badge className="text-xs" style={{ background: 'var(--tpl-badge-new)', color: '#fff' }}>
+                    Nouveau
+                  </Badge>
+                )}
+                {isProductPromo(selectedProduct.price) && !isProductNew(selectedProduct.createdAt) && (
+                  <Badge className="text-xs" style={{ background: 'var(--tpl-badge-promo)', color: '#fff' }}>
+                    Promo
+                  </Badge>
+                )}
+              </div>
+              <h1 className="text-2xl font-bold mb-2" style={{ color: 'var(--tpl-text)' }}>
+                {selectedProduct.name}
+              </h1>
+              <p className="text-2xl font-bold" style={{ color: 'var(--tpl-price)' }}>
+                {formatPrice(selectedProduct.price)}
+              </p>
+            </div>
+
+            {/* Description */}
+            {selectedProduct.description && (
+              <div className="mb-6">
+                <h3 className="text-sm font-semibold mb-2" style={{ color: 'var(--tpl-text)' }}>Description</h3>
+                <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--tpl-text-muted)' }}>
+                  {selectedProduct.description}
+                </p>
+              </div>
+            )}
+
+            {/* Stock info */}
+            {selectedProduct.stock !== undefined && selectedProduct.stock !== null && (
+              <div className="mb-6 flex items-center gap-2 text-sm" style={{ color: 'var(--tpl-text-muted)' }}>
+                {selectedProduct.stock > 0 ? (
+                  selectedProduct.stock <= 3 ? (
+                    <>
+                      <AlertTriangle className="h-4 w-4 text-amber-500" />
+                      <span className="text-amber-600 font-medium">Plus que {selectedProduct.stock} en stock</span>
+                    </>
+                  ) : (
+                    <span>En stock ({selectedProduct.stock} disponibles)</span>
+                  )
+                ) : (
+                  <span className="text-red-500 font-medium">Rupture de stock</span>
+                )}
+              </div>
+            )}
+
+            {/* Add to cart section */}
+            <div className="mb-4 p-4 rounded-xl" style={{ background: 'var(--tpl-card)', border: '1px solid var(--tpl-border)' }}>
+              <p className="text-sm font-semibold mb-3" style={{ color: 'var(--tpl-text)' }}>Quantité</p>
+              <div className="flex items-center gap-4 mb-4">
+                <div className="flex items-center gap-1 rounded-lg p-1" style={{ border: '1px solid var(--tpl-border)' }}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setDetailQty(Math.max(1, detailQty - 1))}>
+                    <Minus className="h-4 w-4" />
+                  </Button>
+                  <span className="text-base font-semibold min-w-[32px] text-center">{detailQty}</span>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setDetailQty(detailQty + 1)}>
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                <span className="text-lg font-bold" style={{ color: 'var(--tpl-price)' }}>
+                  {formatPrice(selectedProduct.price * detailQty)}
+                </span>
+              </div>
+              <Button
+                className="w-full h-12 gap-2 text-sm font-semibold"
+                style={{ background: 'var(--tpl-cta-bg)', color: 'var(--tpl-cta-fg)' }}
+                disabled={selectedProduct.stock !== undefined && selectedProduct.stock !== null && selectedProduct.stock === 0}
+                onClick={() => {
+                  addToCart({ productId: selectedProduct.id, name: selectedProduct.name, price: selectedProduct.price, image: selectedProduct.image || undefined, quantity: detailQty })
+                  toast.success(`${selectedProduct.name} (x${detailQty}) ajouté au panier`)
+                }}
+              >
+                <ShoppingCart className="h-5 w-5" />
+                Ajouter au panier
+              </Button>
+            </div>
+
+            {/* WhatsApp order button */}
+            <Button
+              className="w-full h-12 gap-2 text-sm font-semibold"
+              style={{ background: '#25D366', color: '#ffffff' }}
+              onClick={() => handleSingleProductWhatsApp(selectedProduct, detailQty)}
+            >
+              <MessageCircle className="h-5 w-5" />
+              Commander sur WhatsApp
+            </Button>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="product-grid"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="max-w-5xl mx-auto px-4 pt-4 relative z-10"
+            ref={scrollRef}
+          >
         {/* Category Filter */}
         {publicCategories.length > 0 && (
           <div className="flex gap-2 overflow-x-auto pb-4 mb-2 no-scrollbar">
@@ -805,7 +960,8 @@ function ShopContent() {
                   whileHover={{ scale: cardStyle.hoverScale, transition: { duration: 0.2 } }}
                 >
                   <Card
-                    className="group h-full flex flex-col transition-all duration-300"
+                    className="group h-full flex flex-col transition-all duration-300 cursor-pointer"
+                    onClick={() => setSelectedProduct(product)}
                     style={{
                       background: 'var(--tpl-card)',
                       borderRadius: cardStyle.rounded,
@@ -872,7 +1028,7 @@ function ShopContent() {
 
                         <div className="mt-2">
                           {qty === 0 ? (
-                            <TemplateCtaButton onClick={() => handleAddToCart(product)} style={layout.buttonStyle}>
+                            <TemplateCtaButton onClick={(e) => { e.stopPropagation(); handleAddToCart(product) }} style={layout.buttonStyle}>
                               <Plus className="h-3 w-3" />
                               Ajouter
                             </TemplateCtaButton>
@@ -885,7 +1041,7 @@ function ShopContent() {
                                 variant="ghost"
                                 size="icon"
                                 className="h-7 w-7 shrink-0"
-                                onClick={() => updateCartQuantity(product.id, qty - 1)}
+                                onClick={(e) => { e.stopPropagation(); updateCartQuantity(product.id, qty - 1) }}
                               >
                                 {qty === 1 ? <Trash2 className="h-3 w-3 text-destructive" /> : <Minus className="h-3 w-3" />}
                               </Button>
@@ -894,7 +1050,7 @@ function ShopContent() {
                                 variant="ghost"
                                 size="icon"
                                 className="h-7 w-7 shrink-0"
-                                onClick={() => updateCartQuantity(product.id, qty + 1)}
+                                onClick={(e) => { e.stopPropagation(); updateCartQuantity(product.id, qty + 1) }}
                               >
                                 <Plus className="h-3 w-3" />
                               </Button>
@@ -930,7 +1086,9 @@ function ShopContent() {
             )}
           </div>
         )}
-      </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ─── Cart Bar ─── */}
       <AnimatePresence>

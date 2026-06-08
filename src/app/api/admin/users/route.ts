@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import bcrypt from 'bcryptjs'
 
 export async function GET(request: NextRequest) {
   try {
@@ -59,6 +60,55 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error('Admin users error:', error)
+    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const userEmail = request.cookies.get('whatsshop-user')?.value
+    if (!userEmail) {
+      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+    }
+    const admin = await db.user.findUnique({ where: { email: userEmail } })
+    if (!admin || admin.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+    }
+
+    const body = await request.json()
+    const { name, email, password } = body
+
+    if (!name || !email || !password) {
+      return NextResponse.json({ error: 'Nom, email et mot de passe requis' }, { status: 400 })
+    }
+
+    const existing = await db.user.findUnique({ where: { email } })
+    if (existing) {
+      return NextResponse.json({ error: 'Un utilisateur avec cet email existe déjà' }, { status: 409 })
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10)
+
+    const user = await db.user.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        role: 'SELLER',
+      },
+    })
+
+    return NextResponse.json({
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        createdAt: user.createdAt.toISOString(),
+      },
+    })
+  } catch (error) {
+    console.error('Admin create user error:', error)
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
   }
 }

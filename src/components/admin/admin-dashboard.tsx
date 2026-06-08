@@ -54,15 +54,29 @@ import {
   Search,
   Power,
   Trash2,
+  Plus,
+  UserPlus,
+  Sun,
+  Moon,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
+import { useThemeMode } from '@/lib/use-theme'
 import { Bar, BarChart, XAxis, YAxis, CartesianGrid } from 'recharts'
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -153,6 +167,7 @@ const navItems: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
 
 function AdminSidebarContent() {
   const { adminTab, setAdminTab, user, setUser, setShop, setView } = useAppStore()
+  const { isDark, toggleTheme } = useThemeMode()
 
   async function handleLogout() {
     try { await fetch('/api/auth/session', { method: 'DELETE' }) } catch { /* ignore */ }
@@ -165,7 +180,7 @@ function AdminSidebarContent() {
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="flex items-center gap-2 px-6 py-5">
-        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-destructive text-destructive-foreground">
+        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-600 text-destructive-foreground">
           <Shield className="h-5 w-5" />
         </div>
         <span className="text-lg font-bold text-foreground">WhatsShop Admin</span>
@@ -176,7 +191,7 @@ function AdminSidebarContent() {
       {/* Admin info */}
       <div className="px-6 py-3">
         <p className="text-sm font-medium truncate">{user?.name || 'Admin'}</p>
-        <Badge variant="destructive" className="mt-1 text-[10px]">
+        <Badge className="mt-1 text-[10px] bg-blue-100 text-blue-700 hover:bg-blue-100">
           ADMIN
         </Badge>
       </div>
@@ -190,7 +205,7 @@ function AdminSidebarContent() {
               variant={adminTab === item.id ? 'secondary' : 'ghost'}
               className={`w-full justify-start gap-3 h-11 px-3 ${
                 adminTab === item.id
-                  ? 'bg-destructive/10 text-destructive font-medium hover:bg-destructive/15'
+                  ? 'bg-blue-500/10 text-blue-600 font-medium hover:bg-blue-500/15'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
               onClick={() => setAdminTab(item.id)}
@@ -204,11 +219,25 @@ function AdminSidebarContent() {
 
       <Separator />
 
+      {/* Theme Toggle */}
+      <div className="px-3 py-2">
+        <Button
+          variant="ghost"
+          className="w-full justify-start gap-3 h-11 px-3 text-muted-foreground hover:text-purple-600"
+          onClick={toggleTheme}
+        >
+          {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          <span>{isDark ? 'Mode clair' : 'Mode sombre'}</span>
+        </Button>
+      </div>
+
+      <Separator />
+
       {/* Logout */}
       <div className="px-3 py-4">
         <Button
           variant="ghost"
-          className="w-full justify-start gap-3 h-11 px-3 text-muted-foreground hover:text-destructive"
+          className="w-full justify-start gap-3 h-11 px-3 text-muted-foreground hover:text-blue-600"
           onClick={handleLogout}
         >
           <LogOut className="h-5 w-5" />
@@ -225,6 +254,7 @@ export function AdminDashboard() {
   const { user, setUser, setView, setShop } = useAppStore()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [loading, setLoading] = useState(true)
+  const { isDark, toggleTheme } = useThemeMode()
 
   useEffect(() => {
     async function loadSession() {
@@ -255,7 +285,7 @@ export function AdminDashboard() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-muted/30">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-4 border-destructive border-t-transparent rounded-full animate-spin" />
+          <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
           <p className="text-sm text-muted-foreground">Chargement...</p>
         </div>
       </div>
@@ -284,10 +314,20 @@ export function AdminDashboard() {
             </SheetContent>
           </Sheet>
           <div className="flex items-center gap-2">
-            <div className="flex items-center justify-center w-7 h-7 rounded-md bg-destructive text-destructive-foreground">
+            <div className="flex items-center justify-center w-7 h-7 rounded-md bg-blue-600 text-white">
               <Shield className="h-4 w-4" />
             </div>
             <span className="font-semibold text-sm">Administration</span>
+            <div className="ml-auto">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-purple-600"
+                onClick={toggleTheme}
+              >
+                {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              </Button>
+            </div>
           </div>
         </header>
 
@@ -512,6 +552,11 @@ function AdminUsers() {
   const [users, setUsers] = useState<AdminUser[]>([])
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
+  const [showCreateUser, setShowCreateUser] = useState(false)
+  const [newUserName, setNewUserName] = useState('')
+  const [newUserEmail, setNewUserEmail] = useState('')
+  const [newUserPassword, setNewUserPassword] = useState('')
+  const [creatingUser, setCreatingUser] = useState(false)
 
   const loadUsers = useCallback(async (searchTerm: string) => {
     setLoading(true)
@@ -534,9 +579,45 @@ function AdminUsers() {
     loadUsers(search)
   }, [search, loadUsers])
 
+  async function handleCreateUser() {
+    if (!newUserName.trim() || !newUserEmail.trim() || !newUserPassword.trim()) {
+      toast.error('Veuillez remplir tous les champs')
+      return
+    }
+    setCreatingUser(true)
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newUserName, email: newUserEmail, password: newUserPassword }),
+      })
+      if (res.ok) {
+        toast.success('Utilisateur créé avec succès')
+        setShowCreateUser(false)
+        setNewUserName('')
+        setNewUserEmail('')
+        setNewUserPassword('')
+        loadUsers(search)
+      } else {
+        const data = await res.json()
+        toast.error(data.error || 'Erreur lors de la création')
+      }
+    } catch {
+      toast.error('Erreur lors de la création')
+    } finally {
+      setCreatingUser(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Utilisateurs</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Utilisateurs</h2>
+        <Button onClick={() => setShowCreateUser(true)} className="bg-blue-600 hover:bg-blue-700">
+          <UserPlus className="h-4 w-4 mr-2" />
+          Créer un utilisateur
+        </Button>
+      </div>
 
       {/* Search */}
       <div className="relative max-w-sm">
@@ -601,6 +682,54 @@ function AdminUsers() {
           </CardContent>
         </Card>
       )}
+
+      {/* Create User Dialog */}
+      <Dialog open={showCreateUser} onOpenChange={setShowCreateUser}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Créer un utilisateur</DialogTitle>
+            <DialogDescription>Créez un nouveau compte vendeur sur la plateforme.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="create-user-name">Nom</Label>
+              <Input
+                id="create-user-name"
+                placeholder="Nom complet"
+                value={newUserName}
+                onChange={(e) => setNewUserName(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="create-user-email">Email</Label>
+              <Input
+                id="create-user-email"
+                type="email"
+                placeholder="email@exemple.com"
+                value={newUserEmail}
+                onChange={(e) => setNewUserEmail(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="create-user-password">Mot de passe</Label>
+              <Input
+                id="create-user-password"
+                type="password"
+                placeholder="Mot de passe"
+                value={newUserPassword}
+                onChange={(e) => setNewUserPassword(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCreateUser(false)}>Annuler</Button>
+            <Button onClick={handleCreateUser} disabled={creatingUser} className="bg-blue-600 hover:bg-blue-700">
+              {creatingUser && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Créer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
@@ -613,6 +742,21 @@ function AdminShops() {
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [togglingId, setTogglingId] = useState<string | null>(null)
+  const [showCreateShop, setShowCreateShop] = useState(false)
+  const [newShopName, setNewShopName] = useState('')
+  const [newShopSlug, setNewShopSlug] = useState('')
+  const [newShopWhatsapp, setNewShopWhatsapp] = useState('')
+  const [newShopOwnerId, setNewShopOwnerId] = useState('')
+  const [creatingShop, setCreatingShop] = useState(false)
+
+  function generateSlug(name: string) {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '')
+  }
 
   const loadShops = useCallback(async (p: string, s: string) => {
     setLoading(true)
@@ -669,9 +813,46 @@ function AdminShops() {
     }
   }
 
+  async function handleCreateShop() {
+    if (!newShopName.trim() || !newShopSlug.trim() || !newShopWhatsapp.trim() || !newShopOwnerId.trim()) {
+      toast.error('Veuillez remplir tous les champs')
+      return
+    }
+    setCreatingShop(true)
+    try {
+      const res = await fetch('/api/admin/shops', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newShopName, slug: newShopSlug, whatsapp: newShopWhatsapp, ownerId: newShopOwnerId }),
+      })
+      if (res.ok) {
+        toast.success('Boutique créée avec succès')
+        setShowCreateShop(false)
+        setNewShopName('')
+        setNewShopSlug('')
+        setNewShopWhatsapp('')
+        setNewShopOwnerId('')
+        loadShops(planFilter, search)
+      } else {
+        const data = await res.json()
+        toast.error(data.error || 'Erreur lors de la création')
+      }
+    } catch {
+      toast.error('Erreur lors de la création')
+    } finally {
+      setCreatingShop(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Boutiques</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Boutiques</h2>
+        <Button onClick={() => setShowCreateShop(true)} className="bg-blue-600 hover:bg-blue-700">
+          <Plus className="h-4 w-4 mr-2" />
+          Créer une boutique
+        </Button>
+      </div>
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
@@ -800,6 +981,64 @@ function AdminShops() {
           </CardContent>
         </Card>
       )}
+
+      {/* Create Shop Dialog */}
+      <Dialog open={showCreateShop} onOpenChange={setShowCreateShop}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Créer une boutique</DialogTitle>
+            <DialogDescription>Créez une nouvelle boutique pour un vendeur.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="create-shop-name">Nom de la boutique</Label>
+              <Input
+                id="create-shop-name"
+                placeholder="Ma boutique"
+                value={newShopName}
+                onChange={(e) => {
+                  setNewShopName(e.target.value)
+                  setNewShopSlug(generateSlug(e.target.value))
+                }}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="create-shop-slug">Slug</Label>
+              <Input
+                id="create-shop-slug"
+                placeholder="ma-boutique"
+                value={newShopSlug}
+                onChange={(e) => setNewShopSlug(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="create-shop-whatsapp">Numéro WhatsApp</Label>
+              <Input
+                id="create-shop-whatsapp"
+                placeholder="+225 XX XX XX XX"
+                value={newShopWhatsapp}
+                onChange={(e) => setNewShopWhatsapp(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="create-shop-owner">ID du propriétaire (userId)</Label>
+              <Input
+                id="create-shop-owner"
+                placeholder="clxxxxxxxxxxxxx"
+                value={newShopOwnerId}
+                onChange={(e) => setNewShopOwnerId(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCreateShop(false)}>Annuler</Button>
+            <Button onClick={handleCreateShop} disabled={creatingShop} className="bg-blue-600 hover:bg-blue-700">
+              {creatingShop && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Créer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
