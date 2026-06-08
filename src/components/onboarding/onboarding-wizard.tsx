@@ -35,9 +35,9 @@ import {
 
 const sectorTemplateMap: Record<string, TemplateId> = {
   beaute: 'jameela',
-  mode: 'africa',
-  electronique: 'neon',
-  alimentation: 'classic',
+  mode: 'xstore-fashion',
+  electronique: 'xstore-electro',
+  alimentation: 'xstore-grocery',
   artisanat: 'elegant',
   sport: 'ocean',
   bijoux: 'elegant',
@@ -350,6 +350,7 @@ export function OnboardingWizard() {
                   setSelectedSector={setSelectedSector}
                   logoPreview={logoPreview}
                   onLogoUpload={handleLogoUpload}
+                  assignedTemplate={assignedTemplate}
                 />
               </motion.div>
             )}
@@ -567,6 +568,7 @@ function StepInfo({
   setSelectedSector,
   logoPreview,
   onLogoUpload,
+  assignedTemplate,
 }: {
   shopName: string
   setShopName: (v: string) => void
@@ -578,6 +580,7 @@ function StepInfo({
   setSelectedSector: (v: string) => void
   logoPreview: string | null
   onLogoUpload: (e: React.ChangeEvent<HTMLInputElement>) => void
+  assignedTemplate: { id: string; name: string; emoji: string; description: string; colors: { primary: string; accent: string } }
 }) {
   const previewSlug = shopName
     ? shopName
@@ -738,7 +741,7 @@ function StepInfo({
                 </span>
               </Label>
               <p className="text-xs text-muted-foreground">
-                Le thème sera choisi automatiquement selon votre secteur
+                Chaque secteur est associé à un thème adapté à votre activité
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                 {sectors.map((sector) => {
@@ -751,30 +754,79 @@ function StepInfo({
                       type="button"
                       whileTap={{ scale: 0.95 }}
                       onClick={() => setSelectedSector(sector.id)}
-                      className={`relative p-3 rounded-xl border-2 text-center transition-all duration-200 ${
+                      className={`relative p-3 rounded-xl border-2 text-center transition-all duration-200 overflow-hidden ${
                         isSelected
-                          ? 'border-primary bg-primary/5 shadow-md shadow-primary/10'
+                          ? 'shadow-lg'
                           : 'border-border/50 hover:border-primary/30 hover:bg-muted/50'
                       }`}
+                      style={{
+                        borderColor: isSelected ? tpl.colors.primary : undefined,
+                        background: isSelected ? `${tpl.colors.primary}08` : undefined,
+                        boxShadow: isSelected ? `0 4px 14px ${tpl.colors.primary}20` : undefined,
+                      }}
                     >
+                      {/* Color accent bar at top */}
+                      <div
+                        className="absolute top-0 left-0 right-0 h-0.5 opacity-0 transition-opacity duration-200"
+                        style={{
+                          backgroundColor: tpl.colors.primary,
+                          opacity: isSelected ? 1 : 0,
+                        }}
+                      />
                       <span className="text-xl sm:text-2xl block">{sector.emoji}</span>
-                      <span className={`text-[10px] sm:text-xs font-medium mt-1 block leading-tight ${
-                        isSelected ? 'text-primary' : 'text-foreground/80'
-                      }`}>
+                      <span className={`text-[10px] sm:text-xs font-medium mt-1 block leading-tight transition-colors duration-200 ${
+                        isSelected ? '' : 'text-foreground/80'
+                      }`} style={{ color: isSelected ? tpl.colors.primary : undefined }}>
                         {sector.label.split(' & ')[0]}
                       </span>
+                      {/* Theme name badge */}
                       {isSelected && (
-                        <div
-                          className="absolute top-1 right-1 w-4 h-4 rounded-full flex items-center justify-center text-[8px] text-white"
-                          style={{ backgroundColor: tpl.colors.primary }}
-                        >
-                          <Check className="w-2.5 h-2.5" />
+                        <div className="mt-1.5 flex items-center justify-center gap-1">
+                          <span className="text-xs">{tpl.emoji}</span>
+                          <span
+                            className="text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full"
+                            style={{
+                              backgroundColor: `${tpl.colors.primary}18`,
+                              color: tpl.colors.primary,
+                            }}
+                          >
+                            {tpl.name}
+                          </span>
                         </div>
                       )}
                     </motion.button>
                   )
                 })}
               </div>
+              {/* Selected theme preview */}
+              {selectedSector && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-muted/30"
+                >
+                  <div
+                    className="flex items-center justify-center w-10 h-10 rounded-lg text-lg shrink-0"
+                    style={{ backgroundColor: `${assignedTemplate.colors.primary}15` }}
+                  >
+                    {assignedTemplate.emoji}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">Thème {assignedTemplate.name}</p>
+                    <p className="text-xs text-muted-foreground truncate">{assignedTemplate.description}</p>
+                  </div>
+                  <div className="ml-auto flex items-center gap-1.5 shrink-0">
+                    <div
+                      className="w-4 h-4 rounded-full border border-border/40"
+                      style={{ backgroundColor: assignedTemplate.colors.primary }}
+                    />
+                    <div
+                      className="w-4 h-4 rounded-full border border-border/40"
+                      style={{ backgroundColor: assignedTemplate.colors.accent }}
+                    />
+                  </div>
+                </motion.div>
+              )}
             </div>
           </div>
         </Card>
