@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import QRCode from 'qrcode'
 
 export async function POST(request: NextRequest) {
   try {
@@ -8,17 +9,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'URL requise' }, { status: 400 })
     }
 
-    // Use a free QR code API to generate SVG
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(url)}&format=svg&color=25D366&bgcolor=FFFFFF`
+    // Generate QR code as PNG buffer
+    const qrBuffer: Buffer = await QRCode.toBuffer(url, {
+      type: 'png',
+      width: 600,
+      margin: 2,
+      color: {
+        dark: '#1a1a2e',   // Dark foreground
+        light: '#FFFFFF',  // White background
+      },
+      errorCorrectionLevel: 'H', // High - best for scanning
+    })
 
-    const response = await fetch(qrUrl)
-    if (!response.ok) {
-      return NextResponse.json({ error: 'Erreur lors de la génération du QR code' }, { status: 500 })
-    }
+    // Convert buffer to base64 data URL
+    const base64 = qrBuffer.toString('base64')
+    const dataUrl = `data:image/png;base64,${base64}`
 
-    const svg = await response.text()
-
-    return NextResponse.json({ svg, url, shopName: shopName || '' })
+    return NextResponse.json({
+      dataUrl,
+      url,
+      shopName: shopName || '',
+    })
   } catch (error) {
     console.error('QR code generation error:', error)
     return NextResponse.json({ error: 'Erreur lors de la génération du QR code' }, { status: 500 })

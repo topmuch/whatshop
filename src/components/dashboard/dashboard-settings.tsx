@@ -58,7 +58,7 @@ export function DashboardSettings() {
   const { shop, setShop } = useAppStore()
   const [saving, setSaving] = useState(false)
   const [productCount, setProductCount] = useState(0)
-  const [qrSvg, setQrSvg] = useState<string | null>(null)
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
   const [qrLoading, setQrLoading] = useState(false)
 
   // Shop form state
@@ -105,39 +105,45 @@ export function DashboardSettings() {
       })
       if (res.ok) {
         const data = await res.json()
-        setQrSvg(data.svg)
+        setQrDataUrl(data.dataUrl)
       }
     } catch {
-      // fallback: generate via direct URL
+      // fallback
     } finally {
       setQrLoading(false)
     }
   }
 
   function downloadQrCode() {
-    if (!qrSvg || !shop) return
-    // Convert SVG to PNG using canvas
-    const svgBlob = new Blob([qrSvg], { type: 'image/svg+xml;charset=utf-8' })
-    const url = URL.createObjectURL(svgBlob)
+    if (!qrDataUrl || !shop) return
     const img = new Image()
+    img.crossOrigin = 'anonymous'
     img.onload = () => {
       const canvas = document.createElement('canvas')
       canvas.width = 800
-      canvas.height = 800
+      canvas.height = 900
       const ctx = canvas.getContext('2d')
       if (!ctx) return
       // White background
       ctx.fillStyle = '#FFFFFF'
-      ctx.fillRect(0, 0, 800, 800)
-      // Center the QR code
-      const padding = 60
-      const qrSize = 800 - padding * 2
-      ctx.drawImage(img, padding, padding, qrSize, qrSize)
-      // Add shop name at bottom
-      ctx.fillStyle = '#25D366'
-      ctx.font = 'bold 32px system-ui, sans-serif'
+      ctx.fillRect(0, 0, 800, 900)
+      // Draw QR code centered at top
+      const qrSize = 600
+      const offsetX = (800 - qrSize) / 2
+      ctx.drawImage(img, offsetX, 60, qrSize, qrSize)
+      // Draw shop name below QR code
+      ctx.fillStyle = '#1a1a2e'
+      ctx.font = 'bold 28px system-ui, -apple-system, sans-serif'
       ctx.textAlign = 'center'
-      ctx.fillText(shop.name, 400, 780 - 20)
+      ctx.fillText(shop.name, 400, 720)
+      // Draw URL below name
+      ctx.fillStyle = '#6b7280'
+      ctx.font = '18px monospace'
+      ctx.fillText(`whatsshop.com/${shop.slug}`, 400, 760)
+      // Draw WhatsApp branding
+      ctx.fillStyle = '#25D366'
+      ctx.font = '14px system-ui, -apple-system, sans-serif'
+      ctx.fillText('Propulsé par WhatsShop', 400, 800)
       // Download
       canvas.toBlob((blob) => {
         if (!blob) return
@@ -147,10 +153,9 @@ export function DashboardSettings() {
         a.download = `qr-${shop.slug}.png`
         a.click()
         URL.revokeObjectURL(pngUrl)
-        URL.revokeObjectURL(url)
       }, 'image/png')
     }
-    img.src = url
+    img.src = qrDataUrl
   }
 
   async function handleSave() {
@@ -462,9 +467,9 @@ export function DashboardSettings() {
                 <div className="w-48 h-48 rounded-2xl border-2 border-dashed border-muted-foreground/20 flex items-center justify-center bg-muted/30">
                   <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                 </div>
-              ) : qrSvg ? (
-                <div className="w-48 h-48 rounded-2xl bg-white border shadow-sm flex items-center justify-center p-4 hover:shadow-md transition-shadow">
-                  <div dangerouslySetInnerHTML={{ __html: qrSvg }} className="w-full h-full [&>svg]:w-full [&>svg]:h-full" />
+              ) : qrDataUrl ? (
+                <div className="w-48 h-48 rounded-2xl bg-white border shadow-sm flex items-center justify-center p-3 hover:shadow-md transition-shadow">
+                  <img src={qrDataUrl} alt="QR Code de la boutique" className="w-full h-full object-contain" />
                 </div>
               ) : (
                 <div className="w-48 h-48 rounded-2xl border-2 border-dashed border-muted-foreground/20 flex flex-col items-center justify-center gap-2 bg-muted/30">
@@ -490,7 +495,7 @@ export function DashboardSettings() {
                   size="sm"
                   className="gap-2"
                   onClick={downloadQrCode}
-                  disabled={!qrSvg}
+                  disabled={!qrDataUrl}
                 >
                   <Download className="h-4 w-4" />
                   Télécharger PNG
