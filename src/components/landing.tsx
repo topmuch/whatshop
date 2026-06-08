@@ -128,20 +128,31 @@ function Header() {
         <Logo />
 
         {/* Desktop nav */}
-        <nav className="hidden lg:flex items-center gap-9">
+        <nav className="hidden lg:flex items-center gap-8">
           {[
-            { label: 'Fonctionnalités', href: '#fonctionnalites' },
-            { label: 'Comment ça marche', href: '#etapes' },
-            { label: 'Tarifs', href: '#tarifs' },
-            { label: 'Témoignages', href: '#temoignages' },
+            { label: 'Fonctionnalités', href: '#fonctionnalites', view: undefined },
+            { label: 'Comment ça marche', href: '#etapes', view: undefined },
+            { label: 'Tarifs', href: null, view: 'pricing' as const },
+            { label: 'À propos', href: null, view: 'about' as const },
+            { label: 'Contact', href: null, view: 'contact' as const },
           ].map((item) => (
-            <a
-              key={item.href}
-              href={item.href}
-              className="text-[14px] font-medium text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              {item.label}
-            </a>
+            item.view ? (
+              <button
+                key={item.view}
+                onClick={() => setView(item.view!)}
+                className="text-[14px] font-medium text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                {item.label}
+              </button>
+            ) : (
+              <a
+                key={item.href}
+                href={item.href}
+                className="text-[14px] font-medium text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                {item.label}
+              </a>
+            )
           ))}
         </nav>
 
@@ -174,19 +185,30 @@ function Header() {
             </SheetTitle>
             <nav className="flex flex-col gap-4">
               {[
-                { label: 'Fonctionnalités', href: '#fonctionnalites' },
-                { label: 'Comment ça marche', href: '#etapes' },
-                { label: 'Tarifs', href: '#tarifs' },
-                { label: 'Témoignages', href: '#temoignages' },
+                { label: 'Fonctionnalités', href: '#fonctionnalites', view: undefined },
+                { label: 'Comment ça marche', href: '#etapes', view: undefined },
+                { label: 'Tarifs', href: null, view: 'pricing' as const },
+                { label: 'À propos', href: null, view: 'about' as const },
+                { label: 'Contact', href: null, view: 'contact' as const },
               ].map((item) => (
-                <a
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMobileOpen(false)}
-                  className="text-base font-medium text-gray-600 hover:text-gray-900 transition-colors py-2"
-                >
-                  {item.label}
-                </a>
+                item.view ? (
+                  <button
+                    key={item.view}
+                    onClick={() => { setMobileOpen(false); setView(item.view!) }}
+                    className="text-base font-medium text-gray-600 hover:text-gray-900 transition-colors py-2 text-left"
+                  >
+                    {item.label}
+                  </button>
+                ) : (
+                  <a
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileOpen(false)}
+                    className="text-base font-medium text-gray-600 hover:text-gray-900 transition-colors py-2"
+                  >
+                    {item.label}
+                  </a>
+                )
               ))}
               <Separator />
               <Button
@@ -1044,6 +1066,8 @@ function CTASection() {
 
 /* ──────────────────────────── FOOTER ──────────────────────────── */
 function Footer() {
+  const { setView } = useAppStore()
+
   return (
     <footer className="mt-auto" style={{ backgroundColor: DARK_BG }}>
       {/* Top border accent */}
@@ -1062,7 +1086,7 @@ function Footer() {
               <a href="#" className="w-9 h-9 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] flex items-center justify-center transition-colors">
                 <Instagram className="w-4 h-4 text-white/60" />
               </a>
-              <a href="#" className="w-9 h-9 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] flex items-center justify-center transition-colors">
+              <a href="https://wa.me/2217848582226" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] flex items-center justify-center transition-colors">
                 <MessageCircle className="w-4 h-4 text-white/60" />
               </a>
               <a href="#" className="w-9 h-9 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] flex items-center justify-center transition-colors">
@@ -1076,15 +1100,14 @@ function Footer() {
             <h4 className="font-semibold text-white text-sm mb-5">PRODUIT</h4>
             <ul className="space-y-3">
               {[
-                { label: 'Fonctionnalités', href: '#fonctionnalites' },
-                { label: 'Tarifs', href: '#tarifs' },
-                { label: 'Thèmes', href: '#fonctionnalites' },
-                { label: 'FAQ', href: '#' },
+                { label: 'Fonctionnalités', action: () => setView('landing') },
+                { label: 'Tarifs', action: () => setView('pricing') },
+                { label: 'FAQ', action: () => setView('faq') },
               ].map((item) => (
                 <li key={item.label}>
-                  <a href={item.href} className="text-sm text-white/50 hover:text-white/80 transition-colors">
+                  <button onClick={item.action} className="text-sm text-white/50 hover:text-white/80 transition-colors">
                     {item.label}
-                  </a>
+                  </button>
                 </li>
               ))}
             </ul>
@@ -1094,11 +1117,14 @@ function Footer() {
           <div>
             <h4 className="font-semibold text-white text-sm mb-5">ENTREPRISE</h4>
             <ul className="space-y-3">
-              {['À propos', 'Blog', 'Contact', 'Carrières'].map((item) => (
-                <li key={item}>
-                  <a href="#" className="text-sm text-white/50 hover:text-white/80 transition-colors">
-                    {item}
-                  </a>
+              {[
+                { label: 'À propos', action: () => setView('about') },
+                { label: 'Contact', action: () => setView('contact') },
+              ].map((item) => (
+                <li key={item.label}>
+                  <button onClick={item.action} className="text-sm text-white/50 hover:text-white/80 transition-colors">
+                    {item.label}
+                  </button>
                 </li>
               ))}
             </ul>
@@ -1110,11 +1136,11 @@ function Footer() {
             <ul className="space-y-4">
               <li className="flex items-center gap-3">
                 <MessageCircle className="w-4 h-4 text-primary shrink-0" />
-                <span className="text-sm text-white/50">+221 77 123 45 67</span>
+                <a href="https://wa.me/2217848582226" target="_blank" rel="noopener noreferrer" className="text-sm text-white/50 hover:text-white/80 transition-colors">+221 78 485 82 26</a>
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="w-4 h-4 text-primary shrink-0" />
-                <span className="text-sm text-white/50">contact@whatsshop.com</span>
+                <a href="mailto:contact@whatsshop.com" className="text-sm text-white/50 hover:text-white/80 transition-colors">contact@whatsshop.com</a>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="w-4 h-4 text-primary shrink-0" />
@@ -1127,9 +1153,20 @@ function Footer() {
         {/* Bottom bar */}
         <Separator className="my-10 bg-white/[0.06]" />
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-white/40">
-            © {new Date().getFullYear()} WhatsShop. Tous droits réservés.
-          </p>
+          <div className="flex items-center gap-4">
+            <p className="text-sm text-white/40">
+              © {new Date().getFullYear()} WhatsShop. Tous droits réservés.
+            </p>
+            <div className="flex items-center gap-3">
+              <button onClick={() => setView('privacy')} className="text-sm text-white/40 hover:text-white/70 transition-colors">
+                Confidentialité
+              </button>
+              <span className="text-white/20">·</span>
+              <button onClick={() => setView('terms')} className="text-sm text-white/40 hover:text-white/70 transition-colors">
+                Conditions
+              </button>
+            </div>
+          </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5 text-white/40">
               <Palmtree className="w-4 h-4 text-primary/60" />

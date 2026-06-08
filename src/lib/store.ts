@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-export type AppView = 'landing' | 'login' | 'register' | 'onboarding' | 'dashboard' | 'shop' | 'admin'
+export type AppView = 'landing' | 'login' | 'register' | 'onboarding' | 'dashboard' | 'shop' | 'admin' | 'about' | 'pricing' | 'contact' | 'privacy' | 'terms' | 'faq'
 export type DashboardTab = 'overview' | 'products' | 'categories' | 'orders' | 'live' | 'settings' | 'ai-tools'
 export type AdminTab = 'admin-overview' | 'admin-subscriptions' | 'admin-domains' | 'admin-config' | 'admin-support' | 'admin-moderation' | 'admin-marketing' | 'admin-users' | 'admin-shops' | 'admin-orders'
 
@@ -104,7 +104,7 @@ export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
       // Navigation
-      view: 'landing',
+      view: 'landing' as AppView,
       setView: (view) => set({ view }),
       dashboardTab: 'overview',
       setDashboardTab: (tab) => set({ dashboardTab: tab }),
