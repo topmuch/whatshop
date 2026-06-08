@@ -315,7 +315,7 @@ function HeroSection() {
                 variant="outline"
                 size="lg"
                 className="text-base px-8 py-6 h-auto font-semibold rounded-full bg-white/5 text-white border-white/20 hover:bg-white/10 hover:border-white/30 transition-all duration-300 backdrop-blur-sm"
-                onClick={() => setShopSlug('amina-shop')}
+                onClick={() => setShopSlug('jameela-beauty')}
               >
                 <Play className="w-4 h-4 mr-2" />
                 Voir une démo
@@ -976,10 +976,17 @@ function PricingSection() {
                         : ''
                     }`}
                     variant={plan.popular ? 'default' : 'outline'}
-                    onClick={() => setView('register')}
+                    onClick={() => {
+                      if (plan.price === '0') {
+                        setView('register')
+                      } else {
+                        const message = encodeURIComponent(`Bonjour, je suis intéressé(e) par l'abonnement ${plan.name} à ${plan.price} FCFA/mois sur WhatsShop.`)
+                        window.open(`https://wa.me/2217848582226?text=${message}`, '_blank')
+                      }
+                    }}
                   >
-                    {plan.price === '0' ? 'Commencer gratuitement' : 'Choisir ce plan'}
-                    {plan.price !== '0' && <ArrowRight className="w-4 h-4 ml-2" />}
+                    {plan.price === '0' ? 'Commencer gratuitement' : `S'abonner via WhatsApp`}
+                    {plan.price !== '0' && <MessageCircle className="w-4 h-4 ml-2" />}
                   </Button>
                 </CardContent>
               </Card>

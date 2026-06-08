@@ -29,6 +29,7 @@ import {
   Bot,
   Tag,
   Code2,
+  MessageCircle,
 } from 'lucide-react'
 
 /* ──────────────────────────── CONSTANTS ──────────────────────────── */
@@ -367,10 +368,17 @@ function PricingCards() {
                         : ''
                     }`}
                     variant={plan.popular ? 'default' : 'outline'}
-                    onClick={() => setView('register')}
+                    onClick={() => {
+                      if (plan.price === '0') {
+                        setView('register')
+                      } else {
+                        const message = encodeURIComponent(`Bonjour, je suis intéressé(e) par l'abonnement ${plan.name} à ${plan.price} FCFA/mois sur WhatsShop. Merci de me renseigner.`)
+                        window.open(`https://wa.me/2217848582226?text=${message}`, '_blank')
+                      }
+                    }}
                   >
-                    {plan.price === '0' ? 'Commencer gratuitement' : 'Choisir ce plan'}
-                    {plan.price !== '0' && <ArrowRight className="w-4 h-4 ml-2" />}
+                    {plan.price === '0' ? 'Commencer gratuitement' : `S'abonner via WhatsApp`}
+                    {plan.price !== '0' && <MessageCircle className="w-4 h-4 ml-2" />}
                   </Button>
                 </CardContent>
               </Card>
