@@ -18,6 +18,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { TemplateSelector } from '@/components/dashboard/template-selector'
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible'
 import {
   Check,
   X,
@@ -33,6 +34,14 @@ import {
   QrCode,
   Download,
   RefreshCw,
+  Search,
+  Image,
+  Type,
+  AlertCircle,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  ChevronDown,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -71,6 +80,20 @@ export function DashboardSettings() {
   const [banner, setBanner] = useState('')
   const [template, setTemplate] = useState('classic')
 
+  // SEO form state
+  const [seoTitle, setSeoTitle] = useState('')
+  const [seoDescription, setSeoDescription] = useState('')
+  const [coverImageUrl, setCoverImageUrl] = useState('')
+  const [seoSaving, setSeoSaving] = useState(false)
+
+  // Domain state
+  const [domainStatus, setDomainStatus] = useState<'NONE' | 'PENDING' | 'APPROVED' | 'REJECTED'>('NONE')
+  const [domainName, setDomainName] = useState('')
+  const [domainRejectionReason, setDomainRejectionReason] = useState('')
+  const [domainLoading, setDomainLoading] = useState(false)
+  const [dnsOpen, setDnsOpen] = useState(false)
+  const [domainInput, setDomainInput] = useState('')
+
   useEffect(() => {
     if (shop) {
       setName(shop.name)
@@ -90,6 +113,30 @@ export function DashboardSettings() {
 
       // Generate QR code
       generateQrCode()
+
+      // Fetch SEO settings
+      fetch('/api/settings')
+        .then((res) => res.ok ? res.json() : null)
+        .then((data) => {
+          if (data) {
+            setSeoTitle(data.seoTitle || '')
+            setSeoDescription(data.seoDescription || '')
+            setCoverImageUrl(data.coverImageUrl || '')
+          }
+        })
+        .catch(() => {})
+
+      // Fetch domain status
+      fetch('/api/settings/domain/status')
+        .then((res) => res.ok ? res.json() : null)
+        .then((data) => {
+          if (data) {
+            setDomainStatus(data.status || 'NONE')
+            setDomainName(data.domain || '')
+            setDomainRejectionReason(data.rejectionReason || '')
+          }
+        })
+        .catch(() => {})
     }
   }, [shop])
 
@@ -212,6 +259,60 @@ export function DashboardSettings() {
     toast.success('URL copiée !')
   }
 
+  async function handleSeoSave() {
+    setSeoSaving(true)
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          seoTitle,
+          seoDescription,
+          coverImageUrl,
+          logo,
+        }),
+      })
+      if (!res.ok) {
+        toast.error('Erreur lors de la sauvegarde SEO')
+        return
+      }
+      toast.success('Paramètres SEO enregistrés !')
+    } catch {
+      toast.error('Erreur de connexion')
+    } finally {
+      setSeoSaving(false)
+    }
+  }
+
+  async function handleDomainRequest() {
+    if (!domainInput.trim()) {
+      toast.error('Veuillez entrer un nom de domaine')
+      return
+    }
+    setDomainLoading(true)
+    try {
+      const res = await fetch('/api/settings/domain', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ domain: domainInput.trim() }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        toast.error(data.error || 'Erreur lors de la demande de domaine')
+        return
+      }
+      const data = await res.json()
+      setDomainStatus(data.status || 'PENDING')
+      setDomainName(data.domain || domainInput.trim())
+      setDnsOpen(true)
+      toast.success('Demande de domaine envoyée !')
+    } catch {
+      toast.error('Erreur de connexion')
+    } finally {
+      setDomainLoading(false)
+    }
+  }
+
   const currentPlan = shop?.plan || 'FREE'
   const limits = planLimits[currentPlan as keyof typeof planLimits] || planLimits.FREE
 
@@ -325,6 +426,233 @@ export function DashboardSettings() {
         </CardHeader>
         <CardContent>
           <TemplateSelector currentTemplate={template} onSelect={setTemplate} />
+        </CardContent>
+      </Card>
+
+      {/* SEO & Apparence */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Search className="h-5 w-5 text-primary" />
+            SEO &amp; Apparence
+          </CardTitle>
+          <CardDescription>
+            Optimisez le référencement et l&apos;apparence de votre boutique sur les réseaux sociaux
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="seo-title" className="flex items-center gap-2">
+                <Type className="h-3.5 w-3.5 text-muted-foreground" />
+                SEO Title
+              </Label>
+              <span className="text-xs text-muted-foreground tabular-nums">
+                {seoTitle.length}/60
+              </span>
+            </div>
+            <Input
+              id="seo-title"
+              value={seoTitle}
+              onChange={(e) => {
+                if (e.target.value.length <= 60) setSeoTitle(e.target.value)
+              }}
+              placeholder="Titre de votre boutique (60 caractères max)"
+              maxLength={60}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="seo-description" className="flex items-center gap-2">
+                <Type className="h-3.5 w-3.5 text-muted-foreground" />
+                Meta Description
+              </Label>
+              <span className="text-xs text-muted-foreground tabular-nums">
+                {seoDescription.length}/160
+              </span>
+            </div>
+            <Textarea
+              id="seo-description"
+              value={seoDescription}
+              onChange={(e) => {
+                if (e.target.value.length <= 160) setSeoDescription(e.target.value)
+              }}
+              placeholder="Description de votre boutique pour les moteurs de recherche (160 caractères max)"
+              rows={3}
+              maxLength={160}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="seo-logo" className="flex items-center gap-2">
+              <Image className="h-3.5 w-3.5 text-muted-foreground" />
+              Logo URL
+            </Label>
+            <Input
+              id="seo-logo"
+              value={logo}
+              onChange={(e) => setLogo(e.target.value)}
+              placeholder="https://example.com/logo.png"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="seo-cover" className="flex items-center gap-2">
+              <Image className="h-3.5 w-3.5 text-muted-foreground" />
+              Image de couverture (Open Graph)
+            </Label>
+            <Input
+              id="seo-cover"
+              value={coverImageUrl}
+              onChange={(e) => setCoverImageUrl(e.target.value)}
+              placeholder="https://example.com/cover.jpg"
+            />
+          </div>
+
+          <Button onClick={handleSeoSave} disabled={seoSaving} className="gap-2">
+            {seoSaving ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Check className="h-4 w-4" />
+            )}
+            Enregistrer SEO
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Nom de Domaine Personnalisé */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Globe className="h-5 w-5 text-primary" />
+            Nom de domaine personnalisé
+          </CardTitle>
+          <CardDescription>
+            Utilisez votre propre nom de domaine pour votre boutique WhatsShop
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Domain Status Display */}
+          {domainStatus === 'APPROVED' && (
+            <div className="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 p-4">
+              <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-green-800">Domaine actif</p>
+                <p className="text-sm text-green-700 font-mono">{domainName}</p>
+              </div>
+              <Badge className="bg-green-100 text-green-800 hover:bg-green-100 ml-auto flex-shrink-0">APPROUVÉ</Badge>
+            </div>
+          )}
+
+          {domainStatus === 'PENDING' && (
+            <div className="flex items-center gap-3 rounded-lg border border-yellow-200 bg-yellow-50 p-4">
+              <Clock className="h-5 w-5 text-yellow-600 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-yellow-800">En attente de validation</p>
+                <p className="text-sm text-yellow-700">Votre domaine <span className="font-mono">{domainName}</span> est en cours de vérification.</p>
+              </div>
+              <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 ml-auto flex-shrink-0">EN ATTENTE</Badge>
+            </div>
+          )}
+
+          {domainStatus === 'REJECTED' && (
+            <div className="flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-4">
+              <XCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-red-800">Demande rejetée</p>
+                <p className="text-sm text-red-700">{domainRejectionReason || 'Votre demande de domaine a été rejetée. Vous pouvez soumettre une nouvelle demande.'}</p>
+              </div>
+              <Badge className="bg-red-100 text-red-800 hover:bg-red-100 ml-auto flex-shrink-0">REJETÉ</Badge>
+            </div>
+          )}
+
+          {domainStatus === 'NONE' && (
+            <div className="flex items-center gap-3 rounded-lg border border-muted bg-muted/30 p-4">
+              <AlertCircle className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+              <p className="text-sm text-muted-foreground">Aucun domaine personnalisé configuré</p>
+            </div>
+          )}
+
+          {/* Domain Request Form */}
+          {(domainStatus === 'NONE' || domainStatus === 'REJECTED') && (
+            <div className="space-y-3">
+              <Separator />
+              <h3 className="text-sm font-semibold">Demander un domaine</h3>
+              <div className="flex items-center gap-2">
+                <Input
+                  value={domainInput}
+                  onChange={(e) => setDomainInput(e.target.value)}
+                  placeholder="maboutique.com"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleDomainRequest()
+                  }}
+                />
+                <Button
+                  onClick={handleDomainRequest}
+                  disabled={domainLoading || !domainInput.trim()}
+                  className="gap-2 flex-shrink-0"
+                >
+                  {domainLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Globe className="h-4 w-4" />
+                  )}
+                  Demander
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* DNS Instructions (collapsible) */}
+          {(domainStatus === 'PENDING' || domainStatus === 'APPROVED') && domainName && (
+            <>
+              <Separator />
+              <Collapsible open={dnsOpen} onOpenChange={setDnsOpen}>
+                <CollapsibleTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-between gap-2"
+                  >
+                    <span className="flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4" />
+                      Configuration DNS requise
+                    </span>
+                    <ChevronDown className={`h-4 w-4 transition-transform ${dnsOpen ? 'rotate-180' : ''}`} />
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-3 space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Pour configurer votre domaine, ajoutez un enregistrement CNAME ou A :
+                  </p>
+
+                  <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-1 space-y-1">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Type</p>
+                        <p className="text-sm font-mono font-semibold">CNAME</p>
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Nom / Hôte</p>
+                        <p className="text-sm font-mono font-semibold">@</p>
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Valeur</p>
+                        <p className="text-sm font-mono font-semibold">whatsshop.com</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 p-3">
+                    <AlertCircle className="h-4 w-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <p className="text-xs text-blue-800">
+                      La propagation DNS peut prendre jusqu&apos;à 48 heures.
+                    </p>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            </>
+          )}
         </CardContent>
       </Card>
 

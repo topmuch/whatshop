@@ -14,38 +14,65 @@ model User {
   email     String   @unique
   password  String
   name      String
-  role      String   @default("SELLER") // SELLER | ADMIN
+  role      String   @default("SELLER") // SELLER | ADMIN | SUPER_ADMIN
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  shop   Shop?
-  orders Order[]
+  shop     Shop?
+  orders   Order[]
+  domainReviews DomainRequest[] @relation("DomainReview")
 }
 
 model Shop {
-  id          String   @id @default(cuid())
-  name        String
-  slug        String   @unique
-  description String?
-  logo        String?
-  banner      String?
-  whatsapp    String
-  address     String?
-  phone       String?
-  plan        String   @default("FREE") // FREE | STANDARD | PREMIUM
-  sector      String?  // beaute, mode, electronique, alimentation, artisanat, sport, bijoux, maison, auto, autre
-  template    String   @default("classic") // classic | africa | minimal | elegant | neon | rose | ocean | sunset
-  isActive    Boolean  @default(true)
-  ownerId     String   @unique
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                    String   @id @default(cuid())
+  name                  String
+  slug                  String   @unique
+  description           String?
+  logo                  String?
+  banner                String?
+  whatsapp              String
+  address               String?
+  phone                 String?
+  plan                  String   @default("FREE") // FREE | STANDARD | PRO
+  sector                String?  // beaute, mode, electronique, alimentation, artisanat, sport, bijoux, maison, auto, autre
+  template              String   @default("classic") // classic | africa | minimal | elegant | neon | rose | ocean | sunset | jameela | xstore-fashion | xstore-electro | xstore-grocery
+  isActive              Boolean  @default(true)
+  ownerId               String   @unique
 
-  owner     User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  // SEO & Appearance
+  seoTitle              String?
+  seoDescription        String?
+  coverImageUrl         String?
+
+  // Custom Domain
+  customDomain           String?   @unique
+  customDomainStatus     String?   @default("NONE") // NONE | PENDING | APPROVED | REJECTED
+  customDomainRejectionReason String?
+
+  // Subscription (manual management)
+  subscriptionStatus     String?   @default("TRIAL") // TRIAL | ACTIVE | SUSPENDED | EXPIRED | CANCELLED
+  subscriptionEndDate    DateTime?
+
+  // Referral
+  referredById          String?
+
+  // Moderation
+  isFlagged              Boolean   @default(false)
+  flaggedReason          String?
+
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  owner     User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  referee  Shop?             @relation("Referral", fields: [referredById], references: [id])
+  referrals Shop[]           @relation("Referral")
   categories   Category[]
   products     Product[]
   visits       Visit[]
   orders       Order[]
   liveSession  LiveSession?
+  domainRequest DomainRequest?
+  supportTickets SupportTicket[]
 }
 
 model Category {
@@ -91,7 +118,7 @@ model Order {
 
   shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
   user User? @relation(fields: [userId], references: [id])
-  userId String? 
+  userId String?
 }
 
 model Visit {
@@ -140,4 +167,73 @@ model Lead {
   createdAt DateTime @default(now())
 
   session LiveSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
+
+// ─── NEW: SaaS Configuration (Singleton) ──────────────────────────────────────
+
+model SaaSConfig {
+  id                     String   @id @default(cuid())
+  saasName               String   @default("WhatsShop")
+  primaryColor           String   @default("#EC4899")
+  logoUrl                String?
+  defaultWhatsappMessage String   @default("Bonjour, je souhaite commander le produit: {productName} - {productPrice} FCFA depuis votre boutique WhatsShop.")
+  standardPrice          Int      @default(5000)
+  proPrice               Int      @default(10000)
+  adminWhatsAppNumber    String?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+}
+
+// ─── NEW: Promo Codes (SaaS-level) ─────────────────────────────────────────────
+
+model PromoCode {
+  id             String    @id @default(cuid())
+  code           String    @unique
+  discountPercent Int
+  maxUses        Int
+  currentUses    Int       @default(0)
+  expiresAt      DateTime?
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+// ─── NEW: Custom Domain Requests ───────────────────────────────────────────────
+
+model DomainRequest {
+  id              String   @id @default(cuid())
+  shopId          String   @unique
+  domain          String   @unique
+  status          String   @default("PENDING") // PENDING | APPROVED | REJECTED
+  rejectionReason String?
+  dnsInstructions String?
+  reviewedAt      DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  shop    Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  reviewerId String?
+  reviewer  User?   @relation("DomainReview", fields: [reviewerId], references: [id])
+}
+
+// ─── NEW: Support Tickets ──────────────────────────────────────────────────────
+
+model SupportTicket {
+  id        String   @id @default(cuid())
+  shopId    String
+  message   String
+  status    String   @default("OPEN") // OPEN | RESOLVED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+}
+
+// ─── NEW: Broadcast Messages ───────────────────────────────────────────────────
+
+model BroadcastMessage {
+  id        String   @id @default(cuid())
+  message   String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
 }

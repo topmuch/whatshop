@@ -34,6 +34,13 @@ export async function GET(request: NextRequest) {
         plan: user.shop.plan,
         template: user.shop.template || 'classic',
         isActive: user.shop.isActive,
+        seoTitle: user.shop.seoTitle,
+        seoDescription: user.shop.seoDescription,
+        coverImageUrl: user.shop.coverImageUrl,
+        customDomain: user.shop.customDomain,
+        customDomainStatus: user.shop.customDomainStatus,
+        subscriptionStatus: user.shop.subscriptionStatus,
+        subscriptionEndDate: user.shop.subscriptionEndDate?.toISOString(),
       } : null,
     })
   } catch (error) {

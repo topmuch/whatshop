@@ -5,11 +5,13 @@ import { useEffect, useState, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Switch } from '@/components/ui/switch'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
@@ -37,6 +39,15 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import {
   BarChart3,
   Users,
   Store,
@@ -58,6 +69,18 @@ import {
   UserPlus,
   Sun,
   Moon,
+  CreditCard,
+  Globe,
+  Settings,
+  LifeBuoy,
+  Flag,
+  Megaphone,
+  Download,
+  Edit,
+  Save,
+  Check,
+  MessageSquare,
+  ExternalLink,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
@@ -68,15 +91,6 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog'
-import { Label } from '@/components/ui/label'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -126,6 +140,72 @@ interface AdminOrder {
   shop: { id: string; name: string }
 }
 
+interface AdminSubscription {
+  id: string
+  shopId: string
+  shopName: string
+  shopSlug: string
+  ownerName: string
+  ownerEmail: string
+  plan: string
+  status: string
+  endDate: string
+}
+
+interface AdminDomain {
+  id: string
+  shopName: string
+  domain: string
+  status: string
+  createdAt: string
+}
+
+interface PromoCode {
+  id: string
+  code: string
+  discountPercent: number
+  currentUses: number
+  maxUses: number
+  expiresAt: string
+  active: boolean
+}
+
+interface SupportTicket {
+  id: string
+  shopName: string
+  ownerEmail: string
+  message: string
+  status: string
+  createdAt: string
+}
+
+interface FlaggedShop {
+  id: string
+  shopId: string
+  shopName: string
+  ownerName: string
+  reason: string
+  flaggedAt: string
+}
+
+interface Referral {
+  id: string
+  referrerName: string
+  referredName: string
+  status: string
+  createdAt: string
+}
+
+interface PlatformConfig {
+  saasName: string
+  logoUrl: string
+  primaryColor: string
+  defaultWhatsappMessage: string
+  adminWhatsappNumber: string
+  standardPrice: number
+  proPrice: number
+}
+
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 const formatCurrency = (amount: number) =>
@@ -154,13 +234,64 @@ const statusConfig: Record<string, { label: string; variant: 'secondary' | 'defa
   CANCELLED: { label: 'Annulée', variant: 'destructive' },
 }
 
+const subscriptionStatusBadge = (status: string) => {
+  switch (status) {
+    case 'ACTIVE':
+      return <Badge variant="outline" className="border-emerald-500 text-emerald-700 bg-emerald-50">Actif</Badge>
+    case 'SUSPENDED':
+      return <Badge variant="secondary" className="bg-amber-100 text-amber-700 hover:bg-amber-100">Suspendu</Badge>
+    case 'EXPIRED':
+      return <Badge variant="destructive" className="bg-red-100 text-red-700 hover:bg-red-100">Expiré</Badge>
+    case 'CANCELLED':
+      return <Badge variant="secondary" className="bg-gray-100 text-gray-700 hover:bg-gray-100">Annulé</Badge>
+    case 'TRIAL':
+      return <Badge variant="outline" className="border-sky-500 text-sky-700 bg-sky-50">Essai</Badge>
+    default:
+      return <Badge variant="secondary">{status}</Badge>
+  }
+}
+
+const domainStatusBadge = (status: string) => {
+  switch (status) {
+    case 'PENDING':
+      return <Badge variant="secondary" className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100">En attente</Badge>
+    case 'APPROVED':
+      return <Badge variant="outline" className="border-emerald-500 text-emerald-700 bg-emerald-50">Validé</Badge>
+    case 'REJECTED':
+      return <Badge variant="destructive" className="bg-red-100 text-red-700 hover:bg-red-100">Rejeté</Badge>
+    default:
+      return <Badge variant="secondary">{status}</Badge>
+  }
+}
+
 // ─── Navigation Items ───────────────────────────────────────────────────────
 
-const navItems: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
-  { id: 'admin-overview', label: "Vue d'ensemble", icon: <BarChart3 className="h-5 w-5" /> },
-  { id: 'admin-users', label: 'Utilisateurs', icon: <Users className="h-5 w-5" /> },
-  { id: 'admin-shops', label: 'Boutiques', icon: <Store className="h-5 w-5" /> },
-  { id: 'admin-orders', label: 'Commandes', icon: <ShoppingCart className="h-5 w-5" /> },
+const navGroups = [
+  {
+    label: 'Principal',
+    items: [
+      { id: 'admin-overview' as AdminTab, label: "Vue d'ensemble", icon: <BarChart3 className="h-5 w-5" /> },
+      { id: 'admin-subscriptions' as AdminTab, label: 'Abonnements', icon: <CreditCard className="h-5 w-5" /> },
+      { id: 'admin-domains' as AdminTab, label: 'Domaines', icon: <Globe className="h-5 w-5" /> },
+    ],
+  },
+  {
+    label: 'Gestion',
+    items: [
+      { id: 'admin-config' as AdminTab, label: 'Configuration', icon: <Settings className="h-5 w-5" /> },
+      { id: 'admin-support' as AdminTab, label: 'Support', icon: <LifeBuoy className="h-5 w-5" /> },
+      { id: 'admin-moderation' as AdminTab, label: 'Modération', icon: <Flag className="h-5 w-5" /> },
+      { id: 'admin-marketing' as AdminTab, label: 'Marketing', icon: <Megaphone className="h-5 w-5" /> },
+    ],
+  },
+  {
+    label: 'Système',
+    items: [
+      { id: 'admin-users' as AdminTab, label: 'Utilisateurs', icon: <Users className="h-5 w-5" /> },
+      { id: 'admin-shops' as AdminTab, label: 'Boutiques', icon: <Store className="h-5 w-5" /> },
+      { id: 'admin-orders' as AdminTab, label: 'Commandes', icon: <ShoppingCart className="h-5 w-5" /> },
+    ],
+  },
 ]
 
 // ─── Sidebar Content ─────────────────────────────────────────────────────────
@@ -192,27 +323,34 @@ function AdminSidebarContent() {
       <div className="px-6 py-3">
         <p className="text-sm font-medium truncate">{user?.name || 'Admin'}</p>
         <Badge className="mt-1 text-[10px] bg-blue-100 text-blue-700 hover:bg-blue-100">
-          ADMIN
+          {user?.role === 'SUPER_ADMIN' ? 'SUPER ADMIN' : 'ADMIN'}
         </Badge>
       </div>
 
       {/* Navigation */}
       <ScrollArea className="flex-1 px-3 py-2">
         <nav className="flex flex-col gap-1">
-          {navItems.map((item) => (
-            <Button
-              key={item.id}
-              variant={adminTab === item.id ? 'secondary' : 'ghost'}
-              className={`w-full justify-start gap-3 h-11 px-3 ${
-                adminTab === item.id
-                  ? 'bg-blue-500/10 text-blue-600 font-medium hover:bg-blue-500/15'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-              onClick={() => setAdminTab(item.id)}
-            >
-              {item.icon}
-              <span>{item.label}</span>
-            </Button>
+          {navGroups.map((group, gi) => (
+            <div key={group.label} className={gi > 0 ? 'mt-3' : ''}>
+              <p className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                {group.label}
+              </p>
+              {group.items.map((item) => (
+                <Button
+                  key={item.id}
+                  variant={adminTab === item.id ? 'secondary' : 'ghost'}
+                  className={`w-full justify-start gap-3 h-10 px-3 ${
+                    adminTab === item.id
+                      ? 'bg-blue-500/10 text-blue-600 font-medium hover:bg-blue-500/15'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                  onClick={() => setAdminTab(item.id)}
+                >
+                  {item.icon}
+                  <span className="text-sm">{item.label}</span>
+                </Button>
+              ))}
+            </div>
           ))}
         </nav>
       </ScrollArea>
@@ -223,11 +361,11 @@ function AdminSidebarContent() {
       <div className="px-3 py-2">
         <Button
           variant="ghost"
-          className="w-full justify-start gap-3 h-11 px-3 text-muted-foreground hover:text-purple-600"
+          className="w-full justify-start gap-3 h-10 px-3 text-muted-foreground hover:text-purple-600"
           onClick={toggleTheme}
         >
           {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-          <span>{isDark ? 'Mode clair' : 'Mode sombre'}</span>
+          <span className="text-sm">{isDark ? 'Mode clair' : 'Mode sombre'}</span>
         </Button>
       </div>
 
@@ -237,11 +375,11 @@ function AdminSidebarContent() {
       <div className="px-3 py-4">
         <Button
           variant="ghost"
-          className="w-full justify-start gap-3 h-11 px-3 text-muted-foreground hover:text-blue-600"
+          className="w-full justify-start gap-3 h-10 px-3 text-muted-foreground hover:text-blue-600"
           onClick={handleLogout}
         >
           <LogOut className="h-5 w-5" />
-          <span>Déconnexion</span>
+          <span className="text-sm">Déconnexion</span>
         </Button>
       </div>
     </div>
@@ -264,7 +402,7 @@ export function AdminDashboard() {
           const data = await res.json()
           if (data.user) {
             setUser(data.user)
-            if (data.user.role !== 'ADMIN') {
+            if (data.user.role !== 'ADMIN' && data.user.role !== 'SUPER_ADMIN') {
               setView('dashboard')
               return
             }
@@ -348,6 +486,18 @@ function AdminContent() {
   switch (adminTab) {
     case 'admin-overview':
       return <AdminOverview />
+    case 'admin-subscriptions':
+      return <AdminSubscriptions />
+    case 'admin-domains':
+      return <AdminDomains />
+    case 'admin-config':
+      return <AdminConfig />
+    case 'admin-support':
+      return <AdminSupport />
+    case 'admin-moderation':
+      return <AdminModeration />
+    case 'admin-marketing':
+      return <AdminMarketing />
     case 'admin-users':
       return <AdminUsers />
     case 'admin-shops':
@@ -546,6 +696,1263 @@ function AdminOverview() {
   )
 }
 
+// ─── SUBSCRIPTIONS TAB ──────────────────────────────────────────────────────
+
+function AdminSubscriptions() {
+  const [subscriptions, setSubscriptions] = useState<AdminSubscription[]>([])
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [loading, setLoading] = useState(true)
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
+
+  const loadSubscriptions = useCallback(async (status: string) => {
+    setLoading(true)
+    try {
+      const params = new URLSearchParams()
+      if (status && status !== 'all') params.set('status', status)
+      const res = await fetch(`/api/admin/subscriptions?${params.toString()}`)
+      if (res.ok) {
+        const data = await res.json()
+        setSubscriptions(data.subscriptions)
+      }
+    } catch {
+      toast.error('Erreur lors du chargement des abonnements')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadSubscriptions(statusFilter)
+  }, [statusFilter, loadSubscriptions])
+
+  async function handleAction(shopId: string, action: string) {
+    setActionLoading(`${shopId}-${action}`)
+    try {
+      const res = await fetch('/api/admin/subscriptions', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ shopId, action }),
+      })
+      if (res.ok) {
+        toast.success(`Action "${action}" effectuée avec succès`)
+        loadSubscriptions(statusFilter)
+      } else {
+        const data = await res.json()
+        toast.error(data.error || 'Erreur lors de l\'action')
+      }
+    } catch {
+      toast.error('Erreur lors de l\'action')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold">Abonnements</h2>
+
+      {/* Filter */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-full sm:w-[180px]">
+            <SelectValue placeholder="Statut" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tous les statuts</SelectItem>
+            <SelectItem value="ACTIVE">Actif</SelectItem>
+            <SelectItem value="SUSPENDED">Suspendu</SelectItem>
+            <SelectItem value="EXPIRED">Expiré</SelectItem>
+            <SelectItem value="CANCELLED">Annulé</SelectItem>
+            <SelectItem value="TRIAL">Essai</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Table */}
+      {loading ? (
+        <Card>
+          <CardContent className="p-4 space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
+          </CardContent>
+        </Card>
+      ) : subscriptions.length === 0 ? (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <CreditCard className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+            <p className="text-muted-foreground">Aucun abonnement trouvé</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardContent className="p-0 overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Boutique</TableHead>
+                  <TableHead>Propriétaire</TableHead>
+                  <TableHead>Plan</TableHead>
+                  <TableHead>Statut</TableHead>
+                  <TableHead>Date fin</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {subscriptions.map((sub) => (
+                  <TableRow key={sub.id}>
+                    <TableCell className="font-medium">{sub.shopName}</TableCell>
+                    <TableCell>
+                      <div>
+                        <p className="text-sm">{sub.ownerName}</p>
+                        <p className="text-xs text-muted-foreground">{sub.ownerEmail}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={planVariant(sub.plan)}>{sub.plan}</Badge>
+                    </TableCell>
+                    <TableCell>{subscriptionStatusBadge(sub.status)}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {sub.endDate ? formatDate(sub.endDate) : '—'}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1 flex-wrap">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                          onClick={() => handleAction(sub.shopId, 'activate')}
+                          disabled={actionLoading === `${sub.shopId}-activate`}
+                        >
+                          {actionLoading === `${sub.shopId}-activate` ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Check className="h-3 w-3 mr-1" />}
+                          Activer
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 text-xs text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                          onClick={() => handleAction(sub.shopId, 'suspend')}
+                          disabled={actionLoading === `${sub.shopId}-suspend`}
+                        >
+                          {actionLoading === `${sub.shopId}-suspend` ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <XCircle className="h-3 w-3 mr-1" />}
+                          Suspendre
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                          onClick={() => handleAction(sub.shopId, 'cancel')}
+                          disabled={actionLoading === `${sub.shopId}-cancel`}
+                        >
+                          {actionLoading === `${sub.shopId}-cancel` ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <XCircle className="h-3 w-3 mr-1" />}
+                          Annuler
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 text-xs text-sky-600 hover:text-sky-700 hover:bg-sky-50"
+                          onClick={() => handleAction(sub.shopId, 'extend')}
+                          disabled={actionLoading === `${sub.shopId}-extend`}
+                        >
+                          {actionLoading === `${sub.shopId}-extend` ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Plus className="h-3 w-3 mr-1" />}
+                          +1 mois
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          title="Voir la boutique"
+                          onClick={() => window.open(`/${sub.shopSlug}`, '_blank')}
+                        >
+                          <Eye className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  )
+}
+
+// ─── DOMAINS TAB ─────────────────────────────────────────────────────────────
+
+function AdminDomains() {
+  const [domains, setDomains] = useState<AdminDomain[]>([])
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [loading, setLoading] = useState(true)
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [rejectDialog, setRejectDialog] = useState<{ open: boolean; domainId: string; domainName: string; reason: string }>({
+    open: false, domainId: '', domainName: '', reason: '',
+  })
+
+  const loadDomains = useCallback(async (status: string) => {
+    setLoading(true)
+    try {
+      const params = new URLSearchParams()
+      if (status && status !== 'all') params.set('status', status)
+      const res = await fetch(`/api/admin/domains?${params.toString()}`)
+      if (res.ok) {
+        const data = await res.json()
+        setDomains(data.domains)
+      }
+    } catch {
+      toast.error('Erreur lors du chargement des domaines')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadDomains(statusFilter)
+  }, [statusFilter, loadDomains])
+
+  async function handleApprove(id: string) {
+    setActionLoading(id)
+    try {
+      const res = await fetch(`/api/admin/domains/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'APPROVED' }),
+      })
+      if (res.ok) {
+        toast.success('Domaine validé')
+        loadDomains(statusFilter)
+      } else {
+        toast.error('Erreur lors de la validation')
+      }
+    } catch {
+      toast.error('Erreur lors de la validation')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  async function handleReject() {
+    if (!rejectDialog.reason.trim()) {
+      toast.error('Veuillez saisir une raison du rejet')
+      return
+    }
+    setActionLoading(rejectDialog.domainId)
+    try {
+      const res = await fetch(`/api/admin/domains/${rejectDialog.domainId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'REJECTED', reason: rejectDialog.reason }),
+      })
+      if (res.ok) {
+        toast.success('Domaine rejeté')
+        setRejectDialog({ open: false, domainId: '', domainName: '', reason: '' })
+        loadDomains(statusFilter)
+      } else {
+        toast.error('Erreur lors du rejet')
+      }
+    } catch {
+      toast.error('Erreur lors du rejet')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold">Domaines</h2>
+
+      {/* Filter */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-full sm:w-[180px]">
+            <SelectValue placeholder="Statut" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tous les statuts</SelectItem>
+            <SelectItem value="PENDING">En attente</SelectItem>
+            <SelectItem value="APPROVED">Validé</SelectItem>
+            <SelectItem value="REJECTED">Rejeté</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Table */}
+      {loading ? (
+        <Card>
+          <CardContent className="p-4 space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
+          </CardContent>
+        </Card>
+      ) : domains.length === 0 ? (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <Globe className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+            <p className="text-muted-foreground">Aucun domaine trouvé</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardContent className="p-0 overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Boutique</TableHead>
+                  <TableHead>Domaine</TableHead>
+                  <TableHead>Statut</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {domains.map((d) => (
+                  <TableRow key={d.id}>
+                    <TableCell className="font-medium">{d.shopName}</TableCell>
+                    <TableCell className="text-muted-foreground">{d.domain}</TableCell>
+                    <TableCell>{domainStatusBadge(d.status)}</TableCell>
+                    <TableCell className="text-muted-foreground">{formatDate(d.createdAt)}</TableCell>
+                    <TableCell>
+                      {d.status === 'PENDING' && (
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                            onClick={() => handleApprove(d.id)}
+                            disabled={actionLoading === d.id}
+                          >
+                            {actionLoading === d.id ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Check className="h-3 w-3 mr-1" />}
+                            Valider
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                            onClick={() => setRejectDialog({ open: true, domainId: d.id, domainName: d.domain, reason: '' })}
+                          >
+                            <XCircle className="h-3 w-3 mr-1" />
+                            Rejeter
+                          </Button>
+                        </div>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Reject Dialog */}
+      <Dialog open={rejectDialog.open} onOpenChange={(open) => setRejectDialog(prev => ({ ...prev, open }))}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rejeter le domaine</DialogTitle>
+            <DialogDescription>
+              Rejeter la demande pour le domaine &quot;{rejectDialog.domainName}&quot;. Cette action est irréversible.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="reject-reason">Raison du rejet</Label>
+              <Textarea
+                id="reject-reason"
+                placeholder="Expliquez pourquoi ce domaine est rejeté..."
+                value={rejectDialog.reason}
+                onChange={(e) => setRejectDialog(prev => ({ ...prev, reason: e.target.value }))}
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRejectDialog({ open: false, domainId: '', domainName: '', reason: '' })}>Annuler</Button>
+            <Button onClick={handleReject} disabled={actionLoading === rejectDialog.domainId} className="bg-red-600 hover:bg-red-700">
+              {actionLoading === rejectDialog.domainId && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Rejeter
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
+
+// ─── CONFIG TAB ───────────────────────────────────────────────────────────────
+
+function AdminConfig() {
+  // Pricing state
+  const [standardPrice, setStandardPrice] = useState('')
+  const [proPrice, setProPrice] = useState('')
+  const [savingPricing, setSavingPricing] = useState(false)
+
+  // Platform config state
+  const [config, setConfig] = useState<PlatformConfig>({
+    saasName: '',
+    logoUrl: '',
+    primaryColor: '#3b82f6',
+    defaultWhatsappMessage: '',
+    adminWhatsappNumber: '',
+    standardPrice: 0,
+    proPrice: 0,
+  })
+  const [savingConfig, setSavingConfig] = useState(false)
+  const [loadingConfig, setLoadingConfig] = useState(true)
+
+  // Promo codes state
+  const [promoCodes, setPromoCodes] = useState<PromoCode[]>([])
+  const [loadingPromos, setLoadingPromos] = useState(true)
+  const [showPromoDialog, setShowPromoDialog] = useState(false)
+  const [editingPromo, setEditingPromo] = useState<PromoCode | null>(null)
+  const [promoForm, setPromoForm] = useState({ code: '', discountPercent: '', maxUses: '', expiresAt: '' })
+  const [savingPromo, setSavingPromo] = useState(false)
+
+  useEffect(() => {
+    async function loadConfig() {
+      try {
+        const res = await fetch('/api/admin/config')
+        if (res.ok) {
+          const data = await res.json()
+          setConfig(data)
+          setStandardPrice(String(data.standardPrice || ''))
+          setProPrice(String(data.proPrice || ''))
+        }
+      } catch {
+        toast.error('Erreur lors du chargement de la configuration')
+      } finally {
+        setLoadingConfig(false)
+      }
+    }
+    loadConfig()
+  }, [])
+
+  const loadPromoCodes = useCallback(async () => {
+    setLoadingPromos(true)
+    try {
+      const res = await fetch('/api/admin/promo-codes')
+      if (res.ok) {
+        const data = await res.json()
+        setPromoCodes(data.promoCodes || [])
+      }
+    } catch {
+      toast.error('Erreur lors du chargement des codes promo')
+    } finally {
+      setLoadingPromos(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadPromoCodes()
+  }, [loadPromoCodes])
+
+  async function savePricing() {
+    setSavingPricing(true)
+    try {
+      const res = await fetch('/api/admin/config', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ standardPrice: Number(standardPrice), proPrice: Number(proPrice) }),
+      })
+      if (res.ok) {
+        toast.success('Tarifs mis à jour')
+      } else {
+        toast.error('Erreur lors de la mise à jour des tarifs')
+      }
+    } catch {
+      toast.error('Erreur lors de la mise à jour des tarifs')
+    } finally {
+      setSavingPricing(false)
+    }
+  }
+
+  async function savePlatformConfig() {
+    setSavingConfig(true)
+    try {
+      const res = await fetch('/api/admin/config', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          saasName: config.saasName,
+          logoUrl: config.logoUrl,
+          primaryColor: config.primaryColor,
+          defaultWhatsappMessage: config.defaultWhatsappMessage,
+          adminWhatsappNumber: config.adminWhatsappNumber,
+        }),
+      })
+      if (res.ok) {
+        toast.success('Configuration mise à jour')
+      } else {
+        toast.error('Erreur lors de la mise à jour')
+      }
+    } catch {
+      toast.error('Erreur lors de la mise à jour')
+    } finally {
+      setSavingConfig(false)
+    }
+  }
+
+  function openPromoDialog(promo?: PromoCode) {
+    if (promo) {
+      setEditingPromo(promo)
+      setPromoForm({
+        code: promo.code,
+        discountPercent: String(promo.discountPercent),
+        maxUses: String(promo.maxUses),
+        expiresAt: promo.expiresAt ? promo.expiresAt.split('T')[0] : '',
+      })
+    } else {
+      setEditingPromo(null)
+      setPromoForm({ code: '', discountPercent: '', maxUses: '', expiresAt: '' })
+    }
+    setShowPromoDialog(true)
+  }
+
+  async function savePromoCode() {
+    if (!promoForm.code.trim() || !promoForm.discountPercent.trim()) {
+      toast.error('Veuillez remplir au moins le code et le pourcentage de remise')
+      return
+    }
+    setSavingPromo(true)
+    try {
+      const body = {
+        code: promoForm.code,
+        discountPercent: Number(promoForm.discountPercent),
+        maxUses: promoForm.maxUses ? Number(promoForm.maxUses) : null,
+        expiresAt: promoForm.expiresAt ? new Date(promoForm.expiresAt).toISOString() : null,
+      }
+      const url = editingPromo ? `/api/admin/promo-codes/${editingPromo.id}` : '/api/admin/promo-codes'
+      const res = await fetch(url, {
+        method: editingPromo ? 'PATCH' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      if (res.ok) {
+        toast.success(editingPromo ? 'Code promo mis à jour' : 'Code promo créé')
+        setShowPromoDialog(false)
+        loadPromoCodes()
+      } else {
+        const data = await res.json()
+        toast.error(data.error || 'Erreur lors de l\'enregistrement')
+      }
+    } catch {
+      toast.error('Erreur lors de l\'enregistrement')
+    } finally {
+      setSavingPromo(false)
+    }
+  }
+
+  async function deletePromoCode(id: string) {
+    try {
+      const res = await fetch(`/api/admin/promo-codes/${id}`, { method: 'DELETE' })
+      if (res.ok) {
+        toast.success('Code promo supprimé')
+        loadPromoCodes()
+      } else {
+        toast.error('Erreur lors de la suppression')
+      }
+    } catch {
+      toast.error('Erreur lors de la suppression')
+    }
+  }
+
+  async function togglePromoActive(id: string, active: boolean) {
+    try {
+      const res = await fetch(`/api/admin/promo-codes/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ active }),
+      })
+      if (res.ok) {
+        loadPromoCodes()
+      } else {
+        toast.error('Erreur lors de la mise à jour')
+      }
+    } catch {
+      toast.error('Erreur lors de la mise à jour')
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold">Configuration</h2>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* A. Gestion des Tarifs */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Gestion des Tarifs</CardTitle>
+            <CardDescription>Définissez les prix des abonnements en FCFA.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="standard-price">Prix Standard (FCFA)</Label>
+              <Input
+                id="standard-price"
+                type="number"
+                placeholder="0"
+                value={standardPrice}
+                onChange={(e) => setStandardPrice(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="pro-price">Prix Pro (FCFA)</Label>
+              <Input
+                id="pro-price"
+                type="number"
+                placeholder="0"
+                value={proPrice}
+                onChange={(e) => setProPrice(e.target.value)}
+              />
+            </div>
+            <Button onClick={savePricing} disabled={savingPricing} className="bg-blue-600 hover:bg-blue-700">
+              {savingPricing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+              Enregistrer les tarifs
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* B. Personnalisation Plateforme */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Personnalisation Plateforme</CardTitle>
+            <CardDescription>Configurez l&apos;apparence et les paramètres par défaut.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {loadingConfig ? (
+              <div className="space-y-3">
+                {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
+              </div>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="saas-name">Nom de la plateforme</Label>
+                  <Input
+                    id="saas-name"
+                    placeholder="WhatsShop"
+                    value={config.saasName}
+                    onChange={(e) => setConfig(prev => ({ ...prev, saasName: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="logo-url">URL du logo</Label>
+                  <Input
+                    id="logo-url"
+                    placeholder="https://..."
+                    value={config.logoUrl}
+                    onChange={(e) => setConfig(prev => ({ ...prev, logoUrl: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="primary-color">Couleur principale</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="primary-color"
+                      placeholder="#3b82f6"
+                      value={config.primaryColor}
+                      onChange={(e) => setConfig(prev => ({ ...prev, primaryColor: e.target.value }))}
+                      className="flex-1"
+                    />
+                    <div
+                      className="w-10 h-10 rounded-md border"
+                      style={{ backgroundColor: config.primaryColor }}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="default-message">Message WhatsApp par défaut</Label>
+                  <Textarea
+                    id="default-message"
+                    placeholder="Bonjour, je suis intéressé par..."
+                    value={config.defaultWhatsappMessage}
+                    onChange={(e) => setConfig(prev => ({ ...prev, defaultWhatsappMessage: e.target.value }))}
+                    rows={2}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="admin-whatsapp">Numéro WhatsApp Admin</Label>
+                  <Input
+                    id="admin-whatsapp"
+                    placeholder="+225 XX XX XX XX"
+                    value={config.adminWhatsappNumber}
+                    onChange={(e) => setConfig(prev => ({ ...prev, adminWhatsappNumber: e.target.value }))}
+                  />
+                </div>
+                <Button onClick={savePlatformConfig} disabled={savingConfig} className="bg-blue-600 hover:bg-blue-700">
+                  {savingConfig ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                  Enregistrer
+                </Button>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* C. Codes Promo */}
+        <Card className="lg:col-span-2">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-base">Codes Promo</CardTitle>
+              <CardDescription>Gérez les codes de réduction pour vos abonnements.</CardDescription>
+            </div>
+            <Button onClick={() => openPromoDialog()} size="sm" className="bg-blue-600 hover:bg-blue-700">
+              <Plus className="h-4 w-4 mr-2" />
+              Créer un code
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {loadingPromos ? (
+              <div className="space-y-3">
+                {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
+              </div>
+            ) : promoCodes.length === 0 ? (
+              <div className="text-center py-8">
+                <CreditCard className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                <p className="text-muted-foreground">Aucun code promo</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Code</TableHead>
+                      <TableHead className="text-center">Remise</TableHead>
+                      <TableHead className="text-center">Utilisations</TableHead>
+                      <TableHead>Expiration</TableHead>
+                      <TableHead className="text-center">Actif</TableHead>
+                      <TableHead className="text-center">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {promoCodes.map((promo) => (
+                      <TableRow key={promo.id}>
+                        <TableCell className="font-mono font-medium">{promo.code}</TableCell>
+                        <TableCell className="text-center">{promo.discountPercent}%</TableCell>
+                        <TableCell className="text-center">
+                          {promo.currentUses}/{promo.maxUses || '∞'}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {promo.expiresAt ? formatDate(promo.expiresAt) : 'Jamais'}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Switch
+                            checked={promo.active}
+                            onCheckedChange={(checked) => togglePromoActive(promo.id, checked)}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center justify-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => openPromoDialog(promo)}
+                              title="Modifier"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" title="Supprimer">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Supprimer le code promo</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Cette action est irréversible. Le code &quot;{promo.code}&quot; sera définitivement supprimé.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    variant="destructive"
+                                    onClick={() => deletePromoCode(promo.id)}
+                                    className="bg-destructive text-white hover:bg-destructive/90"
+                                  >
+                                    Supprimer
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Promo Code Dialog */}
+      <Dialog open={showPromoDialog} onOpenChange={setShowPromoDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingPromo ? 'Modifier le code promo' : 'Créer un code promo'}</DialogTitle>
+            <DialogDescription>
+              {editingPromo ? 'Modifiez les détails du code promo.' : 'Créez un nouveau code de réduction.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="promo-code">Code</Label>
+              <Input
+                id="promo-code"
+                placeholder="PROMO2024"
+                value={promoForm.code}
+                onChange={(e) => setPromoForm(prev => ({ ...prev, code: e.target.value.toUpperCase() }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="promo-discount">Remise (%)</Label>
+              <Input
+                id="promo-discount"
+                type="number"
+                placeholder="10"
+                value={promoForm.discountPercent}
+                onChange={(e) => setPromoForm(prev => ({ ...prev, discountPercent: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="promo-max-uses">Nombre max d&apos;utilisations</Label>
+              <Input
+                id="promo-max-uses"
+                type="number"
+                placeholder="Illimité si vide"
+                value={promoForm.maxUses}
+                onChange={(e) => setPromoForm(prev => ({ ...prev, maxUses: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="promo-expires">Date d&apos;expiration</Label>
+              <Input
+                id="promo-expires"
+                type="date"
+                value={promoForm.expiresAt}
+                onChange={(e) => setPromoForm(prev => ({ ...prev, expiresAt: e.target.value }))}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPromoDialog(false)}>Annuler</Button>
+            <Button onClick={savePromoCode} disabled={savingPromo} className="bg-blue-600 hover:bg-blue-700">
+              {savingPromo ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+              {editingPromo ? 'Mettre à jour' : 'Créer'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
+
+// ─── SUPPORT TAB ──────────────────────────────────────────────────────────────
+
+function AdminSupport() {
+  const [tickets, setTickets] = useState<SupportTicket[]>([])
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [loading, setLoading] = useState(true)
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [adminPhone, setAdminPhone] = useState('')
+
+  useEffect(() => {
+    async function loadAdminPhone() {
+      try {
+        const res = await fetch('/api/admin/config')
+        if (res.ok) {
+          const data = await res.json()
+          setAdminPhone(data.adminWhatsappNumber || '')
+        }
+      } catch { /* ignore */ }
+    }
+    loadAdminPhone()
+  }, [])
+
+  const loadTickets = useCallback(async (status: string) => {
+    setLoading(true)
+    try {
+      const params = new URLSearchParams()
+      if (status && status !== 'all') params.set('status', status)
+      const res = await fetch(`/api/admin/support?${params.toString()}`)
+      if (res.ok) {
+        const data = await res.json()
+        setTickets(data.tickets || [])
+      }
+    } catch {
+      toast.error('Erreur lors du chargement des tickets')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadTickets(statusFilter)
+  }, [statusFilter, loadTickets])
+
+  async function resolveTicket(id: string) {
+    setActionLoading(id)
+    try {
+      const res = await fetch('/api/admin/support', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticketId: id, status: 'RESOLVED' }),
+      })
+      if (res.ok) {
+        toast.success('Ticket marqué comme résolu')
+        loadTickets(statusFilter)
+      } else {
+        toast.error('Erreur lors de la mise à jour')
+      }
+    } catch {
+      toast.error('Erreur lors de la mise à jour')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  function openWhatsApp(shopName: string) {
+    const phone = adminPhone.replace(/[^0-9]/g, '')
+    const message = encodeURIComponent(`Support pour ${shopName}`)
+    window.open(`https://wa.me/${phone}?text=${message}`, '_blank')
+  }
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold">Support</h2>
+
+      {/* Filter */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-full sm:w-[180px]">
+            <SelectValue placeholder="Statut" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tous les statuts</SelectItem>
+            <SelectItem value="OPEN">Ouvert</SelectItem>
+            <SelectItem value="RESOLVED">Résolu</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Table */}
+      {loading ? (
+        <Card>
+          <CardContent className="p-4 space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
+          </CardContent>
+        </Card>
+      ) : tickets.length === 0 ? (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <LifeBuoy className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+            <p className="text-muted-foreground">Aucun ticket de support</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardContent className="p-0 overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Boutique</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Message</TableHead>
+                  <TableHead>Statut</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {tickets.map((t) => (
+                  <TableRow key={t.id}>
+                    <TableCell className="text-muted-foreground whitespace-nowrap">{formatDate(t.createdAt)}</TableCell>
+                    <TableCell className="font-medium">{t.shopName}</TableCell>
+                    <TableCell className="text-muted-foreground">{t.ownerEmail}</TableCell>
+                    <TableCell>
+                      <p className="text-sm max-w-xs truncate">{t.message}</p>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={t.status === 'OPEN' ? 'secondary' : 'outline'}
+                        className={
+                          t.status === 'OPEN'
+                            ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-100'
+                            : 'border-emerald-500 text-emerald-700 bg-emerald-50'
+                        }
+                      >
+                        {t.status === 'OPEN' ? 'Ouvert' : 'Résolu'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                          onClick={() => openWhatsApp(t.shopName)}
+                        >
+                          <MessageSquare className="h-3 w-3 mr-1" />
+                          Ouvrir WhatsApp Pro
+                        </Button>
+                        {t.status === 'OPEN' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                            onClick={() => resolveTicket(t.id)}
+                            disabled={actionLoading === t.id}
+                          >
+                            {actionLoading === t.id ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <CheckCircle className="h-3 w-3 mr-1" />}
+                            Marquer résolu
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  )
+}
+
+// ─── MODERATION TAB ───────────────────────────────────────────────────────────
+
+function AdminModeration() {
+  const [flaggedShops, setFlaggedShops] = useState<FlaggedShop[]>([])
+  const [loading, setLoading] = useState(true)
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
+
+  const loadFlaggedShops = useCallback(async () => {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/admin/moderation')
+      if (res.ok) {
+        const data = await res.json()
+        setFlaggedShops(data.flaggedShops || [])
+      }
+    } catch {
+      toast.error('Erreur lors du chargement des signalements')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadFlaggedShops()
+  }, [loadFlaggedShops])
+
+  async function unflag(shopId: string) {
+    setActionLoading(shopId)
+    try {
+      const res = await fetch('/api/admin/moderation', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ shopId, action: 'unflag' }),
+      })
+      if (res.ok) {
+        toast.success('Boutique dé-signalée')
+        loadFlaggedShops()
+      } else {
+        toast.error('Erreur lors du dé-signalement')
+      }
+    } catch {
+      toast.error('Erreur lors du dé-signalement')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold">Modération</h2>
+
+      {loading ? (
+        <Card>
+          <CardContent className="p-4 space-y-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
+          </CardContent>
+        </Card>
+      ) : flaggedShops.length === 0 ? (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <Flag className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+            <p className="text-muted-foreground">Aucune boutique signalée</p>
+            <p className="text-xs text-muted-foreground mt-1">Les boutiques signalées par les utilisateurs apparaîtront ici.</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardContent className="p-0 overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Boutique</TableHead>
+                  <TableHead>Propriétaire</TableHead>
+                  <TableHead>Raison</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {flaggedShops.map((fs) => (
+                  <TableRow key={fs.id}>
+                    <TableCell className="font-medium">{fs.shopName}</TableCell>
+                    <TableCell>{fs.ownerName}</TableCell>
+                    <TableCell>
+                      <Badge variant="destructive" className="bg-amber-100 text-amber-700 hover:bg-amber-100">
+                        {fs.reason}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{formatDate(fs.flaggedAt)}</TableCell>
+                    <TableCell className="text-center">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                        onClick={() => unflag(fs.shopId)}
+                        disabled={actionLoading === fs.shopId}
+                      >
+                        {actionLoading === fs.shopId ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <CheckCircle className="h-3 w-3 mr-1" />}
+                        Dé-signaler
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  )
+}
+
+// ─── MARKETING TAB ───────────────────────────────────────────────────────────
+
+function AdminMarketing() {
+  const [referrals, setReferrals] = useState<Referral[]>([])
+  const [loadingReferrals, setLoadingReferrals] = useState(true)
+  const [exporting, setExporting] = useState(false)
+
+  useEffect(() => {
+    async function loadReferrals() {
+      setLoadingReferrals(true)
+      try {
+        const res = await fetch('/api/admin/referrals')
+        if (res.ok) {
+          const data = await res.json()
+          setReferrals(data.referrals || [])
+        }
+      } catch {
+        toast.error('Erreur lors du chargement des parrainages')
+      } finally {
+        setLoadingReferrals(false)
+      }
+    }
+    loadReferrals()
+  }, [])
+
+  async function handleExport() {
+    setExporting(true)
+    try {
+      window.open('/api/admin/export', '_blank')
+      toast.success('Export CSV lancé')
+    } catch {
+      toast.error('Erreur lors de l\'export')
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold">Marketing</h2>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* A. Suivi du Parrainage */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="text-base">Suivi du Parrainage</CardTitle>
+            <CardDescription>Suivez les parrainages et les inscriptions référencées.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {loadingReferrals ? (
+              <div className="space-y-3">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <Skeleton key={i} className="h-12 w-full" />
+                ))}
+              </div>
+            ) : referrals.length === 0 ? (
+              <div className="text-center py-8">
+                <Megaphone className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                <p className="text-muted-foreground">Aucun parrainage enregistré</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Parrain</TableHead>
+                      <TableHead>Filleul</TableHead>
+                      <TableHead>Statut</TableHead>
+                      <TableHead>Date</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {referrals.map((r) => (
+                      <TableRow key={r.id}>
+                        <TableCell className="font-medium">{r.referrerName}</TableCell>
+                        <TableCell>{r.referredName}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="border-emerald-500 text-emerald-700 bg-emerald-50">
+                            {r.status === 'ACTIVE' ? 'Actif' : r.status === 'PENDING' ? 'En attente' : r.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">{formatDate(r.createdAt)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* B. Export de Données */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="text-base">Export de Données</CardTitle>
+            <CardDescription>Exportez les données de toutes les boutiques au format CSV.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-4">
+              <p className="text-sm text-muted-foreground flex-1">
+                Téléchargez un fichier CSV contenant toutes les données des boutiques : produits, commandes, clients, etc.
+              </p>
+              <Button onClick={handleExport} disabled={exporting} className="bg-blue-600 hover:bg-blue-700 shrink-0">
+                {exporting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+                Exporter CSV
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
+}
+
 // ─── USERS TAB ────────────────────────────────────────────────────────────────
 
 function AdminUsers() {
@@ -648,7 +2055,7 @@ function AdminUsers() {
         </Card>
       ) : (
         <Card>
-          <CardContent className="p-0">
+          <CardContent className="p-0 overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -896,7 +2303,7 @@ function AdminShops() {
         </Card>
       ) : (
         <Card>
-          <CardContent className="p-0">
+          <CardContent className="p-0 overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -1130,7 +2537,7 @@ function AdminOrders() {
         </Card>
       ) : (
         <Card>
-          <CardContent className="p-0">
+          <CardContent className="p-0 overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
