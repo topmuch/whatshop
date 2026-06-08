@@ -48,7 +48,7 @@ export function AuthRegister() {
             <Store className="h-6 w-6" />
           </div>
           <CardTitle>Créer un compte</CardTitle>
-          <CardDescription>Rejoignez WhatsShop et créez votre boutique en ligne</CardDescription>
+          <CardDescription>Rejoignez Boutiko et créez votre boutique en ligne</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">

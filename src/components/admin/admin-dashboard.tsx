@@ -314,7 +314,7 @@ function AdminSidebarContent() {
         <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-600 text-destructive-foreground">
           <Shield className="h-5 w-5" />
         </div>
-        <span className="text-lg font-bold text-foreground">WhatsShop Admin</span>
+        <span className="text-lg font-bold text-foreground">Boutiko Admin</span>
       </div>
 
       <Separator />
@@ -1330,7 +1330,7 @@ function AdminConfig() {
                   <Label htmlFor="saas-name">Nom de la plateforme</Label>
                   <Input
                     id="saas-name"
-                    placeholder="WhatsShop"
+                    placeholder="Boutiko"
                     value={config.saasName}
                     onChange={(e) => setConfig(prev => ({ ...prev, saasName: e.target.value }))}
                   />

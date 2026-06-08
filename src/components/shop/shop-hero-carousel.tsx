@@ -17,10 +17,10 @@ interface Slide {
 }
 
 const DEFAULT_SLIDES: Slide[] = [
-  { id: 'fashion', image: '/banners/banner-fashion.png', title: 'Nouvelle Collection', subtitle: 'Découvrez nos robes et tenues uniques en tissu Wax et Bazin', cta: 'Découvrir' },
-  { id: 'accessoires', image: '/banners/banner-accessoires.png', title: 'Accessoires Artisanaux', subtitle: 'Bijoux, sacs et accessoires faits main avec amour', cta: 'Voir la collection' },
-  { id: 'promo', image: '/banners/banner-promo.png', title: 'Offres Spéciales', subtitle: 'Promotions exceptionnelles sur une sélection de produits', cta: 'En profiter' },
-  { id: 'tissus', image: '/banners/banner-tissus.png', title: 'Tissus Premium', subtitle: 'Wax Hollandais, Bazin riche et Kente authentique', cta: 'Explorer' },
+  { id: 'beauty-soins', image: '/banners/beauty-soins.png', title: 'Soins de Luxe', subtitle: 'Crèmes, sérums et soins premium pour une peau éclatante de beauté', cta: 'Découvrir' },
+  { id: 'beauty-maquillage', image: '/banners/beauty-maquillage.png', title: 'Maquillage Professionnel', subtitle: 'Palettes, rouges à lèvres et mascaras pour un look sublime', cta: 'Voir la collection' },
+  { id: 'beauty-promo', image: '/banners/beauty-promo.png', title: 'Offres Exclusives', subtitle: 'Coffrets cadeaux et promotions exceptionnelles à ne pas manquer', cta: 'En profiter' },
+  { id: 'beauty-naturel', image: '/banners/beauty-naturel.png', title: 'Beauté Naturelle', subtitle: 'Huiles essentielles, argan et produits bio pour votre bien-être', cta: 'Explorer' },
 ]
 
 interface ShopHeroCarouselProps {
@@ -105,7 +105,7 @@ export function ShopHeroCarousel({ slides, shopName, whatsapp }: ShopHeroCarouse
                       style={{ background: 'var(--tpl-hero-badge)' }}
                     >
                       <Sparkles className="h-3 w-3" />
-                      {shopName || 'WhatsShop'}
+                      {shopName || 'Boutiko'}
                     </div>
                     <h2
                       className={cn(

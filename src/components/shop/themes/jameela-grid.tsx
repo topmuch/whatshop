@@ -179,7 +179,7 @@ function JameelaProductCard({
       onClick={() => onProductClick(product)}
     >
       {/* Image wrapper */}
-      <div className="relative aspect-square overflow-hidden rounded-lg bg-[#f3f0ec] mb-3">
+      <div className="relative overflow-hidden rounded-lg bg-[#f3f0ec] mb-3" style={{ aspectRatio: '336 / 280' }}>
         {productImage ? (
           <img
             src={productImage}

@@ -58,7 +58,7 @@ function SidebarContent() {
         <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-pink-500 text-primary-foreground">
           <Store className="h-5 w-5" />
         </div>
-        <span className="text-lg font-bold text-foreground">WhatsShop</span>
+        <span className="text-lg font-bold text-foreground">Boutiko</span>
       </div>
 
       <Separator />
@@ -193,7 +193,7 @@ export function SellerDashboard() {
             <div className="flex items-center justify-center w-7 h-7 rounded-md bg-pink-500 text-primary-foreground">
               <Store className="h-4 w-4" />
             </div>
-            <span className="font-semibold text-sm">{shop?.name || 'WhatsShop'}</span>
+            <span className="font-semibold text-sm">{shop?.name || 'Boutiko'}</span>
             <div className="ml-auto">
               <Button
                 variant="ghost"

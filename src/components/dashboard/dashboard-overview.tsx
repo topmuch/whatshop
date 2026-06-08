@@ -156,7 +156,7 @@ export function DashboardOverview() {
 
   function copyShopUrl() {
     if (!shop) return
-    navigator.clipboard.writeText(`whatsshop.com/${shop.slug}`)
+    navigator.clipboard.writeText(`boutiko.com/${shop.slug}`)
     toast.success('URL copiée !')
   }
 
@@ -184,7 +184,7 @@ export function DashboardOverview() {
         </h1>
         <div className="flex items-center gap-2 mt-2">
           <span className="text-sm text-muted-foreground">
-            Votre boutique : <span className="font-medium text-foreground">whatsshop.com/{shop?.slug}</span>
+            Votre boutique : <span className="font-medium text-foreground">boutiko.com/{shop?.slug}</span>
           </span>
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={copyShopUrl}>
             <Copy className="h-3.5 w-3.5" />

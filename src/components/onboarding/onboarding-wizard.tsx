@@ -263,7 +263,7 @@ export function OnboardingWizard() {
               <ShoppingBag className="w-4 h-4 text-primary-foreground" />
             </div>
             <span className="text-lg font-bold tracking-tight">
-              Whats<span className="text-primary">Shop</span>
+              Bouti<span className="text-primary">ko</span>
             </span>
           </div>
           <div className="flex items-center gap-3">
@@ -691,7 +691,7 @@ function StepInfo({
                   </div>
                   {shopName && (
                     <p className="text-xs text-muted-foreground">
-                      Votre URL : <span className="text-primary font-medium">whatsshop.com/{previewSlug}</span>
+                      Votre URL : <span className="text-primary font-medium">boutiko.com/{previewSlug}</span>
                     </p>
                   )}
                 </div>

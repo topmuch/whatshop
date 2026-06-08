@@ -144,7 +144,7 @@ export function DashboardSettings() {
     if (!shop) return
     setQrLoading(true)
     try {
-      const shopUrl = `https://whatsshop.com/${shop.slug}`
+      const shopUrl = `https://boutiko.com/${shop.slug}`
       const res = await fetch('/api/ai/qr-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -186,11 +186,11 @@ export function DashboardSettings() {
       // Draw URL below name
       ctx.fillStyle = '#6b7280'
       ctx.font = '18px monospace'
-      ctx.fillText(`whatsshop.com/${shop.slug}`, 400, 760)
+      ctx.fillText(`boutiko.com/${shop.slug}`, 400, 760)
       // Draw WhatsApp branding
       ctx.fillStyle = '#25D366'
       ctx.font = '14px system-ui, -apple-system, sans-serif'
-      ctx.fillText('Propulsé par WhatsShop', 400, 800)
+      ctx.fillText('Propulsé par Boutiko', 400, 800)
       // Download
       canvas.toBlob((blob) => {
         if (!blob) return
@@ -255,7 +255,7 @@ export function DashboardSettings() {
 
   function copyShopUrl() {
     if (!shop) return
-    navigator.clipboard.writeText(`whatsshop.com/${shop.slug}`)
+    navigator.clipboard.writeText(`boutiko.com/${shop.slug}`)
     toast.success('URL copiée !')
   }
 
@@ -529,7 +529,7 @@ export function DashboardSettings() {
             Nom de domaine personnalisé
           </CardTitle>
           <CardDescription>
-            Utilisez votre propre nom de domaine pour votre boutique WhatsShop
+            Utilisez votre propre nom de domaine pour votre boutique Boutiko
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -638,7 +638,7 @@ export function DashboardSettings() {
                       </div>
                       <div className="flex-1 space-y-1">
                         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Valeur</p>
-                        <p className="text-sm font-mono font-semibold">whatsshop.com</p>
+                        <p className="text-sm font-mono font-semibold">boutiko.com</p>
                       </div>
                     </div>
                   </div>
@@ -813,7 +813,7 @@ export function DashboardSettings() {
                 <p className="text-sm text-muted-foreground">Boutique</p>
                 <p className="text-lg font-semibold">{shop?.name}</p>
                 <p className="text-sm text-muted-foreground mt-1 font-mono">
-                  whatsshop.com/{shop?.slug}
+                  boutiko.com/{shop?.slug}
                 </p>
               </div>
 
@@ -877,7 +877,7 @@ export function DashboardSettings() {
         <CardContent className="space-y-4">
           <div className="flex items-center gap-2">
             <div className="flex-1 rounded-lg border bg-muted/50 px-4 py-2.5 font-mono text-sm">
-              whatsshop.com/{shop?.slug}
+              boutiko.com/{shop?.slug}
             </div>
             <Button variant="outline" size="icon" onClick={copyShopUrl}>
               <Copy className="h-4 w-4" />
@@ -928,7 +928,7 @@ export function DashboardSettings() {
                 size="sm"
                 className="gap-2"
                 onClick={() => {
-                  const url = `https://wa.me/?text=${encodeURIComponent('Découvrez ma boutique sur WhatsShop ! whatsshop.com/' + (shop?.slug || ''))}`
+                  const url = `https://wa.me/?text=${encodeURIComponent('Découvrez ma boutique sur Boutiko ! boutiko.com/' + (shop?.slug || ''))}`
                   toast.success('Lien WhatsApp généré !')
                 }}
               >

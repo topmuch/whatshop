@@ -270,8 +270,8 @@ const contactCards = [
   {
     icon: Mail,
     label: 'Email',
-    value: 'contact@whatsshop.com',
-    href: 'mailto:contact@whatsshop.com',
+    value: 'contact@boutiko.com',
+    href: 'mailto:contact@boutiko.com',
     color: PRIMARY,
     bgColor: 'rgba(236, 72, 153, 0.1)',
   },
@@ -442,36 +442,18 @@ function LocationSection() {
           <motion.div variants={scaleIn} className="max-w-3xl mx-auto">
             <Card className="rounded-2xl border border-orange-100 shadow-xl shadow-orange-100/30 overflow-hidden">
               <CardContent className="p-0">
-                {/* Decorative map placeholder */}
-                <div className="relative h-64 sm:h-80 bg-gradient-to-br from-orange-50 via-amber-50 to-rose-50 flex items-center justify-center overflow-hidden">
-                  {/* Grid pattern for map feel */}
-                  <div
-                    className="absolute inset-0 opacity-[0.08]"
-                    style={{
-                      backgroundImage: `linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px)`,
-                      backgroundSize: '40px 40px',
-                    }}
+                {/* Google Maps Embed */}
+                <div className="relative w-full" style={{ height: '400px' }}>
+                  <iframe
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d61836.08858422!2d-17.490739!3d14.716677!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xec172f5e3b8e761%3A0x5e5aafe21e0be01!2sDakar%2C%20S%C3%A9n%C3%A9gal!5e0!3m2!1sfr!2ssn!4v1700000000000!5m2!1sfr!2ssn"
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    allowFullScreen
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    title="Boutiko - Dakar, Sénégal"
                   />
-
-                  {/* Decorative circles (map pins / radius indicators) */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-48 h-48 rounded-full border-2 border-dashed border-primary/15" />
-                    <div className="absolute w-32 h-32 rounded-full border-2 border-dashed border-primary/25" />
-                    <div className="absolute w-16 h-16 rounded-full border-2 border-solid border-primary/40" />
-                  </div>
-
-                  {/* Center pin */}
-                  <motion.div
-                    animate={{ y: [0, -6, 0] }}
-                    transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
-                    className="relative z-10 flex flex-col items-center"
-                  >
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center shadow-lg shadow-primary/30">
-                      <MapPin className="w-6 h-6 text-white" />
-                    </div>
-                    <div className="w-2 h-2 rounded-full bg-primary mt-1" />
-                    <div className="w-1 h-1 rounded-full bg-primary/50 mt-1" />
-                  </motion.div>
                 </div>
 
                 {/* Location details */}

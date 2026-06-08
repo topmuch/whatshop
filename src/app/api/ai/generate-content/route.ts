@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
         },
         {
           role: 'user',
-          content: `Produit: ${productName}, Prix: ${price} FCFA${description ? ', Description: ' + description : ''}${shopName ? ', Boutique: ' + shopName : ''}${shopSlug ? ', URL: whatsshop.com/' + shopSlug : ''}. Génère le contenu marketing.`
+          content: `Produit: ${productName}, Prix: ${price} FCFA${description ? ', Description: ' + description : ''}${shopName ? ', Boutique: ' + shopName : ''}${shopSlug ? ', URL: boutiko.com/' + shopSlug : ''}. Génère le contenu marketing.`
         }
       ],
       thinking: { type: 'disabled' }

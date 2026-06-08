@@ -425,7 +425,7 @@ function QrCodePoster() {
   const [showPoster, setShowPoster] = useState(false)
   const posterRef = useRef<HTMLDivElement>(null)
 
-  const shopUrl = shop ? `whatsshop.com/${shop.slug}` : ''
+  const shopUrl = shop ? `boutiko.com/${shop.slug}` : ''
 
   async function generateQrCode() {
     if (!shop) return

@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "WhatsShop - Créez votre boutique en ligne en 3 minutes",
-  description: "WhatsShop permet aux vendeurs de créer une mini-boutique professionnelle pour Facebook, Instagram, TikTok et WhatsApp. Sans compétence technique.",
+  title: "Boutiko - Créez votre boutique en ligne en 3 minutes",
+  description: "Boutiko permet aux vendeurs de créer une mini-boutique professionnelle pour Facebook, Instagram, TikTok et WhatsApp. Sans compétence technique.",
   keywords: ["boutique en ligne", "WhatsApp", "e-commerce", "Afrique", "vendeur"],
   icons: {
     icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",

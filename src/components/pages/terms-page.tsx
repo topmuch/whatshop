@@ -355,7 +355,7 @@ function TermsContent() {
                         </h2>
                         <p className="text-sm text-gray-600 leading-relaxed">
                           Veuillez lire attentivement les présentes Conditions Générales d&apos;Utilisation
-                          (&laquo; CGU &raquo;) avant d&apos;utiliser la plateforme WhatsShop. En vous
+                          (&laquo; CGU &raquo;) avant d&apos;utiliser la plateforme Boutiko. En vous
                           inscrivant ou en utilisant notre service, vous acceptez d&apos;être lié par ces
                           conditions. Si vous n&apos;acceptez pas ces conditions, veuillez ne pas utiliser
                           la plateforme.
@@ -388,14 +388,14 @@ function TermsContent() {
 
                     <div className="space-y-4 text-sm text-gray-600 leading-relaxed">
                       <p>
-                        En accédant à la plateforme WhatsShop, en créant un compte ou en utilisant
+                        En accédant à la plateforme Boutiko, en créant un compte ou en utilisant
                         nos services, vous reconnaissez avoir lu, compris et accepté d&apos;être lié par
                         les présentes Conditions Générales d&apos;Utilisation, y compris toute
                         modification future.
                       </p>
                       <p>
                         Si vous n&apos;acceptez pas l&apos;intégralité de ces conditions, vous devez
-                        cesser immédiatement toute utilisation de la plateforme WhatsShop et de ses
+                        cesser immédiatement toute utilisation de la plateforme Boutiko et de ses
                         services.
                       </p>
                       <p>
@@ -429,7 +429,7 @@ function TermsContent() {
 
                     <div className="space-y-4 text-sm text-gray-600 leading-relaxed">
                       <p>
-                        WhatsShop est une plateforme SaaS (Software as a Service) de création de
+                        Boutiko est une plateforme SaaS (Software as a Service) de création de
                         boutiques en ligne, spécialement conçue pour les vendeurs et commerçants
                         en Afrique. Notre service vous permet de créer une vitrine e-commerce
                         professionnelle et de recevoir des commandes de clients via WhatsApp, Instagram
@@ -443,7 +443,7 @@ function TermsContent() {
                         catégories.
                       </p>
                       <p>
-                        WhatsShop se réserve le droit de modifier, suspendre ou interrompre tout
+                        Boutiko se réserve le droit de modifier, suspendre ou interrompre tout
                         ou partie du service, temporairement ou de manière permanente, avec ou sans
                         préavis, pour des raisons de maintenance, de mise à jour ou pour toute
                         autre raison jugée nécessaire.
@@ -475,7 +475,7 @@ function TermsContent() {
 
                     <div className="space-y-4 text-sm text-gray-600 leading-relaxed">
                       <p>
-                        Pour utiliser les services de WhatsShop, vous devez créer un compte en
+                        Pour utiliser les services de Boutiko, vous devez créer un compte en
                         fournissant des informations exactes, complètes et à jour, notamment votre
                         nom, votre adresse e-mail et votre numéro de téléphone WhatsApp.
                       </p>
@@ -483,16 +483,16 @@ function TermsContent() {
                         Vous êtes responsable de la confidentialité de vos identifiants de connexion
                         et de toutes les activités réalisées sous votre compte. Vous vous engagez
                         à ne pas partager votre mot de passe avec des tiers et à notifier
-                        immédiatement WhatsShop de toute utilisation non autorisée de votre compte.
+                        immédiatement Boutiko de toute utilisation non autorisée de votre compte.
                       </p>
                       <p>
                         Vous devez avoir au moins 18 ans pour créer un compte et utiliser les
-                        services de WhatsShop. En créant un compte, vous déclarez et garantissez
+                        services de Boutiko. En créant un compte, vous déclarez et garantissez
                         que les informations fournies sont véridiques et que vous avez l&apos;autorisation
                         nécessaire pour utiliser le service.
                       </p>
                       <p>
-                        WhatsShop se réserve le droit de suspendre ou de résilier tout compte qui
+                        Boutiko se réserve le droit de suspendre ou de résilier tout compte qui
                         enfreint les présentes conditions, qui a fourni des informations fausses ou
                         trompeuses, ou qui est utilisé à des fins illégales ou non autorisées.
                       </p>
@@ -523,7 +523,7 @@ function TermsContent() {
 
                     <div className="space-y-4 text-sm text-gray-600 leading-relaxed">
                       <p>
-                        Vous vous engagez à utiliser la plateforme WhatsShop conformément à toutes
+                        Vous vous engagez à utiliser la plateforme Boutiko conformément à toutes
                         les lois et réglementations applicables et de manière responsable. Vous
                         acceptez de ne pas utiliser la plateforme à des fins illégales ou non
                         autorisées.
@@ -533,13 +533,13 @@ function TermsContent() {
                         <li>Vendre des produits illégaux, contrefaits ou dangereux</li>
                         <li>Proposer des services frauduleux ou trompeurs</li>
                         <li>Utiliser la plateforme pour du spam, du harcèlement ou des abus</li>
-                        <li>Tenter de pirater, compromettre ou interférer avec les systèmes de WhatsShop</li>
+                        <li>Tenter de pirater, compromettre ou interférer avec les systèmes de Boutiko</li>
                         <li>Créer plusieurs comptes pour abuser des offres gratuites</li>
                         <li>Reproduire, copier ou redistribuer le code ou le design de la plateforme</li>
                         <li>Utiliser des robots, scripts ou outils automatisés pour scraper le contenu</li>
                       </ul>
                       <p>
-                        WhatsShop se réserve le droit de supprimer tout contenu et de suspendre
+                        Boutiko se réserve le droit de supprimer tout contenu et de suspendre
                         tout compte qui enfreint ces règles, sans préavis ni indemnité.
                       </p>
                     </div>
@@ -569,7 +569,7 @@ function TermsContent() {
 
                     <div className="space-y-4 text-sm text-gray-600 leading-relaxed">
                       <p>
-                        En tant qu&apos;utilisateur de WhatsShop, vous êtes l&apos;unique responsable du
+                        En tant qu&apos;utilisateur de Boutiko, vous êtes l&apos;unique responsable du
                         contenu que vous publiez sur la plateforme, y compris mais sans s&apos;y limiter :
                         les descriptions de produits, les images, les prix, les informations de votre
                         boutique et tout autre contenu que vous téléchargez.
@@ -581,13 +581,13 @@ function TermsContent() {
                         aux lois applicables dans votre juridiction.
                       </p>
                       <p>
-                        Vous accordez à WhatsShop une licence mondiale, non exclusive, gratuite
+                        Vous accordez à Boutiko une licence mondiale, non exclusive, gratuite
                         et transférable pour utiliser, reproduire, modifier, adapter, publier,
                         traduire et distribuer votre contenu dans le cadre du fonctionnement
                         de la plateforme et de la promotion de nos services.
                       </p>
                       <p>
-                        WhatsShop se réserve le droit de retirer tout contenu jugé inapproprié
+                        Boutiko se réserve le droit de retirer tout contenu jugé inapproprié
                         ou en violation des présentes conditions, à tout moment et sans préavis.
                       </p>
                     </div>
@@ -617,7 +617,7 @@ function TermsContent() {
 
                     <div className="space-y-4 text-sm text-gray-600 leading-relaxed">
                       <p>
-                        WhatsShop propose différents plans d&apos;abonnement, incluant un plan gratuit
+                        Boutiko propose différents plans d&apos;abonnement, incluant un plan gratuit
                         et des plans payants (Standard et Premium). Les détails des fonctionnalités,
                         des prix et des conditions de chaque plan sont disponibles sur notre page
                         de tarifs et peuvent être modifiés à tout moment.
@@ -635,7 +635,7 @@ function TermsContent() {
                         résiliation.
                       </p>
                       <p>
-                        WhatsShop se réserve le droit de modifier les prix de ses abonnements avec
+                        Boutiko se réserve le droit de modifier les prix de ses abonnements avec
                         un préavis de 30 jours. En cas de refus du nouveau tarif, vous pouvez
                         résilier votre abonnement avant la date d&apos;entrée en vigueur du
                         changement.
@@ -667,26 +667,26 @@ function TermsContent() {
 
                     <div className="space-y-4 text-sm text-gray-600 leading-relaxed">
                       <p>
-                        La plateforme WhatsShop, y compris mais sans s&apos;y limiter le design,
+                        La plateforme Boutiko, y compris mais sans s&apos;y limiter le design,
                         le code source, les logos, les marques commerciales, les thèmes, les
                         templates et toute autre propriété intellectuelle, est la propriété
-                        exclusive de WhatsShop et est protégée par les lois applicables en
+                        exclusive de Boutiko et est protégée par les lois applicables en
                         matière de propriété intellectuelle.
                       </p>
                       <p>
                         Vous ne pouvez pas copier, modifier, distribuer, vendre ou exploiter
-                        de quelque manière que ce soit tout élément de la plateforme WhatsShop
+                        de quelque manière que ce soit tout élément de la plateforme Boutiko
                         sans notre autorisation écrite préalable et expresse.
                       </p>
                       <p>
                         Vous conservez tous les droits de propriété intellectuelle sur le contenu
                         que vous publiez sur votre boutique (images, descriptions, logo de votre
-                        marque, etc.). La licence accordée à WhatsShop (voir section 5) est
+                        marque, etc.). La licence accordée à Boutiko (voir section 5) est
                         limitée au fonctionnement de la plateforme.
                       </p>
                       <p>
-                        Les noms &laquo; WhatsShop &raquo;, &laquo; Whats &raquo; et les logos associés sont
-                        des marques commerciales déposées de WhatsShop. Leur utilisation sans
+                        Les noms &laquo; Boutiko &raquo; et les logos associés sont
+                        des marques commerciales déposées de Boutiko. Leur utilisation sans
                         autorisation est strictement interdite.
                       </p>
                     </div>
@@ -716,25 +716,25 @@ function TermsContent() {
 
                     <div className="space-y-4 text-sm text-gray-600 leading-relaxed">
                       <p>
-                        La plateforme WhatsShop est fournie &laquo; en l&apos;état &raquo; (&laquo; as is &raquo;) et
-                        &laquo; selon sa disponibilité &raquo;. WhatsShop ne garantit pas que la plateforme
+                        La plateforme Boutiko est fournie &laquo; en l&apos;état &raquo; (&laquo; as is &raquo;) et
+                        &laquo; selon sa disponibilité &raquo;. Boutiko ne garantit pas que la plateforme
                         sera disponible en permanence, sans interruption, sans erreur ou sécurisée
                         à 100 %.
                       </p>
                       <p>
-                        Dans la mesure maximale permise par la loi applicable, WhatsShop décline
+                        Dans la mesure maximale permise par la loi applicable, Boutiko décline
                         toute responsabilité pour les dommages directs, indirects, accessoires,
                         spéciaux ou consécutifs découlant de l&apos;utilisation ou de l&apos;incapacité
                         d&apos;utiliser la plateforme.
                       </p>
                       <p>
-                        WhatsShop n&apos;est pas responsable des transactions entre vendeurs et acheteurs,
+                        Boutiko n&apos;est pas responsable des transactions entre vendeurs et acheteurs,
                         de la qualité des produits vendus sur la plateforme, ni du contenu publié
                         par les utilisateurs. Les vendeurs sont seuls responsables de leurs
                         activités commerciales.
                       </p>
                       <p>
-                        WhatsShop ne saurait être tenu responsable en cas de force majeure,
+                        Boutiko ne saurait être tenu responsable en cas de force majeure,
                         interruption de service, panne de réseau, problèmes techniques ou toute
                         autre circonstance indépendante de sa volonté.
                       </p>
@@ -765,13 +765,13 @@ function TermsContent() {
 
                     <div className="space-y-4 text-sm text-gray-600 leading-relaxed">
                       <p>
-                        Vous pouvez résilier votre compte WhatsShop à tout moment en contactant
+                        Vous pouvez résilier votre compte Boutiko à tout moment en contactant
                         notre support client ou depuis les paramètres de votre compte. La
                         résiliation entraînera la suppression de votre boutique et de toutes les
                         données associées dans un délai de 30 jours.
                       </p>
                       <p>
-                        WhatsShop se réserve le droit de suspendre ou de résilier votre compte
+                        Boutiko se réserve le droit de suspendre ou de résilier votre compte
                         à tout moment, sans préavis, en cas de violation des présentes CGU,
                         d&apos;activité frauduleuse, d&apos;utilisation abusive de la plateforme ou
                         pour toute autre raison justifiée.
@@ -814,12 +814,12 @@ function TermsContent() {
 
                     <div className="space-y-4 text-sm text-gray-600 leading-relaxed">
                       <p>
-                        WhatsShop se réserve le droit de modifier les présentes Conditions
+                        Boutiko se réserve le droit de modifier les présentes Conditions
                         Générales d&apos;Utilisation à tout moment. Toute modification sera publiée
                         sur cette page avec la date de mise à jour.
                       </p>
                       <p>
-                        En cas de modification substantielle des CGU, WhatsShop s&apos;efforcera
+                        En cas de modification substantielle des CGU, Boutiko s&apos;efforcera
                         d&apos;en informer les utilisateurs par e-mail ou par notification sur la
                         plateforme au moins 15 jours avant l&apos;entrée en vigueur des changements.
                       </p>
@@ -909,14 +909,14 @@ function TermsContent() {
                             <Mail className="w-3.5 h-3.5 text-primary" />
                             E-mail
                           </p>
-                          <p className="text-sm text-gray-600">legal@whatsshop.com</p>
+                          <p className="text-sm text-gray-600">legal@boutiko.com</p>
                         </div>
                         <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                           <p className="text-xs font-bold text-gray-900 mb-1 flex items-center gap-1.5">
                             <Mail className="w-3.5 h-3.5 text-primary" />
                             Support client
                           </p>
-                          <p className="text-sm text-gray-600">support@whatsshop.com</p>
+                          <p className="text-sm text-gray-600">support@boutiko.com</p>
                         </div>
                         <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                           <p className="text-xs font-bold text-gray-900 mb-1 flex items-center gap-1.5">
@@ -952,7 +952,7 @@ function TermsContent() {
                       Document mis à jour en <span className="font-semibold text-gray-700">Janvier 2025</span>
                     </p>
                     <p className="text-xs text-gray-400 mt-2">
-                      WhatsShop — La plateforme e-commerce pour les vendeurs africains
+                      Boutiko — La plateforme e-commerce pour les vendeurs africains
                     </p>
                   </CardContent>
                 </Card>

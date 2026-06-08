@@ -55,7 +55,7 @@ function Logo({ light = false }: { light?: boolean }) {
         <ShoppingBag className="w-4.5 h-4.5 text-primary-foreground" />
       </div>
       <span className={`text-xl font-bold tracking-tight ${light ? 'text-white' : ''}`}>
-        Whats<span className="text-primary">Shop</span>
+        Bouti<span className="text-primary">ko</span>
       </span>
     </div>
   )
@@ -286,10 +286,10 @@ function PublicFooter() {
               <li className="flex items-center gap-3">
                 <Mail className="w-4 h-4 text-primary shrink-0" />
                 <a
-                  href="mailto:contact@whatsshop.com"
+                  href="mailto:contact@boutiko.com"
                   className="text-sm text-white/50 hover:text-white/80 transition-colors"
                 >
-                  contact@whatsshop.com
+                  contact@boutiko.com
                 </a>
               </li>
               <li className="flex items-center gap-3">
@@ -304,7 +304,7 @@ function PublicFooter() {
         <Separator className="my-10 bg-white/[0.06]" />
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm text-white/40">
-            © {new Date().getFullYear()} WhatsShop. Tous droits réservés.
+            © {new Date().getFullYear()} Boutiko. Tous droits réservés.
           </p>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5 text-white/40">

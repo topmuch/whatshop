@@ -99,7 +99,7 @@ function HeroBanner() {
           >
             À propos de{' '}
             <span className="bg-gradient-to-r from-[#EC4899] via-[#F59E0B] to-[#EC4899] bg-clip-text text-transparent">
-              WhatsShop
+              Boutiko
             </span>
           </motion.h1>
 
@@ -166,7 +166,7 @@ function MissionSection() {
             </motion.h2>
 
             <motion.p variants={fadeInUp} className="mt-6 text-lg text-gray-500 leading-relaxed">
-              WhatsShop est né d'un constat simple : des millions de vendeurs talentueux en Afrique
+              Boutiko est né d'un constat simple : des millions de vendeurs talentueux en Afrique
               méritent les mêmes outils e-commerce que les grandes marques. Notre mission est de
               démocratiser le commerce en ligne en créant une plateforme simple, accessible et
               adaptée aux réalités du marché africain.
@@ -252,7 +252,7 @@ function MissionSection() {
 const milestones = [
   {
     year: '2021',
-    title: 'Création de WhatsShop',
+    title: 'Création de Boutiko',
     description:
       "L'idée naît à Dakar : créer une plateforme e-commerce simple et accessible pour les vendeurs africains qui utilisent WhatsApp comme principal canal de vente.",
   },
@@ -260,13 +260,13 @@ const milestones = [
     year: '2022',
     title: '1 000 marchands',
     description:
-      "En un an, WhatsShop dépasse la barre des 1 000 marchands actifs. La plateforme est disponible en français et en anglais, couvrant 5 pays d'Afrique de l'Ouest.",
+      "En un an, Boutiko dépasse la barre des 1 000 marchands actifs. La plateforme est disponible en français et en anglais, couvrant 5 pays d'Afrique de l'Ouest.",
   },
   {
     year: '2023',
     title: 'Expansion en 15 pays',
     description:
-      "WhatsShop s'étend à 15 pays africains. Lancement des thèmes premium, des statistiques avancées et de l'intégration avec Instagram et TikTok.",
+      "Boutiko s'étend à 15 pays africains. Lancement des thèmes premium, des statistiques avancées et de l'intégration avec Instagram et TikTok.",
   },
   {
     year: '2024',
@@ -302,7 +302,7 @@ function HistorySection() {
             </span>
           </motion.h2>
           <motion.p variants={fadeInUp} className="mt-6 text-lg text-gray-500 max-w-2xl mx-auto">
-            De Dakar à toute l'Afrique, découvrez les étapes qui ont fait de WhatsShop la plateforme de référence
+            De Dakar à toute l'Afrique, découvrez les étapes qui ont fait de Boutiko la plateforme de référence
           </motion.p>
         </motion.div>
 
@@ -377,7 +377,7 @@ const values = [
     icon: Users,
     title: 'Communauté',
     description:
-      "WhatsShop, c'est avant tout une communauté de vendeurs passionnés. Nous apprenons de nos utilisateurs et construisons avec eux, pour eux.",
+      "Boutiko, c'est avant tout une communauté de vendeurs passionnés. Nous apprenons de nos utilisateurs et construisons avec eux, pour eux.",
     color: '#25D366',
   },
   {
@@ -465,7 +465,7 @@ const team = [
     name: 'Aminata Diallo',
     role: 'CEO & Fondatrice',
     description:
-      "Entrepreneuse passionnée, Aminata a fondé WhatsShop après avoir constaté les difficultés des vendeurs africains à se digitaliser.",
+      "Entrepreneuse passionnée, Aminata a fondé Boutiko après avoir constaté les difficultés des vendeurs africains à se digitaliser.",
     gradient: 'from-[#EC4899] to-[#F59E0B]',
   },
   {
@@ -529,7 +529,7 @@ function TeamSection() {
           >
             L'équipe derrière{' '}
             <span className="bg-gradient-to-r from-[#EC4899] to-[#F59E0B] bg-clip-text text-transparent">
-              WhatsShop
+              Boutiko
             </span>
           </motion.h2>
           <motion.p variants={fadeInUp} className="mt-6 text-lg text-white/60 max-w-2xl mx-auto">
@@ -613,12 +613,12 @@ function CTASection() {
           >
             Rejoignez l'aventure{' '}
             <span className="bg-gradient-to-r from-[#EC4899] via-[#F59E0B] to-[#EC4899] bg-clip-text text-transparent">
-              WhatsShop
+              Boutiko
             </span>
           </motion.h2>
 
           <motion.p variants={fadeInUp} className="mt-6 text-lg text-white/60 max-w-2xl mx-auto">
-            Créez votre boutique en ligne gratuitement et rejoignez plus de 2 000 marchands qui font confiance à WhatsShop pour développer leur business.
+            Créez votre boutique en ligne gratuitement et rejoignez plus de 2 000 marchands qui font confiance à Boutiko pour développer leur business.
           </motion.p>
 
           <motion.div variants={fadeInUp} className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">

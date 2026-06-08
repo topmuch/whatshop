@@ -372,7 +372,7 @@ function PricingCards() {
                       if (plan.price === '0') {
                         setView('register')
                       } else {
-                        const message = encodeURIComponent(`Bonjour, je suis intéressé(e) par l'abonnement ${plan.name} à ${plan.price} FCFA/mois sur WhatsShop. Merci de me renseigner.`)
+                        const message = encodeURIComponent(`Bonjour, je suis intéressé(e) par l'abonnement ${plan.name} à ${plan.price} FCFA/mois sur Boutiko. Merci de me renseigner.`)
                         window.open(`https://wa.me/2217848582226?text=${message}`, '_blank')
                       }
                     }}

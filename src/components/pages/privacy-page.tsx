@@ -331,18 +331,18 @@ function ContentSection() {
                 accentColor={PRIMARY}
               >
                 <p>
-                  Chez <strong className="text-gray-900">WhatsShop</strong>, nous prenons la protection de vos
+                  Chez <strong className="text-gray-900">Boutiko</strong>, nous prenons la protection de vos
                   données personnelles très au sérieux. La présente Politique de Confidentialité décrit comment
                   nous collectons, utilisons, stockons et protégeons vos informations lorsque vous utilisez
                   notre plateforme.
                 </p>
                 <p>
-                  En vous inscrivant sur WhatsShop ou en utilisant nos services, vous acceptez les pratiques
+                  En vous inscrivant sur Boutiko ou en utilisant nos services, vous acceptez les pratiques
                   décrites dans cette politique. Nous vous encourageons à la lire attentivement afin de
                   comprendre comment nous traitons vos données.
                 </p>
                 <p>
-                  WhatsShop est une plateforme e-commerce conçue pour les vendeurs et entrepreneurs africains.
+                  Boutiko est une plateforme e-commerce conçue pour les vendeurs et entrepreneurs africains.
                   Notre mission est de vous fournir les meilleurs outils pour développer votre activité en
                   ligne, tout en respectant votre vie privée.
                 </p>
@@ -499,7 +499,7 @@ function ContentSection() {
                     <div>
                       <strong className="text-gray-900">Obligations légales :</strong> Lorsque la loi, un
                       règlement ou une décision de justice l'exige, ou pour protéger les droits et la sécurité
-                      de WhatsShop et de ses utilisateurs.
+                      de Boutiko et de ses utilisateurs.
                     </div>
                   </li>
                 </ul>
@@ -518,7 +518,7 @@ function ContentSection() {
                 accentColor={PRIMARY}
               >
                 <p>
-                  La sécurité de vos données est une priorité absolue pour WhatsShop. Nous mettons en œuvre
+                  La sécurité de vos données est une priorité absolue pour Boutiko. Nous mettons en œuvre
                   les mesures techniques et organisationnelles suivantes :
                 </p>
                 <ul className="space-y-3 mt-2">
@@ -636,7 +636,7 @@ function ContentSection() {
                 accentColor={PRIMARY}
               >
                 <p>
-                  WhatsShop utilise des cookies et technologies similaires pour améliorer votre expérience
+                  Boutiko utilise des cookies et technologies similaires pour améliorer votre expérience
                   sur notre plateforme. Voici les types de cookies que nous utilisons :
                 </p>
                 <ul className="space-y-3 mt-2">
@@ -722,7 +722,7 @@ function ContentSection() {
                 accentColor={PRIMARY}
               >
                 <p>
-                  WhatsShop se réserve le droit de modifier la présente Politique de Confidentialité à tout
+                  Boutiko se réserve le droit de modifier la présente Politique de Confidentialité à tout
                   moment. Les modifications seront appliquées dès leur publication sur notre plateforme.
                 </p>
                 <p>
@@ -740,7 +740,7 @@ function ContentSection() {
                     <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
                     <div>
                       <strong className="text-gray-900">Notification sur la plateforme :</strong> Affichage d'un
-                      avis visible lors de votre prochaine connexion à WhatsShop.
+                      avis visible lors de votre prochaine connexion à Boutiko.
                     </div>
                   </li>
                   <li className="flex items-start gap-3">
@@ -778,7 +778,7 @@ function ContentSection() {
                     </div>
                     <div>
                       <p className="font-semibold text-gray-900 text-sm">Email</p>
-                      <p className="text-gray-500 text-sm">contact@whatsshop.com</p>
+                      <p className="text-gray-500 text-sm">contact@boutiko.com</p>
                     </div>
                   </div>
 
@@ -788,7 +788,7 @@ function ContentSection() {
                     </div>
                     <div>
                       <p className="font-semibold text-gray-900 text-sm">DPO (Délégué Protection)</p>
-                      <p className="text-gray-500 text-sm">dpo@whatsshop.com</p>
+                      <p className="text-gray-500 text-sm">dpo@boutiko.com</p>
                     </div>
                   </div>
                 </div>
@@ -798,7 +798,7 @@ function ContentSection() {
                   ouvrables, conformément aux exigences du RGPD.
                 </p>
                 <p>
-                  <strong className="text-gray-900">WhatsShop</strong> · Dakar, Sénégal
+                  <strong className="text-gray-900">Boutiko</strong> · Dakar, Sénégal
                 </p>
               </LegalSection>
 

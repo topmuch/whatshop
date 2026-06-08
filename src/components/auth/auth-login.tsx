@@ -52,13 +52,13 @@ export function AuthLogin() {
             <Store className="h-6 w-6" />
           </div>
           <CardTitle>Connexion</CardTitle>
-          <CardDescription>Connectez-vous à votre compte WhatsShop</CardDescription>
+          <CardDescription>Connectez-vous à votre compte Boutiko</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="login-email">Email</Label>
-              <Input id="login-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="demo@whatsshop.com" required />
+              <Input id="login-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="demo@boutiko.com" required />
             </div>
             <div className="space-y-2">
               <Label htmlFor="login-password">Mot de passe</Label>
@@ -76,8 +76,8 @@ export function AuthLogin() {
             </p>
             <div className="mt-4 rounded-lg border bg-muted/50 p-3 space-y-1">
               <p className="text-xs text-muted-foreground font-medium">Comptes démo :</p>
-              <p className="text-xs font-mono">Vendeur : demo@whatsshop.com / demo123</p>
-              <p className="text-xs font-mono">Admin : admin@whatsshop.com / admin123</p>
+              <p className="text-xs font-mono">Vendeur : demo@boutiko.com / demo123</p>
+              <p className="text-xs font-mono">Admin : admin@boutiko.com / admin123</p>
             </div>
           </form>
         </CardContent>

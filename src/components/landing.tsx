@@ -78,7 +78,7 @@ function Logo({ light = false }: { light?: boolean }) {
         <ShoppingBag className="w-4.5 h-4.5 text-primary-foreground" />
       </div>
       <span className={`text-xl font-bold tracking-tight ${light ? 'text-white' : ''}`}>
-        Whats<span className="text-primary">Shop</span>
+        Bouti<span className="text-primary">ko</span>
       </span>
     </div>
   )
@@ -592,7 +592,7 @@ function FeaturesSection() {
           >
             POURQUOI{' '}
             <span className="bg-gradient-to-r from-[#EC4899] to-[#F59E0B] bg-clip-text text-transparent">
-              WHATSSHOP
+              BOUTIKO
             </span>
             <span className="text-white"> ?</span>
           </motion.h2>
@@ -739,7 +739,7 @@ const testimonials = [
   {
     name: 'Aminata Diallo',
     location: 'Dakar, Sénégal',
-    text: "WhatsShop a transformé mes ventes Instagram. Je reçois maintenant 3x plus de commandes et mes clientes adorent l'expérience d'achat.",
+    text: "Boutiko a transformé mes ventes Instagram. Je reçois maintenant 3x plus de commandes et mes clientes adorent l'expérience d'achat.",
     initials: 'AD',
     rating: 5,
   },
@@ -788,7 +788,7 @@ function TestimonialSection() {
             </span>
           </motion.h2>
           <motion.p variants={fadeInUp} className="mt-6 text-lg text-white/60 max-w-2xl mx-auto">
-            Plus de 2 000 vendeurs font confiance à WhatsShop pour développer leur business
+            Plus de 2 000 vendeurs font confiance à Boutiko pour développer leur business
           </motion.p>
         </motion.div>
 
@@ -980,7 +980,7 @@ function PricingSection() {
                       if (plan.price === '0') {
                         setView('register')
                       } else {
-                        const message = encodeURIComponent(`Bonjour, je suis intéressé(e) par l'abonnement ${plan.name} à ${plan.price} FCFA/mois sur WhatsShop.`)
+                        const message = encodeURIComponent(`Bonjour, je suis intéressé(e) par l'abonnement ${plan.name} à ${plan.price} FCFA/mois sur Boutiko.`)
                         window.open(`https://wa.me/2217848582226?text=${message}`, '_blank')
                       }
                     }}
@@ -1043,7 +1043,7 @@ function CTASection() {
             votre business ?
           </motion.h2>
           <motion.p variants={fadeInUp} className="mt-6 text-lg text-white/60 max-w-xl mx-auto">
-            Rejoignez +2 000 marchands qui font confiance à WhatsShop.
+            Rejoignez +2 000 marchands qui font confiance à Boutiko.
             <br className="hidden sm:block" />
             Créez votre boutique en 30 secondes.
           </motion.p>
@@ -1147,7 +1147,7 @@ function Footer() {
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="w-4 h-4 text-primary shrink-0" />
-                <a href="mailto:contact@whatsshop.com" className="text-sm text-white/50 hover:text-white/80 transition-colors">contact@whatsshop.com</a>
+                <a href="mailto:contact@boutiko.com" className="text-sm text-white/50 hover:text-white/80 transition-colors">contact@boutiko.com</a>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="w-4 h-4 text-primary shrink-0" />
@@ -1162,7 +1162,7 @@ function Footer() {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <p className="text-sm text-white/40">
-              © {new Date().getFullYear()} WhatsShop. Tous droits réservés.
+              © {new Date().getFullYear()} Boutiko. Tous droits réservés.
             </p>
             <div className="flex items-center gap-3">
               <button onClick={() => setView('privacy')} className="text-sm text-white/40 hover:text-white/70 transition-colors">

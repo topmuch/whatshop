@@ -79,24 +79,24 @@ const categories: CategoryData[] = [
     color: '#EC4899',
     faqs: [
       {
-        question: "Qu'est-ce que WhatsShop ?",
+        question: "Qu'est-ce que Boutiko ?",
         answer:
-          "WhatsShop est une plateforme SaaS qui permet aux vendeurs africains de créer une boutique en ligne en quelques minutes et de recevoir des commandes directement via WhatsApp. Pas besoin de compétences techniques, tout se fait depuis votre téléphone.",
+          "Boutiko est une plateforme SaaS qui permet aux vendeurs africains de créer une boutique en ligne en quelques minutes et de recevoir des commandes directement via WhatsApp. Pas besoin de compétences techniques, tout se fait depuis votre téléphone.",
       },
       {
-        question: 'Dans quels pays WhatsShop est-il disponible ?',
+        question: 'Dans quels pays Boutiko est-il disponible ?',
         answer:
-          "WhatsShop est disponible dans plus de 15 pays africains, dont le Sénégal, la Côte d'Ivoire, le Mali, le Cameroun, le Burkina Faso, le Niger, la Guinée, le Togo, le Bénin, le Ghana, le Congo, la RDC, le Tchad, le Gabon et la République centrafricaine. Nous continuons à nous étendre.",
+          "Boutiko est disponible dans plus de 15 pays africains, dont le Sénégal, la Côte d'Ivoire, le Mali, le Cameroun, le Burkina Faso, le Niger, la Guinée, le Togo, le Bénin, le Ghana, le Congo, la RDC, le Tchad, le Gabon et la République centrafricaine. Nous continuons à nous étendre.",
       },
       {
         question: 'Ai-je besoin de compétences techniques ?',
         answer:
-          "Absolument pas ! WhatsShop est conçu pour être utilisé par tout le monde. Pas besoin de savoir coder ou d'avoir des connaissances en informatique. L'interface est intuitive et tout se fait en quelques clics depuis votre téléphone ou votre ordinateur.",
+          "Absolument pas ! Boutiko est conçu pour être utilisé par tout le monde. Pas besoin de savoir coder ou d'avoir des connaissances en informatique. L'interface est intuitive et tout se fait en quelques clics depuis votre téléphone ou votre ordinateur.",
       },
       {
         question: 'Combien de temps faut-il pour créer une boutique ?',
         answer:
-          "Avec WhatsShop, vous pouvez créer votre boutique en ligne en moins de 3 minutes. Il vous suffit de vous inscrire, de choisir un thème, d'ajouter vos produits et votre boutique est prête à recevoir des commandes.",
+          "Avec Boutiko, vous pouvez créer votre boutique en ligne en moins de 3 minutes. Il vous suffit de vous inscrire, de choisir un thème, d'ajouter vos produits et votre boutique est prête à recevoir des commandes.",
       },
     ],
   },
@@ -114,7 +114,7 @@ const categories: CategoryData[] = [
       {
         question: 'Puis-je personnaliser le design de ma boutique ?',
         answer:
-          "Oui ! WhatsShop propose 12 thèmes premium que vous pouvez personnaliser. Vous pouvez modifier les couleurs, ajouter votre logo, personnaliser la bannière et adapter le design pour qu'il reflète l'identité de votre marque. Le plan Standard et Premium offrent encore plus d'options de personnalisation.",
+          "Oui ! Boutiko propose 12 thèmes premium que vous pouvez personnaliser. Vous pouvez modifier les couleurs, ajouter votre logo, personnaliser la bannière et adapter le design pour qu'il reflète l'identité de votre marque. Le plan Standard et Premium offrent encore plus d'options de personnalisation.",
       },
       {
         question: 'Comment ajouter mes produits ?',
@@ -152,7 +152,7 @@ const categories: CategoryData[] = [
       {
         question: 'Y a-t-il des frais cachés ?',
         answer:
-          "Non, il n'y a aucun frais caché avec WhatsShop. Le prix affiché est le prix que vous payez. Pas de frais de configuration, pas de frais de transaction, pas de frais supplémentaires. Vous pouvez commencer gratuitement et choisir un plan payant uniquement quand vous êtes prêt.",
+          "Non, il n'y a aucun frais caché avec Boutiko. Le prix affiché est le prix que vous payez. Pas de frais de configuration, pas de frais de transaction, pas de frais supplémentaires. Vous pouvez commencer gratuitement et choisir un plan payant uniquement quand vous êtes prêt.",
       },
     ],
   },
@@ -175,7 +175,7 @@ const categories: CategoryData[] = [
       {
         question: 'Comment fonctionnent les statistiques ?',
         answer:
-          "WhatsShop vous offre un tableau de bord de statistiques complet. Vous pouvez suivre le nombre de visites, de commandes, de vues par produit, les revenus générés, et les performances de vos produits les plus vendus. Les statistiques sont en temps réel et accessibles depuis votre téléphone ou votre ordinateur.",
+          "Boutiko vous offre un tableau de bord de statistiques complet. Vous pouvez suivre le nombre de visites, de commandes, de vues par produit, les revenus générés, et les performances de vos produits les plus vendus. Les statistiques sont en temps réel et accessibles depuis votre téléphone ou votre ordinateur.",
       },
       {
         question: "Qu'est-ce que l'IA pour descriptions ?",
@@ -193,7 +193,7 @@ const categories: CategoryData[] = [
       {
         question: 'Comment contacter le support ?',
         answer:
-          "Vous pouvez contacter notre support par plusieurs moyens : via le chat en direct sur notre site, par email à support@whatsshop.com, ou directement par WhatsApp. Notre équipe est disponible pour vous aider avec toutes vos questions.",
+          "Vous pouvez contacter notre support par plusieurs moyens : via le chat en direct sur notre site, par email à support@boutiko.com, ou directement par WhatsApp. Notre équipe est disponible pour vous aider avec toutes vos questions.",
       },
       {
         question: 'Quel est le délai de réponse ?',

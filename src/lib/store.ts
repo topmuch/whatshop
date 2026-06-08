@@ -167,7 +167,7 @@ export const useAppStore = create<AppState>()(
       setPublicCategories: (categories) => set({ publicCategories: categories }),
     }),
     {
-      name: 'whatsshop-storage',
+      name: 'boutiko-storage',
       partialize: (state) => ({
         cart: state.cart,
       }),
