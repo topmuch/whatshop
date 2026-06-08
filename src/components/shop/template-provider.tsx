@@ -1,7 +1,20 @@
 'use client'
 
-import { type ReactNode, useMemo } from 'react'
-import { templates, type TemplateId } from '@/lib/templates'
+import { type ReactNode, useMemo, createContext, useContext } from 'react'
+import { templates, type TemplateId, type ShopTemplate } from '@/lib/templates'
+
+interface TemplateContextValue {
+  template: ShopTemplate
+  cssVars: React.CSSProperties
+}
+
+const TemplateContext = createContext<TemplateContextValue | null>(null)
+
+export function useTemplate() {
+  const ctx = useContext(TemplateContext)
+  if (!ctx) throw new Error('useTemplate must be used within TemplateProvider')
+  return ctx.template
+}
 
 interface TemplateProviderProps {
   templateId: string
@@ -9,10 +22,13 @@ interface TemplateProviderProps {
 }
 
 export function TemplateProvider({ templateId, children }: TemplateProviderProps) {
-  const t = useMemo(() => templates[(templateId as TemplateId) || 'classic'] || templates.classic, [templateId])
+  const template = useMemo(
+    () => templates[(templateId as TemplateId) || 'classic'] || templates.classic,
+    [templateId]
+  )
 
   const cssVars = useMemo(() => {
-    const c = t.colors
+    const c = template.colors
     return {
       '--tpl-bg': c.bg,
       '--tpl-card': c.card,
@@ -32,15 +48,22 @@ export function TemplateProvider({ templateId, children }: TemplateProviderProps
       '--tpl-filter-active-fg': c.filterActiveFg,
       '--tpl-badge-new': c.badgeNew,
       '--tpl-badge-promo': c.badgePromo,
-      '--tpl-card-rounded': t.cardStyle.rounded,
-      '--tpl-card-shadow': t.cardStyle.shadow,
-      '--tpl-image-rounded': t.cardStyle.imageRounded,
+      '--tpl-hero-overlay': c.heroOverlay,
+      '--tpl-hero-badge': c.heroBadge,
+      '--tpl-hero-text': c.heroText,
+      '--tpl-card-rounded': template.cardStyle.rounded,
+      '--tpl-card-shadow': template.cardStyle.shadow,
+      '--tpl-image-rounded': template.cardStyle.imageRounded,
     } as React.CSSProperties
-  }, [t])
+  }, [template])
+
+  const contextValue = useMemo(() => ({ template, cssVars }), [template, cssVars])
 
   return (
-    <div style={cssVars} className="min-h-screen" data-template={t.id}>
-      {children}
-    </div>
+    <TemplateContext.Provider value={contextValue}>
+      <div style={cssVars} className="min-h-screen" data-template={template.id}>
+        {children}
+      </div>
+    </TemplateContext.Provider>
   )
 }

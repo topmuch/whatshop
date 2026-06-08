@@ -1,4 +1,4 @@
-export type TemplateId = 'classic' | 'africa' | 'minimal' | 'elegant' | 'neon'
+export type TemplateId = 'classic' | 'africa' | 'minimal' | 'elegant' | 'neon' | 'rose' | 'ocean' | 'sunset'
 
 export interface ShopTemplate {
   id: TemplateId
@@ -24,12 +24,39 @@ export interface ShopTemplate {
     priceColor: string
     ctaBg: string
     ctaFg: string
+    heroOverlay: string
+    heroBadge: string
+    heroText: string
   }
   cardStyle: {
     rounded: string
     shadow: string
     imageRounded: string
     overflow: string
+    border: string
+    hoverBorder: string
+    hoverScale: string
+  }
+  layout: {
+    gridCols: string // Tailwind grid classes
+    headerStyle: 'standard' | 'centered' | 'minimal' | 'dark' | 'gradient' | 'elevated'
+    cardLayout: 'grid' | 'list' | 'masonry' | 'compact' | 'featured'
+    showCardBorder: boolean
+    cardPadding: string
+    imageSize: string // aspect ratio class
+    badgePosition: 'top-left' | 'top-right' | 'overlay'
+    badgeStyle: 'pill' | 'rounded' | 'tag'
+    categoryStyle: 'pill' | 'underline' | 'button'
+    heroStyle: 'full' | 'contained' | 'minimal' | 'dark' | 'gradient'
+    priceStyle: 'bold' | 'elegant' | 'minimal' | 'tag'
+    buttonStyle: 'filled' | 'outlined' | 'ghost' | 'rounded' | 'pill'
+    footerStyle: 'standard' | 'dark' | 'minimal' | 'gradient'
+  }
+  decorative: {
+    pattern: 'none' | 'dots' | 'lines' | 'kente' | 'waves' | 'gradient'
+    gradientBg: string | null
+    divider: 'line' | 'dots' | 'none' | 'gradient'
+    headerDecoration: string | null // Extra header class
   }
 }
 
@@ -58,18 +85,45 @@ export const templates: Record<TemplateId, ShopTemplate> = {
       priceColor: '#16a34a',
       ctaBg: '#25D366',
       ctaFg: '#ffffff',
+      heroOverlay: 'linear-gradient(135deg, rgba(37,211,102,0.7) 0%, rgba(18,140,126,0.8) 100%)',
+      heroBadge: 'rgba(255,255,255,0.2)',
+      heroText: '#ffffff',
     },
     cardStyle: {
       rounded: '12px',
       shadow: '0 1px 3px rgba(0,0,0,0.08)',
       imageRounded: '12px 12px 0 0',
       overflow: 'hidden',
+      border: 'none',
+      hoverBorder: 'none',
+      hoverScale: 'scale(1)',
+    },
+    layout: {
+      gridCols: 'grid-cols-2 md:grid-cols-3',
+      headerStyle: 'standard',
+      cardLayout: 'grid',
+      showCardBorder: false,
+      cardPadding: 'p-3',
+      imageSize: 'aspect-square',
+      badgePosition: 'top-left',
+      badgeStyle: 'pill',
+      categoryStyle: 'pill',
+      heroStyle: 'full',
+      priceStyle: 'bold',
+      buttonStyle: 'filled',
+      footerStyle: 'standard',
+    },
+    decorative: {
+      pattern: 'none',
+      gradientBg: null,
+      divider: 'line',
+      headerDecoration: null,
     },
   },
   africa: {
     id: 'africa',
     name: 'Afrique',
-    description: 'Tons chauds, terre cuite et or',
+    description: 'Tons chauds, terre cuite et or, motifs africains',
     emoji: '🌍',
     colors: {
       primary: '#C45D2C',
@@ -90,12 +144,39 @@ export const templates: Record<TemplateId, ShopTemplate> = {
       priceColor: '#C45D2C',
       ctaBg: '#C45D2C',
       ctaFg: '#ffffff',
+      heroOverlay: 'linear-gradient(135deg, rgba(196,93,44,0.75) 0%, rgba(212,168,67,0.7) 100%)',
+      heroBadge: 'rgba(212,168,67,0.3)',
+      heroText: '#ffffff',
     },
     cardStyle: {
       rounded: '16px',
       shadow: '0 2px 8px rgba(196,93,44,0.1)',
       imageRounded: '16px 16px 0 0',
       overflow: 'hidden',
+      border: '2px solid transparent',
+      hoverBorder: '2px solid #E8D5B7',
+      hoverScale: 'scale(1.02)',
+    },
+    layout: {
+      gridCols: 'grid-cols-2 md:grid-cols-3',
+      headerStyle: 'centered',
+      cardLayout: 'grid',
+      showCardBorder: false,
+      cardPadding: 'p-4',
+      imageSize: 'aspect-[4/3]',
+      badgePosition: 'top-left',
+      badgeStyle: 'rounded',
+      categoryStyle: 'button',
+      heroStyle: 'gradient',
+      priceStyle: 'tag',
+      buttonStyle: 'rounded',
+      footerStyle: 'standard',
+    },
+    decorative: {
+      pattern: 'kente',
+      gradientBg: 'linear-gradient(180deg, #FFF8F0 0%, #FEF3E2 50%, #FFF8F0 100%)',
+      divider: 'gradient',
+      headerDecoration: 'border-b-2 border-dashed',
     },
   },
   minimal: {
@@ -122,12 +203,39 @@ export const templates: Record<TemplateId, ShopTemplate> = {
       priceColor: '#09090b',
       ctaBg: '#18181b',
       ctaFg: '#ffffff',
+      heroOverlay: 'linear-gradient(135deg, rgba(24,24,27,0.85) 0%, rgba(82,82,91,0.8) 100%)',
+      heroBadge: 'rgba(255,255,255,0.15)',
+      heroText: '#ffffff',
     },
     cardStyle: {
-      rounded: '8px',
+      rounded: '4px',
       shadow: 'none',
-      imageRounded: '8px 8px 0 0',
+      imageRounded: '4px 4px 0 0',
       overflow: 'hidden',
+      border: '1px solid #e4e4e7',
+      hoverBorder: '1px solid #18181b',
+      hoverScale: 'scale(1)',
+    },
+    layout: {
+      gridCols: 'grid-cols-2 md:grid-cols-3',
+      headerStyle: 'minimal',
+      cardLayout: 'compact',
+      showCardBorder: true,
+      cardPadding: 'p-2.5',
+      imageSize: 'aspect-square',
+      badgePosition: 'top-right',
+      badgeStyle: 'tag',
+      categoryStyle: 'underline',
+      heroStyle: 'minimal',
+      priceStyle: 'minimal',
+      buttonStyle: 'ghost',
+      footerStyle: 'minimal',
+    },
+    decorative: {
+      pattern: 'none',
+      gradientBg: null,
+      divider: 'line',
+      headerDecoration: null,
     },
   },
   elegant: {
@@ -154,12 +262,39 @@ export const templates: Record<TemplateId, ShopTemplate> = {
       priceColor: '#D4A843',
       ctaBg: '#D4A843',
       ctaFg: '#1a1a1a',
+      heroOverlay: 'linear-gradient(135deg, rgba(15,15,15,0.8) 0%, rgba(212,168,67,0.4) 100%)',
+      heroBadge: 'rgba(212,168,67,0.25)',
+      heroText: '#f5f5f5',
     },
     cardStyle: {
       rounded: '12px',
       shadow: '0 4px 12px rgba(212,168,67,0.15)',
       imageRounded: '12px 12px 0 0',
       overflow: 'hidden',
+      border: '1px solid #2a2a2a',
+      hoverBorder: '1px solid #D4A843',
+      hoverScale: 'scale(1.02)',
+    },
+    layout: {
+      gridCols: 'grid-cols-2 md:grid-cols-3',
+      headerStyle: 'dark',
+      cardLayout: 'featured',
+      showCardBorder: true,
+      cardPadding: 'p-4',
+      imageSize: 'aspect-[3/4]',
+      badgePosition: 'overlay',
+      badgeStyle: 'rounded',
+      categoryStyle: 'pill',
+      heroStyle: 'dark',
+      priceStyle: 'elegant',
+      buttonStyle: 'filled',
+      footerStyle: 'dark',
+    },
+    decorative: {
+      pattern: 'gradient',
+      gradientBg: 'radial-gradient(ellipse at top, rgba(212,168,67,0.05) 0%, transparent 60%)',
+      divider: 'gradient',
+      headerDecoration: 'border-b border-amber-900/30',
     },
   },
   neon: {
@@ -181,17 +316,221 @@ export const templates: Record<TemplateId, ShopTemplate> = {
       badgePromo: '#A855F7',
       cartBg: '#18181b',
       headerBg: 'rgba(9,9,11,0.95)',
-      filterActive: 'linear-gradient(135deg, #A855F7, #06B6D4)',
+      filterActive: '#A855F7',
       filterActiveFg: '#ffffff',
       priceColor: '#A855F7',
       ctaBg: 'linear-gradient(135deg, #A855F7, #06B6D4)',
       ctaFg: '#ffffff',
+      heroOverlay: 'linear-gradient(135deg, rgba(168,85,247,0.7) 0%, rgba(6,182,212,0.7) 100%)',
+      heroBadge: 'rgba(168,85,247,0.25)',
+      heroText: '#ffffff',
     },
     cardStyle: {
       rounded: '16px',
       shadow: '0 0 20px rgba(168,85,247,0.1)',
       imageRounded: '16px 16px 0 0',
       overflow: 'hidden',
+      border: '1px solid #27272a',
+      hoverBorder: '1px solid #A855F7',
+      hoverScale: 'scale(1.03)',
+    },
+    layout: {
+      gridCols: 'grid-cols-2 md:grid-cols-3',
+      headerStyle: 'dark',
+      cardLayout: 'grid',
+      showCardBorder: true,
+      cardPadding: 'p-3',
+      imageSize: 'aspect-square',
+      badgePosition: 'top-left',
+      badgeStyle: 'pill',
+      categoryStyle: 'pill',
+      heroStyle: 'gradient',
+      priceStyle: 'bold',
+      buttonStyle: 'filled',
+      footerStyle: 'dark',
+    },
+    decorative: {
+      pattern: 'gradient',
+      gradientBg: 'radial-gradient(ellipse at bottom right, rgba(168,85,247,0.08) 0%, transparent 60%)',
+      divider: 'gradient',
+      headerDecoration: 'border-b border-purple-900/30',
+    },
+  },
+  rose: {
+    id: 'rose',
+    name: 'Rose',
+    description: 'Doux et romantique, parfait pour la mode et beauté',
+    emoji: '🌸',
+    colors: {
+      primary: '#EC4899',
+      primaryFg: '#ffffff',
+      accent: '#F9A8D4',
+      bg: '#FFF1F8',
+      card: '#ffffff',
+      cardHover: '#FDF2F8',
+      text: '#1a1a2e',
+      textMuted: '#be185d',
+      border: '#F9A8D4',
+      badgeNew: '#EC4899',
+      badgePromo: '#F43F5E',
+      cartBg: '#FFF1F8',
+      headerBg: 'rgba(255,241,248,0.95)',
+      filterActive: '#EC4899',
+      filterActiveFg: '#ffffff',
+      priceColor: '#EC4899',
+      ctaBg: '#EC4899',
+      ctaFg: '#ffffff',
+      heroOverlay: 'linear-gradient(135deg, rgba(236,72,153,0.7) 0%, rgba(249,168,212,0.7) 100%)',
+      heroBadge: 'rgba(236,72,153,0.25)',
+      heroText: '#ffffff',
+    },
+    cardStyle: {
+      rounded: '20px',
+      shadow: '0 2px 12px rgba(236,72,153,0.1)',
+      imageRounded: '20px 20px 0 0',
+      overflow: 'hidden',
+      border: 'none',
+      hoverBorder: 'none',
+      hoverScale: 'scale(1.02)',
+    },
+    layout: {
+      gridCols: 'grid-cols-2 md:grid-cols-3',
+      headerStyle: 'centered',
+      cardLayout: 'grid',
+      showCardBorder: false,
+      cardPadding: 'p-3',
+      imageSize: 'aspect-[3/4]',
+      badgePosition: 'top-left',
+      badgeStyle: 'rounded',
+      categoryStyle: 'pill',
+      heroStyle: 'gradient',
+      priceStyle: 'bold',
+      buttonStyle: 'pill',
+      footerStyle: 'standard',
+    },
+    decorative: {
+      pattern: 'dots',
+      gradientBg: 'radial-gradient(circle at top left, rgba(236,72,153,0.06) 0%, transparent 50%)',
+      divider: 'gradient',
+      headerDecoration: null,
+    },
+  },
+  ocean: {
+    id: 'ocean',
+    name: 'Océan',
+    description: 'Bleu profond et apaisant, style frais et professionnel',
+    emoji: '🌊',
+    colors: {
+      primary: '#0891B2',
+      primaryFg: '#ffffff',
+      accent: '#06B6D4',
+      bg: '#F0F9FF',
+      card: '#ffffff',
+      cardHover: '#ECFEFF',
+      text: '#0c4a6e',
+      textMuted: '#0e7490',
+      border: '#BAE6FD',
+      badgeNew: '#0891B2',
+      badgePromo: '#0284C7',
+      cartBg: '#F0F9FF',
+      headerBg: 'rgba(240,249,255,0.95)',
+      filterActive: '#0891B2',
+      filterActiveFg: '#ffffff',
+      priceColor: '#0E7490',
+      ctaBg: '#0891B2',
+      ctaFg: '#ffffff',
+      heroOverlay: 'linear-gradient(135deg, rgba(8,145,178,0.75) 0%, rgba(6,182,212,0.7) 100%)',
+      heroBadge: 'rgba(8,145,178,0.25)',
+      heroText: '#ffffff',
+    },
+    cardStyle: {
+      rounded: '12px',
+      shadow: '0 1px 6px rgba(8,145,178,0.1)',
+      imageRounded: '12px 12px 0 0',
+      overflow: 'hidden',
+      border: '1px solid #BAE6FD',
+      hoverBorder: '1px solid #0891B2',
+      hoverScale: 'scale(1.01)',
+    },
+    layout: {
+      gridCols: 'grid-cols-2 md:grid-cols-3',
+      headerStyle: 'standard',
+      cardLayout: 'grid',
+      showCardBorder: true,
+      cardPadding: 'p-3',
+      imageSize: 'aspect-square',
+      badgePosition: 'top-right',
+      badgeStyle: 'pill',
+      categoryStyle: 'pill',
+      heroStyle: 'contained',
+      priceStyle: 'bold',
+      buttonStyle: 'filled',
+      footerStyle: 'standard',
+    },
+    decorative: {
+      pattern: 'waves',
+      gradientBg: 'linear-gradient(180deg, #F0F9FF 0%, #E0F2FE 100%)',
+      divider: 'line',
+      headerDecoration: null,
+    },
+  },
+  sunset: {
+    id: 'sunset',
+    name: 'Coucher de soleil',
+    description: 'Dégradé chaud orange-violet, énergie vibrante',
+    emoji: '🌅',
+    colors: {
+      primary: '#F97316',
+      primaryFg: '#ffffff',
+      accent: '#8B5CF6',
+      bg: '#FFFBF5',
+      card: '#ffffff',
+      cardHover: '#FFF7ED',
+      text: '#1c1917',
+      textMuted: '#92400e',
+      border: '#FED7AA',
+      badgeNew: '#8B5CF6',
+      badgePromo: '#F97316',
+      cartBg: '#FFFBF5',
+      headerBg: 'rgba(255,251,245,0.95)',
+      filterActive: 'linear-gradient(135deg, #F97316, #8B5CF6)',
+      filterActiveFg: '#ffffff',
+      priceColor: '#F97316',
+      ctaBg: 'linear-gradient(135deg, #F97316, #8B5CF6)',
+      ctaFg: '#ffffff',
+      heroOverlay: 'linear-gradient(135deg, rgba(249,115,22,0.75) 0%, rgba(139,92,246,0.7) 100%)',
+      heroBadge: 'rgba(249,115,22,0.25)',
+      heroText: '#ffffff',
+    },
+    cardStyle: {
+      rounded: '14px',
+      shadow: '0 2px 10px rgba(249,115,22,0.1)',
+      imageRounded: '14px 14px 0 0',
+      overflow: 'hidden',
+      border: 'none',
+      hoverBorder: 'none',
+      hoverScale: 'scale(1.03)',
+    },
+    layout: {
+      gridCols: 'grid-cols-2 md:grid-cols-3',
+      headerStyle: 'gradient',
+      cardLayout: 'grid',
+      showCardBorder: false,
+      cardPadding: 'p-3',
+      imageSize: 'aspect-square',
+      badgePosition: 'top-left',
+      badgeStyle: 'pill',
+      categoryStyle: 'pill',
+      heroStyle: 'gradient',
+      priceStyle: 'bold',
+      buttonStyle: 'pill',
+      footerStyle: 'standard',
+    },
+    decorative: {
+      pattern: 'gradient',
+      gradientBg: 'linear-gradient(180deg, #FFFBF5 0%, #FFF7ED 50%, #F5F3FF 100%)',
+      divider: 'gradient',
+      headerDecoration: 'border-b border-orange-200/50',
     },
   },
 }

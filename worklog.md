@@ -84,19 +84,13 @@ Work Log:
 - Updated session route to read cookie and return user+shop data
 - Added DELETE method to session route for logout
 - Updated logout in dashboard to call session DELETE and clear state
-- Removed dead code (duplicate renderTab function) from seller-dashboard
-- Updated "Voir une démo" button to navigate to demo shop (amina-shop slug)
-- Seeded demo data: 1 user, 1 shop, 3 categories, 8 products, 3 orders, 47 visits
+- Seeded demo data: user Aminata Diallo, shop amina-shop, categories, products, orders
 - Demo credentials: demo@whatsshop.com / demo123
-- All lint checks pass (0 errors)
-- API verified: login returns user + shop data correctly
 
 Stage Summary:
 - End-to-end auth flow working with cookie persistence
-- Demo data seeded and accessible
 - All 5 views functional: landing, login, register, dashboard, public shop
 - WhatsApp order generation with wa.me deep link
-- Complete MVP ready for testing
 
 ---
 Task ID: 10-13
@@ -104,43 +98,14 @@ Agent: AI Tools + QR Code Agent
 Task: Build AI Content Generator and QR Code / Poster features
 
 Work Log:
-- Updated store.ts DashboardTab type to include 'ai-tools'
-- Created API route /api/ai/generate-content with z-ai-web-dev-sdk integration
-  - Uses LLM to generate marketing content for Instagram, Facebook, WhatsApp
-  - Parses JSON response with markdown fallback
-  - Returns structured content with hashtags
-- Created API route /api/ai/qr-code
-  - Uses free QR code API (qrserver.com) to generate SVG QR codes
-  - WhatsApp green color theme for QR codes
-- Created dashboard-ai-tools.tsx with two sections:
-  - Section A: AI Content Generator
-    - Product selector (dropdown from shop products) OR manual input
-    - Tab switching between product/manual mode
-    - Loading skeleton during generation
-    - Three result cards: Instagram (pink), Facebook (blue), WhatsApp (green)
-    - Copy to clipboard with feedback
-    - WhatsApp send via wa.me deep link
-    - Hashtag pills display
-  - Section B: QR Code & Poster
-    - QR code generation for shop URL
-    - SVG download
-    - Poster preview with print functionality (window.print)
-    - Social share button (Web Share API)
-- Updated seller-dashboard.tsx:
-  - Added 'ai-tools' nav item with Sparkles icon (before Settings)
-  - Added case in DashboardContent switch
-  - Imported DashboardAiTools component
-- Updated dashboard-products.tsx:
-  - Added "✨ IA" button next to Edit/Delete for each product (desktop + mobile)
-  - Click navigates to ai-tools tab
-  - Sparkles icon, primary color styling
+- Created AI content generation API and dashboard UI
+- Created QR code generation with printable poster
+- All text in French, WhatsApp green theme
 
 Stage Summary:
-- Complete AI tools dashboard with 2 major features
-- AI content generation for 3 social media platforms
-- QR code generation with printable poster
-- All text in French, WhatsApp green theme
-- Lint passes (0 errors), dev server compiles successfully
+- AI tools for social media content generation
+- QR code generator with printable poster
+- Lint passes clean (0 errors)
 
 ---
 Task ID: 14-15
@@ -148,197 +113,55 @@ Agent: Smart Catalog + Centralized Orders Agent
 Task: Rewrite Public Shop with smart catalog features and enhance Dashboard Orders
 
 Work Log:
-- Created visit tracking API route at /api/shops/[slug]/visit/route.ts (POST endpoint)
-- Updated /api/shops/[slug]/products/route.ts to include createdAt field in response
-- Updated store.ts Product interface to include optional createdAt field
-- Added .no-scrollbar CSS utility class to globals.css for horizontal scroll containers
-- Complete rewrite of public-shop.tsx with smart catalog features:
-  - Sticky header with back button, search input, cart icon with badge count
-  - Shop banner with gradient fallback, logo, shop name, description
-  - Contact info: WhatsApp, phone, address
-  - Horizontal scrollable category filter pills with product count badges
-  - "Tous" default active filter showing all products
-  - Real-time search filtering by name, description, and category name
-  - Search results count display ("X résultats")
-  - Clear search button (X icon)
-  - Sort options: Plus récents, Prix croissant, Prix décroissant
-  - Responsive product grid: 2 cols mobile, 3 cols desktop
-  - Enhanced product cards with:
-    - Image with placeholder fallback and hover zoom effect
-    - Product name (line-clamp-1) and category name badge
-    - Price in FCFA (bold, primary color)
-    - "Nouveau" badge (green, for products < 7 days old)
-    - "Promo" badge (orange/flame icon, for products < 5000 FCFA)
-    - "Ajouter au panier" button
-    - Quantity controls (- number +) when item is in cart
-    - Low stock indicator ("Plus que X en stock") for stock <= 3
-  - Enhanced cart bar with expandable panel:
-    - Fixed bottom bar with item count badge and total price
-    - Expandable cart panel with full item details
-    - Quantity controls and remove buttons per item
-    - "Tout supprimer" button to clear cart
-    - "Commander sur WhatsApp" button
-    - Framer Motion animations for cart expand/collapse
-  - Improved WhatsApp message format with:
-    - Shop name greeting
-    - Line items with quantity and subtotal
-    - Total display
-    - Customer info fields (Nom, Adresse, Téléphone)
-  - Empty states for no products and no search results
-  - Skeleton loading states for all sections
-  - Toast notifications for add-to-cart actions
-  - Visit tracking on shop load (fire-and-forget POST)
-- Complete rewrite of dashboard-orders.tsx with enhanced order management:
-  - 4 stats cards: Total commandes, En attente (amber), Confirmées (emerald), Revenus total
-  - Enhanced order cards with order number (#format), customer, date, items, total, status
-  - Status badges with icons: Clock (PENDING), Package (CONFIRMED), CheckCircle (DELIVERED), XCircle (CANCELLED)
-  - Status timeline/progress indicator with colored dots in expanded view
-  - Status update dropdown with visual color indicators
-  - Expanded order details:
-    - Items list with placeholder images
-    - Customer info cards (name, phone, address) with colored icon backgrounds
-    - "Contacter via WhatsApp" button (opens wa.me)
-    - Timestamp display (relative + absolute)
-  - Framer Motion animations for list items
-  - Empty state with illustration and "Copier le lien de la boutique" button
-  - Responsive layout: grid cards on mobile, list on desktop
+- Complete rewrite of public-shop.tsx with smart catalog features
+- Complete rewrite of dashboard-orders.tsx with enhanced order management
 
 Stage Summary:
 - Smart catalog with search, category filters, sort, badges, low stock alerts
 - Enhanced shopping cart with expandable panel and animations
 - Centralized orders with stats dashboard and status timeline
-- Visit tracking API for analytics
-- All text in French, WhatsApp green theme
-- Lint passes (0 errors), dev server compiles successfully
 
 ---
-Task ID: 3
+Task ID: 3-6
 Agent: full-stack-developer
-Task: Create admin API endpoints
+Task: Admin API, Admin Dashboard, Template System v1
 
 Work Log:
-- Created /src/lib/admin-auth.ts (shared helper for admin role verification via cookie + DB lookup)
-- Created /src/app/api/admin/stats/route.ts (GET - platform KPIs: users, shops, products, orders, revenue, visits, plan breakdown, status breakdown, recent users/orders)
-- Created /src/app/api/admin/users/route.ts (GET - all non-admin users with shop info, search filter)
-- Created /src/app/api/admin/shops/route.ts (GET - all shops with owner + counts, plan/search filters)
-- Created /src/app/api/admin/shops/[id]/route.ts (PATCH - toggle isActive/change plan; DELETE - cascade delete shop)
-- Created /src/app/api/admin/orders/route.ts (GET - all orders across shops with shop info, status/search filters)
+- Created admin API endpoints (stats, users, shops, orders)
+- Built super admin dashboard with 4 tabs
+- Created template field in schema and 5 template definitions
+- Built template selector in dashboard settings
 
 Stage Summary:
-- All 5 admin API endpoints created with role-based access control
-- Admin auth verified via whatsshop-user cookie + database role check (returns 403 if not ADMIN)
-- Stats endpoint provides platform-wide KPIs with parallel queries for performance
-- All endpoints use French error messages consistent with the SaaS locale
-- Lint passes (0 errors)
+- Full admin dashboard functional
+- 5 initial templates with color differentiation
+- Template selector in seller dashboard settings
 
 ---
-Task ID: 4
-Agent: full-stack-developer
-Task: Build super admin dashboard
-
-Work Log:
-- Updated store.ts with admin view type and admin tab
-  - Added 'admin' to AppView type
-  - Added AdminTab type: 'admin-overview' | 'admin-users' | 'admin-shops' | 'admin-orders'
-  - Added adminTab and setAdminTab to AppState interface and initial state
-- Updated page.tsx router with admin view
-  - Imported AdminDashboard component
-  - Added {view === 'admin' && <AdminDashboard />} to render
-  - Session check now routes ADMIN users to admin view instead of dashboard
-- Updated auth-login.tsx with admin redirect logic
-  - After successful login, checks user.role === 'ADMIN' → setView('admin')
-  - Updated demo credentials box to show both Vendeur and Admin credentials
-- Created admin-dashboard.tsx with 4 tabs (Overview, Users, Shops, Orders)
-  - Sidebar layout matching seller dashboard pattern with Shield logo and destructive/red theme
-  - Mobile Sheet navigation with header
-  - AdminOverview: 6 KPI stat cards (animated with Framer Motion), bar chart for shops by plan, recent users/orders
-  - AdminUsers: Search bar, data table with name/email/shop/plan/products/orders/date columns
-  - AdminShops: Plan dropdown + search filters, table with owner/plan/products/orders/visits/status/actions, suspend/activate toggle, delete with AlertDialog confirmation
-  - AdminOrders: Status dropdown + search filters, table with ID/shop/client/total/status/date, status badges with icons
-  - Loading skeletons, empty states, toast notifications for all actions
-  - FCFA currency formatting, French text throughout
-
-Stage Summary:
-- Full admin dashboard with platform stats, user/shop/order management
-- Role-based routing: ADMIN → admin dashboard, SELLER → seller dashboard
-- Login credentials displayed for both roles
-
----
-Task ID: 6
+Task ID: 7
 Agent: Main
-Task: Super Admin login flow - integration, verification, and syntax fix
+Task: Enhance template system with 8 templates, unique layouts, and visual differentiation
 
 Work Log:
-- Added super admin user to seed.ts (admin@whatsshop.com / admin123, role: ADMIN)
-- Ran seed script successfully to create admin user in database
-- Fixed syntax error in admin-dashboard.tsx line 595 (??/|| mixing → ??)
-- Verified lint passes clean (0 errors)
-- End-to-end browser verification via agent-browser:
-  - Landing page loads correctly
-  - Login page displays dual demo credentials
-  - Admin login with admin@whatsshop.com/admin123 redirects to admin dashboard
-  - Admin Overview tab: 6 KPI cards (1 utilisateur, 1 boutique, 22 produits, 11 commandes, 282 500 FCFA revenus, 94 visites)
-  - Admin Boutiques tab: table with filters (plan dropdown + search), suspend/delete actions
-  - Admin Utilisateurs tab: search + data table
-  - Sidebar navigation, logout, and role badge all working
+- Rewrote /src/lib/templates.ts with 8 comprehensive template definitions:
+  - Added layout config per template (headerStyle, cardLayout, categoryStyle, heroStyle, priceStyle, buttonStyle, badgeStyle)
+  - Added decorative config (pattern: none/dots/kente/waves/gradient, gradientBg, divider)
+  - Added hero-specific colors (heroOverlay, heroBadge, heroText)
+  - 3 new templates: rose, ocean, sunset
+- Rewrote /src/components/shop/template-provider.tsx:
+  - Exposes template config via React context (useTemplate hook)
+- Rewrote /src/components/shop/public-shop.tsx with template-specific rendering:
+  - TemplateBadge, TemplateCategoryButton, TemplatePrice, TemplateCtaButton components
+  - DecorativeBackground and DecorativeDivider components
+  - 5 header styles: standard, centered, minimal, dark, gradient
+- Updated /src/components/shop/shop-hero-carousel.tsx with template-aware rendering
+- Rewrote /src/components/dashboard/template-selector.tsx with mini preview cards
+- Browser verified: classic, africa, elegant, neon all render with distinct styles
+- All images load, lint passes clean (0 errors)
 
 Stage Summary:
-- Super Admin fully functional end-to-end
-- Credentials: admin@whatsshop.com / admin123
-- Login auto-detects ADMIN role and routes to admin dashboard
-- All 4 admin tabs verified working (Overview, Users, Shops, Orders)
-- Screenshot saved: admin-dashboard.png
-
----
-Task ID: 1
-Agent: full-stack-developer
-Task: Add template field to schema, API, and store
-
-Work Log:
-- Added template field to Shop model in Prisma schema (default: "classic")
-- Pushed schema to database
-- Updated shops API PUT handler to accept template (was already present)
-- Updated shops API POST handler to accept template with default "classic"
-- Updated Shop interface in store with template field (required: string)
-- Updated all shop object constructions across auth, session, settings, and shop APIs
-  - login/route.ts: added template to shop response object
-  - session/route.ts: added template to shop response object
-  - shops/[slug]/route.ts: added template to select clause
-  - create-shop-wizard.tsx: added template to setShop call
-  - dashboard-settings.tsx: already had template support
-- Lint passes clean (0 errors)
-
-Stage Summary:
-- template field available on all Shop objects with default "classic"
-- 5 template options: classic, africa, minimal, elegant, neon
-
----
-Task ID: 2
-Agent: full-stack-developer
-Task: Create 5 shop template themes and template selector
-
-Work Log:
-- Created /src/lib/templates.ts with 5 template definitions (classic, africa, minimal, elegant, neon)
-- Added `template` field to Prisma Shop model (default: 'classic')
-- Updated /api/shops PUT endpoint to handle template field
-- Added `template` optional field to Shop interface in store.ts
-- Created /src/components/dashboard/template-selector.tsx with visual template picker
-  - 2-col mobile, 3-col desktop grid layout
-  - Color preview strip (gradient) + 4 color circles per template
-  - Mini card preview showing template aesthetic
-  - Active template badge ("Actif") with ring highlight
-  - Framer Motion hover/tap animations
-  - Toast notification on selection
-- Updated dashboard-settings.tsx:
-  - Added template state initialized from shop
-  - Added "Thème de la boutique" Card section with Palette icon between shop info and subscription
-  - Template saved with other shop settings on save
-  - Template value updated in store after save
-- Ran bun run db:push to sync schema
-- Lint passes clean (0 errors)
-
-Stage Summary:
-- 5 templates: classic (green), africa (terracotta), minimal (B&W), elegant (dark+gold), neon (dark+purple)
-- Template selector shows color previews and selection state
-- Template is saved with other shop settings via PUT /api/shops
-- Neon template supports CSS gradient values for ctaBg and filterActive
+- 8 unique shop templates with truly different designs
+- Classic (green/standard), Africa (terracotta/centered+kente), Minimal (B&W/compact)
+- Elegant (dark+gold/luxury), Neon (dark+purple/cyber), Rose (pink/romantic)
+- Ocean (blue/professional), Sunset (orange-violet/vibrant)
+- Each template has unique header, category filter, card style, price display, CTA button, decorative patterns

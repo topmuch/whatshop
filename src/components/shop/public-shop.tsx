@@ -1,6 +1,7 @@
 'use client'
 
 import { useAppStore, type Product } from '@/lib/store'
+import { useTemplate } from './template-provider'
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -28,6 +29,14 @@ import {
   Store,
   AlertTriangle,
   ShoppingBag,
+  Crown,
+  Zap,
+  Heart,
+  Gem,
+  Palette,
+  Waves,
+  Sun,
+  Globe,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -56,7 +65,276 @@ function getCategoryCount(products: Product[], categoryId?: string): number {
   return products.filter((p) => p.categoryId === categoryId && p.isAvailable).length
 }
 
-export function PublicShop() {
+/* ─── Template-specific decorative patterns ─── */
+function DecorativeBackground({ pattern, gradientBg }: { pattern: string; gradientBg: string | null }) {
+  if (pattern === 'dots') {
+    return (
+      <div
+        className="fixed inset-0 pointer-events-none z-0"
+        style={{
+          backgroundImage: 'radial-gradient(circle, var(--tpl-primary) 0.5px, transparent 0.5px)',
+          backgroundSize: '24px 24px',
+          opacity: 0.04,
+        }}
+      />
+    )
+  }
+  if (pattern === 'kente') {
+    return (
+      <div
+        className="fixed inset-0 pointer-events-none z-0"
+        style={{
+          backgroundImage: `
+            repeating-linear-gradient(45deg, var(--tpl-primary), var(--tpl-primary) 1px, transparent 1px, transparent 12px),
+            repeating-linear-gradient(-45deg, var(--tpl-accent), var(--tpl-accent) 1px, transparent 1px, transparent 12px)
+          `,
+          opacity: 0.03,
+        }}
+      />
+    )
+  }
+  if (pattern === 'waves') {
+    return (
+      <div
+        className="fixed inset-0 pointer-events-none z-0"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%230891B2' fill-opacity='0.03' d='M0,96L48,112C96,128,192,160,288,186.7C384,213,480,235,576,213.3C672,192,768,128,864,128C960,128,1056,192,1152,208C1248,224,1344,192,1392,176L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'/%3E%3C/svg%3E")`,
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'bottom',
+          backgroundSize: '100% auto',
+        }}
+      />
+    )
+  }
+  if (pattern === 'gradient' && gradientBg) {
+    return <div className="fixed inset-0 pointer-events-none z-0" style={{ background: gradientBg }} />
+  }
+  if (pattern === 'lines') {
+    return (
+      <div
+        className="fixed inset-0 pointer-events-none z-0"
+        style={{
+          backgroundImage: `repeating-linear-gradient(0deg, var(--tpl-border) 0px, var(--tpl-border) 1px, transparent 1px, transparent 40px)`,
+          opacity: 0.3,
+        }}
+      />
+    )
+  }
+  return null
+}
+
+/* ─── Template-specific decorative divider ─── */
+function DecorativeDivider({ style }: { style: string }) {
+  if (style === 'dots') {
+    return (
+      <div className="flex items-center justify-center gap-1.5 py-3">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--tpl-border)' }} />
+        ))}
+      </div>
+    )
+  }
+  if (style === 'gradient') {
+    return (
+      <div className="h-px mx-4" style={{ background: 'linear-gradient(90deg, transparent, var(--tpl-primary), transparent)' }} />
+    )
+  }
+  return <div className="border-b" style={{ borderColor: 'var(--tpl-border)' }} />
+}
+
+/* ─── Template Badge component ─── */
+function TemplateBadge({ children, type, style }: { children: React.ReactNode; type: 'new' | 'promo'; style: string }) {
+  if (style === 'tag') {
+    return (
+      <span
+        className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5"
+        style={{
+          background: type === 'new' ? 'var(--tpl-badge-new)' : 'var(--tpl-badge-promo)',
+          color: '#ffffff',
+        }}
+      >
+        {children}
+      </span>
+    )
+  }
+  return (
+    <Badge
+      className="text-white text-[10px] px-1.5 py-0 h-5 font-medium gap-0.5"
+      style={{ background: type === 'new' ? 'var(--tpl-badge-new)' : 'var(--tpl-badge-promo)' }}
+    >
+      {children}
+    </Badge>
+  )
+}
+
+/* ─── Template Category Button ─── */
+function TemplateCategoryButton({
+  label,
+  count,
+  active,
+  onClick,
+  style,
+}: {
+  label: string
+  count?: number
+  active: boolean
+  onClick: () => void
+  style: string
+}) {
+  if (style === 'underline') {
+    return (
+      <button
+        onClick={onClick}
+        className="shrink-0 text-sm font-medium transition-all duration-200 pb-1"
+        style={{
+          color: active ? 'var(--tpl-text)' : 'var(--tpl-text-muted)',
+          borderBottom: active ? '2px solid var(--tpl-primary)' : '2px solid transparent',
+        }}
+      >
+        {label}
+        {count !== undefined && <span className="ml-1 text-xs opacity-60">({count})</span>}
+      </button>
+    )
+  }
+  if (style === 'button') {
+    return (
+      <button
+        onClick={onClick}
+        className="shrink-0 px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-200"
+        style={
+          active
+            ? { background: 'var(--tpl-filter-active)', color: 'var(--tpl-filter-active-fg)' }
+            : { background: 'var(--tpl-card)', color: 'var(--tpl-text-muted)', border: '1px solid var(--tpl-border)' }
+        }
+      >
+        {label}
+        {count !== undefined && (
+          <span className="ml-1.5 text-xs" style={{ opacity: 0.7 }}>
+            {count}
+          </span>
+        )}
+      </button>
+    )
+  }
+  // pill (default)
+  return (
+    <button
+      onClick={onClick}
+      className="shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-1.5"
+      style={
+        active
+          ? { background: 'var(--tpl-filter-active)', color: 'var(--tpl-filter-active-fg)', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }
+          : { background: 'var(--tpl-card)', color: 'var(--tpl-text-muted)', border: '1px solid var(--tpl-border)' }
+      }
+    >
+      {label}
+      {count !== undefined && (
+        <span className="text-xs" style={{ opacity: 0.7 }}>
+          {count}
+        </span>
+      )}
+    </button>
+  )
+}
+
+/* ─── Template Price Display ─── */
+function TemplatePrice({ price, style }: { price: number; style: string }) {
+  if (style === 'elegant') {
+    return (
+      <div className="flex items-baseline gap-1">
+        <span className="text-[10px] uppercase tracking-widest" style={{ color: 'var(--tpl-text-muted)' }}>
+          Prix
+        </span>
+        <span className="text-sm font-bold" style={{ color: 'var(--tpl-price)' }}>
+          {formatPrice(price)}
+        </span>
+      </div>
+    )
+  }
+  if (style === 'minimal') {
+    return (
+      <span className="text-sm font-semibold" style={{ color: 'var(--tpl-text)' }}>
+        {formatPrice(price)}
+      </span>
+    )
+  }
+  if (style === 'tag') {
+    return (
+      <span
+        className="inline-block text-xs font-bold px-2 py-0.5 rounded"
+        style={{ background: 'var(--tpl-price)', color: 'var(--tpl-primary-fg)' }}
+      >
+        {formatPrice(price)}
+      </span>
+    )
+  }
+  // bold (default)
+  return (
+    <p className="font-bold text-sm" style={{ color: 'var(--tpl-price)' }}>
+      {formatPrice(price)}
+    </p>
+  )
+}
+
+/* ─── Template CTA Button ─── */
+function TemplateCtaButton({
+  children,
+  onClick,
+  style,
+}: {
+  children: React.ReactNode
+  onClick: () => void
+  style: string
+}) {
+  const baseClass = 'w-full text-xs font-medium transition-all duration-200 flex items-center justify-center gap-1'
+  if (style === 'pill') {
+    return (
+      <button
+        className={`${baseClass} rounded-full py-2`}
+        style={{ background: 'var(--tpl-cta-bg)', color: 'var(--tpl-cta-fg)' }}
+        onClick={onClick}
+      >
+        {children}
+      </button>
+    )
+  }
+  if (style === 'rounded') {
+    return (
+      <button
+        className={`${baseClass} rounded-lg py-2`}
+        style={{ background: 'var(--tpl-cta-bg)', color: 'var(--tpl-cta-fg)' }}
+        onClick={onClick}
+      >
+        {children}
+      </button>
+    )
+  }
+  if (style === 'ghost') {
+    return (
+      <button
+        className={`${baseClass} py-2 border`}
+        style={{ borderColor: 'var(--tpl-border)', color: 'var(--tpl-text)' }}
+        onClick={onClick}
+      >
+        {children}
+      </button>
+    )
+  }
+  // filled (default)
+  return (
+    <Button
+      size="sm"
+      className={`w-full h-8 gap-1 ${baseClass}`}
+      style={{ background: 'var(--tpl-cta-bg)', color: 'var(--tpl-cta-fg)' }}
+      onClick={onClick}
+    >
+      {children}
+    </Button>
+  )
+}
+
+/* ─── Inner Shop Content (has access to template context) ─── */
+function ShopContent() {
   const {
     shopSlug,
     setView,
@@ -74,6 +352,9 @@ export function PublicShop() {
     clearCart,
   } = useAppStore()
 
+  const template = useTemplate()
+  const { layout, cardStyle, decorative, colors } = template
+
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
@@ -89,10 +370,7 @@ export function PublicShop() {
       if (!shopRes.ok) return
       const shopData = await shopRes.json()
       setPublicShop(shopData)
-
-      // Track visit
       fetch(`/api/shops/${shopSlug}/visit`, { method: 'POST' }).catch(() => {})
-
       const [prodRes, catRes] = await Promise.all([
         fetch(`/api/shops/${shopSlug}/products`),
         fetch(`/api/shops/${shopSlug}/categories`),
@@ -110,16 +388,9 @@ export function PublicShop() {
     fetchShop()
   }, [fetchShop])
 
-  // Filter and sort products
   const filteredProducts = useMemo(() => {
     let products = publicProducts.filter((p) => p.isAvailable)
-
-    // Category filter
-    if (activeCategory) {
-      products = products.filter((p) => p.categoryId === activeCategory)
-    }
-
-    // Search filter
+    if (activeCategory) products = products.filter((p) => p.categoryId === activeCategory)
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim()
       products = products.filter(
@@ -129,8 +400,6 @@ export function PublicShop() {
           (p.categoryName && p.categoryName.toLowerCase().includes(q))
       )
     }
-
-    // Sort
     switch (sortBy) {
       case 'price-asc':
         products = [...products].sort((a, b) => a.price - b.price)
@@ -138,12 +407,7 @@ export function PublicShop() {
       case 'price-desc':
         products = [...products].sort((a, b) => b.price - a.price)
         break
-      case 'recent':
-      default:
-        // Already sorted by createdAt desc from API
-        break
     }
-
     return products
   }, [publicProducts, activeCategory, searchQuery, sortBy])
 
@@ -151,13 +415,7 @@ export function PublicShop() {
   const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0)
 
   function handleAddToCart(product: Product) {
-    addToCart({
-      productId: product.id,
-      name: product.name,
-      price: product.price,
-      image: product.image || undefined,
-      quantity: 1,
-    })
+    addToCart({ productId: product.id, name: product.name, price: product.price, image: product.image || undefined, quantity: 1 })
     toast.success(`${product.name} ajouté au panier`)
   }
 
@@ -167,29 +425,8 @@ export function PublicShop() {
 
   function handleWhatsAppCheckout() {
     if (!publicShop) return
-    const itemsText = cart
-      .map(
-        (c) =>
-          `🛍 ${c.name} x${c.quantity} — ${(c.price * c.quantity).toLocaleString('fr-FR')} FCFA`
-      )
-      .join('\n')
-
-    const msg = `Bonjour ${publicShop.name} ! 👋
-
-Je souhaite commander :
-
-${itemsText}
-
-━━━━━━━━━━━━━━
-💰 Total : ${total.toLocaleString('fr-FR')} FCFA
-
-📝 Mes informations :
-Nom :
-Adresse :
-Téléphone :
-
-Merci ! 🙏`
-
+    const itemsText = cart.map((c) => `🛍 ${c.name} x${c.quantity} — ${(c.price * c.quantity).toLocaleString('fr-FR')} FCFA`).join('\n')
+    const msg = `Bonjour ${publicShop.name} ! 👋\n\nJe souhaite commander :\n\n${itemsText}\n\n━━━━━━━━━━━━━━\n💰 Total : ${total.toLocaleString('fr-FR')} FCFA\n\n📝 Mes informations :\nNom :\nAdresse :\nTéléphone :\n\nMerci ! 🙏`
     const encoded = encodeURIComponent(msg)
     const phone = publicShop.whatsapp?.replace(/\D/g, '') || ''
     window.open(`https://wa.me/${phone}?text=${encoded}`, '_blank')
@@ -197,15 +434,28 @@ Merci ! 🙏`
 
   function handleCategoryClick(categoryId: string | null) {
     setActiveCategory(categoryId)
-    // Scroll to top of products
     scrollRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
-  // Loading skeleton
+  // Template-specific icon for header
+  const templateIcon = useMemo(() => {
+    const icons: Record<string, React.ReactNode> = {
+      classic: <Store className="h-5 w-5" />,
+      africa: <Globe className="h-5 w-5" />,
+      minimal: <Zap className="h-5 w-5" />,
+      elegant: <Crown className="h-5 w-5" />,
+      neon: <Zap className="h-5 w-5" />,
+      rose: <Heart className="h-5 w-5" />,
+      ocean: <Waves className="h-5 w-5" />,
+      sunset: <Sun className="h-5 w-5" />,
+    }
+    return icons[template.id] || <Store className="h-5 w-5" />
+  }, [template.id])
+
+  // ── Loading skeleton ──
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        {/* Header skeleton */}
         <div className="sticky top-0 z-40 bg-background border-b">
           <div className="max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
             <Skeleton className="h-9 w-9 rounded-lg" />
@@ -213,9 +463,7 @@ Merci ! 🙏`
             <Skeleton className="h-9 w-9 rounded-lg" />
           </div>
         </div>
-        {/* Banner skeleton */}
         <Skeleton className="h-48 md:h-64 w-full" />
-        {/* Content skeleton */}
         <div className="max-w-5xl mx-auto p-4">
           <div className="flex gap-2 mb-4">
             {[1, 2, 3, 4].map((i) => (
@@ -232,16 +480,14 @@ Merci ! 🙏`
     )
   }
 
-  // Shop not found
+  // ── Shop not found ──
   if (!publicShop) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
         <Card className="max-w-md w-full text-center p-8">
           <Package className="h-12 w-12 text-muted-foreground/40 mx-auto mb-4" />
           <h2 className="text-xl font-bold mb-2">Boutique introuvable</h2>
-          <p className="text-muted-foreground mb-4">
-            Cette boutique n&apos;existe pas ou a été désactivée.
-          </p>
+          <p className="text-muted-foreground mb-4">Cette boutique n&apos;existe pas ou a été désactivée.</p>
           <Button onClick={() => setView('landing')}>Retour à l&apos;accueil</Button>
         </Card>
       </div>
@@ -252,17 +498,20 @@ Merci ! 🙏`
   const isSearching = searchQuery.trim().length > 0
 
   return (
-    <TemplateProvider templateId={publicShop.template || 'classic'}>
-    <div className="min-h-screen pb-20" style={{ background: 'var(--tpl-bg)', color: 'var(--tpl-text)' }}>
-      {/* Sticky Header */}
-      <header className="sticky top-0 z-40 backdrop-blur-sm border-b" style={{ background: 'var(--tpl-header-bg)', borderColor: 'var(--tpl-border)' }}>
+    <div className="min-h-screen pb-20 relative" style={{ background: 'var(--tpl-bg)', color: 'var(--tpl-text)' }}>
+      {/* Decorative background pattern */}
+      <DecorativeBackground pattern={decorative.pattern} gradientBg={decorative.gradientBg} />
+
+      {/* ─── Sticky Header ─── */}
+      <header
+        className="sticky top-0 z-40 backdrop-blur-sm border-b"
+        style={{
+          background: 'var(--tpl-header-bg)',
+          borderColor: 'var(--tpl-border)',
+        }}
+      >
         <div className="max-w-5xl mx-auto px-4 py-2.5 flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9 shrink-0"
-            onClick={() => setView('landing')}
-          >
+          <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => setView('landing')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
 
@@ -292,7 +541,10 @@ Merci ! 🙏`
           >
             <ShoppingCart className="h-5 w-5" />
             {cart.length > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center" style={{ background: 'var(--tpl-primary)', color: 'var(--tpl-primary-fg)' }}>
+              <span
+                className="absolute -top-0.5 -right-0.5 text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center"
+                style={{ background: 'var(--tpl-primary)', color: 'var(--tpl-primary-fg)' }}
+              >
                 {itemCount > 9 ? '9+' : itemCount}
               </span>
             )}
@@ -300,105 +552,223 @@ Merci ! 🙏`
         </div>
       </header>
 
-      {/* Hero Carousel */}
+      {/* ─── Hero Carousel ─── */}
       <ShopHeroCarousel shopName={publicShop.name} whatsapp={publicShop.whatsapp} />
 
-      {/* Shop Info Bar */}
-      <div className="border-b" style={{ background: 'var(--tpl-primary)', opacity: 0.06, borderColor: 'var(--tpl-border)' }}>
-        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 min-w-0">
+      {/* ─── Shop Info Bar (template-specific styles) ─── */}
+      {layout.headerStyle === 'centered' ? (
+        <div className="text-center px-4 py-5" style={{ borderBottom: '1px solid var(--tpl-border)' }}>
+          <div className="max-w-5xl mx-auto">
             {publicShop.logo ? (
               <img
                 src={publicShop.logo}
                 alt={publicShop.name}
-                className="w-10 h-10 rounded-lg object-cover shadow-sm shrink-0"
+                className="w-14 h-14 rounded-2xl object-cover shadow-sm mx-auto mb-3"
               />
             ) : (
-              <div className="flex items-center justify-center w-10 h-10 rounded-lg shadow-sm shrink-0" style={{ background: 'var(--tpl-primary)', color: 'var(--tpl-primary-fg)' }}>
-                <Store className="h-5 w-5" />
+              <div
+                className="flex items-center justify-center w-14 h-14 rounded-2xl shadow-sm mx-auto mb-3"
+                style={{ background: 'var(--tpl-primary)', color: 'var(--tpl-primary-fg)' }}
+              >
+                {templateIcon}
               </div>
             )}
-            <div className="min-w-0">
-              <h1 className="text-base sm:text-lg font-bold truncate">{publicShop.name}</h1>
-              {publicShop.description && (
-                <p className="text-xs text-muted-foreground truncate hidden sm:block">{publicShop.description}</p>
+            <h1 className="text-xl sm:text-2xl font-bold">{publicShop.name}</h1>
+            {publicShop.description && (
+              <p className="text-sm mt-1 max-w-lg mx-auto" style={{ color: 'var(--tpl-text-muted)' }}>
+                {publicShop.description}
+              </p>
+            )}
+            <div className="flex items-center justify-center gap-4 mt-3 text-xs" style={{ color: 'var(--tpl-text-muted)' }}>
+              {publicShop.whatsapp && (
+                <span className="flex items-center gap-1">
+                  <MessageCircle className="h-3.5 w-3.5" style={{ color: 'var(--tpl-primary)' }} />
+                  WhatsApp
+                </span>
+              )}
+              {publicShop.phone && (
+                <span className="flex items-center gap-1">
+                  <Phone className="h-3.5 w-3.5" />
+                  {publicShop.phone}
+                </span>
+              )}
+              {publicShop.address && (
+                <span className="flex items-center gap-1">
+                  <MapPin className="h-3.5 w-3.5" />
+                  {publicShop.address}
+                </span>
               )}
             </div>
           </div>
-          <div className="flex items-center gap-3 sm:gap-4 text-xs shrink-0" style={{ color: 'var(--tpl-text-muted)' }}>
-            {publicShop.whatsapp && (
-              <div className="flex items-center gap-1">
-                <MessageCircle className="h-3.5 w-3.5" style={{ color: 'var(--tpl-primary)' }} />
-                <span className="hidden sm:inline">WhatsApp</span>
-              </div>
-            )}
-            {publicShop.phone && (
-              <div className="flex items-center gap-1">
-                <Phone className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">{publicShop.phone}</span>
-              </div>
-            )}
-            {publicShop.address && (
-              <div className="flex items-center gap-1">
-                <MapPin className="h-3.5 w-3.5" />
-                <span className="hidden md:inline line-clamp-1 max-w-[180px]">{publicShop.address}</span>
-              </div>
-            )}
+        </div>
+      ) : layout.headerStyle === 'minimal' ? (
+        <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--tpl-border)' }}>
+          <div className="max-w-5xl mx-auto flex items-center gap-3">
+            <span className="text-xs font-mono uppercase tracking-widest" style={{ color: 'var(--tpl-text-muted)' }}>
+              Boutique
+            </span>
+            <span className="text-xs" style={{ color: 'var(--tpl-border)' }}>/</span>
+            <h1 className="text-sm font-semibold">{publicShop.name}</h1>
           </div>
         </div>
-      </div>
+      ) : layout.headerStyle === 'dark' ? (
+        <div
+          className="px-4 py-4"
+          style={{ background: 'var(--tpl-card)', borderBottom: '1px solid var(--tpl-border)' }}
+        >
+          <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              {publicShop.logo ? (
+                <img
+                  src={publicShop.logo}
+                  alt={publicShop.name}
+                  className="w-10 h-10 rounded-lg object-cover"
+                />
+              ) : (
+                <div
+                  className="flex items-center justify-center w-10 h-10 rounded-lg"
+                  style={{ background: 'var(--tpl-primary)', color: 'var(--tpl-primary-fg)' }}
+                >
+                  {templateIcon}
+                </div>
+              )}
+              <div>
+                <h1 className="text-base font-bold">{publicShop.name}</h1>
+                {publicShop.description && (
+                  <p className="text-xs" style={{ color: 'var(--tpl-text-muted)' }}>
+                    {publicShop.description}
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-3 text-xs" style={{ color: 'var(--tpl-text-muted)' }}>
+              {publicShop.whatsapp && (
+                <span className="flex items-center gap-1">
+                  <MessageCircle className="h-3.5 w-3.5" style={{ color: 'var(--tpl-primary)' }} />
+                </span>
+              )}
+              {publicShop.address && (
+                <span className="hidden md:flex items-center gap-1">
+                  <MapPin className="h-3.5 w-3.5" />
+                  {publicShop.address}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : layout.headerStyle === 'gradient' ? (
+        <div className="px-4 py-5" style={{ background: 'var(--tpl-primary)', borderBottom: '2px solid var(--tpl-accent)' }}>
+          <div className="max-w-5xl mx-auto flex items-center gap-4">
+            {publicShop.logo ? (
+              <img
+                src={publicShop.logo}
+                alt={publicShop.name}
+                className="w-12 h-12 rounded-xl object-cover shadow-md border-2"
+                style={{ borderColor: 'var(--tpl-accent)' }}
+              />
+            ) : (
+              <div
+                className="flex items-center justify-center w-12 h-12 rounded-xl shadow-md"
+                style={{ background: 'var(--tpl-primary-fg)', color: 'var(--tpl-primary)' }}
+              >
+                {templateIcon}
+              </div>
+            )}
+            <div>
+              <h1 className="text-lg font-bold" style={{ color: 'var(--tpl-primary-fg)' }}>
+                {publicShop.name}
+              </h1>
+              {publicShop.description && (
+                <p className="text-xs opacity-80" style={{ color: 'var(--tpl-primary-fg)' }}>
+                  {publicShop.description}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : (
+        // standard header
+        <div className="border-b" style={{ background: 'var(--tpl-primary)', opacity: 0.06, borderColor: 'var(--tpl-border)' }}>
+          <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 min-w-0">
+              {publicShop.logo ? (
+                <img src={publicShop.logo} alt={publicShop.name} className="w-10 h-10 rounded-lg object-cover shadow-sm shrink-0" />
+              ) : (
+                <div
+                  className="flex items-center justify-center w-10 h-10 rounded-lg shadow-sm shrink-0"
+                  style={{ background: 'var(--tpl-primary)', color: 'var(--tpl-primary-fg)' }}
+                >
+                  {templateIcon}
+                </div>
+              )}
+              <div className="min-w-0">
+                <h1 className="text-base sm:text-lg font-bold truncate">{publicShop.name}</h1>
+                {publicShop.description && (
+                  <p className="text-xs text-muted-foreground truncate hidden sm:block">{publicShop.description}</p>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-3 sm:gap-4 text-xs shrink-0" style={{ color: 'var(--tpl-text-muted)' }}>
+              {publicShop.whatsapp && (
+                <div className="flex items-center gap-1">
+                  <MessageCircle className="h-3.5 w-3.5" style={{ color: 'var(--tpl-primary)' }} />
+                  <span className="hidden sm:inline">WhatsApp</span>
+                </div>
+              )}
+              {publicShop.phone && (
+                <div className="flex items-center gap-1">
+                  <Phone className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">{publicShop.phone}</span>
+                </div>
+              )}
+              {publicShop.address && (
+                <div className="flex items-center gap-1">
+                  <MapPin className="h-3.5 w-3.5" />
+                  <span className="hidden md:inline line-clamp-1 max-w-[180px]">{publicShop.address}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
-      {/* Main Content */}
-      <div className="max-w-5xl mx-auto px-4 pt-4" ref={scrollRef}>
-        {/* Category Filter Pills */}
+      {/* Decorative divider */}
+      <DecorativeDivider style={decorative.divider} />
+
+      {/* ─── Main Content ─── */}
+      <div className="max-w-5xl mx-auto px-4 pt-4 relative z-10" ref={scrollRef}>
+        {/* Category Filter */}
         {publicCategories.length > 0 && (
           <div className="flex gap-2 overflow-x-auto pb-4 mb-2 no-scrollbar">
-            <button
+            <TemplateCategoryButton
+              label={`Tous (${totalProductCount})`}
+              active={!activeCategory}
               onClick={() => handleCategoryClick(null)}
-              className="shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200"
-              style={
-                !activeCategory
-                  ? { background: 'var(--tpl-filter-active)', color: 'var(--tpl-filter-active-fg)', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }
-                  : { background: 'var(--tpl-card)', color: 'var(--tpl-text-muted)', border: '1px solid var(--tpl-border)' }
-              }
-            >
-              Tous ({totalProductCount})
-            </button>
+              style={layout.categoryStyle}
+            />
             {publicCategories.map((cat) => {
               const count = getCategoryCount(publicProducts, cat.id)
               if (count === 0) return null
               return (
-                <button
+                <TemplateCategoryButton
                   key={cat.id}
+                  label={cat.name}
+                  count={count}
+                  active={activeCategory === cat.id}
                   onClick={() => handleCategoryClick(cat.id)}
-                  className="shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-1.5"
-                  style={
-                    activeCategory === cat.id
-                      ? { background: 'var(--tpl-filter-active)', color: 'var(--tpl-filter-active-fg)', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }
-                      : { background: 'var(--tpl-card)', color: 'var(--tpl-text-muted)', border: '1px solid var(--tpl-border)' }
-                  }
-                >
-                  {cat.name}
-                  <span
-                    className={`text-xs ${
-                      activeCategory === cat.id ? 'text-primary-foreground/80' : 'text-muted-foreground'
-                    }`}
-                  >
-                    {count}
-                  </span>
-                </button>
+                  style={layout.categoryStyle}
+                />
               )
             })}
           </div>
         )}
 
-        {/* Search results count & Sort */}
+        {/* Search results & Sort */}
         <div className="flex items-center justify-between mb-4 gap-4">
           <div className="text-sm" style={{ color: 'var(--tpl-text-muted)' }}>
             {isSearching ? (
               <span>
-                {filteredProducts.length} résultat{filteredProducts.length !== 1 ? 's' : ''} pour
-                &quot;{searchQuery}&quot;
+                {filteredProducts.length} résultat{filteredProducts.length !== 1 ? 's' : ''} pour &quot;{searchQuery}&quot;
               </span>
             ) : (
               <span>
@@ -417,9 +787,9 @@ Merci ! 🙏`
           </select>
         </div>
 
-        {/* Product Grid */}
+        {/* ─── Product Grid ─── */}
         {filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className={`grid ${layout.gridCols} gap-4`}>
             {filteredProducts.map((product) => {
               const qty = getCartQuantity(product.id)
               const isNew = isProductNew(product.createdAt)
@@ -432,10 +802,20 @@ Merci ! 🙏`
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.25 }}
+                  whileHover={{ scale: cardStyle.hoverScale, transition: { duration: 0.2 } }}
                 >
-                  <Card className="group h-full flex flex-col" style={{ background: 'var(--tpl-card)', borderRadius: 'var(--tpl-card-rounded)', boxShadow: 'var(--tpl-card-shadow)', overflow: 'var(--tpl-image-rounded)' }}>
+                  <Card
+                    className="group h-full flex flex-col transition-all duration-300"
+                    style={{
+                      background: 'var(--tpl-card)',
+                      borderRadius: cardStyle.rounded,
+                      boxShadow: cardStyle.shadow,
+                      overflow: cardStyle.overflow,
+                      border: layout.showCardBorder ? cardStyle.border : 'none',
+                    }}
+                  >
                     {/* Image */}
-                    <div className="aspect-square bg-muted relative overflow-hidden" style={{ borderRadius: 'var(--tpl-image-rounded)' }}>
+                    <div className={`${layout.imageSize} bg-muted relative overflow-hidden`} style={{ borderRadius: cardStyle.imageRounded }}>
                       {product.image ? (
                         <img
                           src={product.image}
@@ -449,25 +829,31 @@ Merci ! 🙏`
                       )}
 
                       {/* Badges */}
-                      <div className="absolute top-2 left-2 flex flex-col gap-1">
+                      <div
+                        className={`absolute flex flex-col gap-1 ${
+                          layout.badgePosition === 'top-left' ? 'top-2 left-2' : layout.badgePosition === 'top-right' ? 'top-2 right-2' : 'top-2 left-2'
+                        }`}
+                      >
                         {isNew && (
-                          <Badge className="text-white text-[10px] px-1.5 py-0 h-5 font-medium gap-0.5" style={{ background: 'var(--tpl-badge-new)' }}>
+                          <TemplateBadge type="new" style={layout.badgeStyle}>
                             <Sparkles className="h-3 w-3" />
-                            Nouveau
-                          </Badge>
+                            {layout.badgeStyle === 'tag' ? 'NOUVEAU' : 'Nouveau'}
+                          </TemplateBadge>
                         )}
                         {isPromo && !isNew && (
-                          <Badge className="text-white text-[10px] px-1.5 py-0 h-5 font-medium gap-0.5" style={{ background: 'var(--tpl-badge-promo)' }}>
+                          <TemplateBadge type="promo" style={layout.badgeStyle}>
                             <Flame className="h-3 w-3" />
-                            Promo
-                          </Badge>
+                            {layout.badgeStyle === 'tag' ? 'PROMO' : 'Promo'}
+                          </TemplateBadge>
                         )}
                       </div>
                     </div>
 
                     {/* Content */}
-                    <CardContent className="p-3 flex flex-col flex-1">
-                      <h3 className="font-semibold text-sm line-clamp-1" style={{ color: 'var(--tpl-text)' }}>{product.name}</h3>
+                    <CardContent className={`${layout.cardPadding} flex flex-col flex-1`}>
+                      <h3 className="font-semibold text-sm line-clamp-1" style={{ color: 'var(--tpl-text)' }}>
+                        {product.name}
+                      </h3>
                       {product.categoryName && (
                         <span className="text-[11px] mt-0.5" style={{ color: 'var(--tpl-text-muted)' }}>
                           {product.categoryName}
@@ -475,45 +861,35 @@ Merci ! 🙏`
                       )}
 
                       <div className="mt-auto pt-3">
-                        <p className="font-bold text-sm" style={{ color: 'var(--tpl-price)' }}>{formatPrice(product.price)}</p>
+                        <TemplatePrice price={product.price} style={layout.priceStyle} />
 
                         {lowStock && (
                           <div className="flex items-center gap-1 mt-1.5 text-amber-600">
                             <AlertTriangle className="h-3 w-3" />
-                            <span className="text-[11px] font-medium">
-                              Plus que {product.stock} en stock
-                            </span>
+                            <span className="text-[11px] font-medium">Plus que {product.stock} en stock</span>
                           </div>
                         )}
 
                         <div className="mt-2">
                           {qty === 0 ? (
-                            <Button
-                              size="sm"
-                              className="w-full h-8 text-xs gap-1"
-                              style={{ background: 'var(--tpl-cta-bg)', color: 'var(--tpl-cta-fg)' }}
-                              onClick={() => handleAddToCart(product)}
-                            >
+                            <TemplateCtaButton onClick={() => handleAddToCart(product)} style={layout.buttonStyle}>
                               <Plus className="h-3 w-3" />
-                              Ajouter au panier
-                            </Button>
+                              Ajouter
+                            </TemplateCtaButton>
                           ) : (
-                            <div className="flex items-center justify-between gap-1 rounded-lg p-0.5" style={{ background: 'var(--tpl-card)', border: '1px solid var(--tpl-border)' }}>
+                            <div
+                              className="flex items-center justify-between gap-1 rounded-lg p-0.5"
+                              style={{ background: 'var(--tpl-card)', border: '1px solid var(--tpl-border)' }}
+                            >
                               <Button
                                 variant="ghost"
                                 size="icon"
                                 className="h-7 w-7 shrink-0"
                                 onClick={() => updateCartQuantity(product.id, qty - 1)}
                               >
-                                {qty === 1 ? (
-                                  <Trash2 className="h-3 w-3 text-destructive" />
-                                ) : (
-                                  <Minus className="h-3 w-3" />
-                                )}
+                                {qty === 1 ? <Trash2 className="h-3 w-3 text-destructive" /> : <Minus className="h-3 w-3" />}
                               </Button>
-                              <span className="text-sm font-semibold min-w-[24px] text-center">
-                                {qty}
-                              </span>
+                              <span className="text-sm font-semibold min-w-[24px] text-center">{qty}</span>
                               <Button
                                 variant="ghost"
                                 size="icon"
@@ -536,11 +912,7 @@ Merci ! 🙏`
           /* Empty State */
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-              {isSearching ? (
-                <Search className="h-7 w-7 text-muted-foreground/40" />
-              ) : (
-                <ShoppingBag className="h-7 w-7 text-muted-foreground/40" />
-              )}
+              {isSearching ? <Search className="h-7 w-7 text-muted-foreground/40" /> : <ShoppingBag className="h-7 w-7 text-muted-foreground/40" />}
             </div>
             <h3 className="font-semibold text-lg mb-1">
               {isSearching ? 'Aucun résultat' : 'Aucun produit disponible'}
@@ -551,11 +923,7 @@ Merci ! 🙏`
                 : 'Cette boutique n\'a pas encore ajouté de produits. Revenez bientôt !'}
             </p>
             {isSearching && (
-              <Button
-                variant="outline"
-                className="mt-4"
-                onClick={() => setSearchQuery('')}
-              >
+              <Button variant="outline" className="mt-4" onClick={() => setSearchQuery('')}>
                 <X className="h-4 w-4 mr-2" />
                 Effacer la recherche
               </Button>
@@ -564,7 +932,7 @@ Merci ! 🙏`
         )}
       </div>
 
-      {/* Cart Bar */}
+      {/* ─── Cart Bar ─── */}
       <AnimatePresence>
         {cart.length > 0 && (
           <motion.div
@@ -582,7 +950,8 @@ Merci ! 🙏`
                   animate={{ height: 'auto' }}
                   exit={{ height: 0 }}
                   transition={{ duration: 0.25 }}
-                  className="overflow-hidden bg-card border-t border-b"
+                  className="overflow-hidden border-t border-b"
+                  style={{ background: 'var(--tpl-cart-bg)' }}
                 >
                   <ScrollArea className="max-h-64">
                     <div className="max-w-5xl mx-auto p-4 space-y-3">
@@ -590,12 +959,7 @@ Merci ! 🙏`
                         <h3 className="font-semibold text-sm">
                           Votre panier ({itemCount} article{itemCount !== 1 ? 's' : ''})
                         </h3>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-destructive h-7 text-xs"
-                          onClick={clearCart}
-                        >
+                        <Button variant="ghost" size="sm" className="text-destructive h-7 text-xs" onClick={clearCart}>
                           <Trash2 className="h-3 w-3 mr-1" />
                           Tout supprimer
                         </Button>
@@ -604,11 +968,7 @@ Merci ! 🙏`
                         <div key={item.id} className="flex items-center gap-3">
                           <div className="w-12 h-12 rounded-lg bg-muted shrink-0 overflow-hidden">
                             {item.image ? (
-                              <img
-                                src={item.image}
-                                alt={item.name}
-                                className="w-full h-full object-cover"
-                              />
+                              <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center">
                                 <Package className="h-5 w-5 text-muted-foreground/30" />
@@ -617,7 +977,7 @@ Merci ! 🙏`
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium line-clamp-1">{item.name}</p>
-                            <p className="text-xs text-primary font-semibold">
+                            <p className="text-xs font-semibold" style={{ color: 'var(--tpl-price)' }}>
                               {formatPrice(item.price)}
                             </p>
                           </div>
@@ -628,15 +988,9 @@ Merci ! 🙏`
                               className="h-7 w-7"
                               onClick={() => updateCartQuantity(item.productId, item.quantity - 1)}
                             >
-                              {item.quantity === 1 ? (
-                                <Trash2 className="h-3 w-3 text-destructive" />
-                              ) : (
-                                <Minus className="h-3 w-3" />
-                              )}
+                              {item.quantity === 1 ? <Trash2 className="h-3 w-3 text-destructive" /> : <Minus className="h-3 w-3" />}
                             </Button>
-                            <span className="text-sm font-semibold min-w-[24px] text-center">
-                              {item.quantity}
-                            </span>
+                            <span className="text-sm font-semibold min-w-[24px] text-center">{item.quantity}</span>
                             <Button
                               variant="ghost"
                               size="icon"
@@ -646,7 +1000,7 @@ Merci ! 🙏`
                               <Plus className="h-3 w-3" />
                             </Button>
                           </div>
-                          <span className="text-sm font-semibold w-24 text-right">
+                          <span className="text-sm font-semibold w-24 text-right" style={{ color: 'var(--tpl-price)' }}>
                             {formatPrice(item.price * item.quantity)}
                           </span>
                         </div>
@@ -654,7 +1008,7 @@ Merci ! 🙏`
                       <Separator />
                       <div className="flex items-center justify-between font-bold">
                         <span>Total</span>
-                        <span className="text-primary">{formatPrice(total)}</span>
+                        <span style={{ color: 'var(--tpl-price)' }}>{formatPrice(total)}</span>
                       </div>
                     </div>
                   </ScrollArea>
@@ -663,7 +1017,7 @@ Merci ! 🙏`
             </AnimatePresence>
 
             {/* Cart bar buttons */}
-            <div className="bg-card border-t shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
+            <div className="border-t shadow-[0_-4px_20px_rgba(0,0,0,0.08)]" style={{ background: 'var(--tpl-cart-bg)' }}>
               <div className="max-w-5xl mx-auto px-4 py-3">
                 <div className="flex items-center gap-3">
                   <Button
@@ -672,12 +1026,12 @@ Merci ! 🙏`
                     className="h-10 gap-1.5 shrink-0"
                     onClick={() => setCartExpanded(!cartExpanded)}
                   >
-                    {cartExpanded ? (
-                      <ChevronDown className="h-4 w-4" />
-                    ) : (
-                      <ChevronUp className="h-4 w-4" />
-                    )}
-                    <Badge variant="secondary" className="px-1.5 h-5 text-xs" style={{ background: 'var(--tpl-primary)', color: 'var(--tpl-primary-fg)' }}>
+                    {cartExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+                    <Badge
+                      variant="secondary"
+                      className="px-1.5 h-5 text-xs"
+                      style={{ background: 'var(--tpl-primary)', color: 'var(--tpl-primary-fg)' }}
+                    >
                       {itemCount}
                     </Badge>
                     <span className="hidden sm:inline">panier</span>
@@ -704,6 +1058,19 @@ Merci ! 🙏`
         )}
       </AnimatePresence>
     </div>
+  )
+}
+
+/* ─── Exported PublicShop (wraps with TemplateProvider) ─── */
+export function PublicShop() {
+  const { publicShop, shopSlug } = useAppStore()
+
+  // We need shop data to know the template - use default 'classic' until loaded
+  const templateId = publicShop?.template || 'classic'
+
+  return (
+    <TemplateProvider templateId={templateId}>
+      <ShopContent />
     </TemplateProvider>
   )
 }
