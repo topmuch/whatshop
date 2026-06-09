@@ -41,6 +41,7 @@ export async function POST(request: NextRequest) {
         isActive: user.shop.isActive,
         heroImages: user.shop.heroImages,
         promoBanners: user.shop.promoBanners,
+        brands: user.shop.brands,
       } : null,
     })
 

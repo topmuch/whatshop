@@ -43,6 +43,7 @@ export async function GET(request: NextRequest) {
         subscriptionEndDate: user.shop.subscriptionEndDate?.toISOString(),
         heroImages: user.shop.heroImages,
         promoBanners: user.shop.promoBanners,
+        brands: user.shop.brands,
       } : null,
     })
   } catch (error) {

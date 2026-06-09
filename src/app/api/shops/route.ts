@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
           id: true, name: true, slug: true, description: true, logo: true,
           banner: true, whatsapp: true, address: true, phone: true,
           plan: true, template: true, isActive: true,
-          heroImages: true, promoBanners: true,
+          heroImages: true, promoBanners: true, brands: true,
           sector: true, createdAt: true,
         },
       })
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
           id: true, name: true, slug: true, description: true, logo: true,
           banner: true, whatsapp: true, address: true, phone: true,
           plan: true, template: true, isActive: true,
-          heroImages: true, promoBanners: true,
+          heroImages: true, promoBanners: true, brands: true,
           sector: true, createdAt: true,
         },
       })
@@ -54,7 +54,7 @@ export async function PUT(request: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
 
     const body = await request.json()
-    const { id, name, description, whatsapp, address, phone, logo, banner, template, heroImages, promoBanners } = body
+    const { id, name, description, whatsapp, address, phone, logo, banner, template, heroImages, promoBanners, brands } = body
 
     if (!id) {
       return NextResponse.json({ error: 'ID requis' }, { status: 400 })
@@ -77,6 +77,7 @@ export async function PUT(request: NextRequest) {
     if (template !== undefined) data.template = template || 'classic'
     if (heroImages !== undefined) data.heroImages = heroImages
     if (promoBanners !== undefined) data.promoBanners = promoBanners
+    if (brands !== undefined) data.brands = brands
 
     const updatedShop = await db.shop.update({
       where: { id },

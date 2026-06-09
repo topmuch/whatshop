@@ -25,6 +25,7 @@ export async function GET(
         isActive: true,
         heroImages: true,
         promoBanners: true,
+        brands: true,
       },
     })
 
