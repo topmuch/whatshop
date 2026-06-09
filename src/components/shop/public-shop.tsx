@@ -46,7 +46,7 @@ import { TemplateProvider } from './template-provider'
 import { LiveShopFeatures } from './live-shop-features'
 import { JameelaGrid } from './themes/jameela-grid'
 import { FashionGrid } from './themes/fashion-grid'
-import { ElectroGrid } from './themes/electro-grid'
+import { ElectroShopPage } from './themes/electro-grid'
 import { GroceryGrid } from './themes/grocery-grid'
 import { ElectroDepotGrid } from './themes/electrodepot-grid'
 
@@ -504,6 +504,12 @@ function ShopContent() {
     return icons[template.id] || <Store className="h-5 w-5" />
   }, [template.id])
 
+  // ── Electro template renders its own full-page layout (Menu → Slide → Categories → Products → Footer) ──
+  // Early return after ALL hooks to satisfy React rules-of-hooks.
+  if (template.id === 'xstore-electro') {
+    return <ElectroShopPage />
+  }
+
   // ── Loading skeleton ──
   if (loading) {
     return (
@@ -652,38 +658,6 @@ function ShopContent() {
           return null
         }
       })()}
-
-      {/* ─── Electro Navigation Menu (before Shop Info Bar) ─── */}
-      {template.id === 'xstore-electro' && (
-        <nav className="sticky top-[57px] z-30 bg-white border-b border-gray-200 shadow-sm">
-          <div className="max-w-[1180px] mx-auto px-4 flex items-center justify-between">
-            <div className="flex items-center gap-6 sm:gap-8">
-              <button
-                onClick={() => { setSelectedProduct(null); setActiveCategory(null); setSearchQuery(''); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                className="text-sm font-semibold text-[#1e293b] hover:text-[#10B981] transition-colors py-3.5"
-              >
-                Accueil
-              </button>
-              <button
-                onClick={() => { setSelectedProduct(null); setActiveCategory(null); setSearchQuery(''); scrollRef.current?.scrollIntoView({ behavior: 'smooth' }); }}
-                className="text-sm font-semibold text-[#1e293b] hover:text-[#10B981] transition-colors py-3.5"
-              >
-                Nos Produits
-              </button>
-              {publicShop.whatsapp && (
-                <a
-                  href={`https://wa.me/${publicShop.whatsapp.replace(/\D/g, '')}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm font-semibold text-[#1e293b] hover:text-[#10B981] transition-colors py-3.5 flex items-center gap-1.5"
-                >
-                  Contactez Nous
-                </a>
-              )}
-            </div>
-          </div>
-        </nav>
-      )}
 
       {/* ─── Shop Info Bar (template-specific styles) ─── */}
       {layout.headerStyle === 'centered' ? (
@@ -1242,27 +1216,6 @@ function ShopContent() {
             )}
             {template.id === 'xstore-fashion' && (
               <FashionGrid
-                filteredProducts={filteredProducts}
-                publicCategories={publicCategories}
-                publicProducts={publicProducts}
-                activeCategory={activeCategory}
-                searchQuery={searchQuery}
-                sortBy={sortBy}
-                isSearching={isSearching}
-                totalProductCount={totalProductCount}
-                onCategoryClick={handleCategoryClick}
-                onProductClick={setSelectedProduct}
-                onAddToCart={handleAddToCart}
-                getCartQuantity={getCartQuantity}
-                updateCartQuantity={updateCartQuantity}
-                onSortChange={setSortBy}
-                onSearchChange={setSearchQuery}
-                shopName={publicShop.name}
-                whatsapp={publicShop.whatsapp}
-              />
-            )}
-            {template.id === 'xstore-electro' && (
-              <ElectroGrid
                 filteredProducts={filteredProducts}
                 publicCategories={publicCategories}
                 publicProducts={publicProducts}
