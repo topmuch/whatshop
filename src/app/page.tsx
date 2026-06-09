@@ -1,7 +1,7 @@
 'use client'
 
 import { useAppStore, AppView } from '@/lib/store'
-import { useEffect } from 'react'
+import { useEffect, useState, useSyncExternalStore } from 'react'
 import { ErrorBoundary } from '@/components/error-boundary'
 import { LandingPage } from '@/components/landing'
 import { AuthLogin } from '@/components/auth/auth-login'
@@ -36,49 +36,100 @@ const PAGE_VIEW_MAP: Record<string, AppView> = {
   'aide': 'faq',
 }
 
+// Empty subscribe function (we don't need to subscribe to URL changes here)
+const emptySubscribe = () => () => {}
+
+/**
+ * Read the current pathname synchronously with proper SSR handling.
+ * Server snapshot returns '/' (landing), client returns actual path.
+ */
+function useClientPathname() {
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => window.location.pathname,
+    () => '/'
+  )
+}
+
+/**
+ * Synchronously resolve the correct view from the current URL.
+ */
+function resolveViewFromPath(pathname: string): { view: AppView; shopSlug: string } {
+  const slug = pathname.slice(1).toLowerCase()
+
+  // Dashboard routes
+  if (slug.startsWith('dashboard')) {
+    return { view: 'dashboard', shopSlug: '' }
+  }
+
+  // Admin routes
+  if (slug.startsWith('admin')) {
+    return { view: 'admin', shopSlug: '' }
+  }
+
+  // Auth routes
+  if (slug === 'login' || slug === 'connexion') {
+    return { view: 'login', shopSlug: '' }
+  }
+  if (slug === 'register' || slug === 'inscription') {
+    return { view: 'register', shopSlug: '' }
+  }
+  if (slug === 'onboarding') {
+    return { view: 'onboarding', shopSlug: '' }
+  }
+
+  // Known public pages
+  if (PAGE_VIEW_MAP[slug]) {
+    return { view: PAGE_VIEW_MAP[slug], shopSlug: '' }
+  }
+
+  // Check query params (middleware rewrites)
+  const params = new URLSearchParams(window.location.search)
+  const pageParam = params.get('page')
+  if (pageParam && PAGE_VIEW_MAP[pageParam]) {
+    return { view: PAGE_VIEW_MAP[pageParam], shopSlug: '' }
+  }
+
+  const shopParam = params.get('shop')
+  if (shopParam) {
+    return { view: 'shop', shopSlug: shopParam }
+  }
+
+  // Shop slug (single segment, alphanumeric with hyphens)
+  if (slug && /^[a-zA-Z0-9][a-zA-Z0-9-]*$/.test(slug)) {
+    return { view: 'shop', shopSlug: slug }
+  }
+
+  return { view: 'landing', shopSlug: '' }
+}
+
 export default function Home() {
   const { view, setView, setUser, setShopSlug, shopSlug } = useAppStore()
+  const pathname = useClientPathname()
 
+  // Synchronously resolve view from the actual URL
+  const urlView = resolveViewFromPath(pathname)
+
+  // Use the URL-derived view immediately (no flash)
+  // Once mounted + session checked, the store view takes over
+  const effectiveView = view !== 'landing' ? view : urlView.view
+  const effectiveSlug = shopSlug || urlView.shopSlug
+
+  // Check for existing session and sync store state
   useEffect(() => {
-    // Handle direct shop URL (middleware rewrites /amina-shop → /)
-    const pathname = window.location.pathname
-    if (pathname !== '/' && pathname.startsWith('/')) {
-      const slug = pathname.slice(1).toLowerCase()
-
-      // Check if this is a known public page
-      if (PAGE_VIEW_MAP[slug]) {
-        setView(PAGE_VIEW_MAP[slug])
-        return
-      }
-
-      // Check if it's a shop slug
-      if (/^[a-zA-Z0-9][a-zA-Z0-9-]*$/.test(slug) && shopSlug !== slug) {
-        setShopSlug(slug)
-        return
-      }
+    // Sync shop slug from URL into store
+    if (urlView.shopSlug && shopSlug !== urlView.shopSlug) {
+      setShopSlug(urlView.shopSlug)
     }
 
-    // Handle page query param from middleware rewrites
-    const params = new URLSearchParams(window.location.search)
-    const pageParam = params.get('page')
-    if (pageParam && PAGE_VIEW_MAP[pageParam]) {
-      setView(PAGE_VIEW_MAP[pageParam])
-      return
-    }
-
-    // Handle shop query param from middleware rewrites
-    const shopParam = params.get('shop')
-    if (shopParam && shopSlug !== shopParam) {
-      setShopSlug(shopParam)
-      return
-    }
-
-    // Check for existing session on mount
-    async function checkSession() {
-      try {
-        const res = await fetch('/api/auth/session')
-        if (res.ok) {
-          const data = await res.json()
+    // Check session on root, dashboard, or admin routes
+    if (urlView.view === 'landing' || urlView.view === 'dashboard' || urlView.view === 'admin') {
+      fetch('/api/auth/session')
+        .then((res) => {
+          if (res.ok) return res.json()
+          throw new Error()
+        })
+        .then((data) => {
           if (data.user) {
             setUser(data.user)
             if (data.user.role === 'ADMIN') {
@@ -87,56 +138,52 @@ export default function Home() {
               setView('dashboard')
             }
           }
-        }
-      } catch {
-        // Not authenticated, stay on landing
-      }
+        })
+        .catch(() => {
+          // Not authenticated, stay on current view
+        })
     }
-
-    if (pathname === '/' && !pageParam && !shopParam) {
-      checkSession()
-    }
-  }, [shopSlug, setShopSlug, setUser, setView])
+  }, [])
 
   return (
     <ErrorBoundary>
     <div className="min-h-screen flex flex-col">
       {/* Landing page has its own header/footer */}
-      {view === 'landing' && <LandingPage />}
-      {view === 'login' && <AuthLogin />}
-      {view === 'register' && <AuthRegister />}
-      {view === 'onboarding' && <OnboardingWizard />}
-      {view === 'dashboard' && <SellerDashboard />}
-      {view === 'admin' && <AdminDashboard />}
-      {view === 'shop' && <PublicShop />}
+      {effectiveView === 'landing' && <LandingPage />}
+      {effectiveView === 'login' && <AuthLogin />}
+      {effectiveView === 'register' && <AuthRegister />}
+      {effectiveView === 'onboarding' && <OnboardingWizard />}
+      {effectiveView === 'dashboard' && <SellerDashboard />}
+      {effectiveView === 'admin' && <AdminDashboard />}
+      {effectiveView === 'shop' && <PublicShop />}
 
       {/* Public pages with shared layout */}
-      {view === 'about' && (
+      {effectiveView === 'about' && (
         <PublicLayout currentView="about">
           <AboutPage />
         </PublicLayout>
       )}
-      {view === 'pricing' && (
+      {effectiveView === 'pricing' && (
         <PublicLayout currentView="pricing">
           <PricingPage />
         </PublicLayout>
       )}
-      {view === 'contact' && (
+      {effectiveView === 'contact' && (
         <PublicLayout currentView="contact">
           <ContactPage />
         </PublicLayout>
       )}
-      {view === 'faq' && (
+      {effectiveView === 'faq' && (
         <PublicLayout currentView="faq">
           <FAQPage />
         </PublicLayout>
       )}
-      {view === 'privacy' && (
+      {effectiveView === 'privacy' && (
         <PublicLayout currentView="privacy">
           <PrivacyPage />
         </PublicLayout>
       )}
-      {view === 'terms' && (
+      {effectiveView === 'terms' && (
         <PublicLayout currentView="terms">
           <TermsPage />
         </PublicLayout>
@@ -146,7 +193,7 @@ export default function Home() {
       <CookieConsent />
 
       {/* Floating WhatsApp button - show on public pages and landing */}
-      {(view === 'landing' || view === 'about' || view === 'pricing' || view === 'contact' || view === 'faq' || view === 'privacy' || view === 'terms') && (
+      {(effectiveView === 'landing' || effectiveView === 'about' || effectiveView === 'pricing' || effectiveView === 'contact' || effectiveView === 'faq' || effectiveView === 'privacy' || effectiveView === 'terms') && (
         <WhatsAppFloat />
       )}
     </div>
