@@ -1,6 +1,7 @@
 'use client'
 
 import { useAppStore, type Product } from '@/lib/store'
+import { formatPrice } from '@/lib/shared'
 import { useTemplate } from './template-provider'
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import { Button } from '@/components/ui/button'
@@ -50,10 +51,6 @@ import { GroceryGrid } from './themes/grocery-grid'
 import { ElectroDepotGrid } from './themes/electrodepot-grid'
 
 type SortOption = 'recent' | 'price-asc' | 'price-desc'
-
-function formatPrice(price: number) {
-  return price.toLocaleString('fr-FR') + ' FCFA'
-}
 
 function isProductNew(createdAt?: string): boolean {
   if (!createdAt) return false

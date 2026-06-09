@@ -25,6 +25,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
+import { formatPrice } from '@/lib/shared'
 
 interface Stats {
   products: number
@@ -117,10 +118,6 @@ function formatDate(dateStr: string) {
     month: 'short',
     year: 'numeric',
   })
-}
-
-function formatPrice(price: number) {
-  return price.toLocaleString('fr-FR') + ' FCFA'
 }
 
 export function DashboardOverview() {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { writeFile, mkdir } from 'fs/promises'
 import path from 'path'
 import sharp from 'sharp'
+import { rateLimit, getClientIp, RATE_LIMITS } from '@/lib/rate-limit'
 
 const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads')
 const MAX_SIZE = 5 * 1024 * 1024 // 5 MB
@@ -10,6 +11,13 @@ const RESIZE_WIDTH = 400
 const RESIZE_HEIGHT = 400
 
 export async function POST(request: NextRequest) {
+  // Rate limiting
+  const ip = getClientIp(request)
+  const rl = rateLimit(ip, RATE_LIMITS.upload)
+  if (!rl.success) {
+    return NextResponse.json({ error: 'Trop de tentatives. Réessayez dans une minute.' }, { status: 429 })
+  }
+
   try {
     const userEmail = request.cookies.get('whatsshop-user')?.value
     if (!userEmail) {

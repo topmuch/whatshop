@@ -294,7 +294,8 @@ export function AuthLogin() {
               </button>
             </p>
 
-            {/* Demo accounts banner */}
+            {/* Demo accounts banner — only visible in development */}
+            {process.env.NODE_ENV === 'development' && (
             <div
               className="rounded-xl p-4 space-y-2.5"
               style={{ background: 'linear-gradient(135deg, rgba(236, 72, 153, 0.06), rgba(245, 158, 11, 0.06))', border: '1px solid rgba(236, 72, 153, 0.15)' }}
@@ -302,7 +303,7 @@ export function AuthLogin() {
               <div className="flex items-center gap-2">
                 <Sparkles className="h-4 w-4 shrink-0" style={{ color: '#EC4899' }} />
                 <span className="text-xs font-semibold" style={{ color: '#0B1426' }}>
-                  Comptes démo
+                  Comptes démo (dev only)
                 </span>
               </div>
               <div className="space-y-1.5 pl-6">
@@ -312,10 +313,11 @@ export function AuthLogin() {
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="text-xs font-medium text-muted-foreground mt-0.5 shrink-0 w-12">Admin</span>
-                  <span className="text-xs text-muted-foreground">admin@boutiko.com / admin123</span>
+                  <span className="text-xs text-muted-foreground">admin@whatsshop.com / admin123</span>
                 </div>
               </div>
             </div>
+            )}
           </form>
         </motion.div>
       </div>

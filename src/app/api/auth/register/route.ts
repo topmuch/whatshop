@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { hashPassword, setSessionCookie } from '@/lib/auth'
+import { rateLimit, getClientIp, RATE_LIMITS } from '@/lib/rate-limit'
 
 // Basic email format validation
 function isValidEmail(email: string): boolean {
@@ -8,6 +9,13 @@ function isValidEmail(email: string): boolean {
 }
 
 export async function POST(request: NextRequest) {
+  // Rate limiting
+  const ip = getClientIp(request)
+  const rl = rateLimit(ip, RATE_LIMITS.register)
+  if (!rl.success) {
+    return NextResponse.json({ error: 'Trop de tentatives. Réessayez dans une minute.' }, { status: 429 })
+  }
+
   try {
     const { email, password, name } = await request.json()
 

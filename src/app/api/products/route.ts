@@ -22,13 +22,17 @@ function formatProduct(p: Record<string, unknown>) {
   return { ...p, images: parseImages(p.images) }
 }
 
-// GET /api/products?shopId=xxx (public — no auth needed)
+const PRODUCTS_PER_PAGE = 20
+
+// GET /api/products?shopId=xxx&page=1&limit=20 (public — no auth needed)
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const shopId = searchParams.get('shopId')
     const categoryId = searchParams.get('categoryId')
     const search = searchParams.get('search')
+    const page = parseInt(searchParams.get('page') || '1', 10)
+    const limit = Math.min(parseInt(searchParams.get('limit') || String(PRODUCTS_PER_PAGE), 10), 100)
 
     if (!shopId) {
       return NextResponse.json({ error: 'shopId requis' }, { status: 400 })
@@ -38,13 +42,29 @@ export async function GET(request: NextRequest) {
     if (categoryId) where.categoryId = categoryId
     if (search) where.name = { contains: search }
 
-    const products = await db.product.findMany({
-      where,
-      include: { category: { select: { id: true, name: true } } },
-      orderBy: { createdAt: 'desc' },
-    })
+    const skip = Math.max(0, (page - 1) * limit)
 
-    return NextResponse.json(products.map(formatProduct))
+    const [products, total] = await Promise.all([
+      db.product.findMany({
+        where,
+        include: { category: { select: { id: true, name: true } } },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      db.product.count({ where }),
+    ])
+
+    return NextResponse.json({
+      products: products.map(formatProduct),
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+        hasNext: page * limit < total,
+      },
+    })
   } catch (error) {
     console.error('Products GET error:', error)
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })

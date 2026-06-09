@@ -29,37 +29,24 @@ import {
   Truck,
   Star,
 } from 'lucide-react'
+import { Product as ProductType, formatPrice } from '@/lib/shared'
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
 
-interface Product {
-  id: string
-  name: string
-  description?: string
-  price: number
-  image?: string
-  images?: string[]
-  stock?: number
-  isAvailable: boolean
-  categoryId?: string
-  categoryName?: string
-  createdAt?: string
-}
-
 interface JameelaGridProps {
-  filteredProducts: Product[]
+  filteredProducts: ProductType[]
   publicCategories: any[]
-  publicProducts: Product[]
+  publicProducts: ProductType[]
   activeCategory: string | null
   searchQuery: string
   sortBy: 'recent' | 'price-asc' | 'price-desc'
   isSearching: boolean
   totalProductCount: number
   onCategoryClick: (id: string | null) => void
-  onProductClick: (product: Product) => void
-  onAddToCart: (product: Product) => void
+  onProductClick: (product: ProductType) => void
+  onAddToCart: (product: ProductType) => void
   getCartQuantity: (productId: string) => number
   updateCartQuantity: (productId: string, qty: number) => void
   onSortChange: (sort: string) => void
@@ -87,11 +74,7 @@ const JAMEELA = {
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
 
-function formatPrice(price: number) {
-  return price.toLocaleString('fr-FR') + ' FCFA'
-}
-
-function isNew(product: Product): boolean {
+function isNew(product: ProductType): boolean {
   if (!product.createdAt) return false
   const created = new Date(product.createdAt)
   const now = new Date()
@@ -99,7 +82,7 @@ function isNew(product: Product): boolean {
   return diffDays <= 14
 }
 
-function isSale(product: Product): boolean {
+function isSale(product: ProductType): boolean {
   // If stock is very low consider it on sale as a heuristic
   return (product.stock !== undefined && product.stock > 0 && product.stock <= 3) || false
 }
@@ -118,10 +101,10 @@ function JameelaProductCard({
   getCartQuantity,
   updateCartQuantity,
 }: {
-  product: Product
+  product: ProductType
   index: number
-  onProductClick: (p: Product) => void
-  onAddToCart: (p: Product) => void
+  onProductClick: (p: ProductType) => void
+  onAddToCart: (p: ProductType) => void
   getCartQuantity: (id: string) => number
   updateCartQuantity: (id: string, qty: number) => void
 }) {
@@ -489,10 +472,10 @@ function ProductGridSection({
   getCartQuantity,
   updateCartQuantity,
 }: {
-  products: Product[]
+  products: ProductType[]
   startIndex: number
-  onProductClick: (p: Product) => void
-  onAddToCart: (p: Product) => void
+  onProductClick: (p: ProductType) => void
+  onAddToCart: (p: ProductType) => void
   getCartQuantity: (id: string) => number
   updateCartQuantity: (id: string, qty: number) => void
 }) {

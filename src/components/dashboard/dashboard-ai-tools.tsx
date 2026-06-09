@@ -35,6 +35,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
+import { formatPrice } from '@/lib/shared'
 
 interface ProductOption {
   id: string
@@ -48,10 +49,6 @@ interface GeneratedContent {
   facebook: string
   whatsapp: string
   hashtags: string[]
-}
-
-function formatPrice(price: number) {
-  return price.toLocaleString('fr-FR') + ' FCFA'
 }
 
 // ============ SECTION A: AI Content Generator ============

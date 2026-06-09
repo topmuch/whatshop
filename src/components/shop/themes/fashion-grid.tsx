@@ -21,34 +21,22 @@ import {
   Newspaper,
   Heart,
 } from 'lucide-react'
+import { Product as ProductType, formatPrice } from '@/lib/shared'
 
 /* ─── Types ─── */
-interface Product {
-  id: string
-  name: string
-  description?: string
-  price: number
-  image?: string
-  images?: string[]
-  stock?: number
-  isAvailable: boolean
-  categoryId?: string
-  categoryName?: string
-  createdAt?: string
-}
 
 interface FashionGridProps {
-  filteredProducts: Product[]
+  filteredProducts: ProductType[]
   publicCategories: any[]
-  publicProducts: Product[]
+  publicProducts: ProductType[]
   activeCategory: string | null
   searchQuery: string
   sortBy: 'recent' | 'price-asc' | 'price-desc'
   isSearching: boolean
   totalProductCount: number
   onCategoryClick: (id: string | null) => void
-  onProductClick: (product: Product) => void
-  onAddToCart: (product: Product) => void
+  onProductClick: (product: ProductType) => void
+  onAddToCart: (product: ProductType) => void
   getCartQuantity: (productId: string) => number
   updateCartQuantity: (productId: string, qty: number) => void
   onSortChange: (sort: string) => void
@@ -90,13 +78,8 @@ function getCategoryEmoji(name: string): string {
   return '🏷️'
 }
 
-/* ─── Format Price ─── */
-function formatPrice(price: number): string {
-  return price.toLocaleString('fr-FR') + ' FCFA'
-}
-
 /* ─── Featured Products (first 3 available products) ─── */
-function useFeaturedProducts(products: Product[]): Product[] {
+function useFeaturedProducts(products: ProductType[]): ProductType[] {
   return useMemo(() => products.filter((p) => p.isAvailable).slice(0, 3), [products])
 }
 
@@ -172,9 +155,9 @@ function FashionProductCard({
   onUpdateQuantity,
   variant = 'default',
 }: {
-  product: Product
-  onProductClick: (product: Product) => void
-  onAddToCart: (product: Product) => void
+  product: ProductType
+  onProductClick: (product: ProductType) => void
+  onAddToCart: (product: ProductType) => void
   cartQty: number
   onUpdateQuantity: (productId: string, qty: number) => void
   variant?: 'default' | 'featured'
@@ -384,7 +367,7 @@ function NewsletterSection() {
       inputRef.current?.focus()
       return
     }
-    toast.success('Merci ! Vous êtes maintenant inscrit(e) à notre newsletter.')
+    toast.info('Service bientôt disponible !')
     setEmail('')
   }, [email])
 

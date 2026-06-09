@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { useAppStore } from '@/lib/store'
+import { PLATFORM_CONFIG } from '@/lib/shared'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -982,7 +983,7 @@ function PricingSection() {
                         setView('register')
                       } else {
                         const message = encodeURIComponent(`Bonjour, je suis intéressé(e) par l'abonnement ${plan.name} à ${plan.price} FCFA/mois sur Boutiko.`)
-                        window.open(`https://wa.me/2217848582226?text=${message}`, '_blank')
+                        window.open(`https://wa.me/${PLATFORM_CONFIG.DEFAULT_WHATSAPP}?text=${message}`, '_blank')
                       }
                     }}
                   >
@@ -1094,7 +1095,7 @@ function Footer() {
               <a href="#" className="w-9 h-9 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] flex items-center justify-center transition-colors">
                 <Instagram className="w-4 h-4 text-white/60" />
               </a>
-              <a href="https://wa.me/2217848582226" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] flex items-center justify-center transition-colors">
+              <a href="https://wa.me/${PLATFORM_CONFIG.DEFAULT_WHATSAPP}" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] flex items-center justify-center transition-colors">
                 <MessageCircle className="w-4 h-4 text-white/60" />
               </a>
               <a href="#" className="w-9 h-9 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] flex items-center justify-center transition-colors">
@@ -1144,7 +1145,7 @@ function Footer() {
             <ul className="space-y-4">
               <li className="flex items-center gap-3">
                 <MessageCircle className="w-4 h-4 text-primary shrink-0" />
-                <a href="https://wa.me/2217848582226" target="_blank" rel="noopener noreferrer" className="text-sm text-white/50 hover:text-white/80 transition-colors">+221 78 485 82 26</a>
+                <a href="https://wa.me/${PLATFORM_CONFIG.DEFAULT_WHATSAPP}" target="_blank" rel="noopener noreferrer" className="text-sm text-white/50 hover:text-white/80 transition-colors">+221 78 485 82 26</a>
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="w-4 h-4 text-primary shrink-0" />

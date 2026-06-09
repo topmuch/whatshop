@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useAppStore, type AppView } from '@/lib/store'
+import { PLATFORM_CONFIG } from '@/lib/shared'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import {
@@ -275,7 +276,7 @@ function PublicFooter() {
               <li className="flex items-center gap-3">
                 <MessageCircle className="w-4 h-4 text-primary shrink-0" />
                 <a
-                  href="https://wa.me/2217848582226"
+                  href="https://wa.me/${PLATFORM_CONFIG.DEFAULT_WHATSAPP}"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-white/50 hover:text-white/80 transition-colors"

@@ -31,35 +31,21 @@ import {
   ChevronRight,
   MessageCircle,
 } from 'lucide-react'
-
-// ─── Product type (local, no external imports from store/templates) ───
-interface Product {
-  id: string
-  name: string
-  description?: string
-  price: number
-  image?: string
-  images?: string[]
-  stock?: number
-  isAvailable: boolean
-  categoryId?: string
-  categoryName?: string
-  createdAt?: string
-}
+import { Product as ProductType, formatPrice } from '@/lib/shared'
 
 // ─── Props ───
 interface ElectroGridProps {
-  filteredProducts: Product[]
+  filteredProducts: ProductType[]
   publicCategories: any[]
-  publicProducts: Product[]
+  publicProducts: ProductType[]
   activeCategory: string | null
   searchQuery: string
   sortBy: string
   isSearching: boolean
   totalProductCount: number
   onCategoryClick: (id: string | null) => void
-  onProductClick: (product: Product) => void
-  onAddToCart: (product: Product) => void
+  onProductClick: (product: ProductType) => void
+  onAddToCart: (product: ProductType) => void
   getCartQuantity: (productId: string) => number
   updateCartQuantity: (productId: string, qty: number) => void
   onSortChange: (sort: string) => void
@@ -113,17 +99,16 @@ function FlashDealSection({
   updateCartQuantity,
   onProductClick,
 }: {
-  product: Product | undefined
-  onAddToCart: (product: Product) => void
+  product: ProductType | undefined
+  onAddToCart: (product: ProductType) => void
   getCartQuantity: (productId: string) => number
   updateCartQuantity: (productId: string, qty: number) => void
-  onProductClick: (product: Product) => void
+  onProductClick: (product: ProductType) => void
 }) {
   const { days, hours, minutes, seconds } = useCountdown()
 
   if (!product) return null
 
-  const priceFormatted = product.price.toLocaleString('fr-FR') + ' FCFA'
   const cartQty = getCartQuantity(product.id)
 
   return (
@@ -187,7 +172,7 @@ function FlashDealSection({
           {/* Price */}
           <div className="flex items-center gap-3 justify-center md:justify-start mb-4">
             <span className="text-2xl font-extrabold text-white">
-              {priceFormatted}
+              {formatPrice(product.price)}
             </span>
           </div>
 
@@ -263,7 +248,7 @@ function FlashDealSection({
 }
 
 // ─── WhatsApp helper ───
-function openWhatsApp(product: Product, whatsapp: string, qty: number = 1) {
+function openWhatsApp(product: ProductType, whatsapp: string, qty: number = 1) {
   const price = (product.price * qty).toLocaleString('fr-FR')
   const msg = `Bonjour ! 👋\n\nJe souhaite commander :\n\n🛍️ ${product.name} x${qty} — ${price} FCFA\n\nMerci ! 🙏`
   const encoded = encodeURIComponent(msg)
@@ -281,15 +266,15 @@ function ElectroProductCard({
   whatsapp,
   index,
 }: {
-  product: Product
-  onAddToCart: (product: Product) => void
-  onProductClick: (product: Product) => void
+  product: ProductType
+  onAddToCart: (product: ProductType) => void
+  onProductClick: (product: ProductType) => void
   getCartQuantity: (productId: string) => number
   updateCartQuantity: (productId: string, qty: number) => void
   whatsapp?: string
   index: number
 }) {
-  const priceFormatted = product.price.toLocaleString('fr-FR') + ' FCFA'
+  const priceFormatted = formatPrice(product.price)
   const cartQty = getCartQuantity(product.id)
   const inStock = (product.stock ?? 0) > 0
 

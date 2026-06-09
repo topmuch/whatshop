@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
+import { PLATFORM_CONFIG } from '@/lib/shared'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -263,7 +264,7 @@ const contactCards = [
     icon: MessageCircle,
     label: 'WhatsApp',
     value: '+221 78 485 82 26',
-    href: 'https://wa.me/2217848582226',
+    href: 'https://wa.me/${PLATFORM_CONFIG.DEFAULT_WHATSAPP}',
     color: '#25D366',
     bgColor: 'rgba(37, 211, 102, 0.1)',
   },
@@ -287,7 +288,7 @@ const contactCards = [
 
 const socialLinks = [
   { icon: Instagram, label: 'Instagram', href: '#', color: '#E1306C' },
-  { icon: MessageCircle, label: 'WhatsApp', href: 'https://wa.me/2217848582226', color: '#25D366' },
+  { icon: MessageCircle, label: 'WhatsApp', href: 'https://wa.me/${PLATFORM_CONFIG.DEFAULT_WHATSAPP}', color: '#25D366' },
   { icon: Phone, label: 'Twitter / X', href: '#', color: '#1DA1F2' },
 ]
 

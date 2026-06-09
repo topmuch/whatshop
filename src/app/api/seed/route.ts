@@ -1,11 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { hashPassword } from '@/lib/auth'
+import { rateLimit, getClientIp, RATE_LIMITS } from '@/lib/rate-limit'
 
 // POST /api/seed - Create default admin and demo accounts
 // Called by Docker startup script to ensure accounts exist
 // Protected by SEED_SECRET environment variable
 export async function POST(request: NextRequest) {
+  // Rate limiting
+  const ip = getClientIp(request)
+  const rl = rateLimit(ip, RATE_LIMITS.seed)
+  if (!rl.success) {
+    return NextResponse.json({ error: 'Trop de tentatives. Réessayez dans une minute.' }, { status: 429 })
+  }
+
   try {
     // Security: Require a secret to prevent public abuse
     const seedSecret = process.env.SEED_SECRET || 'boutiko-seed-2024'

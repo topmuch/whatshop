@@ -1,10 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { rateLimit, getClientIp, RATE_LIMITS } from '@/lib/rate-limit'
 
 export async function POST(
   _request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
+  // Rate limiting
+  const ip = getClientIp(_request)
+  const rl = rateLimit(ip, RATE_LIMITS.visit)
+  if (!rl.success) {
+    return NextResponse.json({ error: 'Trop de tentatives. Réessayez dans une minute.' }, { status: 429 })
+  }
+
   try {
     const { slug } = await params
     const shop = await db.shop.findUnique({ where: { slug, isActive: true } })

@@ -55,6 +55,7 @@ import {
   X,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { formatPrice } from '@/lib/shared'
 
 interface Product {
   id: string
@@ -94,10 +95,6 @@ const emptyForm: ProductFormData = {
   stock: '',
   categoryId: 'none',
   isAvailable: true,
-}
-
-function formatPrice(price: number) {
-  return price.toLocaleString('fr-FR') + ' FCFA'
 }
 
 export function DashboardProducts() {

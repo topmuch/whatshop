@@ -30,35 +30,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Product as ProductType, formatPrice } from '@/lib/shared'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-interface Product {
-  id: string
-  name: string
-  description?: string
-  price: number
-  image?: string
-  images?: string[]
-  stock?: number
-  isAvailable: boolean
-  categoryId?: string
-  categoryName?: string
-  createdAt?: string
-}
-
 interface GroceryGridProps {
-  filteredProducts: Product[]
+  filteredProducts: ProductType[]
   publicCategories: any[]
-  publicProducts: Product[]
+  publicProducts: ProductType[]
   activeCategory: string | null
   searchQuery: string
   sortBy: 'recent' | 'price-asc' | 'price-desc'
   isSearching: boolean
   totalProductCount: number
   onCategoryClick: (id: string | null) => void
-  onProductClick: (product: Product) => void
-  onAddToCart: (product: Product) => void
+  onProductClick: (product: ProductType) => void
+  onAddToCart: (product: ProductType) => void
   getCartQuantity: (productId: string) => number
   updateCartQuantity: (productId: string, qty: number) => void
   onSortChange: (sort: string) => void
@@ -137,10 +124,6 @@ function getGroceryEmoji(name: string): string {
   return '🛒'
 }
 
-function formatPrice(price: number): string {
-  return price.toLocaleString('fr-FR') + ' FCFA'
-}
-
 // ─── Countdown Timer ────────────────────────────────────────────────────────
 
 function useCountdown(initialSeconds = 5 * 3600) {
@@ -211,7 +194,7 @@ export function GroceryGrid({
   }, [filteredProducts, sortBy])
 
   const handleAddToCart = useCallback(
-    (product: Product) => {
+    (product: ProductType) => {
       onAddToCart(product)
       toast.success(`${product.name} ajouté au panier`, {
         description: formatPrice(product.price),
@@ -649,12 +632,12 @@ export function GroceryGrid({
 // ─── Product Card ────────────────────────────────────────────────────────────
 
 interface GroceryProductCardProps {
-  product: Product
+  product: ProductType
   index: number
   cartQuantity: number
-  onAddToCart: (product: Product) => void
+  onAddToCart: (product: ProductType) => void
   onUpdateQuantity: (productId: string, qty: number) => void
-  onProductClick: (product: Product) => void
+  onProductClick: (product: ProductType) => void
 }
 
 function GroceryProductCard({

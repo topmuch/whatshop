@@ -3,6 +3,7 @@
 import useEmblaCarousel from 'embla-carousel-react'
 import Autoplay from 'embla-carousel-autoplay'
 import { motion } from 'framer-motion'
+import { toast } from 'sonner'
 import { useState, useCallback, useEffect, useRef } from 'react'
 import {
   Search,
@@ -29,21 +30,9 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Product as ProductType, formatPrice } from '@/lib/shared'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
-
-interface Product {
-  id: string
-  name: string
-  description?: string | null
-  price: number
-  image?: string | null
-  images?: string[]
-  stock?: number | null
-  isAvailable: boolean
-  categoryId?: string | null
-  category?: { id: string; name: string } | null
-}
 
 interface Category {
   id: string
@@ -51,17 +40,17 @@ interface Category {
 }
 
 interface ElectroDepotGridProps {
-  filteredProducts: Product[]
+  filteredProducts: ProductType[]
   publicCategories: Category[]
-  publicProducts: Product[]
+  publicProducts: ProductType[]
   activeCategory: string | null
   searchQuery: string
   sortBy: string
   isSearching: boolean
   totalProductCount: number
   onCategoryClick: (id: string | null) => void
-  onProductClick: (product: Product) => void
-  onAddToCart: (product: Product) => void
+  onProductClick: (product: ProductType) => void
+  onAddToCart: (product: ProductType) => void
   getCartQuantity: (productId: string) => number
   updateCartQuantity: (productId: string, qty: number) => void
   onSortChange: (sort: string) => void
@@ -144,10 +133,6 @@ const BRANDS = [
 ]
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function formatPrice(price: number): string {
-  return price.toLocaleString('fr-FR') + ' FCFA'
-}
 
 // ─── CSS Keyframes (injected via <style>) ─────────────────────────────────────
 
@@ -406,9 +391,9 @@ function ElectroDepotProductCard({
   updateCartQuantity,
   index,
 }: {
-  product: Product
-  onAddToCart: (product: Product) => void
-  onProductClick: (product: Product) => void
+  product: ProductType
+  onAddToCart: (product: ProductType) => void
+  onProductClick: (product: ProductType) => void
   getCartQuantity: (productId: string) => number
   updateCartQuantity: (productId: string, qty: number) => void
   index: number
@@ -666,12 +651,11 @@ function BrandsMarquee() {
 
 function NewsletterSection() {
   const [email, setEmail] = useState('')
-  const [submitted, setSubmitted] = useState(false)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (email.trim()) {
-      setSubmitted(true)
+      toast.info('Service bientôt disponible !')
       setEmail('')
     }
   }
@@ -688,11 +672,6 @@ function NewsletterSection() {
       <p className="mt-1 text-sm max-w-md mx-auto" style={{ color: COLORS.muted }}>
         Inscrivez-vous pour recevoir nos offres exclusives, promotions et nouveautés directement dans votre boîte mail.
       </p>
-      {submitted ? (
-        <div className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white rounded-none" style={{ backgroundColor: COLORS.primary }}>
-          ✓ Merci pour votre inscription !
-        </div>
-      ) : (
         <form onSubmit={handleSubmit} className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 max-w-md mx-auto">
           <Input
             type="email"
@@ -711,7 +690,6 @@ function NewsletterSection() {
             S&apos;inscrire
           </Button>
         </form>
-      )}
     </div>
   )
 }
