@@ -83,6 +83,8 @@ import {
   ExternalLink,
   Mail,
   Bell,
+  ShieldCheck,
+  Crown,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
@@ -290,6 +292,7 @@ const navGroups = [
     label: 'Gestion',
     items: [
       { id: 'admin-config' as AdminTab, label: 'Configuration', icon: <Settings className="h-5 w-5" /> },
+      { id: 'admin-admins' as AdminTab, label: 'Super Admins', icon: <ShieldCheck className="h-5 w-5" /> },
       { id: 'admin-support' as AdminTab, label: 'Support', icon: <LifeBuoy className="h-5 w-5" /> },
       { id: 'admin-moderation' as AdminTab, label: 'Modération', icon: <Flag className="h-5 w-5" /> },
       { id: 'admin-marketing' as AdminTab, label: 'Marketing', icon: <Megaphone className="h-5 w-5" /> },
@@ -508,6 +511,8 @@ function AdminContent() {
       return <AdminDomains />
     case 'admin-config':
       return <AdminConfig />
+    case 'admin-admins':
+      return <AdminAdmins />
     case 'admin-support':
       return <AdminSupport />
     case 'admin-moderation':
@@ -2794,6 +2799,264 @@ function AdminOrders() {
                     </TableRow>
                   )
                 })}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  )
+}
+
+// ─── SUPER ADMINS TAB ──────────────────────────────────────────────────
+
+interface AdminAccount {
+  id: string
+  name: string
+  email: string
+  role: string
+  createdAt: string
+}
+
+function AdminAdmins() {
+  const { user } = useAppStore()
+  const [admins, setAdmins] = useState<AdminAccount[]>([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [deleteLoading, setDeleteLoading] = useState<string | null>(null)
+
+  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'ADMIN' })
+
+  const loadAdmins = useCallback(async () => {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/admin/admins')
+      if (res.ok) {
+        const data = await res.json()
+        setAdmins(data.admins || [])
+      }
+    } catch {
+      toast.error('Erreur lors du chargement des administrateurs')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadAdmins()
+  }, [loadAdmins])
+
+  async function handleCreate(e: React.FormEvent) {
+    e.preventDefault()
+    if (!form.name.trim() || !form.email.trim() || !form.password) {
+      toast.error('Tous les champs sont requis')
+      return
+    }
+    if (form.password.length < 6) {
+      toast.error('Le mot de passe doit contenir au moins 6 caractères')
+      return
+    }
+    setSaving(true)
+    try {
+      const res = await fetch('/api/admin/admins', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
+      if (res.ok) {
+        toast.success(`Compte ${form.role === 'SUPER_ADMIN' ? 'SUPER ADMIN' : 'ADMIN'} créé avec succès`)
+        setForm({ name: '', email: '', password: '', role: 'ADMIN' })
+        loadAdmins()
+      } else {
+        const data = await res.json()
+        toast.error(data.error || 'Erreur lors de la création')
+      }
+    } catch {
+      toast.error('Erreur lors de la création')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function handleDelete(id: string) {
+    setDeleteLoading(id)
+    try {
+      const res = await fetch(`/api/admin/admins/${id}`, { method: 'DELETE' })
+      if (res.ok) {
+        toast.success('Administrateur supprimé')
+        loadAdmins()
+      } else {
+        const data = await res.json()
+        toast.error(data.error || 'Erreur lors de la suppression')
+      }
+    } catch {
+      toast.error('Erreur lors de la suppression')
+    } finally {
+      setDeleteLoading(null)
+    }
+  }
+
+  const isSuperAdmin = user?.role === 'SUPER_ADMIN'
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">Super Admins</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Gérez les comptes administrateurs de la plateforme
+          </p>
+        </div>
+        <Badge variant="outline" className="text-xs">
+          {admins.length} admin{admins.length > 1 ? 's' : ''}
+        </Badge>
+      </div>
+
+      {/* Create form */}
+      {isSuperAdmin && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Crown className="h-4 w-4 text-amber-500" />
+              Créer un compte admin
+            </CardTitle>
+            <CardDescription>
+              Ajoutez un nouvel administrateur ou super admin à la plateforme
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleCreate} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="admin-name">Nom complet</Label>
+                  <Input
+                    id="admin-name"
+                    placeholder="Ex: Super Admin"
+                    value={form.name}
+                    onChange={(e) => setForm(prev => ({ ...prev, name: e.target.value }))}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="admin-email">Email</Label>
+                  <Input
+                    id="admin-email"
+                    type="email"
+                    placeholder="admin@terangaflow.app"
+                    value={form.email}
+                    onChange={(e) => setForm(prev => ({ ...prev, email: e.target.value }))}
+                    required
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="admin-password">Mot de passe</Label>
+                  <Input
+                    id="admin-password"
+                    type="password"
+                    placeholder="Minimum 6 caractères"
+                    value={form.password}
+                    onChange={(e) => setForm(prev => ({ ...prev, password: e.target.value }))}
+                    required
+                    minLength={6}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="admin-role">Rôle</Label>
+                  <Select value={form.role} onValueChange={(val) => setForm(prev => ({ ...prev, role: val }))}>
+                    <SelectTrigger id="admin-role">
+                      <SelectValue placeholder="Sélectionner" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ADMIN">Admin</SelectItem>
+                      <SelectItem value="SUPER_ADMIN">Super Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="flex justify-end">
+                <Button type="submit" disabled={saving} className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white">
+                  {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <UserPlus className="h-4 w-4 mr-2" />}
+                  Créer le compte
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Admin list */}
+      {loading ? (
+        <Card>
+          <CardContent className="p-4 space-y-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-14 w-full" />
+            ))}
+          </CardContent>
+        </Card>
+      ) : admins.length === 0 ? (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <ShieldCheck className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+            <p className="text-muted-foreground">Aucun administrateur trouvé</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardContent className="p-0 overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nom</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Rôle</TableHead>
+                  <TableHead>Créé le</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {admins.map((admin) => (
+                  <TableRow key={admin.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white text-xs font-bold">
+                          {admin.name.charAt(0).toUpperCase()}
+                        </div>
+                        <span className="font-medium">{admin.name}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{admin.email}</TableCell>
+                    <TableCell>
+                      {admin.role === 'SUPER_ADMIN' ? (
+                        <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600 border-0">
+                          <Crown className="h-3 w-3 mr-1" />
+                          SUPER ADMIN
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="border-blue-500 text-blue-700 bg-blue-50">
+                          <ShieldCheck className="h-3 w-3 mr-1" />
+                          ADMIN
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{formatDate(admin.createdAt)}</TableCell>
+                    <TableCell>
+                      <div className="flex justify-center">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                          onClick={() => handleDelete(admin.id)}
+                          disabled={deleteLoading === admin.id || admin.id === user?.id}
+                          title={admin.id === user?.id ? 'Vous ne pouvez pas supprimer votre compte' : 'Supprimer'}
+                        >
+                          {deleteLoading === admin.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           </CardContent>
