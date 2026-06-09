@@ -50,6 +50,7 @@ function StatCard({
   iconBg,
   iconColor,
   borderAccent,
+  cardBg,
 }: {
   icon: React.ReactNode
   label: string
@@ -59,21 +60,22 @@ function StatCard({
   iconBg?: string
   iconColor?: string
   borderAccent?: string
+  cardBg?: string
 }) {
   return (
-    <Card className={`overflow-hidden ${borderAccent || ''}`}>
+    <Card className={`overflow-hidden ${cardBg || ''} ${borderAccent || ''}`}>
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-muted-foreground">{label}</p>
-            <p className="text-2xl font-bold mt-1">{value}</p>
+            <p className={`text-sm ${cardBg ? 'text-white/80' : 'text-muted-foreground'}`}>{label}</p>
+            <p className={`text-2xl font-bold mt-1 ${cardBg ? 'text-white' : ''}`}>{value}</p>
             {badge && (
               <Badge variant="secondary" className={`mt-2 ${badgeColor}`}>
                 {badge}
               </Badge>
             )}
           </div>
-          <div className={`flex items-center justify-center w-12 h-12 rounded-xl ${iconBg || 'bg-primary/10'} ${iconColor || 'text-primary'}`}>
+          <div className={`flex items-center justify-center w-12 h-12 rounded-xl ${cardBg ? 'bg-white/20 text-white' : `${iconBg || 'bg-primary/10'} ${iconColor || 'text-primary'}`} `}>
             {icon}
           </div>
         </div>
@@ -200,35 +202,25 @@ export function DashboardOverview() {
           icon={<Package className="h-6 w-6" />}
           label="Total produits"
           value={stats?.products ?? 0}
-          iconBg="bg-blue-500/10"
-          iconColor="text-blue-600"
-          borderAccent="border-t-4 border-t-blue-500"
+          cardBg="bg-gradient-to-br from-blue-500 to-blue-600"
         />
         <StatCard
           icon={<ShoppingCart className="h-6 w-6" />}
           label="Commandes"
           value={stats?.orders ?? 0}
-          iconBg="bg-emerald-500/10"
-          iconColor="text-emerald-600"
-          borderAccent="border-t-4 border-t-emerald-500"
+          cardBg="bg-gradient-to-br from-emerald-500 to-emerald-600"
         />
         <StatCard
           icon={<Tags className="h-6 w-6" />}
           label="Catégories"
           value={stats?.categories ?? 0}
-          iconBg="bg-amber-500/10"
-          iconColor="text-amber-600"
-          borderAccent="border-t-4 border-t-amber-500"
+          cardBg="bg-gradient-to-br from-amber-500 to-orange-500"
         />
         <StatCard
           icon={<Crown className="h-6 w-6" />}
           label="Plan actuel"
           value={planInfo.label}
-          badge={planInfo.label}
-          badgeColor={planInfo.color}
-          iconBg="bg-purple-500/10"
-          iconColor="text-purple-600"
-          borderAccent="border-t-4 border-t-purple-500"
+          cardBg="bg-gradient-to-br from-purple-500 to-purple-600"
         />
       </div>
 
