@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { hashPassword } from '@/lib/auth'
 
 // POST /api/seed - Create default admin and demo accounts
 // Called by Docker startup script to ensure accounts exist
@@ -8,12 +9,13 @@ export async function POST() {
     const results = []
 
     // Create admin
+    const adminPassword = await hashPassword('admin123')
     const admin = await db.user.upsert({
       where: { email: 'admin@whatsshop.com' },
       update: {},
       create: {
         email: 'admin@whatsshop.com',
-        password: 'admin123',
+        password: adminPassword,
         name: 'Super Administrateur',
         role: 'ADMIN',
       },
@@ -21,12 +23,13 @@ export async function POST() {
     results.push(`admin: ${admin.email}`)
 
     // Create demo seller + shop
+    const demoPassword = await hashPassword('demo123')
     const demo = await db.user.upsert({
       where: { email: 'demo@whatsshop.com' },
       update: {},
       create: {
         email: 'demo@whatsshop.com',
-        password: 'demo123',
+        password: demoPassword,
         name: 'Aminata Diallo',
         role: 'SELLER',
       },

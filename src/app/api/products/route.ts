@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireShopOwner } from '@/lib/auth'
 
 // Helper: parse JSON images field into string[]
 function parseImages(imagesRaw: unknown): string[] {
@@ -18,13 +19,10 @@ function parseImages(imagesRaw: unknown): string[] {
 
 // Helper: format product with parsed images
 function formatProduct(p: Record<string, unknown>) {
-  return {
-    ...p,
-    images: parseImages(p.images),
-  }
+  return { ...p, images: parseImages(p.images) }
 }
 
-// GET /api/products?shopId=xxx
+// GET /api/products?shopId=xxx (public — no auth needed)
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -53,20 +51,23 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/products
+// POST /api/products (auth required — owner only)
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { shopId, name, description, price, image, images, stock, categoryId, isAvailable } = body
+    const { user, response: errorResponse } = await requireShopOwner(request)
+    if (errorResponse) return errorResponse
+    if (!user || !user.shop) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
 
-    if (!shopId || !name || price === undefined) {
+    const body = await request.json()
+    const { name, description, price, image, images, stock, categoryId, isAvailable } = body
+
+    if (!name || price === undefined) {
       return NextResponse.json({ error: 'Champs requis manquants' }, { status: 400 })
     }
 
     // Check plan limits
-    const shop = await db.shop.findUnique({ where: { id: shopId } })
-    if (shop?.plan === 'FREE') {
-      const productCount = await db.product.count({ where: { shopId } })
+    if (user.shop.plan === 'FREE') {
+      const productCount = await db.product.count({ where: { shopId: user.shop.id } })
       if (productCount >= 10) {
         return NextResponse.json(
           { error: 'Limite atteinte. Passez au plan Standard pour plus de produits.' },
@@ -79,7 +80,7 @@ export async function POST(request: NextRequest) {
 
     const product = await db.product.create({
       data: {
-        shopId,
+        shopId: user.shop.id,
         name,
         description: description || null,
         price: parseFloat(price),
@@ -99,14 +100,26 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PUT /api/products
+// PUT /api/products (auth required — owner only)
 export async function PUT(request: NextRequest) {
   try {
+    const { user, response: errorResponse } = await requireShopOwner(request)
+    if (errorResponse) return errorResponse
+    if (!user || !user.shop) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+
     const body = await request.json()
     const { id, name, description, price, image, images, stock, categoryId, isAvailable } = body
 
     if (!id) {
       return NextResponse.json({ error: 'ID requis' }, { status: 400 })
+    }
+
+    // Verify the product belongs to this shop
+    const existingProduct = await db.product.findFirst({
+      where: { id, shopId: user.shop.id },
+    })
+    if (!existingProduct) {
+      return NextResponse.json({ error: 'Produit introuvable' }, { status: 404 })
     }
 
     const data: Record<string, unknown> = {}
@@ -134,14 +147,26 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-// DELETE /api/products?id=xxx
+// DELETE /api/products?id=xxx (auth required — owner only)
 export async function DELETE(request: NextRequest) {
   try {
+    const { user, response: errorResponse } = await requireShopOwner(request)
+    if (errorResponse) return errorResponse
+    if (!user || !user.shop) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
 
     if (!id) {
       return NextResponse.json({ error: 'ID requis' }, { status: 400 })
+    }
+
+    // Verify the product belongs to this shop
+    const existingProduct = await db.product.findFirst({
+      where: { id, shopId: user.shop.id },
+    })
+    if (!existingProduct) {
+      return NextResponse.json({ error: 'Produit introuvable' }, { status: 404 })
     }
 
     await db.product.delete({ where: { id } })

@@ -1,57 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-
-let seeded = false
-
-async function ensureSeeded() {
-  if (seeded) return
-  try {
-    // Always ensure admin exists (even if other users registered)
-    const admin = await db.user.findUnique({ where: { email: 'admin@whatsshop.com' } })
-    if (!admin) {
-      await db.user.create({
-        data: {
-          email: 'admin@whatsshop.com',
-          password: 'admin123',
-          name: 'Super Administrateur',
-          role: 'ADMIN',
-        },
-      })
-    }
-
-    // Ensure demo seller + shop exist
-    const demo = await db.user.findUnique({ where: { email: 'demo@whatsshop.com' } })
-    if (!demo) {
-      const seller = await db.user.create({
-        data: {
-          email: 'demo@whatsshop.com',
-          password: 'demo123',
-          name: 'Aminata Diallo',
-          role: 'SELLER',
-        },
-      })
-      await db.shop.create({
-        data: {
-          name: 'Amina Mode',
-          slug: 'amina-mode',
-          description: 'Vêtements et accessoires de qualité pour femmes.',
-          whatsapp: '221771234567',
-          plan: 'STANDARD',
-          isActive: true,
-          ownerId: seller.id,
-        },
-      })
-    }
-    seeded = true
-  } catch {
-    seeded = true
-  }
-}
+import { clearSessionCookie } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
   try {
-    await ensureSeeded()
-
     const userEmail = request.cookies.get('whatsshop-user')?.value
 
     if (!userEmail) {
@@ -89,6 +41,8 @@ export async function GET(request: NextRequest) {
         customDomainStatus: user.shop.customDomainStatus,
         subscriptionStatus: user.shop.subscriptionStatus,
         subscriptionEndDate: user.shop.subscriptionEndDate?.toISOString(),
+        heroImages: user.shop.heroImages,
+        promoBanners: user.shop.promoBanners,
       } : null,
     })
   } catch (error) {
@@ -99,12 +53,6 @@ export async function GET(request: NextRequest) {
 
 export async function DELETE() {
   const response = NextResponse.json({ success: true })
-  response.cookies.set('whatsshop-user', '', {
-    httpOnly: true,
-    secure: false,
-    sameSite: 'lax',
-    maxAge: 0,
-    path: '/',
-  })
+  clearSessionCookie(response)
   return response
 }

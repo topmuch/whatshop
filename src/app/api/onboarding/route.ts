@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { isValidSlug } from '@/lib/auth'
 
 // Sector → Template mapping
 const sectorTemplateMap: Record<string, string> = {
@@ -37,6 +38,14 @@ export async function POST(request: NextRequest) {
     if (!userId || !name || !whatsapp) {
       return NextResponse.json(
         { error: 'Informations manquantes (nom, whatsapp requis)' },
+        { status: 400 }
+      )
+    }
+
+    // Validate slug if provided
+    if (slug && !isValidSlug(slug)) {
+      return NextResponse.json(
+        { error: 'Slug invalide. Utilisez 3-50 caractères alphanumériques minuscules et tirets.' },
         { status: 400 }
       )
     }
