@@ -47,6 +47,7 @@ import { JameelaGrid } from './themes/jameela-grid'
 import { FashionGrid } from './themes/fashion-grid'
 import { ElectroGrid } from './themes/electro-grid'
 import { GroceryGrid } from './themes/grocery-grid'
+import { ElectroDepotGrid } from './themes/electrodepot-grid'
 
 type SortOption = 'recent' | 'price-asc' | 'price-desc'
 
@@ -501,7 +502,7 @@ function ShopContent() {
       jameela: <Gem className="h-5 w-5" />,
       'xstore-fashion': <Heart className="h-5 w-5" />,
       'xstore-electro': <Zap className="h-5 w-5" />,
-      'xstore-grocery': <Globe className="h-5 w-5" />,
+      'xstore-grocery': <Globe className="h-5 w-5" />, electrodepot: <Zap className="h-5 w-5" />,
     }
     return icons[template.id] || <Store className="h-5 w-5" />
   }, [template.id])
@@ -1148,7 +1149,7 @@ function ShopContent() {
             ref={scrollRef}
           >
         {/* ─── Theme-specific or Generic Product Grid ─── */}
-        {(template.id === 'jameela' || template.id === 'xstore-fashion' || template.id === 'xstore-electro' || template.id === 'xstore-grocery') ? (
+        {(template.id === 'jameela' || template.id === 'xstore-fashion' || template.id === 'xstore-electro' || template.id === 'xstore-grocery' || template.id === 'electrodepot') ? (
           <div className="relative z-10" ref={scrollRef}>
             {template.id === 'jameela' && (
               <JameelaGrid
@@ -1215,6 +1216,27 @@ function ShopContent() {
             )}
             {template.id === 'xstore-grocery' && (
               <GroceryGrid
+                filteredProducts={filteredProducts}
+                publicCategories={publicCategories}
+                publicProducts={publicProducts}
+                activeCategory={activeCategory}
+                searchQuery={searchQuery}
+                sortBy={sortBy}
+                isSearching={isSearching}
+                totalProductCount={totalProductCount}
+                onCategoryClick={handleCategoryClick}
+                onProductClick={setSelectedProduct}
+                onAddToCart={handleAddToCart}
+                getCartQuantity={getCartQuantity}
+                updateCartQuantity={updateCartQuantity}
+                onSortChange={setSortBy}
+                onSearchChange={setSearchQuery}
+                shopName={publicShop.name}
+                whatsapp={publicShop.whatsapp}
+              />
+            )}
+            {template.id === 'electrodepot' && (
+              <ElectroDepotGrid
                 filteredProducts={filteredProducts}
                 publicCategories={publicCategories}
                 publicProducts={publicProducts}

@@ -35,7 +35,7 @@ model Shop {
   phone                 String?
   plan                  String   @default("FREE") // FREE | STANDARD | PRO
   sector                String?  // beaute, mode, electronique, alimentation, artisanat, sport, bijoux, maison, auto, autre
-  template              String   @default("classic") // classic | africa | minimal | elegant | neon | rose | ocean | sunset | jameela | xstore-fashion | xstore-electro | xstore-grocery
+  template              String   @default("classic") // classic | africa | minimal | elegant | neon | rose | ocean | sunset | jameela | xstore-fashion | xstore-electro | xstore-grocery | electrodepot
   isActive              Boolean  @default(true)
   ownerId               String   @unique
 
