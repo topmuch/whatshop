@@ -143,17 +143,20 @@ export default function Home() {
 
       // Always check session (including login/register views)
       // This ensures that after login + HMR reload, the session is restored
-      if (urlView.view === 'landing' || urlView.view === 'dashboard' || urlView.view === 'admin' || urlView.view === 'login' || urlView.view === 'register') {
+      if (urlView.view === 'landing' || urlView.view === 'dashboard' || urlView.view === 'admin' || urlView.view === 'login' || urlView.view === 'register' || urlView.view === 'onboarding') {
         try {
           const res = await fetch('/api/auth/session')
           if (res.ok) {
             const data = await res.json()
             if (data.user) {
               setUser(data.user)
-              if (data.user.role === 'ADMIN') {
-                setView('admin')
-              } else {
-                setView('dashboard')
+              // Only redirect from landing/register/login; keep onboarding as-is so the wizard can complete
+              if (urlView.view !== 'onboarding') {
+                if (data.user.role === 'ADMIN') {
+                  setView('admin')
+                } else {
+                  setView('dashboard')
+                }
               }
             }
           }

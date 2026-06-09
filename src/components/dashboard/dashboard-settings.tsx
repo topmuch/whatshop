@@ -410,15 +410,19 @@ export function DashboardSettings() {
       const shopUrl = `https://boutiko.com/${shop.slug}`
       const res = await fetch('/api/ai/qr-code', {
         method: 'POST',
+        credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: shopUrl, shopName: shop.name }),
       })
       if (res.ok) {
         const data = await res.json()
         setQrDataUrl(data.dataUrl)
+      } else {
+        const data = await res.json().catch(() => ({}))
+        toast.error(data.error || 'Erreur lors de la génération du QR code')
       }
     } catch {
-      // fallback
+      toast.error('Erreur de connexion lors de la génération du QR code')
     } finally {
       setQrLoading(false)
     }

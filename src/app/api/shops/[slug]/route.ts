@@ -21,6 +21,7 @@ export async function GET(
         address: true,
         phone: true,
         plan: true,
+        sector: true,
         template: true,
         isActive: true,
         heroImages: true,

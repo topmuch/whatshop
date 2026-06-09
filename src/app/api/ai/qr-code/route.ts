@@ -23,16 +23,22 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate QR code as PNG buffer
-    const qrBuffer: Buffer = await QRCode.toBuffer(url, {
-      type: 'png',
-      width: 600,
-      margin: 2,
-      color: {
-        dark: '#1a1a2e',   // Dark foreground
-        light: '#FFFFFF',  // White background
-      },
-      errorCorrectionLevel: 'H', // High - best for scanning
-    })
+    let qrBuffer: Buffer
+    try {
+      qrBuffer = await QRCode.toBuffer(url, {
+        type: 'png',
+        width: 600,
+        margin: 2,
+        color: {
+          dark: '#1a1a2e',   // Dark foreground
+          light: '#FFFFFF',  // White background
+        },
+        errorCorrectionLevel: 'H', // High - best for scanning
+      })
+    } catch (qrError) {
+      console.error('QR code generation failed:', qrError)
+      return NextResponse.json({ error: 'Échec de la génération du QR code. Vérifiez l\'URL fournie.' }, { status: 422 })
+    }
 
     // Convert buffer to base64 data URL
     const base64 = qrBuffer.toString('base64')

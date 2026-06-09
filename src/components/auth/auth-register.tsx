@@ -32,6 +32,7 @@ export function AuthRegister() {
       }
       setUser(data.user)
       setView('onboarding')
+      window.history.replaceState(null, '', '/onboarding')
       toast.success('Compte créé avec succès !')
     } catch {
       toast.error('Erreur de connexion')

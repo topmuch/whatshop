@@ -82,6 +82,12 @@ export async function PUT(request: NextRequest) {
     const updatedShop = await db.shop.update({
       where: { id },
       data,
+      select: {
+        id: true, name: true, slug: true, description: true, logo: true,
+        banner: true, whatsapp: true, address: true, phone: true,
+        plan: true, template: true, isActive: true, sector: true,
+        heroImages: true, promoBanners: true, brands: true,
+      },
     })
 
     return NextResponse.json(updatedShop)
