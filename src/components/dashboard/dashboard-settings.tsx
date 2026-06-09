@@ -43,6 +43,7 @@ import {
   XCircle,
   ChevronDown,
   Upload,
+  LinkIcon,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -78,6 +79,7 @@ export function DashboardSettings() {
   const [address, setAddress] = useState('')
   const [phone, setPhone] = useState('')
   const [logo, setLogo] = useState('')
+  const [logoUrlInput, setLogoUrlInput] = useState('')
   const [banner, setBanner] = useState('')
   const [template, setTemplate] = useState('classic')
 
@@ -582,6 +584,34 @@ export function DashboardSettings() {
             {/* Logo Upload */}
             <div className="space-y-2">
               <Label>Logo de la boutique</Label>
+              {/* URL input */}
+              <div className="flex gap-2">
+                <Input
+                  type="url"
+                  placeholder="Coller l'URL du logo (https://...)"
+                  value={logoUrlInput}
+                  onChange={(e) => setLogoUrlInput(e.target.value)}
+                  className="flex-1 h-9 text-sm"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-9 px-3 shrink-0"
+                  onClick={() => {
+                    const url = logoUrlInput.trim()
+                    if (url) {
+                      setLogo(url)
+                      setLogoUrlInput('')
+                      toast.success('Logo URL appliquée !')
+                    }
+                  }}
+                  disabled={!logoUrlInput.trim()}
+                >
+                  <LinkIcon className="h-3.5 w-3.5 mr-1" />
+                  Appliquer
+                </Button>
+              </div>
               <input
                 ref={logoInputRef}
                 type="file"
@@ -630,7 +660,7 @@ export function DashboardSettings() {
                     <ImagePlus className="h-5 w-5 text-muted-foreground" />
                   )}
                   <span className="text-xs text-muted-foreground">
-                    {logoUploading ? 'Téléchargement...' : 'Cliquez pour télécharger le logo'}
+                    {logoUploading ? 'Téléchargement...' : 'Ou collez une URL ci-dessus'}
                   </span>
                 </button>
               )}
