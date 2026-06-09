@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 
 /**
- * Verify that the requesting user is an ADMIN.
+ * Verify that the requesting user is an ADMIN or SUPER_ADMIN.
  * Reads the `whatsshop-user` cookie, looks up the user in the DB,
- * and checks that user.role === 'ADMIN'.
+ * and checks that user.role is ADMIN or SUPER_ADMIN.
  * Returns the user object on success, or null on failure.
  */
 export async function verifyAdmin(request: NextRequest) {
@@ -18,7 +18,7 @@ export async function verifyAdmin(request: NextRequest) {
     where: { email: userEmail },
   })
 
-  if (!user || user.role !== 'ADMIN') {
+  if (!user || (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN')) {
     return null
   }
 

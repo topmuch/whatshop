@@ -9,10 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MessageCircle, Star, Clock, Gift, Send, Package } from 'lucide-react'
 import { toast } from 'sonner'
-
-function formatPrice(price: number) {
-  return price.toLocaleString('fr-FR') + ' FCFA'
-}
+import { formatPrice } from '@/lib/shared'
 
 /* ─── Live Banner ────────────────────────────────────────────────────── */
 function LiveBanner({ timeLeft, isActive }: { timeLeft: string; isActive: boolean }) {

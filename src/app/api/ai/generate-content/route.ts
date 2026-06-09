@@ -1,8 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import ZAI from 'z-ai-web-dev-sdk'
+import { requireAuth } from '@/lib/auth'
+import { rateLimit, getClientIp, RATE_LIMITS } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: Require authentication to prevent abuse
+    const { user, response: authError } = await requireAuth(request)
+    if (authError) return authError
+    if (!user) return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
+
+    // Rate limiting
+    const ip = getClientIp(request)
+    const rl = rateLimit(ip, RATE_LIMITS.ai)
+    if (!rl.success) {
+      return NextResponse.json({ error: 'Trop de tentatives. Réessayez dans une minute.' }, { status: 429 })
+    }
+
     const { productName, price, description, shopName, shopSlug } = await request.json()
 
     if (!productName || !price) {
@@ -25,13 +39,18 @@ export async function POST(request: NextRequest) {
         },
         {
           role: 'user',
-          content: `Produit: ${productName}, Prix: ${price} FCFA${description ? ', Description: ' + description : ''}${shopName ? ', Boutique: ' + shopName : ''}${shopSlug ? ', URL: boutiko.com/' + shopSlug : ''}. Génère le contenu marketing.`
+          content: `Produit: ${String(productName).slice(0, 200)}, Prix: ${String(price).slice(0, 20)} FCFA${description ? ', Description: ' + String(description).slice(0, 500) : ''}${shopName ? ', Boutique: ' + String(shopName).slice(0, 100) : ''}${shopSlug ? ', URL: boutiko.com/' + String(shopSlug).slice(0, 50) : ''}. Génère le contenu marketing.`
         }
       ],
       thinking: { type: 'disabled' }
     })
 
     const response = completion.choices[0]?.message?.content
+
+    // SECURITY: Null-check the AI response to prevent crash
+    if (!response) {
+      return NextResponse.json({ error: 'Erreur lors de la génération du contenu' }, { status: 500 })
+    }
 
     let content: {
       instagram: string

@@ -1,4 +1,4 @@
-export type TemplateId = 'classic' | 'africa' | 'minimal' | 'elegant' | 'neon' | 'rose' | 'ocean' | 'sunset' | 'jameela' | 'xstore-fashion' | 'xstore-electro' | 'xstore-grocery'
+export type TemplateId = 'classic' | 'africa' | 'minimal' | 'elegant' | 'neon' | 'rose' | 'ocean' | 'sunset' | 'jameela' | 'xstore-fashion' | 'xstore-electro' | 'xstore-grocery' | 'electrodepot'
 
 export interface ShopTemplate {
   id: TemplateId
@@ -40,18 +40,18 @@ export interface ShopTemplate {
   }
   layout: {
     gridCols: string // Tailwind grid classes
-    headerStyle: 'standard' | 'centered' | 'minimal' | 'dark' | 'gradient' | 'elevated' | 'luxury-dark' | 'fashion-clean' | 'electro-tech' | 'grocery-fresh'
-    cardLayout: 'grid' | 'list' | 'masonry' | 'compact' | 'featured' | 'beauty' | 'fashion-card' | 'electro-card' | 'grocery-card'
+    headerStyle: 'standard' | 'centered' | 'minimal' | 'dark' | 'gradient' | 'elevated' | 'luxury-dark' | 'fashion-clean' | 'electro-tech' | 'grocery-fresh' | 'electrodepot-mega'
+    cardLayout: 'grid' | 'list' | 'masonry' | 'compact' | 'featured' | 'beauty' | 'fashion-card' | 'electro-card' | 'grocery-card' | 'electrodepot-product'
     showCardBorder: boolean
     cardPadding: string
     imageSize: string // aspect ratio class
     badgePosition: 'top-left' | 'top-right' | 'overlay'
     badgeStyle: 'pill' | 'rounded' | 'tag'
     categoryStyle: 'pill' | 'underline' | 'button' | 'circle' | 'circle-image'
-    heroStyle: 'full' | 'contained' | 'minimal' | 'dark' | 'gradient' | 'fashion-split' | 'grocery-banner'
+    heroStyle: 'full' | 'contained' | 'minimal' | 'dark' | 'gradient' | 'fashion-split' | 'grocery-banner' | 'electrodepot-wide'
     priceStyle: 'bold' | 'elegant' | 'minimal' | 'tag' | 'beauty-elegant' | 'fashion-bold' | 'electro-highlight'
     buttonStyle: 'filled' | 'outlined' | 'ghost' | 'rounded' | 'pill'
-    footerStyle: 'standard' | 'dark' | 'minimal' | 'gradient'
+    footerStyle: 'standard' | 'dark' | 'minimal' | 'gradient' | 'electrodepot-footer'
   }
   decorative: {
     pattern: 'none' | 'dots' | 'lines' | 'kente' | 'waves' | 'gradient'
@@ -771,6 +771,66 @@ export const templates: Record<TemplateId, ShopTemplate> = {
       gradientBg: 'linear-gradient(180deg, #FFFBF5 0%, #FFF7ED 50%, #F5F3FF 100%)',
       divider: 'gradient',
       headerDecoration: 'border-b border-orange-200/50',
+    },
+  },
+  electrodepot: {
+    id: 'electrodepot',
+    name: 'ElectroDépôt',
+    description: 'Méga-store électronique, promo barre, large slider, marques, newsletter',
+    emoji: '🔌',
+    colors: {
+      primary: '#E31837',
+      primaryFg: '#ffffff',
+      accent: '#1a1a2e',
+      bg: '#ffffff',
+      card: '#ffffff',
+      cardHover: '#f9f9f9',
+      text: '#1a1a1a',
+      textMuted: '#666666',
+      border: '#e0e0e0',
+      badgeNew: '#E31837',
+      badgePromo: '#ff6b00',
+      cartBg: '#ffffff',
+      headerBg: '#ffffff',
+      filterActive: '#E31837',
+      filterActiveFg: '#ffffff',
+      priceColor: '#E31837',
+      ctaBg: '#E31837',
+      ctaFg: '#ffffff',
+      heroOverlay: 'linear-gradient(135deg, rgba(227,24,55,0.85) 0%, rgba(26,26,46,0.75) 100%)',
+      heroBadge: 'rgba(227,24,55,0.2)',
+      heroText: '#ffffff',
+    },
+    cardStyle: {
+      rounded: '4px',
+      shadow: '0 1px 4px rgba(0,0,0,0.08)',
+      imageRounded: '4px 4px 0 0',
+      overflow: 'hidden',
+      border: '1px solid #e0e0e0',
+      hoverBorder: '1px solid #E31837',
+      hoverScale: 'scale(1)',
+      hoverY: -4,
+    },
+    layout: {
+      gridCols: 'grid-cols-2 md:grid-cols-3 lg:grid-cols-5',
+      headerStyle: 'electrodepot-mega',
+      cardLayout: 'electrodepot-product',
+      showCardBorder: true,
+      cardPadding: 'p-2',
+      imageSize: 'aspect-square',
+      badgePosition: 'top-left',
+      badgeStyle: 'pill',
+      categoryStyle: 'circle',
+      heroStyle: 'electrodepot-wide',
+      priceStyle: 'electro-highlight',
+      buttonStyle: 'filled',
+      footerStyle: 'electrodepot-footer',
+    },
+    decorative: {
+      pattern: 'none',
+      gradientBg: null,
+      divider: 'line',
+      headerDecoration: null,
     },
   },
 }

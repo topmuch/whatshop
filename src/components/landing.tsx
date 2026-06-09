@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { useAppStore } from '@/lib/store'
+import { PLATFORM_CONFIG } from '@/lib/shared'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -906,14 +907,15 @@ function PricingSection() {
           </motion.div>
           <motion.h2
             variants={fadeInUp}
-            className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-gray-900"
+            className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight"
+            style={{ color: '#111827' }}
           >
             Des prix{' '}
             <span className="bg-gradient-to-r from-[#EC4899] to-[#F59E0B] bg-clip-text text-transparent">
               simples et justes
             </span>
           </motion.h2>
-          <motion.p variants={fadeInUp} className="mt-6 text-lg text-gray-500 max-w-2xl mx-auto">
+          <motion.p variants={fadeInUp} className="mt-6 text-lg max-w-2xl mx-auto" style={{ color: '#6B7280' }}>
             Pas de frais cachés. Changez de plan à tout moment. Commencez gratuitement.
           </motion.p>
         </motion.div>
@@ -928,7 +930,7 @@ function PricingSection() {
           {plans.map((plan, i) => (
             <motion.div key={i} variants={fadeInUp}>
               <Card
-                className={`relative h-full flex flex-col overflow-hidden rounded-2xl ${
+                className={`relative h-full flex flex-col overflow-hidden rounded-2xl bg-white ${
                   plan.popular
                     ? 'border-2 border-primary shadow-2xl shadow-primary/15 scale-[1.04] md:scale-[1.06]'
                     : 'border border-gray-200 hover:border-primary/20 hover:shadow-xl'
@@ -947,15 +949,15 @@ function PricingSection() {
                   </div>
                 )}
 
-                <CardContent className="pt-8 pb-8 flex-1 flex flex-col px-7">
+                <CardContent className="pt-8 pb-8 flex-1 flex flex-col px-7 bg-white" style={{ color: '#111827' }}>
                   <div className="mb-7">
-                    <h3 className="font-bold text-xl text-gray-900">{plan.name}</h3>
-                    <p className="text-sm text-gray-500 mt-1.5">{plan.description}</p>
+                    <h3 className="font-bold text-xl" style={{ color: '#111827' }}>{plan.name}</h3>
+                    <p className="text-sm mt-1.5" style={{ color: '#6B7280' }}>{plan.description}</p>
                   </div>
 
                   <div className="mb-8">
-                    <span className="text-5xl font-bold tracking-tight text-gray-900">{plan.price}</span>
-                    <span className="text-gray-400 font-medium text-base">{plan.period}</span>
+                    <span className="text-5xl font-bold tracking-tight" style={{ color: '#111827' }}>{plan.price}</span>
+                    <span className="font-medium text-base" style={{ color: '#9CA3AF' }}>{plan.period}</span>
                   </div>
 
                   <ul className="space-y-4 mb-10 flex-1">
@@ -964,7 +966,7 @@ function PricingSection() {
                         <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
                           <Check className="w-3 h-3 text-primary" />
                         </div>
-                        <span className="text-gray-600">{feature}</span>
+                        <span style={{ color: '#4B5563' }}>{feature}</span>
                       </li>
                     ))}
                   </ul>
@@ -981,7 +983,7 @@ function PricingSection() {
                         setView('register')
                       } else {
                         const message = encodeURIComponent(`Bonjour, je suis intéressé(e) par l'abonnement ${plan.name} à ${plan.price} FCFA/mois sur Boutiko.`)
-                        window.open(`https://wa.me/2217848582226?text=${message}`, '_blank')
+                        window.open(`https://wa.me/${PLATFORM_CONFIG.DEFAULT_WHATSAPP}?text=${message}`, '_blank')
                       }
                     }}
                   >
@@ -1093,7 +1095,7 @@ function Footer() {
               <a href="#" className="w-9 h-9 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] flex items-center justify-center transition-colors">
                 <Instagram className="w-4 h-4 text-white/60" />
               </a>
-              <a href="https://wa.me/2217848582226" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] flex items-center justify-center transition-colors">
+              <a href="https://wa.me/${PLATFORM_CONFIG.DEFAULT_WHATSAPP}" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] flex items-center justify-center transition-colors">
                 <MessageCircle className="w-4 h-4 text-white/60" />
               </a>
               <a href="#" className="w-9 h-9 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] flex items-center justify-center transition-colors">
@@ -1143,7 +1145,7 @@ function Footer() {
             <ul className="space-y-4">
               <li className="flex items-center gap-3">
                 <MessageCircle className="w-4 h-4 text-primary shrink-0" />
-                <a href="https://wa.me/2217848582226" target="_blank" rel="noopener noreferrer" className="text-sm text-white/50 hover:text-white/80 transition-colors">+221 78 485 82 26</a>
+                <a href="https://wa.me/${PLATFORM_CONFIG.DEFAULT_WHATSAPP}" target="_blank" rel="noopener noreferrer" className="text-sm text-white/50 hover:text-white/80 transition-colors">+221 78 485 82 26</a>
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="w-4 h-4 text-primary shrink-0" />

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { clearSessionCookie } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
   try {
-    // Read user email from cookie
     const userEmail = request.cookies.get('whatsshop-user')?.value
 
     if (!userEmail) {
@@ -41,6 +41,8 @@ export async function GET(request: NextRequest) {
         customDomainStatus: user.shop.customDomainStatus,
         subscriptionStatus: user.shop.subscriptionStatus,
         subscriptionEndDate: user.shop.subscriptionEndDate?.toISOString(),
+        heroImages: user.shop.heroImages,
+        promoBanners: user.shop.promoBanners,
       } : null,
     })
   } catch (error) {
@@ -51,12 +53,6 @@ export async function GET(request: NextRequest) {
 
 export async function DELETE() {
   const response = NextResponse.json({ success: true })
-  response.cookies.set('whatsshop-user', '', {
-    httpOnly: true,
-    secure: false,
-    sameSite: 'lax',
-    maxAge: 0,
-    path: '/',
-  })
+  clearSessionCookie(response)
   return response
 }

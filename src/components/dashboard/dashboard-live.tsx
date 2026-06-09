@@ -22,6 +22,7 @@ import {
   Check,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { formatPrice } from '@/lib/shared'
 
 // ─── Sound Helper ─────────────────────────────────────────────────────────────
 
@@ -41,12 +42,6 @@ function playDingSound() {
   } catch {
     // Audio not supported
   }
-}
-
-// ─── Price Formatter ──────────────────────────────────────────────────────────
-
-function formatPrice(price: number) {
-  return price.toLocaleString('fr-FR') + ' FCFA'
 }
 
 // ─── Main Component ──────────────────────────────────────────────────────────

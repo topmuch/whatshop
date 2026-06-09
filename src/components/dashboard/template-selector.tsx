@@ -3,7 +3,6 @@
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { templates, type TemplateId } from '@/lib/templates'
-import { toast } from 'sonner'
 import { motion } from 'framer-motion'
 import { Check } from 'lucide-react'
 
@@ -94,7 +93,6 @@ export function TemplateSelector({ currentTemplate, onSelect }: TemplateSelector
               style={isActive ? { '--tw-ring-color': t.colors.primary.startsWith('linear') ? '#A855F7' : t.colors.primary } as React.CSSProperties : undefined}
               onClick={() => {
                 onSelect(t.id)
-                toast.success(`Thème "${t.name}" appliqué !`)
               }}
             >
               {/* Template preview */}

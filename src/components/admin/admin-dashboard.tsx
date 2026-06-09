@@ -545,12 +545,12 @@ function AdminOverview() {
 
   const statCards = stats
     ? [
-        { label: 'Utilisateurs', value: stats.totalUsers, icon: <Users className="h-5 w-5" />, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-t-4 border-t-blue-500' },
-        { label: 'Boutiques', value: stats.totalShops, icon: <Store className="h-5 w-5" />, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-t-4 border-t-emerald-500' },
-        { label: 'Produits', value: stats.totalProducts, icon: <Package className="h-5 w-5" />, color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-t-4 border-t-orange-500' },
-        { label: 'Commandes', value: stats.totalOrders, icon: <ShoppingCart className="h-5 w-5" />, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-t-4 border-t-purple-500' },
-        { label: 'Revenus', value: formatCurrency(stats.totalRevenue), icon: <TrendingUp className="h-5 w-5" />, color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-t-4 border-t-rose-500' },
-        { label: 'Visites', value: stats.totalVisits, icon: <Eye className="h-5 w-5" />, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-t-4 border-t-amber-500' },
+        { label: 'Utilisateurs', value: stats.totalUsers, icon: <Users className="h-5 w-5" />, cardBg: 'bg-gradient-to-br from-blue-500 to-blue-600' },
+        { label: 'Boutiques', value: stats.totalShops, icon: <Store className="h-5 w-5" />, cardBg: 'bg-gradient-to-br from-emerald-500 to-emerald-600' },
+        { label: 'Produits', value: stats.totalProducts, icon: <Package className="h-5 w-5" />, cardBg: 'bg-gradient-to-br from-orange-500 to-orange-600' },
+        { label: 'Commandes', value: stats.totalOrders, icon: <ShoppingCart className="h-5 w-5" />, cardBg: 'bg-gradient-to-br from-purple-500 to-purple-600' },
+        { label: 'Revenus', value: formatCurrency(stats.totalRevenue), icon: <TrendingUp className="h-5 w-5" />, cardBg: 'bg-gradient-to-br from-rose-500 to-rose-600' },
+        { label: 'Visites', value: stats.totalVisits, icon: <Eye className="h-5 w-5" />, cardBg: 'bg-gradient-to-br from-amber-500 to-amber-600' },
       ]
     : []
 
@@ -599,14 +599,14 @@ function AdminOverview() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.05 }}
           >
-            <Card className={`p-4 overflow-hidden ${card.border}`}>
+            <Card className={`p-4 overflow-hidden ${card.cardBg}`}>
               <div className="flex items-center gap-3 mb-2">
-                <div className={`flex items-center justify-center w-9 h-9 rounded-lg ${card.bg} ${card.color}`}>
+                <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-white/20 text-white">
                   {card.icon}
                 </div>
               </div>
-              <p className="text-2xl font-bold">{card.value}</p>
-              <p className="text-xs text-muted-foreground mt-1">{card.label}</p>
+              <p className="text-2xl font-bold text-white">{card.value}</p>
+              <p className="text-xs text-white/80 mt-1">{card.label}</p>
             </Card>
           </motion.div>
         ))}

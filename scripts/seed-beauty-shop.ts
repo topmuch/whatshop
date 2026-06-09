@@ -1,9 +1,16 @@
+// ⚠️ DEVELOPMENT ONLY - This script will NOT run in production
+if (process.env.NODE_ENV === 'production') {
+  console.error('❌ ERROR: Demo seed script is FORBIDDEN in production environment!')
+  console.error('   Demo shops should never exist in production.')
+  process.exit(1)
+}
+
 import { PrismaClient } from '@prisma/client'
 
 const db = new PrismaClient()
 
 async function seedBeautyShop() {
-  console.log('🌸 Creating Jameela Beauty shop...')
+  console.log('🌸 Creating Jameela Beauty shop (DEV only)...')
 
   // 1. Create user
   const existingUser = await db.user.findUnique({ where: { email: 'jameela@whatsshop.com' } })

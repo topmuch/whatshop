@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireShopOwner } from '@/lib/auth'
 
-// GET /api/live/[shopId] - Get live session for a shop
+// GET /api/live/[shopId] - Get live session for a shop (public read)
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ shopId: string }> }
@@ -56,12 +57,19 @@ export async function GET(
 }
 
 // POST /api/live/[shopId] - Create or update live session (toggle live, set pinned product, etc.)
+// SECURITY: Requires shop owner authentication
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ shopId: string }> }
 ) {
   try {
     const { shopId } = await params
+    
+    // SECURITY: Verify the requester owns this shop
+    const { user, response: authError } = await requireShopOwner(request, shopId)
+    if (authError) return authError
+    if (!user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+
     const body = await request.json()
     const { isActive, durationMinutes, pinnedProductId, promoCode } = body
 
@@ -135,12 +143,19 @@ export async function POST(
 }
 
 // PUT /api/live/[shopId] - Update live session (extend time, etc.)
+// SECURITY: Requires shop owner authentication
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ shopId: string }> }
 ) {
   try {
     const { shopId } = await params
+    
+    // SECURITY: Verify the requester owns this shop
+    const { user, response: authError } = await requireShopOwner(request, shopId)
+    if (authError) return authError
+    if (!user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+
     const body = await request.json()
     const { isActive, durationMinutes, pinnedProductId, whatsappClicks } = body
 

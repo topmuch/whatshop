@@ -1,7 +1,7 @@
 'use client'
 
 import { useAppStore } from '@/lib/store'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -29,19 +29,20 @@ import {
   Crown,
   Globe,
   Instagram,
-  ExternalLink,
   Palette,
   QrCode,
   Download,
   RefreshCw,
   Search,
-  Image,
+  ImagePlus,
+  Trash2,
   Type,
   AlertCircle,
   Clock,
   CheckCircle2,
   XCircle,
   ChevronDown,
+  Upload,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -64,7 +65,7 @@ const planLabels: Record<string, string> = {
 }
 
 export function DashboardSettings() {
-  const { shop, setShop } = useAppStore()
+  const { shop, setShop, publicShop, setPublicShop } = useAppStore()
   const [saving, setSaving] = useState(false)
   const [productCount, setProductCount] = useState(0)
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
@@ -80,6 +81,22 @@ export function DashboardSettings() {
   const [banner, setBanner] = useState('')
   const [template, setTemplate] = useState('classic')
 
+  // Hero images (slider)
+  const [heroImages, setHeroImages] = useState<string[]>([])
+
+  // Promo banners
+  const [promoBanners, setPromoBanners] = useState<{id: string; image: string; title: string; link: string}[]>([])
+  const [promoUploading, setPromoUploading] = useState(false)
+
+  // URL input states
+  const [heroUrlInput, setHeroUrlInput] = useState('')
+  const [promoUrlInput, setPromoUrlInput] = useState('')
+
+  // Upload states
+  const [logoUploading, setLogoUploading] = useState(false)
+  const [bannerUploading, setBannerUploading] = useState(false)
+  const [heroUploading, setHeroUploading] = useState(false)
+
   // SEO form state
   const [seoTitle, setSeoTitle] = useState('')
   const [seoDescription, setSeoDescription] = useState('')
@@ -94,6 +111,12 @@ export function DashboardSettings() {
   const [dnsOpen, setDnsOpen] = useState(false)
   const [domainInput, setDomainInput] = useState('')
 
+  // File input refs
+  const logoInputRef = useRef<HTMLInputElement>(null)
+  const bannerInputRef = useRef<HTMLInputElement>(null)
+  const heroInputRef = useRef<HTMLInputElement>(null)
+  const promoInputRef = useRef<HTMLInputElement>(null)
+
   useEffect(() => {
     if (shop) {
       setName(shop.name)
@@ -105,11 +128,29 @@ export function DashboardSettings() {
       setBanner(shop.banner || '')
       setTemplate(shop.template || 'classic')
 
+      // Parse hero images from shop data
+      try {
+        const heroRaw = (shop as Record<string, unknown>).heroImages as string | undefined
+        const parsed = heroRaw ? JSON.parse(heroRaw) : []
+        setHeroImages(Array.isArray(parsed) ? parsed : [])
+      } catch {
+        setHeroImages([])
+      }
+
+      // Parse promo banners from shop data
+      try {
+        const promoRaw = (shop as Record<string, unknown>).promoBanners as string | undefined
+        const parsed = promoRaw ? JSON.parse(promoRaw) : []
+        setPromoBanners(Array.isArray(parsed) ? parsed : [])
+      } catch {
+        setPromoBanners([])
+      }
+
       // Fetch product count
       fetch(`/api/products?shopId=${shop.id}`)
         .then((res) => res.ok ? res.json() : [])
-        .then((products) => setProductCount(products.length))
-        .catch(() => {})
+        .then((products) => setProductCount(Array.isArray(products) ? products.length : 0))
+        .catch(() => setProductCount(0))
 
       // Generate QR code
       generateQrCode()
@@ -139,6 +180,144 @@ export function DashboardSettings() {
         .catch(() => {})
     }
   }, [shop])
+
+  // Upload helper
+  async function uploadFile(file: File): Promise<string | null> {
+    const formData = new FormData()
+    formData.append('file', file)
+    const res = await fetch('/api/upload', { method: 'POST', body: formData })
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      toast.error(data.error || 'Erreur lors du téléchargement')
+      return null
+    }
+    const data = await res.json()
+    return data.url
+  }
+
+  async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setLogoUploading(true)
+    try {
+      const url = await uploadFile(file)
+      if (url) {
+        setLogo(url)
+        toast.success('Logo téléchargé avec succès !')
+      }
+    } finally {
+      setLogoUploading(false)
+      if (logoInputRef.current) logoInputRef.current.value = ''
+    }
+  }
+
+  async function handleBannerUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setBannerUploading(true)
+    try {
+      const url = await uploadFile(file)
+      if (url) {
+        setBanner(url)
+        toast.success('Bannière téléchargée avec succès !')
+      }
+    } finally {
+      setBannerUploading(false)
+      if (bannerInputRef.current) bannerInputRef.current.value = ''
+    }
+  }
+
+  async function handleHeroUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+    setHeroUploading(true)
+    try {
+      const newImages: string[] = []
+      for (let i = 0; i < files.length; i++) {
+        if (heroImages.length + newImages.length >= 6) {
+          toast.warning('Maximum 6 images autorisées')
+          break
+        }
+        const url = await uploadFile(files[i])
+        if (url) newImages.push(url)
+      }
+      if (newImages.length > 0) {
+        setHeroImages((prev) => [...prev, ...newImages])
+        toast.success(`${newImages.length} image(s) ajoutée(s) au slide !`)
+      }
+    } finally {
+      setHeroUploading(false)
+      if (heroInputRef.current) heroInputRef.current.value = ''
+    }
+  }
+
+  function removeHeroImage(index: number) {
+    setHeroImages((prev) => prev.filter((_, i) => i !== index))
+    toast.success('Image retirée du slide')
+  }
+
+  function addHeroFromUrl() {
+    const url = heroUrlInput.trim()
+    if (!url) return
+    if (heroImages.length >= 6) {
+      toast.warning('Maximum 6 images autorisées')
+      return
+    }
+    setHeroImages((prev) => [...prev, url])
+    setHeroUrlInput('')
+    toast.success('Image ajoutée au slide !')
+  }
+
+  async function handlePromoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setPromoUploading(true)
+    try {
+      const url = await uploadFile(file)
+      if (url) {
+        const newBanner = {
+          id: Date.now().toString(),
+          image: url,
+          title: 'Promotion',
+          link: '',
+        }
+        setPromoBanners((prev) => [...prev, newBanner])
+        toast.success('Bannière publicitaire ajoutée !')
+      }
+    } finally {
+      setPromoUploading(false)
+      if (promoInputRef.current) promoInputRef.current.value = ''
+    }
+  }
+
+  function removePromoBanner(id: string) {
+    setPromoBanners((prev) => prev.filter((b) => b.id !== id))
+    toast.success('Bannière retirée')
+  }
+
+  function addPromoFromUrl() {
+    const url = promoUrlInput.trim()
+    if (!url) return
+    if (promoBanners.length >= 4) {
+      toast.warning('Maximum 4 bannières autorisées')
+      return
+    }
+    const newBanner = {
+      id: Date.now().toString(),
+      image: url,
+      title: 'Promotion',
+      link: '',
+    }
+    setPromoBanners((prev) => [...prev, newBanner])
+    setPromoUrlInput('')
+    toast.success('Bannière publicitaire ajoutée !')
+  }
+
+  function updatePromoBanner(id: string, field: 'title' | 'link', value: string) {
+    setPromoBanners((prev) =>
+      prev.map((b) => (b.id === id ? { ...b, [field]: value } : b))
+    )
+  }
 
   async function generateQrCode() {
     if (!shop) return
@@ -171,27 +350,21 @@ export function DashboardSettings() {
       canvas.height = 900
       const ctx = canvas.getContext('2d')
       if (!ctx) return
-      // White background
       ctx.fillStyle = '#FFFFFF'
       ctx.fillRect(0, 0, 800, 900)
-      // Draw QR code centered at top
       const qrSize = 600
       const offsetX = (800 - qrSize) / 2
       ctx.drawImage(img, offsetX, 60, qrSize, qrSize)
-      // Draw shop name below QR code
       ctx.fillStyle = '#1a1a2e'
       ctx.font = 'bold 28px system-ui, -apple-system, sans-serif'
       ctx.textAlign = 'center'
       ctx.fillText(shop.name, 400, 720)
-      // Draw URL below name
       ctx.fillStyle = '#6b7280'
       ctx.font = '18px monospace'
       ctx.fillText(`boutiko.com/${shop.slug}`, 400, 760)
-      // Draw WhatsApp branding
       ctx.fillStyle = '#25D366'
       ctx.font = '14px system-ui, -apple-system, sans-serif'
       ctx.fillText('Propulsé par Boutiko', 400, 800)
-      // Download
       canvas.toBlob((blob) => {
         if (!blob) return
         const pngUrl = URL.createObjectURL(blob)
@@ -222,6 +395,8 @@ export function DashboardSettings() {
           logo,
           banner,
           template,
+          heroImages: JSON.stringify(heroImages),
+          promoBanners: JSON.stringify(promoBanners),
         }),
       })
 
@@ -244,7 +419,17 @@ export function DashboardSettings() {
         plan: updatedShop.plan,
         template: updatedShop.template || 'classic',
         isActive: updatedShop.isActive,
+        heroImages: updatedShop.heroImages,
+        promoBanners: updatedShop.promoBanners,
       })
+      // Also update publicShop so the shop view reflects changes immediately
+      if (publicShop && publicShop.id === shop.id) {
+        setPublicShop({
+          ...publicShop,
+          ...updatedShop,
+          template: updatedShop.template || 'classic',
+        })
+      }
       toast.success('Boutique mise à jour !')
     } catch {
       toast.error('Erreur de connexion')
@@ -269,7 +454,6 @@ export function DashboardSettings() {
           seoTitle,
           seoDescription,
           coverImageUrl,
-          logo,
         }),
       })
       if (!res.ok) {
@@ -382,26 +566,124 @@ export function DashboardSettings() {
               placeholder="Ex: Dakar, Sénégal"
             />
           </div>
+
+          {/* Logo & Banner Upload */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Logo Upload */}
             <div className="space-y-2">
-              <Label htmlFor="shop-logo">URL du logo</Label>
-              <Input
-                id="shop-logo"
-                value={logo}
-                onChange={(e) => setLogo(e.target.value)}
-                placeholder="https://example.com/logo.png"
+              <Label>Logo de la boutique</Label>
+              <input
+                ref={logoInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/gif,image/webp"
+                className="hidden"
+                onChange={handleLogoUpload}
               />
+              {logo ? (
+                <div className="relative rounded-lg border border-muted overflow-hidden group">
+                  <img
+                    src={logo}
+                    alt="Logo"
+                    className="w-full h-24 object-contain bg-white p-2"
+                  />
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="h-8 text-xs"
+                      onClick={() => logoInputRef.current?.click()}
+                    >
+                      <Upload className="h-3.5 w-3.5 mr-1" />
+                      Changer
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="h-8 text-xs"
+                      onClick={() => setLogo('')}
+                    >
+                      <Trash2 className="h-3.5 w-3.5 mr-1" />
+                      Supprimer
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => logoInputRef.current?.click()}
+                  disabled={logoUploading}
+                  className="w-full h-24 rounded-lg border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 bg-muted/20 flex flex-col items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  {logoUploading ? (
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  ) : (
+                    <ImagePlus className="h-5 w-5 text-muted-foreground" />
+                  )}
+                  <span className="text-xs text-muted-foreground">
+                    {logoUploading ? 'Téléchargement...' : 'Cliquez pour télécharger le logo'}
+                  </span>
+                </button>
+              )}
             </div>
+
+            {/* Banner Upload */}
             <div className="space-y-2">
-              <Label htmlFor="shop-banner">URL de la bannière</Label>
-              <Input
-                id="shop-banner"
-                value={banner}
-                onChange={(e) => setBanner(e.target.value)}
-                placeholder="https://example.com/banner.png"
+              <Label>Bannière de la boutique</Label>
+              <input
+                ref={bannerInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/gif,image/webp"
+                className="hidden"
+                onChange={handleBannerUpload}
               />
+              {banner ? (
+                <div className="relative rounded-lg border border-muted overflow-hidden group">
+                  <img
+                    src={banner}
+                    alt="Bannière"
+                    className="w-full h-24 object-cover"
+                  />
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="h-8 text-xs"
+                      onClick={() => bannerInputRef.current?.click()}
+                    >
+                      <Upload className="h-3.5 w-3.5 mr-1" />
+                      Changer
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="h-8 text-xs"
+                      onClick={() => setBanner('')}
+                    >
+                      <Trash2 className="h-3.5 w-3.5 mr-1" />
+                      Supprimer
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => bannerInputRef.current?.click()}
+                  disabled={bannerUploading}
+                  className="w-full h-24 rounded-lg border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 bg-muted/20 flex flex-col items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  {bannerUploading ? (
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  ) : (
+                    <ImagePlus className="h-5 w-5 text-muted-foreground" />
+                  )}
+                  <span className="text-xs text-muted-foreground">
+                    {bannerUploading ? 'Téléchargement...' : 'Cliquez pour télécharger la bannière'}
+                  </span>
+                </button>
+              )}
             </div>
           </div>
+
           <Button onClick={handleSave} disabled={saving} className="gap-2">
             {saving ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -410,6 +692,264 @@ export function DashboardSettings() {
             )}
             Enregistrer
           </Button>
+        </CardContent>
+      </Card>
+
+      {/* Hero Slider Images */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ImagePlus className="h-5 w-5 text-primary" />
+            Images du slide (page d&apos;accueil)
+          </CardTitle>
+          <CardDescription>
+            Ajoutez jusqu&apos;à 6 images qui défilent en haut de votre boutique publique
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Current hero images */}
+          {heroImages.length > 0 && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {heroImages.map((img, idx) => (
+                <div
+                  key={idx}
+                  className="relative rounded-lg border border-muted overflow-hidden group aspect-video"
+                >
+                  <img
+                    src={img}
+                    alt={`Slide ${idx + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute top-1.5 left-1.5">
+                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-black/60 text-white border-0">
+                      {idx + 1}
+                    </Badge>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeHeroImage(idx)}
+                    className="absolute top-1.5 right-1.5 h-6 w-6 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Upload button */}
+          <input
+            ref={heroInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/gif,image/webp"
+            multiple
+            className="hidden"
+            onChange={handleHeroUpload}
+          />
+          {heroImages.length < 6 && (
+            <button
+              type="button"
+              onClick={() => heroInputRef.current?.click()}
+              disabled={heroUploading}
+              className="w-full rounded-lg border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 bg-muted/20 py-6 flex flex-col items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50"
+            >
+              {heroUploading ? (
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              ) : (
+                <Upload className="h-6 w-6 text-muted-foreground" />
+              )}
+              <span className="text-sm text-muted-foreground">
+                {heroUploading
+                  ? 'Téléchargement en cours...'
+                  : `Cliquez pour ajouter des images (${heroImages.length}/6)`}
+              </span>
+              <span className="text-xs text-muted-foreground/60">
+                JPG, PNG, GIF ou WebP — Max 5 Mo par image
+              </span>
+            </button>
+          )}
+
+          {/* URL input for hero images */}
+          {heroImages.length < 6 && (
+            <div className="flex items-center gap-2">
+              <Input
+                value={heroUrlInput}
+                onChange={(e) => setHeroUrlInput(e.target.value)}
+                placeholder="Ou collez une URL d'image..."
+                className="flex-1 h-9 text-sm"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') addHeroFromUrl()
+                }}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addHeroFromUrl}
+                disabled={!heroUrlInput.trim()}
+                className="gap-1.5 h-9 flex-shrink-0"
+              >
+                <ImagePlus className="h-3.5 w-3.5" />
+                Ajouter
+              </Button>
+            </div>
+          )}
+
+          {heroImages.length > 0 && (
+            <Button onClick={handleSave} disabled={saving} size="sm" className="gap-2">
+              {saving ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Check className="h-4 w-4" />
+              )}
+              Enregistrer les images du slide
+            </Button>
+          )}
+
+          {heroImages.length === 0 && (
+            <p className="text-xs text-muted-foreground text-center">
+              Si aucune image n&apos;est ajoutée, les images par défaut du slide seront affichées sur votre boutique.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Promo Banners */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ImagePlus className="h-5 w-5 text-primary" />
+            Bannières publicitaires
+          </CardTitle>
+          <CardDescription>
+            Ajoutez des bannières promotionnelles sur votre boutique (jusqu&apos;à 4)
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Current promo banners */}
+          {promoBanners.length > 0 && (
+            <div className="space-y-4">
+              {promoBanners.map((banner, idx) => (
+                <div key={banner.id} className="rounded-lg border border-muted overflow-hidden">
+                  {/* Banner preview */}
+                  <div className="relative aspect-[16/5] bg-muted/20">
+                    <img
+                      src={banner.image}
+                      alt={banner.title || `Bannière ${idx + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute top-2 left-2">
+                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-black/60 text-white border-0">
+                        {idx + 1}/{promoBanners.length}
+                      </Badge>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removePromoBanner(banner.id)}
+                      className="absolute top-2 right-2 h-7 w-7 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 shadow-sm transition-opacity"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                  {/* Banner fields */}
+                  <div className="p-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Titre de la bannière</Label>
+                      <Input
+                        value={banner.title}
+                        onChange={(e) => updatePromoBanner(banner.id, 'title', e.target.value)}
+                        placeholder="Ex: Promotion d'été"
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Lien (optionnel)</Label>
+                      <Input
+                        value={banner.link}
+                        onChange={(e) => updatePromoBanner(banner.id, 'link', e.target.value)}
+                        placeholder="https://example.com/promo"
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Upload button */}
+          <input
+            ref={promoInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/gif,image/webp"
+            className="hidden"
+            onChange={handlePromoUpload}
+          />
+          {promoBanners.length < 4 && (
+            <button
+              type="button"
+              onClick={() => promoInputRef.current?.click()}
+              disabled={promoUploading}
+              className="w-full rounded-lg border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 bg-muted/20 py-6 flex flex-col items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50"
+            >
+              {promoUploading ? (
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              ) : (
+                <Upload className="h-6 w-6 text-muted-foreground" />
+              )}
+              <span className="text-sm text-muted-foreground">
+                {promoUploading
+                  ? 'Téléchargement en cours...'
+                  : `Cliquez pour ajouter une bannière (${promoBanners.length}/4)`}
+              </span>
+              <span className="text-xs text-muted-foreground/60">
+                JPG, PNG, GIF ou WebP — Max 5 Mo — Ratio 16:5 recommandé
+              </span>
+            </button>
+          )}
+
+          {/* URL input for promo banners */}
+          {promoBanners.length < 4 && (
+            <div className="flex items-center gap-2">
+              <Input
+                value={promoUrlInput}
+                onChange={(e) => setPromoUrlInput(e.target.value)}
+                placeholder="Ou collez une URL d'image..."
+                className="flex-1 h-9 text-sm"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') addPromoFromUrl()
+                }}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addPromoFromUrl}
+                disabled={!promoUrlInput.trim()}
+                className="gap-1.5 h-9 flex-shrink-0"
+              >
+                <ImagePlus className="h-3.5 w-3.5" />
+                Ajouter
+              </Button>
+            </div>
+          )}
+
+          {promoBanners.length > 0 && (
+            <Button onClick={handleSave} disabled={saving} size="sm" className="gap-2">
+              {saving ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Check className="h-4 w-4" />
+              )}
+              Enregistrer les bannières
+            </Button>
+          )}
+
+          {promoBanners.length === 0 && (
+            <p className="text-xs text-muted-foreground text-center">
+              Les bannières publicitaires s&apos;affichent sur votre boutique entre les sections produits.
+            </p>
+          )}
         </CardContent>
       </Card>
 
@@ -485,21 +1025,8 @@ export function DashboardSettings() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="seo-logo" className="flex items-center gap-2">
-              <Image className="h-3.5 w-3.5 text-muted-foreground" />
-              Logo URL
-            </Label>
-            <Input
-              id="seo-logo"
-              value={logo}
-              onChange={(e) => setLogo(e.target.value)}
-              placeholder="https://example.com/logo.png"
-            />
-          </div>
-
-          <div className="space-y-2">
             <Label htmlFor="seo-cover" className="flex items-center gap-2">
-              <Image className="h-3.5 w-3.5 text-muted-foreground" />
+              <ImagePlus className="h-3.5 w-3.5 text-muted-foreground" />
               Image de couverture (Open Graph)
             </Label>
             <Input
@@ -673,8 +1200,8 @@ export function DashboardSettings() {
             <div>
               <p className="text-sm text-muted-foreground">Plan actuel</p>
               <div className="flex items-center gap-2 mt-1">
-                <Badge variant="secondary" className={planBadgeColors[currentPlan]}>
-                  {planLabels[currentPlan]}
+                <Badge variant="secondary" className={planBadgeColors[currentPlan] || planBadgeColors.FREE}>
+                  {planLabels[currentPlan] || planLabels.FREE}
                 </Badge>
                 <span className="text-sm text-muted-foreground">{limits.price}</span>
               </div>

@@ -1,7 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { authenticateUser, setSessionCookie } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { rateLimit, getClientIp, RATE_LIMITS } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
+  // Rate limiting
+  const ip = getClientIp(request)
+  const rl = rateLimit(ip, RATE_LIMITS.login)
+  if (!rl.success) {
+    return NextResponse.json({ error: 'Trop de tentatives. Réessayez dans une minute.' }, { status: 429 })
+  }
+
   try {
     const { email, password } = await request.json()
 
@@ -9,12 +18,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email et mot de passe requis' }, { status: 400 })
     }
 
-    const user = await db.user.findUnique({
-      where: { email },
-      include: { shop: true },
-    })
+    const user = await authenticateUser(email, password)
 
-    if (!user || user.password !== password) {
+    if (!user) {
       return NextResponse.json({ error: 'Identifiants incorrects' }, { status: 401 })
     }
 
@@ -33,18 +39,12 @@ export async function POST(request: NextRequest) {
         plan: user.shop.plan,
         template: user.shop.template || 'classic',
         isActive: user.shop.isActive,
+        heroImages: user.shop.heroImages,
+        promoBanners: user.shop.promoBanners,
       } : null,
     })
 
-    // Set session cookie
-    response.cookies.set('whatsshop-user', user.email, {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 30, // 30 days
-      path: '/',
-    })
-
+    setSessionCookie(response, user.email)
     return response
   } catch (error) {
     console.error('Login error:', error)

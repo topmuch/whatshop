@@ -30,35 +30,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Product as ProductType, formatPrice } from '@/lib/shared'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-interface Product {
-  id: string
-  name: string
-  description?: string
-  price: number
-  image?: string
-  images?: string[]
-  stock?: number
-  isAvailable: boolean
-  categoryId?: string
-  categoryName?: string
-  createdAt?: string
-}
-
 interface GroceryGridProps {
-  filteredProducts: Product[]
+  filteredProducts: ProductType[]
   publicCategories: any[]
-  publicProducts: Product[]
+  publicProducts: ProductType[]
   activeCategory: string | null
   searchQuery: string
   sortBy: 'recent' | 'price-asc' | 'price-desc'
   isSearching: boolean
   totalProductCount: number
   onCategoryClick: (id: string | null) => void
-  onProductClick: (product: Product) => void
-  onAddToCart: (product: Product) => void
+  onProductClick: (product: ProductType) => void
+  onAddToCart: (product: ProductType) => void
   getCartQuantity: (productId: string) => number
   updateCartQuantity: (productId: string, qty: number) => void
   onSortChange: (sort: string) => void
@@ -120,8 +107,6 @@ const GROCERY_EMOJIS: Record<string, string> = {
   bébé: '🍼',
 }
 
-const DISCOUNT_OPTIONS = [10, 15, 20, 25] as const
-
 const TRUST_BADGES = [
   { icon: Truck, label: 'Livraison Rapide' },
   { icon: Lock, label: 'Paiement Sécurisé' },
@@ -137,19 +122,6 @@ function getGroceryEmoji(name: string): string {
     if (lower.includes(key)) return emoji
   }
   return '🛒'
-}
-
-function getDiscountPercent(productId: string): number {
-  let hash = 0
-  for (let i = 0; i < productId.length; i++) {
-    hash = (hash << 5) - hash + productId.charCodeAt(i)
-    hash |= 0
-  }
-  return DISCOUNT_OPTIONS[Math.abs(hash) % DISCOUNT_OPTIONS.length]
-}
-
-function formatPrice(price: number): string {
-  return price.toLocaleString('fr-FR') + ' FCFA'
 }
 
 // ─── Countdown Timer ────────────────────────────────────────────────────────
@@ -222,7 +194,7 @@ export function GroceryGrid({
   }, [filteredProducts, sortBy])
 
   const handleAddToCart = useCallback(
-    (product: Product) => {
+    (product: ProductType) => {
       onAddToCart(product)
       toast.success(`${product.name} ajouté au panier`, {
         description: formatPrice(product.price),
@@ -660,12 +632,12 @@ export function GroceryGrid({
 // ─── Product Card ────────────────────────────────────────────────────────────
 
 interface GroceryProductCardProps {
-  product: Product
+  product: ProductType
   index: number
   cartQuantity: number
-  onAddToCart: (product: Product) => void
+  onAddToCart: (product: ProductType) => void
   onUpdateQuantity: (productId: string, qty: number) => void
-  onProductClick: (product: Product) => void
+  onProductClick: (product: ProductType) => void
 }
 
 function GroceryProductCard({
@@ -676,9 +648,6 @@ function GroceryProductCard({
   onUpdateQuantity,
   onProductClick,
 }: GroceryProductCardProps) {
-  const discountPercent =
-    product.price < 10000 ? getDiscountPercent(product.id) : null
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 15 }}
@@ -706,27 +675,6 @@ function GroceryProductCard({
               <span className="text-xs">Pas d&apos;image</span>
             </div>
           </div>
-        )}
-
-        {/* Discount Badge */}
-        {discountPercent && (
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', stiffness: 400, delay: 0.2 }}
-            className="absolute top-2 right-2 z-10"
-          >
-            <div
-              className="flex items-center justify-center rounded-full text-white font-bold text-xs shadow-md"
-              style={{
-                width: 42,
-                height: 42,
-                backgroundColor: GROCERY_COLORS.red,
-              }}
-            >
-              -{discountPercent}%
-            </div>
-          </motion.div>
         )}
 
         {/* Stock indicator */}

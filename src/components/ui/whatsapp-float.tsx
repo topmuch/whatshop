@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { MessageCircle } from "lucide-react";
+import { PLATFORM_CONFIG } from '@/lib/shared';
 
 interface WhatsAppFloatProps {
   visible?: boolean;
@@ -48,7 +49,7 @@ export function WhatsAppFloat({ visible = true }: WhatsAppFloatProps) {
 
       {/* Main button */}
       <a
-        href="https://wa.me/2217848582226?text=Bonjour%2C%20je%20suis%20int%C3%A9ress%C3%A9(e)%20par%20Boutiko"
+        href="https://wa.me/${PLATFORM_CONFIG.DEFAULT_WHATSAPP}?text=Bonjour%2C%20je%20suis%20int%C3%A9ress%C3%A9(e)%20par%20Boutiko"
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Contactez-nous sur WhatsApp"

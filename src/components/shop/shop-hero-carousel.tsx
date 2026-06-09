@@ -27,11 +27,32 @@ interface ShopHeroCarouselProps {
   slides?: Slide[]
   shopName?: string
   whatsapp?: string
+  heroImages?: string
 }
 
-export function ShopHeroCarousel({ slides, shopName, whatsapp }: ShopHeroCarouselProps) {
+export function ShopHeroCarousel({ slides, shopName, whatsapp, heroImages }: ShopHeroCarouselProps) {
   const template = useTemplate()
-  const carouselSlides = slides || DEFAULT_SLIDES
+
+  // Parse custom hero images from JSON string
+  let customSlides: Slide[] = []
+  if (heroImages) {
+    try {
+      const imgs = JSON.parse(heroImages)
+      if (Array.isArray(imgs) && imgs.length > 0) {
+        customSlides = imgs.map((img: string, idx: number) => ({
+          id: `custom-${idx}`,
+          image: img,
+          title: shopName || 'Bienvenue',
+          subtitle: 'Découvrez nos produits',
+          cta: 'Commander',
+        }))
+      }
+    } catch {
+      // fallback to defaults
+    }
+  }
+
+  const carouselSlides = slides || customSlides.length > 0 ? customSlides : DEFAULT_SLIDES
 
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, [
     Autoplay({ delay: 4500, stopOnInteraction: false }),

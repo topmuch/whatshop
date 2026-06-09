@@ -1,8 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import QRCode from 'qrcode'
+import { requireAuth } from '@/lib/auth'
+import { rateLimit, getClientIp, RATE_LIMITS } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: Require authentication
+    const { user, response: authError } = await requireAuth(request)
+    if (authError) return authError
+    if (!user) return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
+
+    // Rate limiting
+    const ip = getClientIp(request)
+    const rl = rateLimit(ip, RATE_LIMITS.ai)
+    if (!rl.success) {
+      return NextResponse.json({ error: 'Trop de tentatives. Réessayez dans une minute.' }, { status: 429 })
+    }
     const { url, shopName } = await request.json()
 
     if (!url) {

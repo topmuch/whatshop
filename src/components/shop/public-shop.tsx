@@ -1,6 +1,7 @@
 'use client'
 
 import { useAppStore, type Product } from '@/lib/store'
+import { formatPrice } from '@/lib/shared'
 import { useTemplate } from './template-provider'
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import { Button } from '@/components/ui/button'
@@ -47,12 +48,9 @@ import { JameelaGrid } from './themes/jameela-grid'
 import { FashionGrid } from './themes/fashion-grid'
 import { ElectroGrid } from './themes/electro-grid'
 import { GroceryGrid } from './themes/grocery-grid'
+import { ElectroDepotGrid } from './themes/electrodepot-grid'
 
 type SortOption = 'recent' | 'price-asc' | 'price-desc'
-
-function formatPrice(price: number) {
-  return price.toLocaleString('fr-FR') + ' FCFA'
-}
 
 function isProductNew(createdAt?: string): boolean {
   if (!createdAt) return false
@@ -501,7 +499,7 @@ function ShopContent() {
       jameela: <Gem className="h-5 w-5" />,
       'xstore-fashion': <Heart className="h-5 w-5" />,
       'xstore-electro': <Zap className="h-5 w-5" />,
-      'xstore-grocery': <Globe className="h-5 w-5" />,
+      'xstore-grocery': <Globe className="h-5 w-5" />, electrodepot: <Zap className="h-5 w-5" />,
     }
     return icons[template.id] || <Store className="h-5 w-5" />
   }, [template.id])
@@ -610,7 +608,50 @@ function ShopContent() {
       </header>
 
       {/* ─── Hero Carousel ─── */}
-      <ShopHeroCarousel shopName={publicShop.name} whatsapp={publicShop.whatsapp} />
+      <ShopHeroCarousel
+        shopName={publicShop.name}
+        whatsapp={publicShop.whatsapp}
+        heroImages={publicShop.heroImages}
+      />
+
+      {/* ─── Promo Banners ─── */}
+      {(() => {
+        try {
+          const banners = publicShop.promoBanners ? JSON.parse(publicShop.promoBanners) : []
+          if (!Array.isArray(banners) || banners.length === 0) return null
+          return (
+            <div className="max-w-5xl mx-auto px-4 pt-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {banners.map((b: { id: string; image: string; title: string; link: string }, idx: number) => (
+                  <a
+                    key={b.id || idx}
+                    href={b.link || '#'}
+                    target={b.link ? '_blank' : undefined}
+                    rel={b.link ? 'noopener noreferrer' : undefined}
+                    className={`block rounded-xl overflow-hidden shadow-sm border hover:shadow-md transition-shadow ${banners.length === 1 ? 'sm:col-span-2' : ''}`}
+                    style={{ borderColor: 'var(--tpl-border)' }}
+                  >
+                    <div className="relative aspect-[16/5]">
+                      <img
+                        src={b.image}
+                        alt={b.title || `Promo ${idx + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                      {b.title && (
+                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-4 py-2">
+                          <span className="text-white text-sm font-medium">{b.title}</span>
+                        </div>
+                      )}
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )
+        } catch {
+          return null
+        }
+      })()}
 
       {/* ─── Electro Navigation Menu (before Shop Info Bar) ─── */}
       {template.id === 'xstore-electro' && (
@@ -1176,7 +1217,7 @@ function ShopContent() {
             ref={scrollRef}
           >
         {/* ─── Theme-specific or Generic Product Grid ─── */}
-        {(template.id === 'jameela' || template.id === 'xstore-fashion' || template.id === 'xstore-electro' || template.id === 'xstore-grocery') ? (
+        {(template.id === 'jameela' || template.id === 'xstore-fashion' || template.id === 'xstore-electro' || template.id === 'xstore-grocery' || template.id === 'electrodepot') ? (
           <div className="relative z-10" ref={scrollRef}>
             {template.id === 'jameela' && (
               <JameelaGrid
@@ -1243,6 +1284,27 @@ function ShopContent() {
             )}
             {template.id === 'xstore-grocery' && (
               <GroceryGrid
+                filteredProducts={filteredProducts}
+                publicCategories={publicCategories}
+                publicProducts={publicProducts}
+                activeCategory={activeCategory}
+                searchQuery={searchQuery}
+                sortBy={sortBy}
+                isSearching={isSearching}
+                totalProductCount={totalProductCount}
+                onCategoryClick={handleCategoryClick}
+                onProductClick={setSelectedProduct}
+                onAddToCart={handleAddToCart}
+                getCartQuantity={getCartQuantity}
+                updateCartQuantity={updateCartQuantity}
+                onSortChange={setSortBy}
+                onSearchChange={setSearchQuery}
+                shopName={publicShop.name}
+                whatsapp={publicShop.whatsapp}
+              />
+            )}
+            {template.id === 'electrodepot' && (
+              <ElectroDepotGrid
                 filteredProducts={filteredProducts}
                 publicCategories={publicCategories}
                 publicProducts={publicProducts}

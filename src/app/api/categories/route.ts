@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireShopOwner } from '@/lib/auth'
 
 // GET /api/categories?shopId=xxx
 export async function GET(request: NextRequest) {
@@ -34,19 +35,23 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/categories
+// POST /api/categories (auth required)
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { shopId, name, description } = body
+    const { user, response: errorResponse } = await requireShopOwner(request)
+    if (errorResponse) return errorResponse
+    if (!user || !user.shop) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
 
-    if (!shopId || !name) {
-      return NextResponse.json({ error: 'Champs requis manquants' }, { status: 400 })
+    const body = await request.json()
+    const { name, description } = body
+
+    if (!name) {
+      return NextResponse.json({ error: 'Nom requis' }, { status: 400 })
     }
 
     const category = await db.category.create({
       data: {
-        shopId,
+        shopId: user.shop.id,
         name,
         description: description || null,
       },
@@ -59,14 +64,26 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PUT /api/categories
+// PUT /api/categories (auth required)
 export async function PUT(request: NextRequest) {
   try {
+    const { user, response: errorResponse } = await requireShopOwner(request)
+    if (errorResponse) return errorResponse
+    if (!user || !user.shop) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+
     const body = await request.json()
     const { id, name, description } = body
 
     if (!id) {
       return NextResponse.json({ error: 'ID requis' }, { status: 400 })
+    }
+
+    // Verify the category belongs to this shop
+    const existingCat = await db.category.findFirst({
+      where: { id, shopId: user.shop.id },
+    })
+    if (!existingCat) {
+      return NextResponse.json({ error: 'Catégorie introuvable' }, { status: 404 })
     }
 
     const category = await db.category.update({
@@ -84,14 +101,26 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-// DELETE /api/categories?id=xxx
+// DELETE /api/categories?id=xxx (auth required)
 export async function DELETE(request: NextRequest) {
   try {
+    const { user, response: errorResponse } = await requireShopOwner(request)
+    if (errorResponse) return errorResponse
+    if (!user || !user.shop) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
 
     if (!id) {
       return NextResponse.json({ error: 'ID requis' }, { status: 400 })
+    }
+
+    // Verify the category belongs to this shop
+    const existingCat = await db.category.findFirst({
+      where: { id, shopId: user.shop.id },
+    })
+    if (!existingCat) {
+      return NextResponse.json({ error: 'Catégorie introuvable' }, { status: 404 })
     }
 
     await db.category.delete({ where: { id } })

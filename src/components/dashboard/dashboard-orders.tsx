@@ -43,6 +43,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
+import { formatPrice } from '@/lib/shared'
 
 interface OrderItem {
   productId: string
@@ -109,10 +110,6 @@ const newStatusOptions: Record<string, string[]> = {
   CONFIRMED: ['DELIVERED', 'CANCELLED'],
   DELIVERED: [],
   CANCELLED: ['PENDING'],
-}
-
-function formatPrice(price: number) {
-  return price.toLocaleString('fr-FR') + ' FCFA'
 }
 
 function formatDate(dateStr: string) {

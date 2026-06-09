@@ -55,6 +55,7 @@ import {
   X,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { formatPrice } from '@/lib/shared'
 
 interface Product {
   id: string
@@ -92,12 +93,8 @@ const emptyForm: ProductFormData = {
   image: '',
   images: [],
   stock: '',
-  categoryId: '',
+  categoryId: 'none',
   isAvailable: true,
-}
-
-function formatPrice(price: number) {
-  return price.toLocaleString('fr-FR') + ' FCFA'
 }
 
 export function DashboardProducts() {
@@ -174,7 +171,7 @@ export function DashboardProducts() {
       image: product.image || '',
       images: Array.isArray(product.images) ? [...product.images] : [],
       stock: String(product.stock || ''),
-      categoryId: product.categoryId || '',
+      categoryId: product.categoryId || 'none',
       isAvailable: product.isAvailable,
     })
     setDialogOpen(true)
@@ -204,7 +201,7 @@ export function DashboardProducts() {
         image: form.image || null,
         images: allImages,
         stock: form.stock || null,
-        categoryId: form.categoryId || null,
+        categoryId: form.categoryId !== 'none' ? form.categoryId : null,
         isAvailable: form.isAvailable,
       }
 
@@ -667,7 +664,7 @@ export function DashboardProducts() {
                   <SelectValue placeholder="Sélectionner une catégorie" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Aucune catégorie</SelectItem>
+                  <SelectItem value="none">Aucune catégorie</SelectItem>
                   {categories.map((cat) => (
                     <SelectItem key={cat.id} value={cat.id}>
                       {cat.name}

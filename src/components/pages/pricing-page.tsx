@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { useAppStore } from '@/lib/store'
+import { PLATFORM_CONFIG } from '@/lib/shared'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -307,7 +308,7 @@ function PricingCards() {
           {plans.map((plan, i) => (
             <motion.div key={i} variants={fadeInUp}>
               <Card
-                className={`relative h-full flex flex-col overflow-hidden rounded-2xl ${
+                className={`relative h-full flex flex-col overflow-hidden rounded-2xl bg-white ${
                   plan.popular
                     ? 'border-2 border-primary shadow-2xl shadow-primary/15 scale-[1.04] md:scale-[1.06]'
                     : 'border border-gray-200 hover:border-primary/20 hover:shadow-xl'
@@ -326,7 +327,7 @@ function PricingCards() {
                   </div>
                 )}
 
-                <CardContent className="pt-8 pb-8 flex-1 flex flex-col px-7">
+                <CardContent className="pt-8 pb-8 flex-1 flex flex-col px-7 bg-white text-gray-900">
                   <div className="mb-7">
                     <div className="flex items-center gap-3 mb-2">
                       <div
@@ -373,7 +374,7 @@ function PricingCards() {
                         setView('register')
                       } else {
                         const message = encodeURIComponent(`Bonjour, je suis intéressé(e) par l'abonnement ${plan.name} à ${plan.price} FCFA/mois sur Boutiko. Merci de me renseigner.`)
-                        window.open(`https://wa.me/2217848582226?text=${message}`, '_blank')
+                        window.open(`https://wa.me/${PLATFORM_CONFIG.DEFAULT_WHATSAPP}?text=${message}`, '_blank')
                       }
                     }}
                   >

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireShopOwner } from '@/lib/auth'
 
 // Helper: parse JSON images field into string[]
 function parseImages(imagesRaw: unknown): string[] {
@@ -18,55 +19,75 @@ function parseImages(imagesRaw: unknown): string[] {
 
 // Helper: format product with parsed images
 function formatProduct(p: Record<string, unknown>) {
-  return {
-    ...p,
-    images: parseImages(p.images),
-  }
+  return { ...p, images: parseImages(p.images) }
 }
 
-// GET /api/products?shopId=xxx
+const PRODUCTS_PER_PAGE = 20
+
+// GET /api/products?shopId=xxx&page=1&limit=20 (public — no auth needed)
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const shopId = searchParams.get('shopId')
     const categoryId = searchParams.get('categoryId')
     const search = searchParams.get('search')
+    const page = parseInt(searchParams.get('page') || '1', 10)
+    const limit = Math.min(parseInt(searchParams.get('limit') || String(PRODUCTS_PER_PAGE), 10), 100)
 
     if (!shopId) {
       return NextResponse.json({ error: 'shopId requis' }, { status: 400 })
     }
 
-    const where: Record<string, unknown> = { shopId }
+    const where: Record<string, unknown> = { shopId, isAvailable: true }
     if (categoryId) where.categoryId = categoryId
     if (search) where.name = { contains: search }
 
-    const products = await db.product.findMany({
-      where,
-      include: { category: { select: { id: true, name: true } } },
-      orderBy: { createdAt: 'desc' },
-    })
+    const skip = Math.max(0, (page - 1) * limit)
 
-    return NextResponse.json(products.map(formatProduct))
+    const [products, total] = await Promise.all([
+      db.product.findMany({
+        where,
+        include: { category: { select: { id: true, name: true } } },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      db.product.count({ where }),
+    ])
+
+    return NextResponse.json({
+      products: products.map(formatProduct),
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+        hasNext: page * limit < total,
+      },
+    })
   } catch (error) {
     console.error('Products GET error:', error)
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
   }
 }
 
-// POST /api/products
+// POST /api/products (auth required — owner only)
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { shopId, name, description, price, image, images, stock, categoryId, isAvailable } = body
+    const { user, response: errorResponse } = await requireShopOwner(request)
+    if (errorResponse) return errorResponse
+    if (!user || !user.shop) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
 
-    if (!shopId || !name || price === undefined) {
+    const body = await request.json()
+    const { name, description, price, image, images, stock, categoryId, isAvailable } = body
+
+    if (!name || price === undefined) {
       return NextResponse.json({ error: 'Champs requis manquants' }, { status: 400 })
     }
 
     // Check plan limits
-    const shop = await db.shop.findUnique({ where: { id: shopId } })
-    if (shop?.plan === 'FREE') {
-      const productCount = await db.product.count({ where: { shopId } })
+    if (user.shop.plan === 'FREE') {
+      const productCount = await db.product.count({ where: { shopId: user.shop.id } })
       if (productCount >= 10) {
         return NextResponse.json(
           { error: 'Limite atteinte. Passez au plan Standard pour plus de produits.' },
@@ -79,7 +100,7 @@ export async function POST(request: NextRequest) {
 
     const product = await db.product.create({
       data: {
-        shopId,
+        shopId: user.shop.id,
         name,
         description: description || null,
         price: parseFloat(price),
@@ -99,14 +120,26 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PUT /api/products
+// PUT /api/products (auth required — owner only)
 export async function PUT(request: NextRequest) {
   try {
+    const { user, response: errorResponse } = await requireShopOwner(request)
+    if (errorResponse) return errorResponse
+    if (!user || !user.shop) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+
     const body = await request.json()
     const { id, name, description, price, image, images, stock, categoryId, isAvailable } = body
 
     if (!id) {
       return NextResponse.json({ error: 'ID requis' }, { status: 400 })
+    }
+
+    // Verify the product belongs to this shop
+    const existingProduct = await db.product.findFirst({
+      where: { id, shopId: user.shop.id },
+    })
+    if (!existingProduct) {
+      return NextResponse.json({ error: 'Produit introuvable' }, { status: 404 })
     }
 
     const data: Record<string, unknown> = {}
@@ -134,14 +167,26 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-// DELETE /api/products?id=xxx
+// DELETE /api/products?id=xxx (auth required — owner only)
 export async function DELETE(request: NextRequest) {
   try {
+    const { user, response: errorResponse } = await requireShopOwner(request)
+    if (errorResponse) return errorResponse
+    if (!user || !user.shop) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
 
     if (!id) {
       return NextResponse.json({ error: 'ID requis' }, { status: 400 })
+    }
+
+    // Verify the product belongs to this shop
+    const existingProduct = await db.product.findFirst({
+      where: { id, shopId: user.shop.id },
+    })
+    if (!existingProduct) {
+      return NextResponse.json({ error: 'Produit introuvable' }, { status: 404 })
     }
 
     await db.product.delete({ where: { id } })

@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireShopOwner } from '@/lib/auth'
 
-// GET /api/orders?shopId=xxx&status=xxx
+// GET /api/orders?shopId=xxx&status=xxx (auth required)
 export async function GET(request: NextRequest) {
   try {
+    const { user, response: errorResponse } = await requireShopOwner(request)
+    if (errorResponse) return errorResponse
+    if (!user || !user.shop) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+
     const { searchParams } = new URL(request.url)
-    const shopId = searchParams.get('shopId')
     const status = searchParams.get('status')
 
-    if (!shopId) {
-      return NextResponse.json({ error: 'shopId requis' }, { status: 400 })
-    }
-
-    const where: Record<string, unknown> = { shopId }
+    const where: Record<string, unknown> = { shopId: user.shop.id }
     if (status && status !== 'ALL') where.status = status
 
     const orders = await db.order.findMany({
@@ -27,9 +27,13 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// PUT /api/orders (update status)
+// PUT /api/orders (update status) (auth required)
 export async function PUT(request: NextRequest) {
   try {
+    const { user, response: errorResponse } = await requireShopOwner(request)
+    if (errorResponse) return errorResponse
+    if (!user || !user.shop) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+
     const body = await request.json()
     const { id, status } = body
 
@@ -40,6 +44,14 @@ export async function PUT(request: NextRequest) {
     const validStatuses = ['PENDING', 'CONFIRMED', 'DELIVERED', 'CANCELLED']
     if (!validStatuses.includes(status)) {
       return NextResponse.json({ error: 'Statut invalide' }, { status: 400 })
+    }
+
+    // Verify the order belongs to this shop
+    const existingOrder = await db.order.findFirst({
+      where: { id, shopId: user.shop.id },
+    })
+    if (!existingOrder) {
+      return NextResponse.json({ error: 'Commande introuvable' }, { status: 404 })
     }
 
     const order = await db.order.update({
