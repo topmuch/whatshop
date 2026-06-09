@@ -65,7 +65,7 @@ const planLabels: Record<string, string> = {
 }
 
 export function DashboardSettings() {
-  const { shop, setShop } = useAppStore()
+  const { shop, setShop, publicShop, setPublicShop } = useAppStore()
   const [saving, setSaving] = useState(false)
   const [productCount, setProductCount] = useState(0)
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
@@ -422,6 +422,14 @@ export function DashboardSettings() {
         heroImages: updatedShop.heroImages,
         promoBanners: updatedShop.promoBanners,
       })
+      // Also update publicShop so the shop view reflects changes immediately
+      if (publicShop && publicShop.id === shop.id) {
+        setPublicShop({
+          ...publicShop,
+          ...updatedShop,
+          template: updatedShop.template || 'classic',
+        })
+      }
       toast.success('Boutique mise à jour !')
     } catch {
       toast.error('Erreur de connexion')

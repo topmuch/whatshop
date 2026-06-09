@@ -30,6 +30,7 @@ import {
   Truck,
   Shield,
   ChevronRight,
+  MessageCircle,
 } from 'lucide-react'
 
 // ─── Product type (local, no external imports from store/templates) ───
@@ -54,7 +55,7 @@ interface ElectroGridProps {
   publicProducts: Product[]
   activeCategory: string | null
   searchQuery: string
-  sortBy: 'recent' | 'price-asc' | 'price-desc'
+  sortBy: string
   isSearching: boolean
   totalProductCount: number
   onCategoryClick: (id: string | null) => void
@@ -294,6 +295,15 @@ function FlashDealSection({
   )
 }
 
+// ─── WhatsApp helper ───
+function openWhatsApp(product: Product, whatsapp: string, qty: number = 1) {
+  const price = (product.price * qty).toLocaleString('fr-FR')
+  const msg = `Bonjour ! 👋\n\nJe souhaite commander :\n\n🛍️ ${product.name} x${qty} — ${price} FCFA\n\nMerci ! 🙏`
+  const encoded = encodeURIComponent(msg)
+  const phone = whatsapp.replace(/\D/g, '')
+  window.open(`https://wa.me/${phone}?text=${encoded}`, '_blank')
+}
+
 // ─── Product Card ───
 function ElectroProductCard({
   product,
@@ -301,6 +311,7 @@ function ElectroProductCard({
   onProductClick,
   getCartQuantity,
   updateCartQuantity,
+  whatsapp,
   index,
 }: {
   product: Product
@@ -308,6 +319,7 @@ function ElectroProductCard({
   onProductClick: (product: Product) => void
   getCartQuantity: (productId: string) => number
   updateCartQuantity: (productId: string, qty: number) => void
+  whatsapp?: string
   index: number
 }) {
   const priceFormatted = product.price.toLocaleString('fr-FR') + ' FCFA'
@@ -395,17 +407,31 @@ function ElectroProductCard({
         {/* Add to Cart / Quantity Controls */}
         <div onClick={(e) => e.stopPropagation()}>
           {cartQty === 0 ? (
-            <Button
-              onClick={() => {
-                onAddToCart(product)
-                toast.success(`${product.name} ajouté au panier !`)
-              }}
-              className="w-full gap-1.5 bg-[#10B981] hover:bg-[#059669] text-white font-semibold rounded-lg text-sm h-9"
-              disabled={!product.isAvailable || !inStock}
-            >
-              <Plus className="size-3.5" />
-              Ajouter
-            </Button>
+            <div className="flex gap-1.5">
+              <Button
+                onClick={() => {
+                  onAddToCart(product)
+                  toast.success(`${product.name} ajouté au panier !`)
+                }}
+                className="flex-1 gap-1.5 bg-[#10B981] hover:bg-[#059669] text-white font-semibold rounded-lg text-sm h-9"
+                disabled={!product.isAvailable || !inStock}
+              >
+                <Plus className="size-3.5" />
+                Ajouter
+              </Button>
+              {whatsapp && (
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    openWhatsApp(product, whatsapp)
+                  }}
+                  className="gap-1.5 bg-[#25D366] hover:bg-[#1da851] text-white font-semibold rounded-lg text-sm h-9 px-3"
+                  disabled={!product.isAvailable || !inStock}
+                >
+                  <MessageCircle className="size-3.5" />
+                </Button>
+              )}
+            </div>
           ) : (
             <div className="flex items-center justify-between rounded-lg border border-[#10B981]/30 bg-emerald-50 p-1">
               <Button
@@ -431,6 +457,16 @@ function ElectroProductCard({
               >
                 <Plus className="size-3.5" />
               </Button>
+              {whatsapp && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-8 text-[#25D366] hover:bg-[#25D366]/10"
+                  onClick={() => openWhatsApp(product, whatsapp, cartQty)}
+                >
+                  <MessageCircle className="size-3.5" />
+                </Button>
+              )}
             </div>
           )}
         </div>
@@ -697,6 +733,7 @@ export function ElectroGrid({
               onProductClick={onProductClick}
               getCartQuantity={getCartQuantity}
               updateCartQuantity={updateCartQuantity}
+              whatsapp={whatsapp}
               index={index}
             />
           ))}
@@ -723,10 +760,15 @@ export function ElectroGrid({
           <span>Paiement sécurisé</span>
         </div>
         {whatsapp && (
-          <div className="flex items-center gap-2 text-[#64748b] text-sm">
-            <ShoppingBag className="size-4 text-[#10B981]" />
-            <span>Service client WhatsApp</span>
-          </div>
+          <a
+            href={`https://wa.me/${whatsapp.replace(/\D/g, '')}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 text-[#64748b] text-sm hover:text-[#25D366] transition-colors"
+          >
+            <MessageCircle className="size-4 text-[#25D366]" />
+            <span>Commander via WhatsApp</span>
+          </a>
         )}
       </motion.div>
     </div>
