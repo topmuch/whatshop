@@ -13,6 +13,7 @@
     "db:reset": "prisma migrate reset",
     "seed:dev": "NODE_ENV=development bun scripts/seed.ts",
     "seed:beauty": "NODE_ENV=development bun scripts/seed-beauty-shop.ts",
+    "seed:electro": "bun scripts/seed-electro-shop.ts",
     "seed:prod": "NODE_ENV=production bun scripts/seed-production.ts"
   },
   "dependencies": {
