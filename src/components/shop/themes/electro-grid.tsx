@@ -437,7 +437,6 @@ function ElectroCategories({
 
           {categories.map((cat) => {
             const count = getCategoryCount(cat.id)
-            if (count === 0) return null
             return (
               <button
                 key={cat.id}
