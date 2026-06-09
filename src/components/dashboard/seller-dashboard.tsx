@@ -129,6 +129,11 @@ export function SellerDashboard() {
   const { isDark, toggleTheme } = useThemeMode()
 
   useEffect(() => {
+    // If user data is already set (e.g. just logged in), skip session fetch
+    if (user) {
+      setLoading(false)
+      return
+    }
     async function loadSession() {
       try {
         const res = await fetch('/api/auth/session')
@@ -150,7 +155,7 @@ export function SellerDashboard() {
       }
     }
     loadSession()
-  }, [setUser, setShop, setView])
+  }, [setUser, setShop, setView, user])
 
   if (loading) {
     return (
