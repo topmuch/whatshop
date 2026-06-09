@@ -46,8 +46,8 @@ RUN mkdir -p /app/db
 
 EXPOSE 3000
 
-# Health check
+# Health check (uses bun fetch instead of curl to avoid extra packages)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD curl -f http://localhost:3000/ || exit 1
+  CMD bun -e "fetch('http://localhost:3000/').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
 
 CMD ["bun", "server.js"]
