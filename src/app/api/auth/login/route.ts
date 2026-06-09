@@ -1,8 +1,54 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 
+let seeded = false
+
+async function ensureSeeded() {
+  if (seeded) return
+  try {
+    const count = await db.user.count()
+    if (count === 0) {
+      console.log('🌱 Seeding database with default accounts...')
+      await db.user.create({
+        data: {
+          email: 'admin@whatsshop.com',
+          password: 'admin123',
+          name: 'Super Administrateur',
+          role: 'ADMIN',
+        },
+      })
+      const demo = await db.user.create({
+        data: {
+          email: 'demo@whatsshop.com',
+          password: 'demo123',
+          name: 'Aminata Diallo',
+          role: 'SELLER',
+        },
+      })
+      await db.shop.create({
+        data: {
+          name: 'Amina Mode',
+          slug: 'amina-mode',
+          description: 'Vêtements et accessoires de qualité pour femmes.',
+          whatsapp: '221771234567',
+          plan: 'STANDARD',
+          isActive: true,
+          ownerId: demo.id,
+        },
+      })
+      console.log('✅ Default accounts created: admin@whatsshop.com / admin123')
+    }
+    seeded = true
+  } catch (err) {
+    console.error('⚠️ Seed error:', err)
+    seeded = true
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
+    await ensureSeeded()
+
     const { email, password } = await request.json()
 
     if (!email || !password) {
@@ -18,7 +64,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Identifiants incorrects' }, { status: 401 })
     }
 
-    // Plain text comparison (bcrypt only used on admin user creation)
     if (user.password !== password) {
       return NextResponse.json({ error: 'Identifiants incorrects' }, { status: 401 })
     }
@@ -41,12 +86,11 @@ export async function POST(request: NextRequest) {
       } : null,
     })
 
-    // Set session cookie
     response.cookies.set('whatsshop-user', user.email, {
       httpOnly: true,
       secure: false,
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 30, // 30 days
+      maxAge: 60 * 60 * 24 * 30,
       path: '/',
     })
 
