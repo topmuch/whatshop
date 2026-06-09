@@ -1,9 +1,53 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 
+let seeded = false
+
+async function ensureSeeded() {
+  if (seeded) return
+  try {
+    const count = await db.user.count()
+    if (count === 0) {
+      // Database is empty, create default accounts
+      await db.user.create({
+        data: {
+          email: 'admin@whatsshop.com',
+          password: 'admin123',
+          name: 'Super Administrateur',
+          role: 'ADMIN',
+        },
+      })
+      const demo = await db.user.create({
+        data: {
+          email: 'demo@whatsshop.com',
+          password: 'demo123',
+          name: 'Aminata Diallo',
+          role: 'SELLER',
+        },
+      })
+      await db.shop.create({
+        data: {
+          name: 'Amina Mode',
+          slug: 'amina-mode',
+          description: 'Vêtements et accessoires de qualité pour femmes.',
+          whatsapp: '221771234567',
+          plan: 'STANDARD',
+          isActive: true,
+          ownerId: demo.id,
+        },
+      })
+    }
+    seeded = true
+  } catch {
+    // Ignore seed errors
+    seeded = true
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
-    // Read user email from cookie
+    await ensureSeeded()
+
     const userEmail = request.cookies.get('whatsshop-user')?.value
 
     if (!userEmail) {
