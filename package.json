@@ -10,7 +10,10 @@
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
-    "db:reset": "prisma migrate reset"
+    "db:reset": "prisma migrate reset",
+    "seed:dev": "NODE_ENV=development bun scripts/seed.ts",
+    "seed:beauty": "NODE_ENV=development bun scripts/seed-beauty-shop.ts",
+    "seed:prod": "NODE_ENV=production bun scripts/seed-production.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

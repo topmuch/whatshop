@@ -1,8 +1,15 @@
-import { db } from './src/lib/db'
+// ⚠️ DEVELOPMENT ONLY - This script will NOT run in production
+if (process.env.NODE_ENV === 'production') {
+  console.error('❌ ERROR: Seed script is FORBIDDEN in production environment!')
+  console.error('   If you need to seed production, use scripts/seed-production.ts instead.')
+  process.exit(1)
+}
+
+import { db } from '../src/lib/db'
 import { hashSync } from 'bcryptjs'
 
 async function seed() {
-  console.log('Seeding database...')
+  console.log('🌱 Seeding database (DEV environment only)...')
 
   // Create demo user
   const user = await db.user.upsert({

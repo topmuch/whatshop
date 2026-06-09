@@ -906,14 +906,15 @@ function PricingSection() {
           </motion.div>
           <motion.h2
             variants={fadeInUp}
-            className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-gray-900"
+            className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight"
+            style={{ color: '#111827' }}
           >
             Des prix{' '}
             <span className="bg-gradient-to-r from-[#EC4899] to-[#F59E0B] bg-clip-text text-transparent">
               simples et justes
             </span>
           </motion.h2>
-          <motion.p variants={fadeInUp} className="mt-6 text-lg text-gray-500 max-w-2xl mx-auto">
+          <motion.p variants={fadeInUp} className="mt-6 text-lg max-w-2xl mx-auto" style={{ color: '#6B7280' }}>
             Pas de frais cachés. Changez de plan à tout moment. Commencez gratuitement.
           </motion.p>
         </motion.div>
@@ -947,15 +948,15 @@ function PricingSection() {
                   </div>
                 )}
 
-                <CardContent className="pt-8 pb-8 flex-1 flex flex-col px-7 bg-white text-gray-900">
+                <CardContent className="pt-8 pb-8 flex-1 flex flex-col px-7 bg-white" style={{ color: '#111827' }}>
                   <div className="mb-7">
-                    <h3 className="font-bold text-xl">{plan.name}</h3>
-                    <p className="text-sm text-gray-500 mt-1.5">{plan.description}</p>
+                    <h3 className="font-bold text-xl" style={{ color: '#111827' }}>{plan.name}</h3>
+                    <p className="text-sm mt-1.5" style={{ color: '#6B7280' }}>{plan.description}</p>
                   </div>
 
                   <div className="mb-8">
-                    <span className="text-5xl font-bold tracking-tight">{plan.price}</span>
-                    <span className="text-gray-400 font-medium text-base">{plan.period}</span>
+                    <span className="text-5xl font-bold tracking-tight" style={{ color: '#111827' }}>{plan.price}</span>
+                    <span className="font-medium text-base" style={{ color: '#9CA3AF' }}>{plan.period}</span>
                   </div>
 
                   <ul className="space-y-4 mb-10 flex-1">
@@ -964,7 +965,7 @@ function PricingSection() {
                         <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
                           <Check className="w-3 h-3 text-primary" />
                         </div>
-                        <span className="text-gray-600">{feature}</span>
+                        <span style={{ color: '#4B5563' }}>{feature}</span>
                       </li>
                     ))}
                   </ul>
