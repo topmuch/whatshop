@@ -92,7 +92,7 @@ function ElectroMenu({
 
   return (
     <header className="sticky top-0 z-50 bg-white shadow-sm border-b" style={{ borderColor: BLUE.border }}>
-      <div className="max-w-[1180px] mx-auto px-4">
+      <div className="max-w-[1400px] mx-auto px-4 lg:px-6">
         <div className="flex items-center justify-between h-[70px]">
           {/* Logo — 255×82 */}
           <button onClick={onNavAccueil} className="flex items-center gap-2 shrink-0">
@@ -284,9 +284,8 @@ function ElectroHeroSlide({
 
   return (
     <section className="w-full" style={{ background: BLUE.bgGray }}>
-      <div className="max-w-[1180px] mx-auto px-4 py-4">
         <div
-          className="relative w-full overflow-hidden rounded-2xl"
+          className="relative w-full overflow-hidden"
           style={{ aspectRatio: '1180 / 600', maxHeight: '600px' }}
         >
           {images.length > 0 ? (
@@ -384,7 +383,6 @@ function ElectroHeroSlide({
             </div>
           )}
         </div>
-      </div>
     </section>
   )
 }
@@ -413,7 +411,7 @@ function ElectroCategories({
 
   return (
     <section className="w-full bg-white">
-      <div className="max-w-[1180px] mx-auto px-4 py-6">
+      <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-6">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-1 h-6 rounded-full" style={{ background: BLUE.primary }} />
           <h2 className="text-lg font-bold" style={{ color: BLUE.text }}>
@@ -669,7 +667,7 @@ function ElectroFooter({
   return (
     <footer className="w-full mt-12" style={{ background: '#1e293b' }}>
       {/* Trust badges */}
-      <div className="max-w-[1180px] mx-auto px-4 py-8">
+      <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-8">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
           <div className="flex items-center gap-3">
             <div className="flex items-center justify-center w-12 h-12 rounded-xl" style={{ background: BLUE.primary }}>
@@ -778,7 +776,7 @@ function ElectroProductDetail({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.25 }}
-      className="max-w-[1180px] mx-auto px-4 py-6"
+      className="max-w-[1400px] mx-auto px-4 lg:px-6 py-6"
     >
       {/* Back button */}
       <button
@@ -952,7 +950,7 @@ function ElectroCartBar({
             style={{ borderColor: BLUE.border }}
           >
             <ScrollArea className="max-h-64">
-              <div className="max-w-[1180px] mx-auto p-4 space-y-3">
+              <div className="max-w-[1400px] mx-auto p-4 space-y-3">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-semibold text-sm" style={{ color: BLUE.text }}>
                     Votre panier ({itemCount} article{itemCount !== 1 ? 's' : ''})
@@ -1004,7 +1002,7 @@ function ElectroCartBar({
 
       {/* Cart bar */}
       <div className="bg-white border-t px-4 py-3" style={{ borderColor: BLUE.border }}>
-        <div className="max-w-[1180px] mx-auto flex items-center gap-3">
+        <div className="max-w-[1400px] mx-auto flex items-center gap-3">
           <Button
             variant="outline"
             size="sm"
@@ -1149,7 +1147,7 @@ function ElectroLoadingSkeleton() {
         <Skeleton className="w-full rounded-2xl mx-auto" style={{ aspectRatio: '1180 / 600', maxHeight: '600px' }} />
       </div>
       {/* Products skeleton */}
-      <div className="max-w-[1180px] mx-auto px-4 py-6">
+      <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="flex flex-col gap-2 rounded-xl overflow-hidden" style={{ border: `1px solid ${BLUE.border}` }}>
@@ -1374,7 +1372,7 @@ export function ElectroShopPage() {
 
               {/* ═══ SECTION 4 : PRODUITS ═══ */}
               <section className="w-full bg-white">
-                <div className="max-w-[1180px] mx-auto px-4 py-6 space-y-6" ref={scrollRef}>
+                <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-6 space-y-6" ref={scrollRef}>
                   {/* Section title */}
                   <div className="flex items-center gap-3">
                     <div className="w-1 h-6 rounded-full" style={{ background: BLUE.primary }} />
@@ -1461,7 +1459,7 @@ export function ElectroShopPage() {
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                       transition={{ duration: 0.3 }}
-                      className="grid grid-cols-2 md:grid-cols-4 gap-4"
+                      className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
                     >
                       {filteredProducts.map((product, index) => (
                         <ElectroProductCard
