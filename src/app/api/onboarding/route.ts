@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { isValidSlug } from '@/lib/auth'
+import { requireAuth, isValidSlug } from '@/lib/auth'
 
 // Sector → Template mapping
 const sectorTemplateMap: Record<string, string> = {
@@ -32,6 +32,11 @@ const sectorCategoriesMap: Record<string, string[]> = {
 
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: Require authentication and verify userId matches caller
+    const { user, response: authError } = await requireAuth(request)
+    if (authError) return authError
+    if (!user) return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
+
     const body = await request.json()
     const { userId, name, slug, whatsapp, address, phone, plan, sector, logo } = body
 
@@ -39,6 +44,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Informations manquantes (nom, whatsapp requis)' },
         { status: 400 }
+      )
+    }
+
+    // CRITICAL: Verify the userId matches the authenticated user
+    if (userId !== user.id) {
+      return NextResponse.json(
+        { error: 'Action non autorisée' },
+        { status: 403 }
       )
     }
 

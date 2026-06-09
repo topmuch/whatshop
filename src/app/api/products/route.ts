@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'shopId requis' }, { status: 400 })
     }
 
-    const where: Record<string, unknown> = { shopId }
+    const where: Record<string, unknown> = { shopId, isAvailable: true }
     if (categoryId) where.categoryId = categoryId
     if (search) where.name = { contains: search }
 

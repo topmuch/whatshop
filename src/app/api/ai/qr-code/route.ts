@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import QRCode from 'qrcode'
+import { requireAuth } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: Require authentication
+    const { user, response: authError } = await requireAuth(request)
+    if (authError) return authError
+    if (!user) return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
     const { url, shopName } = await request.json()
 
     if (!url) {

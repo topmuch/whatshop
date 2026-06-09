@@ -23,7 +23,6 @@ import {
   Trash2,
   Package,
   ShoppingBag,
-  Star,
   Eye,
   Clock,
   Zap,
@@ -69,35 +68,7 @@ interface ElectroGridProps {
   whatsapp?: string
 }
 
-// ─── Star rating helper: hash product.id to get a consistent 3-5 star rating ───
-function getStarRating(productId: string): number {
-  let hash = 0
-  for (let i = 0; i < productId.length; i++) {
-    const char = productId.charCodeAt(i)
-    hash = (hash << 5) - hash + char
-    hash |= 0
-  }
-  return 3 + (Math.abs(hash) % 3) // returns 3, 4, or 5
-}
-
-function StarRating({ productId }: { productId: string }) {
-  const rating = getStarRating(productId)
-  return (
-    <div className="flex items-center gap-0.5">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <Star
-          key={star}
-          className={`size-3.5 ${
-            star <= rating
-              ? 'fill-amber-400 text-amber-400'
-              : 'fill-none text-gray-300'
-          }`}
-        />
-      ))}
-      <span className="ml-1 text-xs text-[#64748b]">({rating}.0)</span>
-    </div>
-  )
-}
+// StarRating removed — displaying fake reviews is misleading to customers
 
 // ─── Countdown Timer Hook ───
 function useCountdown(initialMs: number = 2 * 24 * 60 * 60 * 1000) {
@@ -154,7 +125,6 @@ function FlashDealSection({
 
   const priceFormatted = product.price.toLocaleString('fr-FR') + ' FCFA'
   const cartQty = getCartQuantity(product.id)
-  const discountPercent = 25 // fake discount for flash deal
 
   return (
     <motion.div
@@ -172,9 +142,9 @@ function FlashDealSection({
       <div className="relative flex flex-col md:flex-row items-center gap-6 rounded-xl bg-[#0d9488]/40 p-6">
         {/* Flash Deal badge */}
         <div className="absolute -top-3 left-6">
-          <Badge className="bg-red-500 text-white border-none shadow-lg gap-1.5 px-3 py-1 text-xs font-bold">
+          <Badge className="bg-amber-500 text-white border-none shadow-lg gap-1.5 px-3 py-1 text-xs font-bold">
             <Zap className="size-3.5" />
-            -{discountPercent}%
+            Offre Spéciale
           </Badge>
         </div>
 
@@ -218,9 +188,6 @@ function FlashDealSection({
           <div className="flex items-center gap-3 justify-center md:justify-start mb-4">
             <span className="text-2xl font-extrabold text-white">
               {priceFormatted}
-            </span>
-            <span className="text-sm text-white/50 line-through">
-              {Math.round(product.price * 1.33).toLocaleString('fr-FR')} FCFA
             </span>
           </div>
 
@@ -374,8 +341,7 @@ function ElectroProductCard({
 
       {/* Product Info */}
       <div className="flex flex-1 flex-col gap-1.5 p-3">
-        {/* Star Rating */}
-        <StarRating productId={product.id} />
+        {/* Rating placeholder — real reviews coming soon */}
 
         {/* Name */}
         <h3 className="font-semibold leading-snug line-clamp-2 text-sm text-[#1e293b]">

@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { hashPassword, setSessionCookie } from '@/lib/auth'
 
+// Basic email format validation
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { email, password, name } = await request.json()
@@ -10,9 +15,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Tous les champs sont requis' }, { status: 400 })
     }
 
+    // Validate email format
+    if (!isValidEmail(email)) {
+      return NextResponse.json({ error: 'Format d\'email invalide' }, { status: 400 })
+    }
+
     // Validate password length
     if (password.length < 6) {
       return NextResponse.json({ error: 'Le mot de passe doit contenir au moins 6 caractères' }, { status: 400 })
+    }
+
+    // Validate name length
+    if (name.trim().length < 2) {
+      return NextResponse.json({ error: 'Le nom doit contenir au moins 2 caractères' }, { status: 400 })
     }
 
     // Check if user already exists

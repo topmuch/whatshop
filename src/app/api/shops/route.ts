@@ -10,13 +10,31 @@ export async function GET(request: NextRequest) {
     const slug = searchParams.get('slug')
 
     if (id) {
-      const shop = await db.shop.findUnique({ where: { id } })
+      const shop = await db.shop.findUnique({
+        where: { id },
+        select: {
+          id: true, name: true, slug: true, description: true, logo: true,
+          banner: true, whatsapp: true, address: true, phone: true,
+          plan: true, template: true, isActive: true,
+          heroImages: true, promoBanners: true,
+          sector: true, createdAt: true,
+        },
+      })
       if (!shop) return NextResponse.json({ error: 'Boutique non trouvée' }, { status: 404 })
       return NextResponse.json(shop)
     }
 
     if (slug) {
-      const shop = await db.shop.findUnique({ where: { slug } })
+      const shop = await db.shop.findUnique({
+        where: { slug },
+        select: {
+          id: true, name: true, slug: true, description: true, logo: true,
+          banner: true, whatsapp: true, address: true, phone: true,
+          plan: true, template: true, isActive: true,
+          heroImages: true, promoBanners: true,
+          sector: true, createdAt: true,
+        },
+      })
       if (!shop) return NextResponse.json({ error: 'Boutique non trouvée' }, { status: 404 })
       return NextResponse.json(shop)
     }
