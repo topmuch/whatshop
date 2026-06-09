@@ -1,0 +1,15 @@
+node_modules
+.next
+.git
+.gitignore
+db/*.db
+db/*.db-journal
+.env
+.env.local
+.env.production
+dev.log
+server.log
+*.log
+mini-services
+skills
+scripts

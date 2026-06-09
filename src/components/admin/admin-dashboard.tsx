@@ -81,6 +81,8 @@ import {
   Check,
   MessageSquare,
   ExternalLink,
+  Mail,
+  Bell,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
@@ -204,6 +206,15 @@ interface PlatformConfig {
   adminWhatsappNumber: string
   standardPrice: number
   proPrice: number
+  supportEmail: string
+  senderName: string
+  autoWelcomeEmail: boolean
+  notifyNewSeller: boolean
+  notifyNewOrder: boolean
+  notifyDomainRequest: boolean
+  notifySupportTicket: boolean
+  weeklyReport: boolean
+  lowStockAlerts: boolean
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -1097,9 +1108,19 @@ function AdminConfig() {
     adminWhatsappNumber: '',
     standardPrice: 0,
     proPrice: 0,
+    supportEmail: 'contact@boutiko.com',
+    senderName: 'Boutiko',
+    autoWelcomeEmail: true,
+    notifyNewSeller: true,
+    notifyNewOrder: true,
+    notifyDomainRequest: true,
+    notifySupportTicket: true,
+    weeklyReport: false,
+    lowStockAlerts: false,
   })
   const [savingConfig, setSavingConfig] = useState(false)
   const [loadingConfig, setLoadingConfig] = useState(true)
+  const [savingNotif, setSavingNotif] = useState(false)
 
   // Promo codes state
   const [promoCodes, setPromoCodes] = useState<PromoCode[]>([])
@@ -1115,7 +1136,25 @@ function AdminConfig() {
         const res = await fetch('/api/admin/config')
         if (res.ok) {
           const data = await res.json()
-          setConfig(data)
+          setConfig(prev => ({
+            ...prev,
+            saasName: data.saasName ?? prev.saasName,
+            logoUrl: data.logoUrl ?? prev.logoUrl,
+            primaryColor: data.primaryColor ?? prev.primaryColor,
+            defaultWhatsappMessage: data.defaultWhatsappMessage ?? prev.defaultWhatsappMessage,
+            adminWhatsappNumber: data.adminWhatsappNumber ?? prev.adminWhatsappNumber,
+            standardPrice: data.standardPrice ?? prev.standardPrice,
+            proPrice: data.proPrice ?? prev.proPrice,
+            supportEmail: data.supportEmail ?? prev.supportEmail,
+            senderName: data.senderName ?? prev.senderName,
+            autoWelcomeEmail: data.autoWelcomeEmail ?? prev.autoWelcomeEmail,
+            notifyNewSeller: data.notifyNewSeller ?? prev.notifyNewSeller,
+            notifyNewOrder: data.notifyNewOrder ?? prev.notifyNewOrder,
+            notifyDomainRequest: data.notifyDomainRequest ?? prev.notifyDomainRequest,
+            notifySupportTicket: data.notifySupportTicket ?? prev.notifySupportTicket,
+            weeklyReport: data.weeklyReport ?? prev.weeklyReport,
+            lowStockAlerts: data.lowStockAlerts ?? prev.lowStockAlerts,
+          }))
           setStandardPrice(String(data.standardPrice || ''))
           setProPrice(String(data.proPrice || ''))
         }
@@ -1190,6 +1229,36 @@ function AdminConfig() {
       toast.error('Erreur lors de la mise à jour')
     } finally {
       setSavingConfig(false)
+    }
+  }
+
+  async function saveNotificationSettings() {
+    setSavingNotif(true)
+    try {
+      const res = await fetch('/api/admin/config', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          supportEmail: config.supportEmail,
+          senderName: config.senderName,
+          autoWelcomeEmail: config.autoWelcomeEmail,
+          notifyNewSeller: config.notifyNewSeller,
+          notifyNewOrder: config.notifyNewOrder,
+          notifyDomainRequest: config.notifyDomainRequest,
+          notifySupportTicket: config.notifySupportTicket,
+          weeklyReport: config.weeklyReport,
+          lowStockAlerts: config.lowStockAlerts,
+        }),
+      })
+      if (res.ok) {
+        toast.success('Préférences email & notifications enregistrées')
+      } else {
+        toast.error('Erreur lors de l\'enregistrement des préférences')
+      }
+    } catch {
+      toast.error('Erreur lors de l\'enregistrement des préférences')
+    } finally {
+      setSavingNotif(false)
     }
   }
 
@@ -1388,7 +1457,152 @@ function AdminConfig() {
           </CardContent>
         </Card>
 
-        {/* C. Codes Promo */}
+        {/* C. Paramètres Email & Notifications */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Mail className="h-4 w-4" />
+              Paramètres Email & Notifications
+            </CardTitle>
+            <CardDescription>Configurez les emails et les notifications de la plateforme.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {loadingConfig ? (
+              <div className="space-y-3">
+                {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
+              </div>
+            ) : (
+              <>
+                {/* Email Settings */}
+                <div>
+                  <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    Configuration Email
+                  </h3>
+                  <div className="grid sm:grid-cols-2 gap-4 mb-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="support-email">Email de support</Label>
+                      <Input
+                        id="support-email"
+                        type="email"
+                        placeholder="contact@boutiko.com"
+                        value={config.supportEmail}
+                        onChange={(e) => setConfig(prev => ({ ...prev, supportEmail: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="sender-name">Nom de l&apos;expéditeur</Label>
+                      <Input
+                        id="sender-name"
+                        placeholder="Boutiko"
+                        value={config.senderName}
+                        onChange={(e) => setConfig(prev => ({ ...prev, senderName: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between py-2">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="auto-welcome">Réponse automatique aux nouveaux vendeurs</Label>
+                      <p className="text-xs text-muted-foreground">Envoyer un email de bienvenue automatique</p>
+                    </div>
+                    <Switch
+                      id="auto-welcome"
+                      checked={config.autoWelcomeEmail}
+                      onCheckedChange={(checked) => setConfig(prev => ({ ...prev, autoWelcomeEmail: checked }))}
+                    />
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Notification Settings */}
+                <div>
+                  <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
+                    <Bell className="h-4 w-4 text-muted-foreground" />
+                    Notifications
+                  </h3>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between py-1">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="notify-new-seller">Nouvelle inscription vendeur</Label>
+                        <p className="text-xs text-muted-foreground">Notifier lorsqu&apos;un nouveau vendeur s&apos;inscrit</p>
+                      </div>
+                      <Switch
+                        id="notify-new-seller"
+                        checked={config.notifyNewSeller}
+                        onCheckedChange={(checked) => setConfig(prev => ({ ...prev, notifyNewSeller: checked }))}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between py-1">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="notify-new-order">Nouvelle commande</Label>
+                        <p className="text-xs text-muted-foreground">Notifier pour chaque nouvelle commande sur la plateforme</p>
+                      </div>
+                      <Switch
+                        id="notify-new-order"
+                        checked={config.notifyNewOrder}
+                        onCheckedChange={(checked) => setConfig(prev => ({ ...prev, notifyNewOrder: checked }))}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between py-1">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="notify-domain">Demande de domaine personnalisé</Label>
+                        <p className="text-xs text-muted-foreground">Notifier lorsqu&apos;un domaine personnalisé est demandé</p>
+                      </div>
+                      <Switch
+                        id="notify-domain"
+                        checked={config.notifyDomainRequest}
+                        onCheckedChange={(checked) => setConfig(prev => ({ ...prev, notifyDomainRequest: checked }))}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between py-1">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="notify-support">Ticket de support</Label>
+                        <p className="text-xs text-muted-foreground">Notifier lorsqu&apos;un ticket de support est ouvert</p>
+                      </div>
+                      <Switch
+                        id="notify-support"
+                        checked={config.notifySupportTicket}
+                        onCheckedChange={(checked) => setConfig(prev => ({ ...prev, notifySupportTicket: checked }))}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between py-1">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="notify-weekly">Rapport hebdomadaire</Label>
+                        <p className="text-xs text-muted-foreground">Envoyer un résumé statistique hebdomadaire</p>
+                      </div>
+                      <Switch
+                        id="notify-weekly"
+                        checked={config.weeklyReport}
+                        onCheckedChange={(checked) => setConfig(prev => ({ ...prev, weeklyReport: checked }))}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between py-1">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="notify-stock">Alertes de stock faible</Label>
+                        <p className="text-xs text-muted-foreground">Notifier lorsque les produits sont en stock faible ou épuisé</p>
+                      </div>
+                      <Switch
+                        id="notify-stock"
+                        checked={config.lowStockAlerts}
+                        onCheckedChange={(checked) => setConfig(prev => ({ ...prev, lowStockAlerts: checked }))}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-2">
+                  <Button onClick={saveNotificationSettings} disabled={savingNotif} className="bg-blue-600 hover:bg-blue-700">
+                    {savingNotif ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                    Enregistrer les préférences
+                  </Button>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* D. Codes Promo */}
         <Card className="lg:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>

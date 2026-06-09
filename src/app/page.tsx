@@ -17,6 +17,7 @@ import { FAQPage } from '@/components/pages/faq-page'
 import { PrivacyPage } from '@/components/pages/privacy-page'
 import { TermsPage } from '@/components/pages/terms-page'
 import { WhatsAppFloat } from '@/components/ui/whatsapp-float'
+import { CookieConsent } from '@/components/ui/cookie-consent'
 
 // Map of page query param values to AppView types
 const PAGE_VIEW_MAP: Record<string, AppView> = {
@@ -138,6 +139,9 @@ export default function Home() {
           <TermsPage />
         </PublicLayout>
       )}
+
+      {/* GDPR / Cookie Consent Banner */}
+      <CookieConsent />
 
       {/* Floating WhatsApp button - show on public pages and landing */}
       {(view === 'landing' || view === 'about' || view === 'pricing' || view === 'contact' || view === 'faq' || view === 'privacy' || view === 'terms') && (
