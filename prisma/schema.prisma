@@ -50,6 +50,9 @@ model Shop {
   // Promo Banners (JSON array of {image, title, link, position} objects)
   promoBanners          String   @default("[]")
 
+  // Brands Carousel (JSON array of {name, image, link} objects)
+  brands                String   @default("[]")
+
   // Custom Domain
   customDomain           String?   @unique
   customDomainStatus     String?   @default("NONE") // NONE | PENDING | APPROVED | REJECTED

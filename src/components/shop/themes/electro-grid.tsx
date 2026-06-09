@@ -652,7 +652,215 @@ function ElectroProductCard({
 }
 
 // ═══════════════════════════════════════════════════════════════
-// SECTION 5 : FOOTER
+// SECTION 5 : PROMO BANNERS (2 advertising spaces)
+// ═══════════════════════════════════════════════════════════════
+
+function ElectroPromoBanners({
+  promoBannersRaw,
+}: {
+  promoBannersRaw?: string
+}) {
+  const banners = useMemo(() => {
+    if (!promoBannersRaw) return []
+    try {
+      const parsed = JSON.parse(promoBannersRaw)
+      return Array.isArray(parsed) ? parsed : []
+    } catch {
+      return []
+    }
+  }, [promoBannersRaw])
+
+  if (banners.length === 0) return null
+
+  // Display up to 2 banners in a grid, or 1 full width
+  const displayBanners = banners.slice(0, 2)
+
+  return (
+    <section className="w-full py-4" style={{ background: BLUE.bgGray }}>
+      <div className="max-w-[1400px] mx-auto px-4 lg:px-6">
+        <div className={'grid gap-4 ' + (displayBanners.length === 2 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1}')}>
+          {displayBanners.map((banner: { id?: string; image: string; title?: string; link?: string }, idx: number) => (
+            <a
+              key={banner.id || idx}
+              href={banner.link || '#'}
+              target={banner.link ? '_blank' : undefined}
+              rel={banner.link ? 'noopener noreferrer' : undefined}
+              className="block relative rounded-xl overflow-hidden group cursor-pointer"
+              style={{
+                aspectRatio: displayBanners.length === 2 ? '16 / 7' : '16 / 5',
+                border: '1px solid ' + BLUE.border,
+              }}
+              onClick={(e) => {
+                if (!banner.link) e.preventDefault()
+              }}
+            >
+              <img
+                src={banner.image}
+                alt={banner.title || 'Promo ' + (idx + 1)}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                loading="lazy"
+              />
+              {/* Title overlay */}
+              {banner.title && (
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end">
+                  <div className="px-4 pb-3">
+                    <span className="inline-block px-3 py-1 rounded-lg text-white text-xs font-bold uppercase tracking-wider" style={{ background: BLUE.primary }}>
+                      {banner.title}
+                    </span>
+                  </div>
+                </div>
+              )}
+              {/* Hover link indicator */}
+              {banner.link && (
+                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/90 shadow-md">
+                    <ArrowRight className="size-4" style={{ color: BLUE.primary }} />
+                  </div>
+                </div>
+              )}
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SECTION 6 : BRAND CAROUSEL
+// ═══════════════════════════════════════════════════════════════
+
+function ElectroBrandCarousel({
+  brandsRaw,
+}: {
+  brandsRaw?: string
+}) {
+  const carouselRef = useRef<HTMLDivElement>(null)
+  const [canScrollLeft, setCanScrollLeft] = useState(false)
+  const [canScrollRight, setCanScrollRight] = useState(false)
+
+  const brands = useMemo(() => {
+    if (!brandsRaw) return []
+    try {
+      const parsed = JSON.parse(brandsRaw)
+      return Array.isArray(parsed) ? parsed : []
+    } catch {
+      return []
+    }
+  }, [brandsRaw])
+
+  // Auto-scroll (infinite loop)
+  const scrollOffsetRef = useRef(0)
+
+  useEffect(() => {
+    if (brands.length === 0) return
+    const itemWidth = 160 // px per item
+    const totalWidth = brands.length * itemWidth
+    if (totalWidth === 0) return
+
+    const interval = setInterval(() => {
+      scrollOffsetRef.current += 1
+      if (scrollOffsetRef.current >= totalWidth) {
+        scrollOffsetRef.current = 0
+        carouselRef.current?.scrollTo({ left: 0, behavior: 'instant' as ScrollBehavior })
+      } else if (carouselRef.current) {
+        carouselRef.current.scrollLeft = scrollOffsetRef.current
+      }
+    }, 30) // Speed of auto-scroll
+    return () => clearInterval(interval)
+  }, [brands.length])
+
+  function handleScrollCheck() {
+    if (!carouselRef.current) return
+    const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current
+    setCanScrollLeft(scrollLeft > 0)
+    setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 10)
+  }
+
+  if (brands.length === 0) return null
+
+  // Duplicate brands for infinite scroll effect
+  const displayBrands = [...brands, ...brands]
+
+  return (
+    <section className="w-full bg-white border-y" style={{ borderColor: BLUE.border }}>
+      <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-5">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-1 h-6 rounded-full" style={{ background: BLUE.primary }} />
+          <h2 className="text-lg font-bold" style={{ color: BLUE.text }}>
+            Nos Marques
+          </h2>
+        </div>
+      </div>
+
+      <div className="relative max-w-[1400px] mx-auto px-4 lg:px-6">
+        {/* Left scroll button */}
+        {canScrollLeft && (
+          <button
+            onClick={() => carouselRef.current?.scrollBy({ left: -200, behavior: 'smooth' })}
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-8 h-8 rounded-full bg-white shadow-md border hover:bg-gray-50 transition-colors"
+            style={{ borderColor: BLUE.border }}
+          >
+            <ChevronRight className="size-4 rotate-180" style={{ color: BLUE.text }} />
+          </button>
+        )}
+
+        {/* Scrollable brand logos */}
+        <div
+          ref={carouselRef}
+          className="flex gap-6 overflow-x-auto pb-2"
+          style={{ scrollbarWidth: 'none' }}
+          onScroll={handleScrollCheck}
+        >
+          {displayBrands.map((brand: { id?: string; name: string; image: string; link?: string }, idx: number) => {
+            const realIdx = idx % brands.length
+            return (
+              <a
+                key={(brand.id || realIdx) + '-' + idx}
+                href={brand.link || '#'}
+                target={brand.link ? '_blank' : undefined}
+                rel={brand.link ? 'noopener noreferrer' : undefined}
+                className="shrink-0 flex flex-col items-center gap-2 group cursor-pointer"
+                onClick={(e) => {
+                  if (!brand.link) e.preventDefault()
+                }}
+              >
+                <div
+                  className="flex items-center justify-center w-[140px] h-[70px] rounded-xl bg-white transition-all duration-200 group-hover:shadow-md group-hover:scale-105 p-3"
+                  style={{ border: '1px solid ' + BLUE.border }}
+                >
+                  <img
+                    src={brand.image}
+                    alt={brand.name}
+                    className="max-w-full max-h-full object-contain grayscale group-hover:grayscale-0 transition-all duration-300"
+                    loading="lazy"
+                  />
+                </div>
+                <span className="text-xs font-medium truncate max-w-[140px]" style={{ color: BLUE.textMuted }}>
+                  {brand.name}
+                </span>
+              </a>
+            )
+          })}
+        </div>
+
+        {/* Right scroll button */}
+        {canScrollRight && (
+          <button
+            onClick={() => carouselRef.current?.scrollBy({ left: 200, behavior: 'smooth' })}
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-8 h-8 rounded-full bg-white shadow-md border hover:bg-gray-50 transition-colors"
+            style={{ borderColor: BLUE.border }}
+          >
+            <ChevronRight className="size-4" style={{ color: BLUE.text }} />
+          </button>
+        )}
+      </div>
+    </section>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SECTION 7 : FOOTER
 // ═══════════════════════════════════════════════════════════════
 
 function ElectroFooter({
@@ -1372,6 +1580,9 @@ export function ElectroShopPage() {
                 }}
               />
 
+              {/* ═══ BRAND CAROUSEL ═══ */}
+              <ElectroBrandCarousel brandsRaw={publicShop.brands} />
+
               {/* ═══ SECTION 4 : PRODUITS ═══ */}
               <section className="w-full bg-white">
                 <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-6 space-y-6" ref={scrollRef}>
@@ -1479,6 +1690,9 @@ export function ElectroShopPage() {
                   </AnimatePresence>
                 </div>
               </section>
+
+              {/* ═══ PROMO BANNERS ═══ */}
+              <ElectroPromoBanners promoBannersRaw={publicShop.promoBanners} />
             </motion.div>
           )}
         </AnimatePresence>

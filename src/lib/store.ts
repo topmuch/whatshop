@@ -44,6 +44,7 @@ export interface Shop {
   subscriptionEndDate?: string
   heroImages?: string
   promoBanners?: string
+  brands?: string
 }
 
 export interface Product {

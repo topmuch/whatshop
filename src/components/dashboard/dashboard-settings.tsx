@@ -90,9 +90,15 @@ export function DashboardSettings() {
   const [promoBanners, setPromoBanners] = useState<{id: string; image: string; title: string; link: string}[]>([])
   const [promoUploading, setPromoUploading] = useState(false)
 
+  // Brands carousel
+  const [brands, setBrands] = useState<{id: string; name: string; image: string; link: string}[]>([])
+  const [brandUploading, setBrandUploading] = useState(false)
+
   // URL input states
   const [heroUrlInput, setHeroUrlInput] = useState('')
   const [promoUrlInput, setPromoUrlInput] = useState('')
+  const [brandUrlInput, setBrandUrlInput] = useState('')
+  const [brandNameInput, setBrandNameInput] = useState('')
 
   // Upload states
   const [logoUploading, setLogoUploading] = useState(false)
@@ -118,6 +124,7 @@ export function DashboardSettings() {
   const bannerInputRef = useRef<HTMLInputElement>(null)
   const heroInputRef = useRef<HTMLInputElement>(null)
   const promoInputRef = useRef<HTMLInputElement>(null)
+  const brandInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (shop) {
@@ -146,6 +153,15 @@ export function DashboardSettings() {
         setPromoBanners(Array.isArray(parsed) ? parsed : [])
       } catch {
         setPromoBanners([])
+      }
+
+      // Parse brands from shop data
+      try {
+        const brandsRaw = (shop as Record<string, unknown>).brands as string | undefined
+        const parsed = brandsRaw ? JSON.parse(brandsRaw) : []
+        setBrands(Array.isArray(parsed) ? parsed : [])
+      } catch {
+        setBrands([])
       }
 
       // Fetch product count
@@ -329,6 +345,64 @@ export function DashboardSettings() {
     )
   }
 
+  // ── Brand handlers ──
+  async function handleBrandUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setBrandUploading(true)
+    try {
+      const url = await uploadFile(file)
+      if (url) {
+        const newBrand = {
+          id: Date.now().toString(),
+          image: url,
+          name: brandNameInput.trim() || 'Marque',
+          link: '',
+        }
+        setBrands((prev) => [...prev, newBrand])
+        setBrandNameInput('')
+        toast.success('Marque ajoutée !')
+      }
+    } finally {
+      setBrandUploading(false)
+      if (brandInputRef.current) brandInputRef.current.value = ''
+    }
+  }
+
+  function removeBrand(id: string) {
+    setBrands((prev) => prev.filter((b) => b.id !== id))
+    toast.success('Marque retirée')
+  }
+
+  function addBrandFromUrl() {
+    const url = brandUrlInput.trim()
+    const name = brandNameInput.trim() || 'Marque'
+    if (!url) {
+      toast.error('Entrez une URL pour le logo de la marque')
+      return
+    }
+    if (brands.length >= 20) {
+      toast.warning('Maximum 20 marques autorisées')
+      return
+    }
+    const newBrand = {
+      id: Date.now().toString(),
+      image: url,
+      name,
+      link: '',
+    }
+    setBrands((prev) => [...prev, newBrand])
+    setBrandUrlInput('')
+    setBrandNameInput('')
+    toast.success('Marque ajoutée !')
+  }
+
+  function updateBrand(id: string, field: 'name' | 'link', value: string) {
+    setBrands((prev) =>
+      prev.map((b) => (b.id === id ? { ...b, [field]: value } : b))
+    )
+  }
+
   async function generateQrCode() {
     if (!shop) return
     setQrLoading(true)
@@ -407,6 +481,7 @@ export function DashboardSettings() {
           template,
           heroImages: JSON.stringify(heroImages),
           promoBanners: JSON.stringify(promoBanners),
+          brands: JSON.stringify(brands),
         }),
       })
 
@@ -431,6 +506,7 @@ export function DashboardSettings() {
         isActive: updatedShop.isActive,
         heroImages: updatedShop.heroImages,
         promoBanners: updatedShop.promoBanners,
+        brands: updatedShop.brands,
       })
       // Also update publicShop so the shop view reflects changes immediately
       if (publicShop && publicShop.id === shop.id) {
@@ -440,6 +516,7 @@ export function DashboardSettings() {
           template: updatedShop.template || 'classic',
           heroImages: updatedShop.heroImages,
           promoBanners: updatedShop.promoBanners,
+          brands: updatedShop.brands,
         })
       }
       toast.success('Boutique mise à jour !')
@@ -988,6 +1065,146 @@ export function DashboardSettings() {
           {promoBanners.length === 0 && (
             <p className="text-xs text-muted-foreground text-center">
               Les bannières publicitaires s&apos;affichent sur votre boutique entre les sections produits.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Brands Carousel */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Globe className="h-5 w-5 text-primary" />
+            Carousel des marques
+          </CardTitle>
+          <CardDescription>
+            Ajoutez les logos des marques que vous distribuez (jusqu&apos;à 20). Ils apparaissent dans un carousel sur votre boutique.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Current brands */}
+          {brands.length > 0 && (
+            <div className="space-y-3">
+              {brands.map((brand, idx) => (
+                <div key={brand.id} className="flex items-center gap-3 rounded-lg border border-muted p-3">
+                  {/* Brand logo thumbnail */}
+                  <div className="shrink-0 w-16 h-10 rounded-lg overflow-hidden bg-muted/20 flex items-center justify-center">
+                    <img src={brand.image} alt={brand.name} className="max-w-full max-h-full object-contain" />
+                  </div>
+                  {/* Brand info */}
+                  <div className="flex-1 min-w-0 space-y-1.5">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Nom</Label>
+                        <Input
+                          value={brand.name}
+                          onChange={(e) => updateBrand(brand.id, 'name', e.target.value)}
+                          placeholder="Nom de la marque"
+                          className="h-8 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Lien (optionnel)</Label>
+                        <Input
+                          value={brand.link}
+                          onChange={(e) => updateBrand(brand.id, 'link', e.target.value)}
+                          placeholder="https://example.com"
+                          className="h-8 text-sm"
+                        />
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground truncate">{brand.image}</p>
+                  </div>
+                  {/* Delete */}
+                  <button
+                    type="button"
+                    onClick={() => removeBrand(brand.id)}
+                    className="shrink-0 h-7 w-7 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition-colors"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Add brand form */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Input
+                value={brandNameInput}
+                onChange={(e) => setBrandNameInput(e.target.value)}
+                placeholder="Nom de la marque"
+                className="h-9 text-sm"
+              />
+              <Input
+                value={brandUrlInput}
+                onChange={(e) => setBrandUrlInput(e.target.value)}
+                placeholder="URL du logo (https://...)"
+                className="flex-1 h-9 text-sm"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') addBrandFromUrl()
+                }}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addBrandFromUrl}
+                disabled={!brandUrlInput.trim() || brands.length >= 20}
+                className="gap-1.5 h-9 flex-shrink-0"
+              >
+                <ImagePlus className="h-3.5 w-3.5" />
+                Ajouter
+              </Button>
+            </div>
+
+            {/* Upload button */}
+            <input
+              ref={brandInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml"
+              className="hidden"
+              onChange={handleBrandUpload}
+            />
+            {brands.length < 20 && (
+              <button
+                type="button"
+                onClick={() => brandInputRef.current?.click()}
+                disabled={brandUploading}
+                className="w-full rounded-lg border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 bg-muted/20 py-4 flex flex-col items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+              >
+                {brandUploading ? (
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                ) : (
+                  <Upload className="h-5 w-5 text-muted-foreground" />
+                )}
+                <span className="text-sm text-muted-foreground">
+                  {brandUploading
+                    ? 'Téléchargement en cours...'
+                    : `Ou téléchargez un logo (${brands.length}/20)`}
+                </span>
+                <span className="text-xs text-muted-foreground/60">
+                  JPG, PNG, GIF, WebP ou SVG — Max 5 Mo
+                </span>
+              </button>
+            )}
+          </div>
+
+          {brands.length > 0 && (
+            <Button onClick={handleSave} disabled={saving} size="sm" className="gap-2">
+              {saving ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Check className="h-4 w-4" />
+              )}
+              Enregistrer les marques
+            </Button>
+          )}
+
+          {brands.length === 0 && (
+            <p className="text-xs text-muted-foreground text-center">
+              Le carousel de marques s&apos;affiche sur votre boutique au-dessus des produits. Ajoutez les logos des marques que vous vendez.
             </p>
           )}
         </CardContent>
