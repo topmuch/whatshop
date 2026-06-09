@@ -37,6 +37,7 @@ export async function POST(request: NextRequest) {
         address: user.shop.address,
         phone: user.shop.phone,
         plan: user.shop.plan,
+        sector: user.shop.sector,
         template: user.shop.template || 'classic',
         isActive: user.shop.isActive,
         heroImages: user.shop.heroImages,

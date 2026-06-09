@@ -1,6 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 
+// GET /api/settings — Get seller shop settings (SEO, appearance)
+export async function GET(request: NextRequest) {
+  try {
+    const userEmail = request.cookies.get('whatsshop-user')?.value
+
+    if (!userEmail) {
+      return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
+    }
+
+    const user = await db.user.findUnique({
+      where: { email: userEmail },
+      include: { shop: true },
+    })
+
+    if (!user || !user.shop) {
+      return NextResponse.json({ error: 'Boutique introuvable' }, { status: 404 })
+    }
+
+    return NextResponse.json({
+      seoTitle: user.shop.seoTitle,
+      seoDescription: user.shop.seoDescription,
+      coverImageUrl: user.shop.coverImageUrl,
+    })
+  } catch (error) {
+    console.error('Settings GET error:', error)
+    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
+  }
+}
+
 // PUT /api/settings — Update seller shop settings (SEO, appearance)
 export async function PUT(request: NextRequest) {
   try {
@@ -35,6 +64,10 @@ export async function PUT(request: NextRequest) {
     const updatedShop = await db.shop.update({
       where: { id: user.shop.id },
       data,
+      select: {
+        id: true, name: true, slug: true, seoTitle: true, seoDescription: true,
+        coverImageUrl: true, logo: true, banner: true,
+      },
     })
 
     return NextResponse.json(updatedShop)

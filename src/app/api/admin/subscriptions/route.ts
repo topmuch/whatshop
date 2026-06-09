@@ -1,16 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { verifyAdmin, adminUnauthorized } from '@/lib/admin-auth'
 
 export async function GET(request: NextRequest) {
   try {
-    const userEmail = request.cookies.get('whatsshop-user')?.value
-    if (!userEmail) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
-    }
-    const admin = await db.user.findUnique({ where: { email: userEmail } })
-    if (!admin || (admin.role !== 'ADMIN' && admin.role !== 'SUPER_ADMIN')) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
-    }
+    const admin = await verifyAdmin(request)
+    if (!admin) return adminUnauthorized()
 
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status') || ''
@@ -46,14 +41,8 @@ export async function GET(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const userEmail = request.cookies.get('whatsshop-user')?.value
-    if (!userEmail) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
-    }
-    const admin = await db.user.findUnique({ where: { email: userEmail } })
-    if (!admin || (admin.role !== 'ADMIN' && admin.role !== 'SUPER_ADMIN')) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
-    }
+    const admin = await verifyAdmin(request)
+    if (!admin) return adminUnauthorized()
 
     const body = await request.json()
     const { shopId, action } = body
