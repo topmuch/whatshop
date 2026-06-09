@@ -55,8 +55,10 @@ export function AuthLogin() {
       if (data.shop) setShop(data.shop)
       if (data.user.role === 'ADMIN') {
         setView('admin')
+        window.history.replaceState(null, '', '/admin')
       } else {
         setView('dashboard')
+        window.history.replaceState(null, '', '/dashboard')
       }
       toast.success('Connexion réussie !')
     } catch {

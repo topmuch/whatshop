@@ -141,8 +141,9 @@ export default function Home() {
         setShopSlug(urlView.shopSlug)
       }
 
-      // Check session on root, dashboard, or admin routes
-      if (urlView.view === 'landing' || urlView.view === 'dashboard' || urlView.view === 'admin') {
+      // Always check session (including login/register views)
+      // This ensures that after login + HMR reload, the session is restored
+      if (urlView.view === 'landing' || urlView.view === 'dashboard' || urlView.view === 'admin' || urlView.view === 'login' || urlView.view === 'register') {
         try {
           const res = await fetch('/api/auth/session')
           if (res.ok) {
