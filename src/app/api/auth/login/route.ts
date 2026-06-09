@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import bcrypt from 'bcryptjs'
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,15 +18,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Identifiants incorrects' }, { status: 401 })
     }
 
-    // Support both plain text (legacy/seed) and bcrypt hashed passwords
-    let passwordValid = false
-    if (user.password === password) {
-      passwordValid = true
-    } else if (user.password.startsWith('$2')) {
-      passwordValid = await bcrypt.compare(password, user.password)
-    }
-
-    if (!passwordValid) {
+    // Plain text comparison (bcrypt only used on admin user creation)
+    if (user.password !== password) {
       return NextResponse.json({ error: 'Identifiants incorrects' }, { status: 401 })
     }
 
