@@ -299,10 +299,10 @@ export function DashboardOrders() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="p-4">
+        <Card className="p-4 overflow-hidden border-t-4 border-t-blue-500">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-              <ShoppingBag className="h-5 w-5 text-primary" />
+            <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+              <ShoppingBag className="h-5 w-5 text-blue-600" />
             </div>
             <div>
               <p className="text-2xl font-bold">{stats.total}</p>
@@ -310,7 +310,7 @@ export function DashboardOrders() {
             </div>
           </div>
         </Card>
-        <Card className="p-4">
+        <Card className="p-4 overflow-hidden border-t-4 border-t-amber-500">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
               <Clock className="h-5 w-5 text-amber-600" />
@@ -321,7 +321,7 @@ export function DashboardOrders() {
             </div>
           </div>
         </Card>
-        <Card className="p-4">
+        <Card className="p-4 overflow-hidden border-t-4 border-t-emerald-500">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
               <CheckCircle className="h-5 w-5 text-emerald-600" />
@@ -332,10 +332,10 @@ export function DashboardOrders() {
             </div>
           </div>
         </Card>
-        <Card className="p-4">
+        <Card className="p-4 overflow-hidden border-t-4 border-t-purple-500">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-              <DollarSign className="h-5 w-5 text-primary" />
+            <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+              <DollarSign className="h-5 w-5 text-purple-600" />
             </div>
             <div>
               <p className="text-2xl font-bold">{formatPrice(stats.revenue)}</p>

@@ -49,6 +49,7 @@ function StatCard({
   badgeColor,
   iconBg,
   iconColor,
+  borderAccent,
 }: {
   icon: React.ReactNode
   label: string
@@ -57,9 +58,10 @@ function StatCard({
   badgeColor?: string
   iconBg?: string
   iconColor?: string
+  borderAccent?: string
 }) {
   return (
-    <Card>
+    <Card className={`overflow-hidden ${borderAccent || ''}`}>
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div>
@@ -200,6 +202,7 @@ export function DashboardOverview() {
           value={stats?.products ?? 0}
           iconBg="bg-blue-500/10"
           iconColor="text-blue-600"
+          borderAccent="border-t-4 border-t-blue-500"
         />
         <StatCard
           icon={<ShoppingCart className="h-6 w-6" />}
@@ -207,6 +210,7 @@ export function DashboardOverview() {
           value={stats?.orders ?? 0}
           iconBg="bg-emerald-500/10"
           iconColor="text-emerald-600"
+          borderAccent="border-t-4 border-t-emerald-500"
         />
         <StatCard
           icon={<Tags className="h-6 w-6" />}
@@ -214,6 +218,7 @@ export function DashboardOverview() {
           value={stats?.categories ?? 0}
           iconBg="bg-amber-500/10"
           iconColor="text-amber-600"
+          borderAccent="border-t-4 border-t-amber-500"
         />
         <StatCard
           icon={<Crown className="h-6 w-6" />}
@@ -223,6 +228,7 @@ export function DashboardOverview() {
           badgeColor={planInfo.color}
           iconBg="bg-purple-500/10"
           iconColor="text-purple-600"
+          borderAccent="border-t-4 border-t-purple-500"
         />
       </div>
 

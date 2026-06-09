@@ -55,18 +55,18 @@ function SidebarContent() {
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="flex items-center gap-2 px-6 py-5">
-        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-pink-500 text-primary-foreground">
+        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/20 text-white">
           <Store className="h-5 w-5" />
         </div>
-        <span className="text-lg font-bold text-foreground">Boutiko</span>
+        <span className="text-lg font-bold text-white">Boutiko</span>
       </div>
 
-      <Separator />
+      <Separator className="bg-white/15" />
 
       {/* Shop name */}
       {shop && (
         <div className="px-6 py-3">
-          <p className="text-sm text-muted-foreground truncate">{shop.name}</p>
+          <p className="text-sm text-white/80 truncate">{shop.name}</p>
         </div>
       )}
 
@@ -79,8 +79,8 @@ function SidebarContent() {
               variant={dashboardTab === item.id ? 'secondary' : 'ghost'}
               className={`w-full justify-start gap-3 h-11 px-3 ${
                 dashboardTab === item.id
-                  ? 'bg-pink-500/10 text-pink-600 font-medium hover:bg-pink-500/15'
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? 'bg-white/20 text-white font-medium hover:bg-white/25'
+                  : 'text-white/70 hover:text-white hover:bg-white/10'
               }`}
               onClick={() => setDashboardTab(item.id)}
             >
@@ -91,13 +91,13 @@ function SidebarContent() {
         </nav>
       </ScrollArea>
 
-      <Separator />
+      <Separator className="bg-white/15" />
 
       {/* Theme Toggle */}
       <div className="px-3 py-2">
         <Button
           variant="ghost"
-          className="w-full justify-start gap-3 h-11 px-3 text-muted-foreground hover:text-purple-600"
+          className="w-full justify-start gap-3 h-11 px-3 text-white/70 hover:text-white hover:bg-white/10"
           onClick={toggleTheme}
         >
           {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
@@ -105,13 +105,13 @@ function SidebarContent() {
         </Button>
       </div>
 
-      <Separator />
+      <Separator className="bg-white/15" />
 
       {/* Logout */}
       <div className="px-3 py-4">
         <Button
           variant="ghost"
-          className="w-full justify-start gap-3 h-11 px-3 text-muted-foreground hover:text-destructive"
+          className="w-full justify-start gap-3 h-11 px-3 text-white/70 hover:text-red-200 hover:bg-white/10"
           onClick={handleLogout}
         >
           <LogOut className="h-5 w-5" />
@@ -171,7 +171,7 @@ export function SellerDashboard() {
   return (
     <div className="min-h-screen flex bg-muted/30">
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex lg:w-64 lg:flex-col bg-card border-r min-h-screen sticky top-0">
+      <aside className="hidden lg:flex lg:w-64 lg:flex-col bg-gradient-to-b from-pink-500 to-pink-700 border-r border-pink-400/30 min-h-screen sticky top-0">
         <SidebarContent />
       </aside>
 
@@ -185,7 +185,7 @@ export function SellerDashboard() {
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-64 p-0">
+            <SheetContent side="left" className="w-64 p-0 bg-gradient-to-b from-pink-500 to-pink-700 border-r border-pink-400/30">
               <SidebarContent />
             </SheetContent>
           </Sheet>

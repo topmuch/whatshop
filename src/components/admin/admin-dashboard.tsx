@@ -322,18 +322,18 @@ function AdminSidebarContent() {
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="flex items-center gap-2 px-6 py-5">
-        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-600 text-destructive-foreground">
+        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/20 text-white">
           <Shield className="h-5 w-5" />
         </div>
-        <span className="text-lg font-bold text-foreground">Boutiko Admin</span>
+        <span className="text-lg font-bold text-white">Boutiko Admin</span>
       </div>
 
-      <Separator />
+      <Separator className="bg-white/15" />
 
       {/* Admin info */}
       <div className="px-6 py-3">
-        <p className="text-sm font-medium truncate">{user?.name || 'Admin'}</p>
-        <Badge className="mt-1 text-[10px] bg-blue-100 text-blue-700 hover:bg-blue-100">
+        <p className="text-sm font-medium truncate text-white">{user?.name || 'Admin'}</p>
+        <Badge className="mt-1 text-[10px] bg-white/20 text-white hover:bg-white/25">
           {user?.role === 'SUPER_ADMIN' ? 'SUPER ADMIN' : 'ADMIN'}
         </Badge>
       </div>
@@ -343,7 +343,7 @@ function AdminSidebarContent() {
         <nav className="flex flex-col gap-1">
           {navGroups.map((group, gi) => (
             <div key={group.label} className={gi > 0 ? 'mt-3' : ''}>
-              <p className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+              <p className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-white/60">
                 {group.label}
               </p>
               {group.items.map((item) => (
@@ -352,8 +352,8 @@ function AdminSidebarContent() {
                   variant={adminTab === item.id ? 'secondary' : 'ghost'}
                   className={`w-full justify-start gap-3 h-10 px-3 ${
                     adminTab === item.id
-                      ? 'bg-blue-500/10 text-blue-600 font-medium hover:bg-blue-500/15'
-                      : 'text-muted-foreground hover:text-foreground'
+                      ? 'bg-white/20 text-white font-medium hover:bg-white/25'
+                      : 'text-white/70 hover:text-white hover:bg-white/10'
                   }`}
                   onClick={() => setAdminTab(item.id)}
                 >
@@ -366,13 +366,13 @@ function AdminSidebarContent() {
         </nav>
       </ScrollArea>
 
-      <Separator />
+      <Separator className="bg-white/15" />
 
       {/* Theme Toggle */}
       <div className="px-3 py-2">
         <Button
           variant="ghost"
-          className="w-full justify-start gap-3 h-10 px-3 text-muted-foreground hover:text-purple-600"
+          className="w-full justify-start gap-3 h-10 px-3 text-white/70 hover:text-white hover:bg-white/10"
           onClick={toggleTheme}
         >
           {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
@@ -380,13 +380,13 @@ function AdminSidebarContent() {
         </Button>
       </div>
 
-      <Separator />
+      <Separator className="bg-white/15" />
 
       {/* Logout */}
       <div className="px-3 py-4">
         <Button
           variant="ghost"
-          className="w-full justify-start gap-3 h-10 px-3 text-muted-foreground hover:text-blue-600"
+          className="w-full justify-start gap-3 h-10 px-3 text-white/70 hover:text-blue-200 hover:bg-white/10"
           onClick={handleLogout}
         >
           <LogOut className="h-5 w-5" />
@@ -444,7 +444,7 @@ export function AdminDashboard() {
   return (
     <div className="min-h-screen flex bg-muted/30">
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex lg:w-64 lg:flex-col bg-card border-r min-h-screen sticky top-0">
+      <aside className="hidden lg:flex lg:w-64 lg:flex-col bg-gradient-to-b from-blue-600 to-blue-800 border-r border-blue-500/30 min-h-screen sticky top-0">
         <AdminSidebarContent />
       </aside>
 
@@ -458,7 +458,7 @@ export function AdminDashboard() {
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-64 p-0">
+            <SheetContent side="left" className="w-64 p-0 bg-gradient-to-b from-blue-600 to-blue-800 border-r border-blue-500/30">
               <AdminSidebarContent />
             </SheetContent>
           </Sheet>
@@ -545,12 +545,12 @@ function AdminOverview() {
 
   const statCards = stats
     ? [
-        { label: 'Utilisateurs', value: stats.totalUsers, icon: <Users className="h-5 w-5" />, color: 'text-blue-600', bg: 'bg-blue-50' },
-        { label: 'Boutiques', value: stats.totalShops, icon: <Store className="h-5 w-5" />, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-        { label: 'Produits', value: stats.totalProducts, icon: <Package className="h-5 w-5" />, color: 'text-orange-600', bg: 'bg-orange-50' },
-        { label: 'Commandes', value: stats.totalOrders, icon: <ShoppingCart className="h-5 w-5" />, color: 'text-purple-600', bg: 'bg-purple-50' },
-        { label: 'Revenus', value: formatCurrency(stats.totalRevenue), icon: <TrendingUp className="h-5 w-5" />, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-        { label: 'Visites', value: stats.totalVisits, icon: <Eye className="h-5 w-5" />, color: 'text-amber-600', bg: 'bg-amber-50' },
+        { label: 'Utilisateurs', value: stats.totalUsers, icon: <Users className="h-5 w-5" />, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-t-4 border-t-blue-500' },
+        { label: 'Boutiques', value: stats.totalShops, icon: <Store className="h-5 w-5" />, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-t-4 border-t-emerald-500' },
+        { label: 'Produits', value: stats.totalProducts, icon: <Package className="h-5 w-5" />, color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-t-4 border-t-orange-500' },
+        { label: 'Commandes', value: stats.totalOrders, icon: <ShoppingCart className="h-5 w-5" />, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-t-4 border-t-purple-500' },
+        { label: 'Revenus', value: formatCurrency(stats.totalRevenue), icon: <TrendingUp className="h-5 w-5" />, color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-t-4 border-t-rose-500' },
+        { label: 'Visites', value: stats.totalVisits, icon: <Eye className="h-5 w-5" />, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-t-4 border-t-amber-500' },
       ]
     : []
 
@@ -599,7 +599,7 @@ function AdminOverview() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.05 }}
           >
-            <Card className="p-4">
+            <Card className={`p-4 overflow-hidden ${card.border}`}>
               <div className="flex items-center gap-3 mb-2">
                 <div className={`flex items-center justify-center w-9 h-9 rounded-lg ${card.bg} ${card.color}`}>
                   {card.icon}
