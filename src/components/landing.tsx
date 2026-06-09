@@ -928,7 +928,7 @@ function PricingSection() {
           {plans.map((plan, i) => (
             <motion.div key={i} variants={fadeInUp}>
               <Card
-                className={`relative h-full flex flex-col overflow-hidden rounded-2xl ${
+                className={`relative h-full flex flex-col overflow-hidden rounded-2xl bg-white ${
                   plan.popular
                     ? 'border-2 border-primary shadow-2xl shadow-primary/15 scale-[1.04] md:scale-[1.06]'
                     : 'border border-gray-200 hover:border-primary/20 hover:shadow-xl'
@@ -947,14 +947,14 @@ function PricingSection() {
                   </div>
                 )}
 
-                <CardContent className="pt-8 pb-8 flex-1 flex flex-col px-7">
+                <CardContent className="pt-8 pb-8 flex-1 flex flex-col px-7 bg-white text-gray-900">
                   <div className="mb-7">
-                    <h3 className="font-bold text-xl text-gray-900">{plan.name}</h3>
+                    <h3 className="font-bold text-xl">{plan.name}</h3>
                     <p className="text-sm text-gray-500 mt-1.5">{plan.description}</p>
                   </div>
 
                   <div className="mb-8">
-                    <span className="text-5xl font-bold tracking-tight text-gray-900">{plan.price}</span>
+                    <span className="text-5xl font-bold tracking-tight">{plan.price}</span>
                     <span className="text-gray-400 font-medium text-base">{plan.period}</span>
                   </div>
 
