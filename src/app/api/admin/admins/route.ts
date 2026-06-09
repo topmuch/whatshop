@@ -3,8 +3,11 @@ import { db } from '@/lib/db'
 import { verifyAdmin, adminUnauthorized } from '@/lib/admin-auth'
 import { hashPassword } from '@/lib/auth'
 
-// GET /api/admin/admins — list all ADMIN/SUPER_ADMIN users
-export async function GET() {
+// GET /api/admin/admins — list all ADMIN/SUPER_ADMIN users (auth required)
+export async function GET(request: NextRequest) {
+  const admin = await verifyAdmin(request)
+  if (!admin) return adminUnauthorized()
+
   try {
     const admins = await db.user.findMany({
       where: {

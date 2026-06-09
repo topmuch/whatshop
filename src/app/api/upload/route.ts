@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { writeFile, mkdir } from 'fs/promises'
 import path from 'path'
 import sharp from 'sharp'
+import { db } from '@/lib/db'
 import { rateLimit, getClientIp, RATE_LIMITS } from '@/lib/rate-limit'
 
 const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads')
@@ -22,6 +23,12 @@ export async function POST(request: NextRequest) {
     const userEmail = request.cookies.get('whatsshop-user')?.value
     if (!userEmail) {
       return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
+    }
+
+    // Verify user actually exists in DB (not just cookie existence)
+    const user = await db.user.findUnique({ where: { email: userEmail } })
+    if (!user) {
+      return NextResponse.json({ error: 'Utilisateur non trouvé' }, { status: 401 })
     }
 
     const formData = await request.formData()

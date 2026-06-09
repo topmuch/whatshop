@@ -35,6 +35,13 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(parseInt(searchParams.get('limit') || String(PRODUCTS_PER_PAGE), 10), 100)
     const includeAll = searchParams.get('all') === 'true'
 
+    // SECURITY: require auth to see hidden/unavailable products
+    if (includeAll) {
+      const { user, response: authErr } = await requireShopOwner(request)
+      if (authErr) return authErr
+      if (!user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+    }
+
     if (!shopId) {
       return NextResponse.json({ error: 'shopId requis' }, { status: 400 })
     }
@@ -83,8 +90,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { name, description, price, image, images, stock, categoryId, isAvailable } = body
 
-    if (!name || price === undefined) {
-      return NextResponse.json({ error: 'Champs requis manquants' }, { status: 400 })
+    if (!name || price === undefined || price === null || isNaN(parseFloat(price))) {
+      return NextResponse.json({ error: 'Champs requis manquants ou prix invalide' }, { status: 400 })
     }
 
     // Check plan limits
@@ -136,6 +143,11 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'ID requis' }, { status: 400 })
     }
 
+    // Validate price if provided
+    if (price !== undefined && (price === null || isNaN(parseFloat(price)))) {
+      return NextResponse.json({ error: 'Prix invalide' }, { status: 400 })
+    }
+
     // Verify the product belongs to this shop
     const existingProduct = await db.product.findFirst({
       where: { id, shopId: user.shop.id },
@@ -152,7 +164,7 @@ export async function PUT(request: NextRequest) {
     if (images !== undefined) {
       data.images = Array.isArray(images) ? JSON.stringify(images) : '[]'
     }
-    if (stock !== undefined) data.stock = parseInt(stock) || null
+    if (stock !== undefined) data.stock = stock === null || stock === '' ? null : parseInt(stock)
     if (categoryId !== undefined) data.categoryId = categoryId || null
     if (isAvailable !== undefined) data.isAvailable = isAvailable
 

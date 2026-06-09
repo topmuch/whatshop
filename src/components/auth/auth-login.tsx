@@ -53,7 +53,7 @@ export function AuthLogin() {
       }
       setUser(data.user)
       if (data.shop) setShop(data.shop)
-      if (data.user.role === 'ADMIN') {
+      if (data.user.role === 'ADMIN' || data.user.role === 'SUPER_ADMIN') {
         setView('admin')
         window.history.replaceState(null, '', '/admin')
       } else {
@@ -311,7 +311,7 @@ export function AuthLogin() {
               <div className="space-y-1.5 pl-6">
                 <div className="flex items-start gap-2">
                   <span className="text-xs font-medium text-muted-foreground mt-0.5 shrink-0 w-12">Vendeur</span>
-                  <span className="text-xs text-muted-foreground">demo@boutiko.com / demo123</span>
+                  <span className="text-xs text-muted-foreground">electro@demo.com / demo1234</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="text-xs font-medium text-muted-foreground mt-0.5 shrink-0 w-12">Admin</span>

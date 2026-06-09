@@ -67,7 +67,11 @@ export async function PUT(request: NextRequest) {
     }
 
     const data: Record<string, unknown> = {}
-    if (name !== undefined) data.name = name?.trim() || null
+    // name is a required field in Prisma schema — never set to null
+    if (name !== undefined && name !== null) {
+      const trimmed = (typeof name === 'string' ? name : '').trim()
+      if (trimmed) data.name = trimmed
+    }
     if (description !== undefined) data.description = description || null
     if (whatsapp !== undefined) data.whatsapp = whatsapp?.trim() || ''
     if (address !== undefined) data.address = address || null
@@ -93,7 +97,8 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json(updatedShop)
   } catch (error) {
     console.error('Shops PUT error:', error)
-    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
+    const message = error instanceof Error ? error.message : 'Erreur lors de la sauvegarde'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
 

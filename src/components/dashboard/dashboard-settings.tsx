@@ -490,7 +490,8 @@ export function DashboardSettings() {
       })
 
       if (!res.ok) {
-        toast.error('Erreur lors de la sauvegarde')
+        const errData = await res.json().catch(() => ({}))
+        toast.error(errData.error || 'Erreur lors de la sauvegarde')
         return
       }
 
@@ -550,7 +551,8 @@ export function DashboardSettings() {
         }),
       })
       if (!res.ok) {
-        toast.error('Erreur lors de la sauvegarde SEO')
+        const errData = await res.json().catch(() => ({}))
+        toast.error(errData.error || 'Erreur lors de la sauvegarde SEO')
         return
       }
       toast.success('Paramètres SEO enregistrés !')

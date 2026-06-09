@@ -152,7 +152,7 @@ export default function Home() {
               setUser(data.user)
               // Only redirect from landing/register/login; keep onboarding as-is so the wizard can complete
               if (urlView.view !== 'onboarding') {
-                if (data.user.role === 'ADMIN') {
+                if (data.user.role === 'ADMIN' || data.user.role === 'SUPER_ADMIN') {
                   setView('admin')
                 } else {
                   setView('dashboard')
