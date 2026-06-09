@@ -108,8 +108,8 @@ export function DashboardSettings() {
       // Fetch product count
       fetch(`/api/products?shopId=${shop.id}`)
         .then((res) => res.ok ? res.json() : [])
-        .then((products) => setProductCount(products.length))
-        .catch(() => {})
+        .then((products) => setProductCount(Array.isArray(products) ? products.length : 0))
+        .catch(() => setProductCount(0))
 
       // Generate QR code
       generateQrCode()
@@ -673,8 +673,8 @@ export function DashboardSettings() {
             <div>
               <p className="text-sm text-muted-foreground">Plan actuel</p>
               <div className="flex items-center gap-2 mt-1">
-                <Badge variant="secondary" className={planBadgeColors[currentPlan]}>
-                  {planLabels[currentPlan]}
+                <Badge variant="secondary" className={planBadgeColors[currentPlan] || planBadgeColors.FREE}>
+                  {planLabels[currentPlan] || planLabels.FREE}
                 </Badge>
                 <span className="text-sm text-muted-foreground">{limits.price}</span>
               </div>
