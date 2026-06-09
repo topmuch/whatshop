@@ -119,14 +119,16 @@ export function DashboardProducts() {
   const fetchProducts = useCallback(async () => {
     if (!shop) return
     try {
-      const params = new URLSearchParams({ shopId: shop.id })
+      const params = new URLSearchParams({ shopId: shop.id, all: 'true' })
       if (search) params.set('search', search)
       if (categoryFilter && categoryFilter !== 'all') params.set('categoryId', categoryFilter)
 
       const res = await fetch(`/api/products?${params}`)
       if (res.ok) {
         const data = await res.json()
-        setProducts(data)
+        // API returns { products: [...], pagination: {...} } or plain array
+        const productsArray = Array.isArray(data) ? data : (data.products || [])
+        setProducts(productsArray)
       }
     } catch {
       toast.error('Erreur de chargement des produits')
@@ -596,12 +598,39 @@ export function DashboardProducts() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="product-image">URL de l'image principale</Label>
-              <Input
-                id="product-image"
-                value={form.image}
-                onChange={(e) => setForm({ ...form, image: e.target.value })}
-                placeholder="https://example.com/image.jpg"
-              />
+              <div className="flex items-center gap-2">
+                {form.image ? (
+                  <div className="relative shrink-0">
+                    <img
+                      src={form.image}
+                      alt="Aperçu"
+                      className="w-16 h-16 rounded-lg object-cover border bg-muted"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement
+                        target.style.display = 'none'
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-red-500 text-white flex items-center justify-center shadow-sm hover:bg-red-600"
+                      onClick={() => setForm({ ...form, image: '' })}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="w-16 h-16 rounded-lg border-2 border-dashed border-muted-foreground/20 bg-muted/20 flex items-center justify-center shrink-0">
+                    <ImageIcon className="h-6 w-6 text-muted-foreground/50" />
+                  </div>
+                )}
+                <Input
+                  id="product-image"
+                  value={form.image}
+                  onChange={(e) => setForm({ ...form, image: e.target.value })}
+                  placeholder="https://example.com/image.jpg"
+                  className="flex-1"
+                />
+              </div>
             </div>
             <div className="space-y-2">
               <Label>Photos supplémentaires</Label>

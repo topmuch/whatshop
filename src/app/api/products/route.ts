@@ -33,12 +33,14 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search')
     const page = parseInt(searchParams.get('page') || '1', 10)
     const limit = Math.min(parseInt(searchParams.get('limit') || String(PRODUCTS_PER_PAGE), 10), 100)
+    const includeAll = searchParams.get('all') === 'true'
 
     if (!shopId) {
       return NextResponse.json({ error: 'shopId requis' }, { status: 400 })
     }
 
-    const where: Record<string, unknown> = { shopId, isAvailable: true }
+    const where: Record<string, unknown> = { shopId }
+    if (!includeAll) where.isAvailable = true
     if (categoryId) where.categoryId = categoryId
     if (search) where.name = { contains: search }
 

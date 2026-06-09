@@ -147,9 +147,17 @@ export function DashboardSettings() {
       }
 
       // Fetch product count
-      fetch(`/api/products?shopId=${shop.id}`)
-        .then((res) => res.ok ? res.json() : [])
-        .then((products) => setProductCount(Array.isArray(products) ? products.length : 0))
+      fetch(`/api/products?shopId=${shop.id}&all=true`)
+        .then((res) => res.ok ? res.json() : null)
+        .then((data) => {
+          if (data && data.pagination) {
+            setProductCount(data.pagination.total || 0)
+          } else if (Array.isArray(data)) {
+            setProductCount(data.length)
+          } else {
+            setProductCount(0)
+          }
+        })
         .catch(() => setProductCount(0))
 
       // Generate QR code
@@ -428,6 +436,8 @@ export function DashboardSettings() {
           ...publicShop,
           ...updatedShop,
           template: updatedShop.template || 'classic',
+          heroImages: updatedShop.heroImages,
+          promoBanners: updatedShop.promoBanners,
         })
       }
       toast.success('Boutique mise à jour !')
