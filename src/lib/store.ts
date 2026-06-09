@@ -42,6 +42,8 @@ export interface Shop {
   customDomainStatus?: string
   subscriptionStatus?: string
   subscriptionEndDate?: string
+  heroImages?: string
+  promoBanners?: string
 }
 
 export interface Product {

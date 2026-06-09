@@ -617,6 +617,45 @@ function ShopContent() {
         heroImages={publicShop.heroImages}
       />
 
+      {/* ─── Promo Banners ─── */}
+      {(() => {
+        try {
+          const banners = publicShop.promoBanners ? JSON.parse(publicShop.promoBanners) : []
+          if (!Array.isArray(banners) || banners.length === 0) return null
+          return (
+            <div className="max-w-5xl mx-auto px-4 pt-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {banners.map((b: { id: string; image: string; title: string; link: string }, idx: number) => (
+                  <a
+                    key={b.id || idx}
+                    href={b.link || '#'}
+                    target={b.link ? '_blank' : undefined}
+                    rel={b.link ? 'noopener noreferrer' : undefined}
+                    className={`block rounded-xl overflow-hidden shadow-sm border hover:shadow-md transition-shadow ${banners.length === 1 ? 'sm:col-span-2' : ''}`}
+                    style={{ borderColor: 'var(--tpl-border)' }}
+                  >
+                    <div className="relative aspect-[16/5]">
+                      <img
+                        src={b.image}
+                        alt={b.title || `Promo ${idx + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                      {b.title && (
+                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-4 py-2">
+                          <span className="text-white text-sm font-medium">{b.title}</span>
+                        </div>
+                      )}
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )
+        } catch {
+          return null
+        }
+      })()}
+
       {/* ─── Shop Info Bar (template-specific styles) ─── */}
       {layout.headerStyle === 'centered' ? (
         <div className="text-center px-4 py-5" style={{ borderBottom: '1px solid var(--tpl-border)' }}>

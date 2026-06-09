@@ -88,6 +88,10 @@ export function DashboardSettings() {
   const [promoBanners, setPromoBanners] = useState<{id: string; image: string; title: string; link: string}[]>([])
   const [promoUploading, setPromoUploading] = useState(false)
 
+  // URL input states
+  const [heroUrlInput, setHeroUrlInput] = useState('')
+  const [promoUrlInput, setPromoUrlInput] = useState('')
+
   // Upload states
   const [logoUploading, setLogoUploading] = useState(false)
   const [bannerUploading, setBannerUploading] = useState(false)
@@ -252,6 +256,18 @@ export function DashboardSettings() {
     toast.success('Image retirée du slide')
   }
 
+  function addHeroFromUrl() {
+    const url = heroUrlInput.trim()
+    if (!url) return
+    if (heroImages.length >= 6) {
+      toast.warning('Maximum 6 images autorisées')
+      return
+    }
+    setHeroImages((prev) => [...prev, url])
+    setHeroUrlInput('')
+    toast.success('Image ajoutée au slide !')
+  }
+
   async function handlePromoUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
@@ -277,6 +293,24 @@ export function DashboardSettings() {
   function removePromoBanner(id: string) {
     setPromoBanners((prev) => prev.filter((b) => b.id !== id))
     toast.success('Bannière retirée')
+  }
+
+  function addPromoFromUrl() {
+    const url = promoUrlInput.trim()
+    if (!url) return
+    if (promoBanners.length >= 4) {
+      toast.warning('Maximum 4 bannières autorisées')
+      return
+    }
+    const newBanner = {
+      id: Date.now().toString(),
+      image: url,
+      title: 'Promotion',
+      link: '',
+    }
+    setPromoBanners((prev) => [...prev, newBanner])
+    setPromoUrlInput('')
+    toast.success('Bannière publicitaire ajoutée !')
   }
 
   function updatePromoBanner(id: string, field: 'title' | 'link', value: string) {
@@ -385,6 +419,8 @@ export function DashboardSettings() {
         plan: updatedShop.plan,
         template: updatedShop.template || 'classic',
         isActive: updatedShop.isActive,
+        heroImages: updatedShop.heroImages,
+        promoBanners: updatedShop.promoBanners,
       })
       toast.success('Boutique mise à jour !')
     } catch {
@@ -725,6 +761,32 @@ export function DashboardSettings() {
             </button>
           )}
 
+          {/* URL input for hero images */}
+          {heroImages.length < 6 && (
+            <div className="flex items-center gap-2">
+              <Input
+                value={heroUrlInput}
+                onChange={(e) => setHeroUrlInput(e.target.value)}
+                placeholder="Ou collez une URL d'image..."
+                className="flex-1 h-9 text-sm"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') addHeroFromUrl()
+                }}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addHeroFromUrl}
+                disabled={!heroUrlInput.trim()}
+                className="gap-1.5 h-9 flex-shrink-0"
+              >
+                <ImagePlus className="h-3.5 w-3.5" />
+                Ajouter
+              </Button>
+            </div>
+          )}
+
           {heroImages.length > 0 && (
             <Button onClick={handleSave} disabled={saving} size="sm" className="gap-2">
               {saving ? (
@@ -836,6 +898,32 @@ export function DashboardSettings() {
                 JPG, PNG, GIF ou WebP — Max 5 Mo — Ratio 16:5 recommandé
               </span>
             </button>
+          )}
+
+          {/* URL input for promo banners */}
+          {promoBanners.length < 4 && (
+            <div className="flex items-center gap-2">
+              <Input
+                value={promoUrlInput}
+                onChange={(e) => setPromoUrlInput(e.target.value)}
+                placeholder="Ou collez une URL d'image..."
+                className="flex-1 h-9 text-sm"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') addPromoFromUrl()
+                }}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addPromoFromUrl}
+                disabled={!promoUrlInput.trim()}
+                className="gap-1.5 h-9 flex-shrink-0"
+              >
+                <ImagePlus className="h-3.5 w-3.5" />
+                Ajouter
+              </Button>
+            </div>
           )}
 
           {promoBanners.length > 0 && (
