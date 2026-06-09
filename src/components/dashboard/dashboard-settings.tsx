@@ -84,6 +84,10 @@ export function DashboardSettings() {
   // Hero images (slider)
   const [heroImages, setHeroImages] = useState<string[]>([])
 
+  // Promo banners
+  const [promoBanners, setPromoBanners] = useState<{id: string; image: string; title: string; link: string}[]>([])
+  const [promoUploading, setPromoUploading] = useState(false)
+
   // Upload states
   const [logoUploading, setLogoUploading] = useState(false)
   const [bannerUploading, setBannerUploading] = useState(false)
@@ -107,6 +111,7 @@ export function DashboardSettings() {
   const logoInputRef = useRef<HTMLInputElement>(null)
   const bannerInputRef = useRef<HTMLInputElement>(null)
   const heroInputRef = useRef<HTMLInputElement>(null)
+  const promoInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (shop) {
@@ -126,6 +131,15 @@ export function DashboardSettings() {
         setHeroImages(Array.isArray(parsed) ? parsed : [])
       } catch {
         setHeroImages([])
+      }
+
+      // Parse promo banners from shop data
+      try {
+        const promoRaw = (shop as Record<string, unknown>).promoBanners as string | undefined
+        const parsed = promoRaw ? JSON.parse(promoRaw) : []
+        setPromoBanners(Array.isArray(parsed) ? parsed : [])
+      } catch {
+        setPromoBanners([])
       }
 
       // Fetch product count
@@ -238,6 +252,39 @@ export function DashboardSettings() {
     toast.success('Image retirée du slide')
   }
 
+  async function handlePromoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setPromoUploading(true)
+    try {
+      const url = await uploadFile(file)
+      if (url) {
+        const newBanner = {
+          id: Date.now().toString(),
+          image: url,
+          title: 'Promotion',
+          link: '',
+        }
+        setPromoBanners((prev) => [...prev, newBanner])
+        toast.success('Bannière publicitaire ajoutée !')
+      }
+    } finally {
+      setPromoUploading(false)
+      if (promoInputRef.current) promoInputRef.current.value = ''
+    }
+  }
+
+  function removePromoBanner(id: string) {
+    setPromoBanners((prev) => prev.filter((b) => b.id !== id))
+    toast.success('Bannière retirée')
+  }
+
+  function updatePromoBanner(id: string, field: 'title' | 'link', value: string) {
+    setPromoBanners((prev) =>
+      prev.map((b) => (b.id === id ? { ...b, [field]: value } : b))
+    )
+  }
+
   async function generateQrCode() {
     if (!shop) return
     setQrLoading(true)
@@ -315,6 +362,7 @@ export function DashboardSettings() {
           banner,
           template,
           heroImages: JSON.stringify(heroImages),
+          promoBanners: JSON.stringify(promoBanners),
         }),
       })
 
@@ -691,6 +739,119 @@ export function DashboardSettings() {
           {heroImages.length === 0 && (
             <p className="text-xs text-muted-foreground text-center">
               Si aucune image n&apos;est ajoutée, les images par défaut du slide seront affichées sur votre boutique.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Promo Banners */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ImagePlus className="h-5 w-5 text-primary" />
+            Bannières publicitaires
+          </CardTitle>
+          <CardDescription>
+            Ajoutez des bannières promotionnelles sur votre boutique (jusqu&apos;à 4)
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Current promo banners */}
+          {promoBanners.length > 0 && (
+            <div className="space-y-4">
+              {promoBanners.map((banner, idx) => (
+                <div key={banner.id} className="rounded-lg border border-muted overflow-hidden">
+                  {/* Banner preview */}
+                  <div className="relative aspect-[16/5] bg-muted/20">
+                    <img
+                      src={banner.image}
+                      alt={banner.title || `Bannière ${idx + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute top-2 left-2">
+                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-black/60 text-white border-0">
+                        {idx + 1}/{promoBanners.length}
+                      </Badge>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removePromoBanner(banner.id)}
+                      className="absolute top-2 right-2 h-7 w-7 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 shadow-sm transition-opacity"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                  {/* Banner fields */}
+                  <div className="p-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Titre de la bannière</Label>
+                      <Input
+                        value={banner.title}
+                        onChange={(e) => updatePromoBanner(banner.id, 'title', e.target.value)}
+                        placeholder="Ex: Promotion d'été"
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Lien (optionnel)</Label>
+                      <Input
+                        value={banner.link}
+                        onChange={(e) => updatePromoBanner(banner.id, 'link', e.target.value)}
+                        placeholder="https://example.com/promo"
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Upload button */}
+          <input
+            ref={promoInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/gif,image/webp"
+            className="hidden"
+            onChange={handlePromoUpload}
+          />
+          {promoBanners.length < 4 && (
+            <button
+              type="button"
+              onClick={() => promoInputRef.current?.click()}
+              disabled={promoUploading}
+              className="w-full rounded-lg border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 bg-muted/20 py-6 flex flex-col items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50"
+            >
+              {promoUploading ? (
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              ) : (
+                <Upload className="h-6 w-6 text-muted-foreground" />
+              )}
+              <span className="text-sm text-muted-foreground">
+                {promoUploading
+                  ? 'Téléchargement en cours...'
+                  : `Cliquez pour ajouter une bannière (${promoBanners.length}/4)`}
+              </span>
+              <span className="text-xs text-muted-foreground/60">
+                JPG, PNG, GIF ou WebP — Max 5 Mo — Ratio 16:5 recommandé
+              </span>
+            </button>
+          )}
+
+          {promoBanners.length > 0 && (
+            <Button onClick={handleSave} disabled={saving} size="sm" className="gap-2">
+              {saving ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Check className="h-4 w-4" />
+              )}
+              Enregistrer les bannières
+            </Button>
+          )}
+
+          {promoBanners.length === 0 && (
+            <p className="text-xs text-muted-foreground text-center">
+              Les bannières publicitaires s&apos;affichent sur votre boutique entre les sections produits.
             </p>
           )}
         </CardContent>

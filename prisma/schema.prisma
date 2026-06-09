@@ -47,6 +47,9 @@ model Shop {
   // Hero Slider (JSON array of image URLs)
   heroImages            String   @default("[]")
 
+  // Promo Banners (JSON array of {image, title, link, position} objects)
+  promoBanners          String   @default("[]")
+
   // Custom Domain
   customDomain           String?   @unique
   customDomainStatus     String?   @default("NONE") // NONE | PENDING | APPROVED | REJECTED
