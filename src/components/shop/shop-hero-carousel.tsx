@@ -64,7 +64,11 @@ export function ShopHeroCarousel({ slides, shopName, whatsapp }: ShopHeroCarouse
   }
 
   // Template-specific carousel heights
-  const heroHeight = template.layout.heroStyle === 'minimal' ? 'h-36 sm:h-44 md:h-52' : 'h-52 sm:h-64 md:h-80 lg:h-96'
+  const heroHeight = template.layout.heroStyle === 'minimal'
+    ? 'h-36 sm:h-44 md:h-52'
+    : template.id === 'xstore-electro'
+      ? 'h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px]'
+      : 'h-52 sm:h-64 md:h-80 lg:h-96'
 
   // Template-specific overlay styles
   const overlayStyle = template.layout.heroStyle === 'minimal'
@@ -90,7 +94,10 @@ export function ShopHeroCarousel({ slides, shopName, whatsapp }: ShopHeroCarouse
               <img
                 src={slide.image}
                 alt={slide.title}
-                className="absolute inset-0 w-full h-full object-cover"
+                className={cn(
+                  'absolute inset-0 w-full h-full object-cover',
+                  template.id === 'xstore-electro' && 'object-center'
+                )}
               />
               {/* Template-aware overlay */}
               <div className={cn('absolute inset-0', overlayStyle)} />
