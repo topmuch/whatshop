@@ -6,9 +6,10 @@ let seeded = false
 async function ensureSeeded() {
   if (seeded) return
   try {
-    const count = await db.user.count()
-    if (count === 0) {
-      console.log('🌱 Seeding database with default accounts...')
+    // Always ensure admin exists (even if other users exist)
+    const admin = await db.user.findUnique({ where: { email: 'admin@whatsshop.com' } })
+    if (!admin) {
+      console.log('🌱 Creating admin account...')
       await db.user.create({
         data: {
           email: 'admin@whatsshop.com',
@@ -17,7 +18,14 @@ async function ensureSeeded() {
           role: 'ADMIN',
         },
       })
-      const demo = await db.user.create({
+      console.log('✅ Admin created: admin@whatsshop.com / admin123')
+    }
+
+    // Ensure demo seller + shop exist
+    const demo = await db.user.findUnique({ where: { email: 'demo@whatsshop.com' } })
+    if (!demo) {
+      console.log('🌱 Creating demo seller...')
+      const seller = await db.user.create({
         data: {
           email: 'demo@whatsshop.com',
           password: 'demo123',
@@ -33,10 +41,10 @@ async function ensureSeeded() {
           whatsapp: '221771234567',
           plan: 'STANDARD',
           isActive: true,
-          ownerId: demo.id,
+          ownerId: seller.id,
         },
       })
-      console.log('✅ Default accounts created: admin@whatsshop.com / admin123')
+      console.log('✅ Demo created: demo@whatsshop.com / demo123')
     }
     seeded = true
   } catch (err) {
