@@ -315,7 +315,7 @@ export function AuthLogin() {
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="text-xs font-medium text-muted-foreground mt-0.5 shrink-0 w-12">Admin</span>
-                  <span className="text-xs text-muted-foreground">admin@whatsshop.com / admin123</span>
+                  <span className="text-xs text-muted-foreground">admin@terangaflow.app / admin123</span>
                 </div>
               </div>
             </div>
