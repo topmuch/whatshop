@@ -1,7 +1,7 @@
 'use client'
 
 import { useAppStore } from '@/lib/store'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -53,6 +53,7 @@ import {
   AlertCircle,
   Sparkles,
   X,
+  Upload,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatPrice } from '@/lib/shared'
@@ -115,6 +116,49 @@ export function DashboardProducts() {
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [deletingProduct, setDeletingProduct] = useState<Product | null>(null)
   const [deleting, setDeleting] = useState(false)
+
+  // Image upload
+  const [imageUploading, setImageUploading] = useState(false)
+  const mainImageInputRef = useRef<HTMLInputElement>(null)
+  const extraImageInputRef = useRef<HTMLInputElement>(null)
+  const [uploadTarget, setUploadTarget] = useState<'main' | number | null>(null)
+
+  async function uploadProductFile(file: File): Promise<string | null> {
+    const formData = new FormData()
+    formData.append('file', file)
+    const res = await fetch('/api/upload', { method: 'POST', body: formData })
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      toast.error(data.error || 'Erreur lors du téléchargement')
+      return null
+    }
+    const data = await res.json()
+    return data.url
+  }
+
+  async function handleProductImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setImageUploading(true)
+    try {
+      const url = await uploadProductFile(file)
+      if (url) {
+        if (uploadTarget === 'main') {
+          setForm({ ...form, image: url })
+        } else if (typeof uploadTarget === 'number') {
+          const newImages = [...form.images]
+          newImages[uploadTarget] = url
+          setForm({ ...form, images: newImages })
+        }
+        toast.success('Image téléchargée !')
+      }
+    } finally {
+      setImageUploading(false)
+      setUploadTarget(null)
+      if (mainImageInputRef.current) mainImageInputRef.current.value = ''
+      if (extraImageInputRef.current) extraImageInputRef.current.value = ''
+    }
+  }
 
   const fetchProducts = useCallback(async () => {
     if (!shop) return
@@ -597,10 +641,18 @@ export function DashboardProducts() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="product-image">URL de l'image principale</Label>
+              <Label>Image principale</Label>
+              {/* Hidden file input for main image upload */}
+              <input
+                ref={mainImageInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/gif,image/webp"
+                className="hidden"
+                onChange={handleProductImageUpload}
+              />
               <div className="flex items-center gap-2">
                 {form.image ? (
-                  <div className="relative shrink-0">
+                  <div className="relative shrink-0 group">
                     <img
                       src={form.image}
                       alt="Aperçu"
@@ -630,10 +682,28 @@ export function DashboardProducts() {
                   placeholder="https://example.com/image.jpg"
                   className="flex-1"
                 />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="shrink-0 h-9 w-9"
+                  disabled={imageUploading}
+                  onClick={() => { setUploadTarget('main'); mainImageInputRef.current?.click() }}
+                >
+                  {imageUploading && uploadTarget === 'main' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                </Button>
               </div>
             </div>
             <div className="space-y-2">
               <Label>Photos supplémentaires</Label>
+              {/* Hidden file input for extra images */}
+              <input
+                ref={extraImageInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/gif,image/webp"
+                className="hidden"
+                onChange={handleProductImageUpload}
+              />
               <div className="space-y-2">
                 {form.images.map((img, idx) => (
                   <div key={idx} className="flex items-center gap-2">
@@ -658,6 +728,16 @@ export function DashboardProducts() {
                       placeholder={`URL de la photo ${idx + 2}`}
                       className="flex-1"
                     />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8 shrink-0"
+                      disabled={imageUploading}
+                      onClick={() => { setUploadTarget(idx); extraImageInputRef.current?.click() }}
+                    >
+                      {imageUploading && uploadTarget === idx ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                    </Button>
                     <Button
                       type="button"
                       variant="ghost"

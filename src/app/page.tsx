@@ -36,7 +36,7 @@ const PAGE_VIEW_MAP: Record<string, AppView> = {
   'aide': 'faq',
 }
 
-// Empty subscribe function (we don't need to subscribe to URL changes here)
+// Empty subscribe — value is read once on mount
 const emptySubscribe = () => () => {}
 
 /**
@@ -52,9 +52,15 @@ function useClientPathname() {
 }
 
 /**
- * Synchronously resolve the correct view from the current URL.
+ * Resolve the correct view from the URL pathname.
+ * Safe to call with server-provided '/' path.
  */
 function resolveViewFromPath(pathname: string): { view: AppView; shopSlug: string } {
+  // Guard: during SSR, pathname is '/' — never use window here
+  if (typeof window === 'undefined') {
+    return { view: 'landing', shopSlug: '' }
+  }
+
   const slug = pathname.slice(1).toLowerCase()
 
   // Dashboard routes
@@ -103,9 +109,22 @@ function resolveViewFromPath(pathname: string): { view: AppView; shopSlug: strin
   return { view: 'landing', shopSlug: '' }
 }
 
+/** Minimal loading shell shown during SSR and before hydration */
+function LoadingShell() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="flex flex-col items-center gap-3">
+        <div className="h-8 w-8 rounded-full border-2 border-gray-300 border-t-gray-800 animate-spin" />
+        <span className="text-sm text-gray-400">Chargement...</span>
+      </div>
+    </div>
+  )
+}
+
 export default function Home() {
   const { view, setView, setUser, setShopSlug, shopSlug } = useAppStore()
   const pathname = useClientPathname()
+  const [hydrated, setHydrated] = useState(false)
 
   // Synchronously resolve view from the actual URL
   const urlView = resolveViewFromPath(pathname)
@@ -113,37 +132,50 @@ export default function Home() {
   // Use the URL-derived view immediately (no flash)
   // Once mounted + session checked, the store view takes over
   const effectiveView = view !== 'landing' ? view : urlView.view
-  const effectiveSlug = shopSlug || urlView.shopSlug
 
   // Check for existing session and sync store state
   useEffect(() => {
-    // Sync shop slug from URL into store
-    if (urlView.shopSlug && shopSlug !== urlView.shopSlug) {
-      setShopSlug(urlView.shopSlug)
-    }
+    const init = async () => {
+      // Sync shop slug from URL into store
+      if (urlView.shopSlug && shopSlug !== urlView.shopSlug) {
+        setShopSlug(urlView.shopSlug)
+      }
 
-    // Check session on root, dashboard, or admin routes
-    if (urlView.view === 'landing' || urlView.view === 'dashboard' || urlView.view === 'admin') {
-      fetch('/api/auth/session')
-        .then((res) => {
-          if (res.ok) return res.json()
-          throw new Error()
-        })
-        .then((data) => {
-          if (data.user) {
-            setUser(data.user)
-            if (data.user.role === 'ADMIN') {
-              setView('admin')
-            } else {
-              setView('dashboard')
+      // Check session on root, dashboard, or admin routes
+      if (urlView.view === 'landing' || urlView.view === 'dashboard' || urlView.view === 'admin') {
+        try {
+          const res = await fetch('/api/auth/session')
+          if (res.ok) {
+            const data = await res.json()
+            if (data.user) {
+              setUser(data.user)
+              if (data.user.role === 'ADMIN') {
+                setView('admin')
+              } else {
+                setView('dashboard')
+              }
             }
           }
-        })
-        .catch(() => {
+        } catch {
           // Not authenticated, stay on current view
-        })
+        }
+      }
+
+      // Mark as hydrated — now safe to show content
+      setHydrated(true)
     }
+    init()
   }, [])
+
+  // During SSR: show a neutral loading shell (prevents landing page flash)
+  // After hydration: show the correct view immediately
+  if (!hydrated) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <LoadingShell />
+      </div>
+    )
+  }
 
   return (
     <ErrorBoundary>

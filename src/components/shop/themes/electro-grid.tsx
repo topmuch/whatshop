@@ -491,6 +491,7 @@ function ElectroProductCard({
       className="group flex flex-col overflow-hidden rounded-xl bg-white transition-all duration-300 cursor-pointer hover:shadow-xl"
       style={{ border: `1px solid ${BLUE.border}` }}
       onClick={() => onProductClick(product)}
+      whileTap={{ scale: 0.98 }}
     >
       {/* Image 336×280 */}
       <div className="relative w-full overflow-hidden" style={{ aspectRatio: '336 / 280' }}>
@@ -571,12 +572,12 @@ function ElectroProductCard({
         <div className="flex-1" />
 
         {/* Actions */}
-        <div onClick={(e) => e.stopPropagation()} className="mt-1">
+        <div className="mt-1">
           {cartQty === 0 ? (
             <div className="flex gap-1.5">
               <Button
                 onClick={(e) => {
-                  e.stopPropagation()
+                  e.nativeEvent.stopImmediatePropagation()
                   onAddToCart(product)
                   toast.success(`${product.name} ajouté au panier !`)
                 }}
@@ -590,7 +591,7 @@ function ElectroProductCard({
               {whatsapp && (
                 <Button
                   onClick={(e) => {
-                    e.stopPropagation()
+                    e.nativeEvent.stopImmediatePropagation()
                     openWhatsApp(product, whatsapp)
                   }}
                   className="gap-1.5 font-semibold rounded-lg text-sm h-9 px-3"
@@ -611,7 +612,7 @@ function ElectroProductCard({
                 size="icon"
                 className="size-8"
                 style={{ color: BLUE.primary }}
-                onClick={() => updateCartQuantity(product.id, cartQty - 1)}
+                onClick={(e) => { e.nativeEvent.stopImmediatePropagation(); updateCartQuantity(product.id, cartQty - 1) }}
               >
                 {cartQty === 1 ? (
                   <Trash2 className="size-3.5 text-red-500" />
@@ -627,7 +628,7 @@ function ElectroProductCard({
                 size="icon"
                 className="size-8"
                 style={{ color: BLUE.primary }}
-                onClick={() => updateCartQuantity(product.id, cartQty + 1)}
+                onClick={(e) => { e.nativeEvent.stopImmediatePropagation(); updateCartQuantity(product.id, cartQty + 1) }}
               >
                 <Plus className="size-3.5" />
               </Button>
@@ -637,7 +638,7 @@ function ElectroProductCard({
                   size="icon"
                   className="size-8"
                   style={{ color: BLUE.whatsapp }}
-                  onClick={() => openWhatsApp(product, whatsapp, cartQty)}
+                  onClick={(e) => { e.nativeEvent.stopImmediatePropagation(); openWhatsApp(product, whatsapp, cartQty) }}
                 >
                   <MessageCircle className="size-3.5" />
                 </Button>
