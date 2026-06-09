@@ -61,7 +61,8 @@ const BLUE = {
   bgGray: '#f8fafc',
   border: '#e2e8f0',
   borderLight: '#f1f5f9',
-  whatsapp: '#25D366',
+  whatsapp: '#000000',
+  whatsappFg: '#FFFFFF',
   price: '#0066FF',
 } as const
 
@@ -96,7 +97,7 @@ function ElectroMenu({
         <div className="flex items-center justify-between h-[70px]">
           {/* Logo — 255×82 */}
           <button onClick={onNavAccueil} className="flex items-center gap-2 shrink-0">
-            {logo ? (
+            {logo && logo.length > 0 ? (
               <img
                 src={logo}
                 alt={shopName}
@@ -492,8 +493,8 @@ function ElectroProductCard({
       style={{ border: `1px solid ${BLUE.border}` }}
       onClick={() => onProductClick(product)}
     >
-      {/* Image 400×400 */}
-      <div className="relative w-full overflow-hidden" style={{ aspectRatio: '400 / 400' }}>
+      {/* Image 336×280 */}
+      <div className="relative w-full overflow-hidden" style={{ aspectRatio: '336 / 280' }}>
         {product.image ? (
           <img
             src={product.image}
@@ -575,7 +576,8 @@ function ElectroProductCard({
           {cartQty === 0 ? (
             <div className="flex gap-1.5">
               <Button
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation()
                   onAddToCart(product)
                   toast.success(`${product.name} ajouté au panier !`)
                 }}
@@ -592,8 +594,8 @@ function ElectroProductCard({
                     e.stopPropagation()
                     openWhatsApp(product, whatsapp)
                   }}
-                  className="gap-1.5 text-white font-semibold rounded-lg text-sm h-9 px-3"
-                  style={{ background: BLUE.whatsapp }}
+                  className="gap-1.5 font-semibold rounded-lg text-sm h-9 px-3"
+                  style={{ background: BLUE.whatsapp, color: BLUE.whatsappFg }}
                   disabled={!product.isAvailable || !inStock}
                 >
                   <MessageCircle className="size-3.5" />
@@ -698,7 +700,7 @@ function ElectroFooter({
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center justify-center w-12 h-12 rounded-xl" style={{ background: BLUE.whatsapp }}>
-              <MessageCircle className="size-6 text-white" />
+              <MessageCircle className="size-6" style={{ color: BLUE.whatsappFg }} />
             </div>
             <div>
               <p className="text-white text-sm font-semibold">Support WhatsApp</p>
@@ -892,8 +894,8 @@ function ElectroProductDetail({
           {/* WhatsApp */}
           {whatsapp && (
             <Button
-              className="w-full h-12 gap-2 text-sm font-bold text-white rounded-xl"
-              style={{ background: BLUE.whatsapp }}
+              className="w-full h-12 gap-2 text-sm font-bold rounded-xl"
+              style={{ background: BLUE.whatsapp, color: BLUE.whatsappFg }}
               disabled={!inStock}
               onClick={() => openWhatsApp(product, whatsapp, qty)}
             >
@@ -1023,8 +1025,8 @@ function ElectroCartBar({
           </div>
 
           <Button
-            className="h-10 gap-2 text-white font-semibold text-sm rounded-lg px-6"
-            style={{ background: BLUE.whatsapp }}
+            className="h-10 gap-2 font-semibold text-sm rounded-lg px-6"
+            style={{ background: BLUE.whatsapp, color: BLUE.whatsappFg }}
             onClick={onCheckout}
           >
             <MessageCircle className="size-4" />
@@ -1151,7 +1153,7 @@ function ElectroLoadingSkeleton() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="flex flex-col gap-2 rounded-xl overflow-hidden" style={{ border: `1px solid ${BLUE.border}` }}>
-              <Skeleton className="w-full" style={{ aspectRatio: '400 / 400' }} />
+              <Skeleton className="w-full" style={{ aspectRatio: '336 / 280' }} />
               <div className="p-3 space-y-2">
                 <Skeleton className="h-4 w-full" />
                 <Skeleton className="h-3 w-24" />
@@ -1399,7 +1401,7 @@ export function ElectroShopPage() {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       {Array.from({ length: 8 }).map((_, i) => (
                         <div key={i} className="flex flex-col gap-2 rounded-xl overflow-hidden" style={{ border: `1px solid ${BLUE.border}` }}>
-                          <Skeleton className="w-full" style={{ aspectRatio: '400 / 400' }} />
+                          <Skeleton className="w-full" style={{ aspectRatio: '336 / 280' }} />
                           <div className="p-3 space-y-2">
                             <Skeleton className="h-4 w-full" />
                             <Skeleton className="h-3 w-24" />
@@ -1459,7 +1461,7 @@ export function ElectroShopPage() {
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                       transition={{ duration: 0.3 }}
-                      className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
+                      className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
                     >
                       {filteredProducts.map((product, index) => (
                         <ElectroProductCard
@@ -1505,6 +1507,27 @@ export function ElectroShopPage() {
           />
         )}
       </AnimatePresence>
+
+      {/* ═══ FLOATING WHATSAPP BUTTON ═══ */}
+      {publicShop.whatsapp && (
+        <a
+          href={`https://wa.me/${publicShop.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Bonjour ${publicShop.name} ! 👋\nJe suis intéressé(e) par vos produits.`)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="fixed bottom-[80px] right-5 z-50 flex items-center justify-center w-14 h-14 rounded-full shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl group"
+          style={{ background: BLUE.whatsapp }}
+          title={`Contacter ${publicShop.name} sur WhatsApp`}
+        >
+          <MessageCircle className="size-7" style={{ color: BLUE.whatsappFg }} />
+          {/* Tooltip */}
+          <span
+            className="absolute right-full mr-3 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"
+            style={{ background: '#1e293b', color: 'white' }}
+          >
+            {publicShop.whatsapp}
+          </span>
+        </a>
+      )}
 
       {/* Bottom padding when cart is visible */}
       {cart.length > 0 && <div className="h-[60px]" />}
