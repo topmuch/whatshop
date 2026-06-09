@@ -6,7 +6,6 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 import { db } from '../src/lib/db'
-import { hashSync } from 'bcryptjs'
 
 async function seed() {
   console.log('🌱 Seeding database (DEV environment only)...')

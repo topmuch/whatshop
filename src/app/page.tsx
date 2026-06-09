@@ -2,6 +2,7 @@
 
 import { useAppStore, AppView } from '@/lib/store'
 import { useEffect } from 'react'
+import { ErrorBoundary } from '@/components/error-boundary'
 import { LandingPage } from '@/components/landing'
 import { AuthLogin } from '@/components/auth/auth-login'
 import { AuthRegister } from '@/components/auth/auth-register'
@@ -98,6 +99,7 @@ export default function Home() {
   }, [shopSlug, setShopSlug, setUser, setView])
 
   return (
+    <ErrorBoundary>
     <div className="min-h-screen flex flex-col">
       {/* Landing page has its own header/footer */}
       {view === 'landing' && <LandingPage />}
@@ -148,5 +150,6 @@ export default function Home() {
         <WhatsAppFloat />
       )}
     </div>
+    </ErrorBoundary>
   )
 }

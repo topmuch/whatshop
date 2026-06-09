@@ -217,7 +217,12 @@ export function SellerDashboard() {
 }
 
 function DashboardContent() {
-  const { dashboardTab } = useAppStore()
+  const { dashboardTab, shop } = useAppStore()
+
+  // Safety: if shop is somehow null, redirect to create shop wizard
+  if (!shop) {
+    return <CreateShopWizard />
+  }
 
   switch (dashboardTab) {
     case 'overview':

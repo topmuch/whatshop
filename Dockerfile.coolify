@@ -30,5 +30,9 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 ENV DATABASE_URL=file:/app/data/whatshop.db
 
-# Start server in background, seed database, then wait
-CMD ["sh", "-c", "mkdir -p /app/data && export DATABASE_URL=file:/app/data/whatshop.db && npx prisma db push --skip-generate && node .next/standalone/server.js & sleep 5 && curl -s -X POST http://localhost:3000/api/seed && echo 'Seed complete' && wait"]
+# Health check
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+  CMD curl -f http://localhost:3000/ || exit 1
+
+# Start server, wait for ready, seed database via API
+CMD ["sh", "-c", "mkdir -p /app/data && export DATABASE_URL=file:/app/data/whatshop.db && npx prisma db push --skip-generate && node .next/standalone/server.js & SERVER_PID=$! && echo 'Waiting for server...' && for i in 1 2 3 4 5 6 7 8 9 10; do curl -sf http://localhost:3000/api/auth/session && break; sleep 2; done && echo 'Server ready, seeding...' && curl -sf -X POST http://localhost:3000/api/seed && echo 'Done.' && wait $SERVER_PID"]

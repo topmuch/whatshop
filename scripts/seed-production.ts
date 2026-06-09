@@ -3,7 +3,6 @@
 // It does NOT create any demo shops, demo users, or demo products.
 
 import { PrismaClient } from '@prisma/client'
-import { hashSync } from 'bcryptjs'
 
 const db = new PrismaClient()
 
