@@ -610,7 +610,11 @@ function ShopContent() {
       </header>
 
       {/* ─── Hero Carousel ─── */}
-      <ShopHeroCarousel shopName={publicShop.name} whatsapp={publicShop.whatsapp} />
+      <ShopHeroCarousel
+        shopName={publicShop.name}
+        whatsapp={publicShop.whatsapp}
+        heroImages={publicShop.heroImages}
+      />
 
       {/* ─── Shop Info Bar (template-specific styles) ─── */}
       {layout.headerStyle === 'centered' ? (

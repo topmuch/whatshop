@@ -44,6 +44,9 @@ model Shop {
   seoDescription        String?
   coverImageUrl         String?
 
+  // Hero Slider (JSON array of image URLs)
+  heroImages            String   @default("[]")
+
   // Custom Domain
   customDomain           String?   @unique
   customDomainStatus     String?   @default("NONE") // NONE | PENDING | APPROVED | REJECTED

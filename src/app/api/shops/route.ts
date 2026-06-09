@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json()
-    const { id, name, description, whatsapp, address, phone, logo, banner, template } = body
+    const { id, name, description, whatsapp, address, phone, logo, banner, template, heroImages } = body
 
     if (!id) {
       return NextResponse.json({ error: 'ID requis' }, { status: 400 })
@@ -46,6 +46,7 @@ export async function PUT(request: NextRequest) {
     if (logo !== undefined) data.logo = logo || null
     if (banner !== undefined) data.banner = banner || null
     if (template !== undefined) data.template = template || 'classic'
+    if (heroImages !== undefined) data.heroImages = heroImages
 
     const shop = await db.shop.update({
       where: { id },
