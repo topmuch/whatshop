@@ -34,13 +34,13 @@ import {
 /* ──────────────────────────── CONSTANTS ──────────────────────────── */
 
 const sectorTemplateMap: Record<string, TemplateId> = {
-  beaute: 'jameela',
-  mode: 'xstore-fashion',
-  electronique: 'xstore-electro',
+  beaute: 'beauty-premium',
+  mode: 'luxe-fashion',
+  electronique: 'tiktok-live',
   alimentation: 'xstore-grocery',
   artisanat: 'elegant',
   sport: 'ocean',
-  bijoux: 'elegant',
+  bijoux: 'luxe-fashion',
   maison: 'sunset',
   auto: 'minimal',
   autre: 'classic',

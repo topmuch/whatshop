@@ -49,9 +49,13 @@ import { toast } from 'sonner'
 
 const templateOptions = [
   { id: 'minimal', name: 'Classique', description: 'Épuré et professionnel', color: '#18181b', gradient: 'linear-gradient(135deg, #18181b, #52525b)' },
-  { id: 'rose', name: 'Mode', description: 'Doux et tendance', color: '#EC4899', gradient: 'linear-gradient(135deg, #EC4899, #F9A8D4)' },
+  { id: 'luxe-fashion', name: 'Luxe Fashion', description: 'Glassmorphism & or', color: '#D4AF37', gradient: 'linear-gradient(135deg, #D4AF37, #FFE5E5)' },
+  { id: 'tiktok-live', name: 'TikTok Live', description: 'Urgence & conversion', color: '#FF0050', gradient: 'linear-gradient(135deg, #FF0050, #FE2C55)' },
+  { id: 'beauty-premium', name: 'Beauty Premium', description: 'Rose gold & confiance', color: '#B76E79', gradient: 'linear-gradient(135deg, #B76E79, #DCAE96)' },
   { id: 'jameela', name: 'Beauté', description: 'Luxe et élégance', color: '#C8A882', gradient: 'linear-gradient(135deg, #C8A882, #C9788F)' },
+  { id: 'rose', name: 'Mode', description: 'Doux et tendance', color: '#EC4899', gradient: 'linear-gradient(135deg, #EC4899, #F9A8D4)' },
   { id: 'ocean', name: 'Tech', description: 'Moderne et frais', color: '#0891B2', gradient: 'linear-gradient(135deg, #0891B2, #06B6D4)' },
+  { id: 'xstore-electro', name: 'Electro', description: 'Tech moderne', color: '#0066FF', gradient: 'linear-gradient(135deg, #0066FF, #0052CC)' },
   { id: 'xstore-grocery', name: 'Épicerie', description: 'Fraîcheur alimentaire', color: '#00A651', gradient: 'linear-gradient(135deg, #00A651, #16A34A)' },
   { id: 'sunset', name: 'Flash Live', description: 'Énergie vibrante', color: '#F97316', gradient: 'linear-gradient(135deg, #F97316, #EF4444)' },
 ] as const

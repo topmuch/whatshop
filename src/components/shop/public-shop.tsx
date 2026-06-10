@@ -49,6 +49,9 @@ import { FashionGrid } from './themes/fashion-grid'
 import { ElectroShopPage } from './themes/electro-grid'
 import { GroceryGrid } from './themes/grocery-grid'
 import { ElectroDepotGrid } from './themes/electrodepot-grid'
+import { LuxeFashionShopPage } from './themes/luxe-fashion-grid'
+import { TikTokLiveShopPage } from './themes/tiktok-live-grid'
+import { BeautyPremiumShopPage } from './themes/beauty-premium-grid'
 
 type SortOption = 'recent' | 'price-asc' | 'price-desc'
 
@@ -504,10 +507,19 @@ function ShopContent() {
     return icons[template.id] || <Store className="h-5 w-5" />
   }, [template.id])
 
-  // ── Electro template renders its own full-page layout (Menu → Slide → Categories → Products → Footer) ──
-  // Early return after ALL hooks to satisfy React rules-of-hooks.
+  // ── Full-page custom templates render their own complete layout ──
+  // Early returns after ALL hooks to satisfy React rules-of-hooks.
   if (template.id === 'xstore-electro') {
     return <ElectroShopPage />
+  }
+  if (template.id === 'luxe-fashion') {
+    return <LuxeFashionShopPage />
+  }
+  if (template.id === 'tiktok-live') {
+    return <TikTokLiveShopPage />
+  }
+  if (template.id === 'beauty-premium') {
+    return <BeautyPremiumShopPage />
   }
 
   // ── Loading skeleton ──
