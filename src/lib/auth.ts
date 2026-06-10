@@ -128,9 +128,12 @@ export function isValidSlug(slug: string): boolean {
  * Set the session cookie on a response.
  */
 export function setSessionCookie(response: NextResponse, email: string) {
+  // Default to non-secure in production unless explicitly enabled.
+  // Set COOKIE_SECURE=true when behind HTTPS (e.g. with a domain + SSL cert).
+  const isSecure = process.env.COOKIE_SECURE === 'true'
   response.cookies.set('whatsshop-user', email, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: isSecure,
     sameSite: 'lax',
     maxAge: 60 * 60 * 24 * 30, // 30 days
     path: '/',
@@ -141,9 +144,10 @@ export function setSessionCookie(response: NextResponse, email: string) {
  * Clear the session cookie.
  */
 export function clearSessionCookie(response: NextResponse) {
+  const isSecure = process.env.COOKIE_SECURE === 'true'
   response.cookies.set('whatsshop-user', '', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: isSecure,
     sameSite: 'lax',
     maxAge: 0,
     path: '/',
