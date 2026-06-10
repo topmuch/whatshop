@@ -5,7 +5,7 @@ import { db } from '@/lib/db'
 
 const PLAN_ORDER: PlanType[] = ['STARTER', 'PRO', 'BUSINESS']
 
-// GET /api/subscription — Get current user subscription info
+// GET /api/subscription — Get current user subscription info + pending request
 export async function GET(request: NextRequest) {
   try {
     const { user, response: errorResponse } = await requireAuth(request)
@@ -17,9 +17,24 @@ export async function GET(request: NextRequest) {
 
     const planConfig = PLAN_CONFIGS[subscription.planType]
 
+    // Check for pending upgrade request
+    const pendingRequest = await db.upgradeRequest.findFirst({
+      where: { userId: user.id, status: 'PENDING' },
+      orderBy: { createdAt: 'desc' },
+    })
+
     return NextResponse.json({
       ...subscription,
       currentShopCount: shopCount,
+      pendingUpgrade: pendingRequest
+        ? {
+            id: pendingRequest.id,
+            requestedPlan: pendingRequest.requestedPlan,
+            requestedLabel: PLAN_CONFIGS[pendingRequest.requestedPlan]?.label || pendingRequest.requestedPlan,
+            requestedPrice: PLAN_CONFIGS[pendingRequest.requestedPlan]?.price || 0,
+            createdAt: pendingRequest.createdAt,
+          }
+        : null,
       planConfig: {
         label: planConfig.label,
         price: planConfig.price,
@@ -42,7 +57,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// PUT /api/subscription — Self-service upgrade plan (any authenticated user)
+// PUT /api/subscription — Request plan upgrade (creates pending request for admin)
 export async function PUT(request: NextRequest) {
   try {
     const { user, response: errorResponse } = await requireAuth(request)
@@ -56,24 +71,46 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Plan invalide' }, { status: 400 })
     }
 
-    // Check upgrade direction: user can only upgrade (or stay same), not downgrade
+    // Check upgrade direction
     const currentSub = await getOrCreateSubscription(user.id)
     const currentIndex = PLAN_ORDER.indexOf(currentSub.planType)
     const newIndex = PLAN_ORDER.indexOf(planType)
 
-    if (newIndex < currentIndex) {
+    if (newIndex <= currentIndex) {
       return NextResponse.json({
-        error: 'Impossible de rétrograder. Contactez le support pour changer vers un plan inférieur.',
+        error: newIndex < currentIndex
+          ? 'Impossible de rétrograder. Contactez le support.'
+          : 'Vous êtes déjà sur ce plan.',
       }, { status: 400 })
     }
 
-    // Set end date to 30 days from now
-    const endDate = new Date()
-    endDate.setDate(endDate.getDate() + 30)
+    // Check if there's already a pending request
+    const existingPending = await db.upgradeRequest.findFirst({
+      where: { userId: user.id, status: 'PENDING' },
+    })
+    if (existingPending) {
+      return NextResponse.json({
+        error: 'Vous avez déjà une demande en attente de validation.',
+      }, { status: 409 })
+    }
 
-    const subscription = await upgradeSubscription(user.id, planType, endDate)
+    // Create the upgrade request (pending admin validation)
+    const upgradeReq = await db.upgradeRequest.create({
+      data: {
+        userId: user.id,
+        requestedPlan: planType,
+      },
+    })
 
-    return NextResponse.json(subscription)
+    return NextResponse.json({
+      message: 'Demande de mise à niveau envoyée. Un administrateur va valider votre demande.',
+      request: {
+        id: upgradeReq.id,
+        requestedPlan: upgradeReq.requestedPlan,
+        status: upgradeReq.status,
+        createdAt: upgradeReq.createdAt,
+      },
+    })
   } catch (error) {
     console.error('Subscription PUT error:', error)
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })

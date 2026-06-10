@@ -625,6 +625,7 @@ export function DashboardSettings() {
     maxShops: number
     currentShopCount: number
     endDate: string | null
+    pendingUpgrade: { id: string; requestedPlan: string; requestedLabel: string; requestedPrice: number; createdAt: string } | null
     planConfig: { label: string; price: number; maxShops: number; customDomain: boolean; features: string[] }
     allPlans: { type: string; label: string; price: number; maxShops: number; customDomain: boolean; features: string[] }[]
   } | null>(null)
@@ -652,23 +653,20 @@ export function DashboardSettings() {
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
-        toast.error(err.error || 'Erreur lors de la mise à niveau')
+        toast.error(err.error || 'Erreur lors de la demande')
         return
       }
       const data = await res.json()
+      // Update local state to show pending
       setSubscriptionData((prev) =>
         prev
           ? {
               ...prev,
-              planType: data.planType,
-              status: data.status,
-              maxShops: data.maxShops,
-              endDate: data.endDate,
-              planConfig: prev.allPlans.find((p) => p.type === data.planType) || prev.planConfig,
+              pendingUpgrade: data.request || null,
             }
           : prev
       )
-      toast.success(`Forfait mis à jour vers ${prevLabel(planType)} ! 🎉`)
+      toast.success('Demande envoyée ! Un administrateur va la valider.')
     } catch {
       toast.error('Erreur de connexion')
     } finally {
@@ -787,6 +785,30 @@ export function DashboardSettings() {
                 )}
               </div>
 
+              {/* Pending upgrade banner */}
+              {subscriptionData.pendingUpgrade && (
+                <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 mb-5">
+                  <div className="flex items-start gap-3">
+                    <Clock className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-amber-800 text-sm">
+                        Demande en attente de validation
+                      </p>
+                      <p className="text-xs text-amber-700 mt-1">
+                        Vous avez demandé le forfait <strong>{subscriptionData.pendingUpgrade.requestedLabel}</strong>{' '}
+                        ({subscriptionData.pendingUpgrade.requestedPrice.toLocaleString('fr-FR')} FCFA/mois) le{' '}
+                        {new Date(subscriptionData.pendingUpgrade.createdAt).toLocaleDateString('fr-FR', {
+                          day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
+                        })}
+                      </p>
+                      <p className="text-xs text-amber-600 mt-1.5">
+                        Un administrateur va examiner votre demande. Vous serez notifié dès validation.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Available upgrades */}
               {subscriptionData.allPlans
                 .filter((p) => p.type !== subscriptionData.planType)
@@ -847,14 +869,16 @@ export function DashboardSettings() {
                             className="w-full gap-1.5"
                             size="sm"
                             onClick={() => handleUpgrade(plan.type)}
-                            disabled={upgrading === plan.type}
+                            disabled={upgrading === plan.type || !!subscriptionData.pendingUpgrade}
                           >
                             {upgrading === plan.type ? (
                               <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : subscriptionData.pendingUpgrade ? (
+                              <Clock className="h-3.5 w-3.5" />
                             ) : (
                               <ArrowUpRight className="h-3.5 w-3.5" />
                             )}
-                            Passer au {plan.label}
+                            {subscriptionData.pendingUpgrade ? 'Demande en cours...' : `Demander le ${plan.label}`}
                           </Button>
                         </div>
                       ))}

@@ -89,6 +89,10 @@ import {
   Building2,
   Ban,
   DollarSign,
+  ArrowUpRight,
+  X,
+  RefreshCw,
+  AlertCircle,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
@@ -319,6 +323,7 @@ const navGroups = [
   {
     label: 'Gestion',
     items: [
+      { id: 'admin-upgrades' as AdminTab, label: 'Demandes', icon: <ArrowUpRight className="h-5 w-5" /> },
       { id: 'admin-config' as AdminTab, label: 'Configuration', icon: <Settings className="h-5 w-5" /> },
       { id: 'admin-admins' as AdminTab, label: 'Super Admins', icon: <ShieldCheck className="h-5 w-5" /> },
       { id: 'admin-support' as AdminTab, label: 'Support', icon: <LifeBuoy className="h-5 w-5" /> },
@@ -342,6 +347,14 @@ const navGroups = [
 function AdminSidebarContent() {
   const { adminTab, setAdminTab, user, setUser, setShop, setView } = useAppStore()
   const { isDark, toggleTheme } = useThemeMode()
+  const [pendingUpgrades, setPendingUpgrades] = useState(0)
+
+  useEffect(() => {
+    fetch('/api/admin/upgrade-requests?status=PENDING')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => { if (data) setPendingUpgrades(data.pendingCount) })
+      .catch(() => {})
+  }, [adminTab])
 
   async function handleLogout() {
     try {
@@ -409,7 +422,12 @@ function AdminSidebarContent() {
                   onClick={() => setAdminTab(item.id)}
                 >
                   {item.icon}
-                  <span className="text-sm">{item.label}</span>
+                  <span className="text-sm flex-1 text-left">{item.label}</span>
+                  {item.id === 'admin-upgrades' && pendingUpgrades > 0 && (
+                    <span className="flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-red-500 text-white text-[10px] font-bold">
+                      {pendingUpgrades}
+                    </span>
+                  )}
                 </Button>
               ))}
             </div>
@@ -444,6 +462,316 @@ function AdminSidebarContent() {
           <span className="text-sm">Déconnexion</span>
         </Button>
       </div>
+    </div>
+  )
+}
+
+// ─── UPGRADE REQUESTS TAB ────────────────────────────────────────────────────
+
+interface UpgradeRequest {
+  id: string
+  userId: string
+  requestedPlan: string
+  status: string
+  reviewedBy: string | null
+  reviewedAt: string | null
+  rejectionReason: string | null
+  createdAt: string
+  user: { id: string; name: string; email: string; role: string }
+  reviewer: { id: string; name: string; email: string } | null
+  currentPlan: string
+  currentPlanLabel: string
+  requestedPlanLabel: string
+  requestedPlanPrice: number
+  shopCount: number
+}
+
+const upgradeStatusBadge = (status: string) => {
+  switch (status) {
+    case 'PENDING':
+      return <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100">En attente</Badge>
+    case 'APPROVED':
+      return <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">Approuvée</Badge>
+    case 'REJECTED':
+      return <Badge className="bg-red-100 text-red-700 hover:bg-red-100">Refusée</Badge>
+    default:
+      return <Badge variant="secondary">{status}</Badge>
+  }
+}
+
+function AdminUpgradeRequests() {
+  const [requests, setRequests] = useState<UpgradeRequest[]>([])
+  const [loading, setLoading] = useState(true)
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [rejectReasons, setRejectReasons] = useState<Record<string, string>>({})
+  const [showRejectInput, setShowRejectInput] = useState<Record<string, boolean>>({})
+
+  const loadRequests = useCallback(async () => {
+    setLoading(true)
+    try {
+      const params = new URLSearchParams()
+      if (statusFilter && statusFilter !== 'all') params.set('status', statusFilter)
+      const res = await fetch(`/api/admin/upgrade-requests?${params.toString()}`)
+      if (res.ok) {
+        const data = await res.json()
+        setRequests(data.requests || [])
+      }
+    } catch {
+      toast.error('Erreur lors du chargement des demandes')
+    } finally {
+      setLoading(false)
+    }
+  }, [statusFilter])
+
+  useEffect(() => {
+    loadRequests()
+  }, [loadRequests])
+
+  async function handleAction(requestId: string, action: 'APPROVE' | 'REJECT') {
+    if (action === 'REJECT' && !rejectReasons[requestId]?.trim()) {
+      toast.error('Veuillez saisir une raison du refus')
+      return
+    }
+    setActionLoading(requestId)
+    try {
+      const body: { requestId: string; action: string; reason?: string } = { requestId, action }
+      if (action === 'REJECT') body.reason = rejectReasons[requestId]
+      const res = await fetch('/api/admin/upgrade-requests', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      if (res.ok) {
+        toast.success(action === 'APPROVE' ? 'Demande approuvée avec succès' : 'Demande refusée')
+        setRejectReasons(prev => { const n = { ...prev }; delete n[requestId]; return n })
+        setShowRejectInput(prev => { const n = { ...prev }; delete n[requestId]; return n })
+        loadRequests()
+      } else {
+        const data = await res.json()
+        toast.error(data.error || 'Erreur lors du traitement')
+      }
+    } catch {
+      toast.error('Erreur lors du traitement')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const pendingCount = requests.filter(r => r.status === 'PENDING').length
+
+  const formatUpgradeDate = (dateStr: string) =>
+    new Date(dateStr).toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+
+  const formatUpgradePrice = (amount: number) =>
+    new Intl.NumberFormat('fr-FR').format(amount) + ' FCFA/mois'
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold flex items-center gap-2">
+            <ArrowUpRight className="h-6 w-6" />
+            Demandes d&apos;upgrade
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Gérez les demandes de changement de plan des vendeurs
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          {pendingCount > 0 && (
+            <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100 text-sm px-3 py-1">
+              <Clock className="h-3.5 w-3.5 mr-1.5" />
+              {pendingCount} en attente
+            </Badge>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={loadRequests}
+            disabled={loading}
+            className="gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            Actualiser
+          </Button>
+        </div>
+      </div>
+
+      {/* Filter */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-full sm:w-[200px]">
+            <SelectValue placeholder="Statut" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tous</SelectItem>
+            <SelectItem value="PENDING">En attente</SelectItem>
+            <SelectItem value="APPROVED">Approuvées</SelectItem>
+            <SelectItem value="REJECTED">Refusées</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Table */}
+      {loading ? (
+        <Card>
+          <CardContent className="p-4 space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-14 w-full" />
+            ))}
+          </CardContent>
+        </Card>
+      ) : requests.length === 0 ? (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <AlertCircle className="h-14 w-14 mx-auto text-muted-foreground/40 mb-4" />
+            <p className="text-lg font-medium text-muted-foreground">Aucune demande trouvée</p>
+            <p className="text-sm text-muted-foreground/70 mt-1">
+              {statusFilter !== 'all'
+                ? 'Aucune demande ne correspond à ce filtre.'
+                : 'Les demandes d\'upgrade des vendeurs apparaîtront ici.'}
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardContent className="p-0 overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Utilisateur</TableHead>
+                  <TableHead>Plan actuel → Demandé</TableHead>
+                  <TableHead className="text-center">Boutiques</TableHead>
+                  <TableHead>Statut</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {requests.map((req) => (
+                  <TableRow key={req.id}>
+                    <TableCell className="text-muted-foreground text-sm whitespace-nowrap">
+                      {formatUpgradeDate(req.createdAt)}
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <p className="text-sm font-medium">{req.user?.name || 'Inconnu'}</p>
+                        <p className="text-xs text-muted-foreground">{req.user?.email}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Badge variant="secondary" className="text-xs">
+                          {req.currentPlanLabel || req.currentPlan}
+                        </Badge>
+                        <span className="text-muted-foreground">→</span>
+                        <Badge variant="outline" className="text-xs border-blue-500 text-blue-700 bg-blue-50">
+                          {req.requestedPlanLabel || req.requestedPlan}
+                        </Badge>
+                        {req.requestedPlanPrice > 0 && (
+                          <span className="text-xs text-muted-foreground">
+                            ({formatUpgradePrice(req.requestedPlanPrice)})
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <span className="text-sm font-medium">{req.shopCount || 0}</span>
+                    </TableCell>
+                    <TableCell>
+                      {upgradeStatusBadge(req.status)}
+                      {req.status === 'REJECTED' && req.rejectionReason && (
+                        <p className="text-xs text-red-600 mt-1 max-w-[200px] truncate" title={req.rejectionReason}>
+                          {req.rejectionReason}
+                        </p>
+                      )}
+                      {req.reviewer && req.reviewedAt && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          par {req.reviewer.name} · {formatDate(req.reviewedAt)}
+                        </p>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {req.status === 'PENDING' && (
+                        <div className="flex items-center gap-1.5 justify-end flex-wrap">
+                          <Button
+                            size="sm"
+                            className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white gap-1"
+                            onClick={() => handleAction(req.id, 'APPROVE')}
+                            disabled={actionLoading === req.id}
+                          >
+                            {actionLoading === req.id ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <Check className="h-3 w-3" />
+                            )}
+                            Approuver
+                          </Button>
+                          {!showRejectInput[req.id] ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 text-xs text-red-600 border-red-300 hover:bg-red-50 hover:text-red-700 gap-1"
+                              onClick={() => setShowRejectInput(prev => ({ ...prev, [req.id]: true }))}
+                              disabled={actionLoading === req.id}
+                            >
+                              <X className="h-3 w-3" />
+                              Refuser
+                            </Button>
+                          ) : (
+                            <div className="flex items-center gap-1.5">
+                              <Input
+                                type="text"
+                                placeholder="Raison du refus..."
+                                className="h-8 text-xs w-40"
+                                value={rejectReasons[req.id] || ''}
+                                onChange={e => setRejectReasons(prev => ({ ...prev, [req.id]: e.target.value }))}
+                                onKeyDown={e => {
+                                  if (e.key === 'Enter') handleAction(req.id, 'REJECT')
+                                  if (e.key === 'Escape') setShowRejectInput(prev => ({ ...prev, [req.id]: false }))
+                                }}
+                                autoFocus
+                              />
+                              <Button
+                                size="sm"
+                                className="h-8 text-xs bg-red-600 hover:bg-red-700 text-white"
+                                onClick={() => handleAction(req.id, 'REJECT')}
+                                disabled={actionLoading === req.id || !rejectReasons[req.id]?.trim()}
+                              >
+                                {actionLoading === req.id ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : (
+                                  <Check className="h-3 w-3" />
+                                )}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-8 w-8 p-0"
+                                onClick={() => setShowRejectInput(prev => ({ ...prev, [req.id]: false }))}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }
@@ -607,6 +935,8 @@ function AdminContent() {
       return <AdminOrders />
     case 'admin-resellers':
       return <AdminResellers />
+    case 'admin-upgrades':
+      return <AdminUpgradeRequests />
     default:
       return <AdminOverview />
   }

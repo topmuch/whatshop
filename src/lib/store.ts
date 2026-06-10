@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware'
 
 export type AppView = 'landing' | 'login' | 'register' | 'onboarding' | 'dashboard' | 'reseller' | 'shop' | 'admin' | 'about' | 'pricing' | 'contact' | 'privacy' | 'terms' | 'faq'
 export type DashboardTab = 'overview' | 'products' | 'categories' | 'orders' | 'live' | 'settings' | 'ai-tools'
-export type AdminTab = 'admin-overview' | 'admin-subscriptions' | 'admin-domains' | 'admin-config' | 'admin-support' | 'admin-moderation' | 'admin-marketing' | 'admin-users' | 'admin-shops' | 'admin-orders' | 'admin-admins' | 'admin-resellers'
+export type AdminTab = 'admin-overview' | 'admin-subscriptions' | 'admin-domains' | 'admin-upgrades' | 'admin-config' | 'admin-support' | 'admin-moderation' | 'admin-marketing' | 'admin-users' | 'admin-shops' | 'admin-orders' | 'admin-admins' | 'admin-resellers'
 
 export interface CartItem {
   id: string
