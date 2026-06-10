@@ -152,16 +152,19 @@ export default function Home() {
               setUser(data.user)
               if (data.shop) setShop(data.shop)
               // Only redirect from landing/register/login; keep onboarding as-is so the wizard can complete
-              if (urlView.view !== 'onboarding') {
-                if (data.user.role === 'ADMIN' || data.user.role === 'SUPER_ADMIN') {
-                  setView('admin')
-                } else if (!data.shop) {
-                  // Seller without a shop → onboarding
-                  setView('onboarding')
-                  window.history.replaceState(null, '', '/onboarding')
-                } else {
-                  setView('dashboard')
-                }
+              // BUT if user already has a shop and is on onboarding, redirect to dashboard
+              if (data.user.role === 'ADMIN' || data.user.role === 'SUPER_ADMIN') {
+                setView('admin')
+              } else if (!data.shop) {
+                // Seller without a shop → onboarding
+                setView('onboarding')
+                window.history.replaceState(null, '', '/onboarding')
+              } else if (urlView.view === 'onboarding') {
+                // User has a shop but is on onboarding URL → go to dashboard
+                setView('dashboard')
+                window.history.replaceState(null, '', '/dashboard')
+              } else {
+                setView('dashboard')
               }
             }
           }

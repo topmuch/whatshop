@@ -316,12 +316,26 @@ function AdminSidebarContent() {
   const { isDark, toggleTheme } = useThemeMode()
 
   async function handleLogout() {
-    try { await fetch('/api/auth/session', { method: 'DELETE' }) } catch { /* ignore */ }
+    try {
+      const res = await fetch('/api/auth/session', { method: 'DELETE' })
+      if (res.ok) {
+        // Cookie cleared, now reset state and redirect
+        setUser(null)
+        setShop(null)
+        setView('landing')
+        window.history.replaceState(null, '', '/')
+        // Use replace to avoid back-button returning to admin
+        window.location.replace('/')
+        return
+      }
+    } catch { /* ignore */ }
+    // Fallback: clear cookie client-side and redirect anyway
+    document.cookie = 'whatsshop-user=; path=/; max-age=0'
     setUser(null)
     setShop(null)
     setView('landing')
     window.history.replaceState(null, '', '/')
-    window.location.href = '/'
+    window.location.replace('/')
   }
 
   return (
@@ -417,10 +431,11 @@ export function AdminDashboard() {
       setLoading(false)
       return
     }
+    let cancelled = false
     async function loadSession() {
       try {
         const res = await fetch('/api/auth/session')
-        if (res.ok) {
+        if (res.ok && !cancelled) {
           const data = await res.json()
           if (data.user) {
             setUser(data.user)
@@ -435,10 +450,11 @@ export function AdminDashboard() {
       } catch {
         // Error fetching session
       } finally {
-        setLoading(false)
+        if (!cancelled) setLoading(false)
       }
     }
     loadSession()
+    return () => { cancelled = true }
   }, [setUser, setShop, setView, user])
 
   if (loading) {

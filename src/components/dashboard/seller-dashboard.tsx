@@ -28,7 +28,6 @@ import { DashboardOrders } from './dashboard-orders'
 import { DashboardSettings } from './dashboard-settings'
 import { DashboardAiTools } from './dashboard-ai-tools'
 import { DashboardLive } from './dashboard-live'
-import { CreateShopWizard } from './create-shop-wizard'
 
 const navItems: { id: DashboardTab; label: string; icon: React.ReactNode }[] = [
   { id: 'overview', label: 'Vue d\'ensemble', icon: <LayoutDashboard className="h-5 w-5" /> },
@@ -45,12 +44,24 @@ function SidebarContent() {
   const { isDark, toggleTheme } = useThemeMode()
 
   async function handleLogout() {
-    try { await fetch('/api/auth/session', { method: 'DELETE' }) } catch { /* ignore */ }
+    try {
+      const res = await fetch('/api/auth/session', { method: 'DELETE' })
+      if (res.ok) {
+        setUser(null)
+        setShop(null)
+        setView('landing')
+        window.history.replaceState(null, '', '/')
+        window.location.replace('/')
+        return
+      }
+    } catch { /* ignore */ }
+    // Fallback: clear cookie client-side and redirect anyway
+    document.cookie = 'whatsshop-user=; path=/; max-age=0'
     setUser(null)
     setShop(null)
     setView('landing')
     window.history.replaceState(null, '', '/')
-    window.location.href = '/'
+    window.location.replace('/')
   }
 
   return (
@@ -131,20 +142,20 @@ export function SellerDashboard() {
   const { isDark, toggleTheme } = useThemeMode()
 
   useEffect(() => {
-    // If user data is already set (e.g. just logged in), skip session fetch
-    if (user) {
-      setLoading(false)
-      return
-    }
+    let cancelled = false
     async function loadSession() {
       try {
         const res = await fetch('/api/auth/session')
-        if (res.ok) {
+        if (res.ok && !cancelled) {
           const data = await res.json()
           if (data.user) {
             setUser(data.user)
             if (data.shop) {
               setShop(data.shop)
+            } else {
+              // Seller without a shop → redirect to onboarding wizard
+              setView('onboarding')
+              window.history.replaceState(null, '', '/onboarding')
             }
           } else {
             setView('landing')
@@ -153,11 +164,18 @@ export function SellerDashboard() {
       } catch {
         // Error fetching session
       } finally {
-        setLoading(false)
+        if (!cancelled) setLoading(false)
       }
     }
-    loadSession()
-  }, [setUser, setShop, setView, user])
+    // Always fetch session to ensure shop data is up-to-date
+    // Skip only if both user AND shop are already set (e.g. just logged in)
+    if (user && shop) {
+      setLoading(false)
+    } else {
+      loadSession()
+    }
+    return () => { cancelled = true }
+  }, [])
 
   if (loading) {
     return (
@@ -170,9 +188,12 @@ export function SellerDashboard() {
     )
   }
 
-  // If user has no shop, show the create shop wizard
+  // If user has no shop after session fetch, onboarding redirect should have kicked in
+  // Safety net: redirect to onboarding instead of showing CreateShopWizard
   if (user && !shop) {
-    return <CreateShopWizard />
+    setView('onboarding')
+    window.history.replaceState(null, '', '/onboarding')
+    return null
   }
 
   return (
@@ -226,9 +247,9 @@ export function SellerDashboard() {
 function DashboardContent() {
   const { dashboardTab, shop } = useAppStore()
 
-  // Safety: if shop is somehow null, redirect to create shop wizard
+  // Safety: if shop is somehow null, parent will redirect to onboarding
   if (!shop) {
-    return <CreateShopWizard />
+    return null
   }
 
   switch (dashboardTab) {

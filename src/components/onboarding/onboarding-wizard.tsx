@@ -270,14 +270,6 @@ export function OnboardingWizard() {
             <span className="text-sm text-muted-foreground hidden sm:inline">
               Étape {step + 1} sur 3
             </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setView('dashboard')}
-              className="text-muted-foreground hover:text-foreground"
-            >
-              Passer
-            </Button>
           </div>
         </div>
       </header>
