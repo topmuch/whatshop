@@ -1,8 +1,15 @@
 // ✅ PRODUCTION-SAFE SEED SCRIPT
-// This script only creates the minimum required data for production.
-// It does NOT create any demo shops, demo users, or demo products.
+// This script creates the minimum required data for production:
+//   - SaaSConfig
+//   - SUPER_ADMIN user (configurable via env vars)
+//
+// Environment variables:
+//   SUPER_ADMIN_EMAIL    — default: admin@boutiko.com
+//   SUPER_ADMIN_PASSWORD — default: Admin123!  (min 6 chars)
+//   SUPER_ADMIN_NAME     — default: Super Admin
 
 import { PrismaClient } from '@prisma/client'
+import bcrypt from 'bcryptjs'
 
 const db = new PrismaClient()
 
@@ -26,9 +33,32 @@ async function seedProduction() {
     console.log('  ✓ SaaSConfig already exists, skipping')
   }
 
+  // 2. Create SUPER_ADMIN user (if none exists)
+  const adminEmail = process.env.SUPER_ADMIN_EMAIL || 'admin@boutiko.com'
+  const adminPassword = process.env.SUPER_ADMIN_PASSWORD || 'Admin123!'
+  const adminName = process.env.SUPER_ADMIN_NAME || 'Super Admin'
+
+  const existingAdmin = await db.user.findUnique({ where: { email: adminEmail } })
+  if (!existingAdmin) {
+    if (adminPassword.length < 6) {
+      console.error('  ✗ SUPER_ADMIN_PASSWORD must be at least 6 characters')
+      process.exit(1)
+    }
+    const hashedPassword = await bcrypt.hash(adminPassword, 10)
+    await db.user.create({
+      data: {
+        email: adminEmail,
+        password: hashedPassword,
+        name: adminName,
+        role: 'SUPER_ADMIN',
+      },
+    })
+    console.log(`  ✓ SUPER_ADMIN created: ${adminEmail}`)
+  } else {
+    console.log(`  ✓ SUPER_ADMIN already exists (${adminEmail}), skipping`)
+  }
+
   console.log('\n✅ Production seed completed!')
-  console.log('   No demo data was created.')
-  console.log('   Run `bun run scripts/seed.ts` in development to create demo data.')
 }
 
 seedProduction()

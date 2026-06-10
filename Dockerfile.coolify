@@ -29,5 +29,5 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 ENV DATABASE_URL=file:/app/data/whatshop.db
 
-# Push DB schema then start server
-CMD ["sh", "-c", "npx prisma db push --skip-generate && node .next/standalone/server.js"]
+# Push DB schema, seed production data, then start server
+CMD ["sh", "-c", "npx prisma db push --skip-generate && bun scripts/seed-production.ts && node .next/standalone/server.js"]
