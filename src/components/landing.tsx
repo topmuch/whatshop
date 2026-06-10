@@ -304,6 +304,50 @@ const steps = [
   },
 ]
 
+/* ── SCROLLING BANNER ── */
+const bannerWords = [
+  'Multi-Boutiques',
+  'Commandes WhatsApp',
+  'Commandes directement sur WhatsApp',
+  'Mode Live',
+  'Vendez en direct avec le mode TikTok Live',
+  'Statistiques',
+  'Domaine personnalisé',
+  'Analytics',
+]
+
+function ScrollingBanner() {
+  // Duplicate the list for seamless infinite loop
+  const items = [...bannerWords, ...bannerWords]
+  return (
+    <div className="relative overflow-hidden bg-gradient-to-r from-pink-500 via-rose-500 to-pink-500 py-3.5">
+      <div className="flex animate-marquee whitespace-nowrap">
+        {items.map((word, i) => (
+          <span
+            key={i}
+            className="inline-flex items-center gap-3 mx-4 text-sm sm:text-base font-semibold text-white/90"
+          >
+            {word}
+            <span className="text-white/40">✦</span>
+          </span>
+        ))}
+      </div>
+      <style>{`
+        @keyframes marquee {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .animate-marquee {
+          animation: marquee 25s linear infinite;
+        }
+        .animate-marquee:hover {
+          animation-play-state: paused;
+        }
+      `}</style>
+    </div>
+  )
+}
+
 function HowItWorks() {
   return (
     <section id="how-it-works" className="py-20 md:py-28 bg-white">
@@ -1070,6 +1114,7 @@ export function LandingPage() {
       <Header />
       <main className="flex-1">
         <Hero />
+        <ScrollingBanner />
         <HowItWorks />
         <SocialSelling />
         <Features />
