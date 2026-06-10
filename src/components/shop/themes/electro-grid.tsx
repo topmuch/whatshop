@@ -284,19 +284,19 @@ function ElectroHeroSlide({
   }, [images.length])
 
   return (
-    <section className="w-full" style={{ background: BLUE.bgGray }}>
+    <section className="w-full" style={{ background: '#0f172a' }}>
         <div
           className="relative w-full overflow-hidden"
           style={{ aspectRatio: '1180 / 600', maxHeight: '600px' }}
         >
           {images.length > 0 ? (
-            <AnimatePresence mode="wait">
+            <AnimatePresence initial={false}>
               <motion.div
                 key={currentSlide}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.6 }}
+                transition={{ duration: 0.6, ease: 'easeInOut' }}
                 className="absolute inset-0"
               >
                 <img
