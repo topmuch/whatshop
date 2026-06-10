@@ -1,7 +1,7 @@
 'use client'
 
 import { useAppStore, type AdminTab } from '@/lib/store'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -784,6 +784,7 @@ export function AdminDashboard() {
   const [loading, setLoading] = useState(true)
   const [godModeUser, setGodModeUser] = useState<string | null>(null)
   const { isDark, toggleTheme } = useThemeMode()
+  const sessionChecked = useRef(false)
 
   useEffect(() => {
     if (typeof document !== 'undefined' && document.cookie.includes('whatsshop-god-mode')) {
@@ -802,7 +803,11 @@ export function AdminDashboard() {
   }
 
   useEffect(() => {
-    // If user data is already set (e.g. just logged in), skip session fetch
+    // Prevent re-running on re-hydration or re-render
+    if (sessionChecked.current) return
+    sessionChecked.current = true
+
+    // If user data is already set (e.g. from Zustand persist rehydration), skip session fetch
     if (user) {
       setLoading(false)
       return
@@ -831,7 +836,7 @@ export function AdminDashboard() {
     }
     loadSession()
     return () => { cancelled = true }
-  }, [setUser, setShop, setView, user])
+  }, [])
 
   if (loading) {
     return (
