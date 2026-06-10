@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { verifyAdmin, adminUnauthorized } from '@/lib/admin-auth'
+import { hashPassword } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
   try {
@@ -49,21 +50,69 @@ export async function GET(request: NextRequest) {
   }
 }
 
+/**
+ * POST /api/admin/shops
+ *
+ * Creates a shop. Two modes:
+ * 1. With `ownerId`: uses an existing user (original behavior).
+ * 2. With `ownerName` + `ownerEmail` + `ownerPassword`: creates a new SELLER user first.
+ *
+ * Returns `credentials` when a new user was created, so the admin can send them
+ * via WhatsApp.
+ */
 export async function POST(request: NextRequest) {
   try {
     const admin = await verifyAdmin(request)
     if (!admin) return adminUnauthorized()
 
     const body = await request.json()
-    const { name, slug, whatsapp, ownerId } = body
+    const { name, slug, whatsapp, ownerId, ownerName, ownerEmail, ownerPassword, plan } = body
 
-    if (!name || !slug || !whatsapp || !ownerId) {
-      return NextResponse.json({ error: 'Nom, slug, whatsapp et ownerId requis' }, { status: 400 })
+    if (!name || !slug || !whatsapp) {
+      return NextResponse.json({ error: 'Nom, slug et whatsapp requis' }, { status: 400 })
     }
 
-    const owner = await db.user.findUnique({ where: { id: ownerId } })
-    if (!owner) {
-      return NextResponse.json({ error: 'Propriétaire introuvable' }, { status: 404 })
+    let resolvedOwnerId = ownerId
+
+    // If no ownerId provided, create a new user from the given info
+    if (!resolvedOwnerId) {
+      if (!ownerName || !ownerEmail || !ownerPassword) {
+        return NextResponse.json(
+          { error: 'Sélectionnez un utilisateur existant OU fournissez nom, email et mot de passe pour en créer un nouveau.' },
+          { status: 400 }
+        )
+      }
+
+      if (ownerPassword.length < 6) {
+        return NextResponse.json({ error: 'Le mot de passe doit contenir au moins 6 caractères.' }, { status: 400 })
+      }
+
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ownerEmail)) {
+        return NextResponse.json({ error: "Format d'email invalide." }, { status: 400 })
+      }
+
+      // Check email uniqueness
+      const existingUser = await db.user.findUnique({ where: { email: ownerEmail } })
+      if (existingUser) {
+        return NextResponse.json({ error: 'Cet email est déjà utilisé.' }, { status: 409 })
+      }
+
+      const hashedPw = await hashPassword(ownerPassword)
+      const newUser = await db.user.create({
+        data: {
+          email: ownerEmail,
+          password: hashedPw,
+          name: ownerName.trim(),
+          role: 'SELLER',
+        },
+      })
+      resolvedOwnerId = newUser.id
+    } else {
+      // Validate existing owner
+      const owner = await db.user.findUnique({ where: { id: resolvedOwnerId } })
+      if (!owner) {
+        return NextResponse.json({ error: 'Propriétaire introuvable' }, { status: 404 })
+      }
     }
 
     const existingSlug = await db.shop.findUnique({ where: { slug } })
@@ -71,7 +120,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Ce slug est déjà utilisé' }, { status: 409 })
     }
 
-    const existingOwnerShop = await db.shop.findUnique({ where: { ownerId } })
+    const existingOwnerShop = await db.shop.findUnique({ where: { ownerId: resolvedOwnerId } })
     if (existingOwnerShop) {
       return NextResponse.json({ error: 'Cet utilisateur a déjà une boutique' }, { status: 409 })
     }
@@ -81,9 +130,17 @@ export async function POST(request: NextRequest) {
         name,
         slug,
         whatsapp,
-        ownerId,
+        ownerId: resolvedOwnerId,
+        ...(plan ? { plan } : {}),
       },
     })
+
+    // If we created a new user, return the credentials for WhatsApp sharing
+    const credentials = !ownerId ? {
+      email: ownerEmail,
+      password: ownerPassword,
+      shopUrl: `${process.env.NEXT_PUBLIC_APP_URL || ''}/${slug}`,
+    } : null
 
     return NextResponse.json({
       shop: {
@@ -95,6 +152,7 @@ export async function POST(request: NextRequest) {
         createdAt: shop.createdAt.toISOString(),
         ownerId: shop.ownerId,
       },
+      credentials,
     })
   } catch (error) {
     console.error('Admin create shop error:', error)

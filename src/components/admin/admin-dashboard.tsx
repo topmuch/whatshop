@@ -85,6 +85,7 @@ import {
   Bell,
   ShieldCheck,
   Crown,
+  MessageCircle,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
@@ -2378,7 +2379,14 @@ function AdminShops() {
   const [newShopSlug, setNewShopSlug] = useState('')
   const [newShopWhatsapp, setNewShopWhatsapp] = useState('')
   const [newShopOwnerId, setNewShopOwnerId] = useState('')
+  const [ownerMode, setOwnerMode] = useState<'existing' | 'new'>('new')
+  const [newOwnerName, setNewOwnerName] = useState('')
+  const [newOwnerEmail, setNewOwnerEmail] = useState('')
+  const [newOwnerPassword, setNewOwnerPassword] = useState('')
+  const [newShopPlan, setNewShopPlan] = useState('FREE')
   const [creatingShop, setCreatingShop] = useState(false)
+  const [lastCredentials, setLastCredentials] = useState<{ email: string; password: string; shopUrl: string } | null>(null)
+  const [sellerUsers, setSellerUsers] = useState<{ id: string; name: string; email: string }[]>([])
 
   function generateSlug(name: string) {
     return name
@@ -2444,25 +2452,58 @@ function AdminShops() {
     }
   }
 
+  async function loadSellerUsers() {
+    try {
+      const res = await fetch('/api/admin/users')
+      if (res.ok) {
+        const data = await res.json()
+        setSellerUsers((data.users || []).filter((u: any) => u.role === 'SELLER'))
+      }
+    } catch { /* ignore */ }
+  }
+
   async function handleCreateShop() {
-    if (!newShopName.trim() || !newShopSlug.trim() || !newShopWhatsapp.trim() || !newShopOwnerId.trim()) {
-      toast.error('Veuillez remplir tous les champs')
+    if (!newShopName.trim() || !newShopSlug.trim() || !newShopWhatsapp.trim()) {
+      toast.error('Remplissez le nom, slug et WhatsApp')
+      return
+    }
+    if (ownerMode === 'existing' && !newShopOwnerId.trim()) {
+      toast.error('Sélectionnez un propriétaire')
+      return
+    }
+    if (ownerMode === 'new' && (!newOwnerName.trim() || !newOwnerEmail.trim() || !newOwnerPassword.trim())) {
+      toast.error('Remplissez le nom, email et mot de passe du propriétaire')
+      return
+    }
+    if (ownerMode === 'new' && newOwnerPassword.length < 6) {
+      toast.error('Le mot de passe doit contenir au moins 6 caractères')
       return
     }
     setCreatingShop(true)
+    setLastCredentials(null)
     try {
+      const body: Record<string, string> = { name: newShopName, slug: newShopSlug, whatsapp: newShopWhatsapp, plan: newShopPlan }
+      if (ownerMode === 'existing') {
+        body.ownerId = newShopOwnerId
+      } else {
+        body.ownerName = newOwnerName
+        body.ownerEmail = newOwnerEmail
+        body.ownerPassword = newOwnerPassword
+      }
       const res = await fetch('/api/admin/shops', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newShopName, slug: newShopSlug, whatsapp: newShopWhatsapp, ownerId: newShopOwnerId }),
+        body: JSON.stringify(body),
       })
       if (res.ok) {
-        toast.success('Boutique créée avec succès')
-        setShowCreateShop(false)
-        setNewShopName('')
-        setNewShopSlug('')
-        setNewShopWhatsapp('')
-        setNewShopOwnerId('')
+        const data = await res.json()
+        toast.success('Boutique créée avec succès !')
+        if (data.credentials) {
+          setLastCredentials(data.credentials)
+        } else {
+          setShowCreateShop(false)
+          resetCreateForm()
+        }
         loadShops(planFilter, search)
       } else {
         const data = await res.json()
@@ -2473,6 +2514,30 @@ function AdminShops() {
     } finally {
       setCreatingShop(false)
     }
+  }
+
+  function resetCreateForm() {
+    setNewShopName('')
+    setNewShopSlug('')
+    setNewShopWhatsapp('')
+    setNewShopOwnerId('')
+    setNewShopPlan('FREE')
+    setNewOwnerName('')
+    setNewOwnerEmail('')
+    setNewOwnerPassword('')
+    setLastCredentials(null)
+  }
+
+  function sendViaWhatsApp() {
+    if (!lastCredentials || !newShopWhatsapp) return
+    const phone = newShopWhatsapp.replace(/[^0-9]/g, '')
+    const msg = encodeURIComponent(
+      `Bonjour ! 🎉\n\nVotre boutique *${newShopName}* a été créée sur Boutiko.\n\n` +
+      `🔑 *Identifiants de connexion :*\n📧 Email : ${lastCredentials.email}\n🔐 Mot de passe : ${lastCredentials.password}\n\n` +
+      `🌐 Votre boutique : ${lastCredentials.shopUrl}\n\n` +
+      `Connectez-vous et commencez à vendre ! 🚀`
+    )
+    window.open(`https://wa.me/${phone}?text=${msg}`, '_blank')
   }
 
   return (
@@ -2652,22 +2717,86 @@ function AdminShops() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="create-shop-owner">ID du propriétaire (userId)</Label>
-              <Input
-                id="create-shop-owner"
-                placeholder="clxxxxxxxxxxxxx"
-                value={newShopOwnerId}
-                onChange={(e) => setNewShopOwnerId(e.target.value)}
-              />
+              <Label>Plan</Label>
+              <Select value={newShopPlan} onValueChange={setNewShopPlan}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="FREE">Gratuit</SelectItem>
+                  <SelectItem value="STANDARD">Standard</SelectItem>
+                  <SelectItem value="PREMIUM">Premium</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Propriétaire</Label>
+              <div className="flex gap-2 mb-2">
+                <Button
+                  type="button"
+                  variant={ownerMode === 'new' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => { setOwnerMode('new'); loadSellerUsers() }}
+                  className={ownerMode === 'new' ? 'bg-blue-600 hover:bg-blue-700' : ''}
+                >Nouveau vendeur</Button>
+                <Button
+                  type="button"
+                  variant={ownerMode === 'existing' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => { setOwnerMode('existing'); loadSellerUsers() }}
+                  className={ownerMode === 'existing' ? 'bg-blue-600 hover:bg-blue-700' : ''}
+                >Vendeur existant</Button>
+              </div>
+              {ownerMode === 'new' ? (
+                <div className="space-y-3">
+                  <Input placeholder="Nom du vendeur" value={newOwnerName} onChange={(e) => setNewOwnerName(e.target.value)} />
+                  <Input placeholder="Email" type="email" value={newOwnerEmail} onChange={(e) => setNewOwnerEmail(e.target.value)} />
+                  <Input placeholder="Mot de passe (min 6 caractères)" type="text" value={newOwnerPassword} onChange={(e) => setNewOwnerPassword(e.target.value)} />
+                </div>
+              ) : (
+                <Select value={newShopOwnerId} onValueChange={setNewShopOwnerId}>
+                  <SelectTrigger><SelectValue placeholder="Sélectionner un vendeur" /></SelectTrigger>
+                  <SelectContent>
+                    {sellerUsers.length === 0 ? (
+                      <SelectItem value="_none" disabled>Aucun vendeur disponible</SelectItem>
+                    ) : sellerUsers.map(u => (
+                      <SelectItem key={u.id} value={u.id}>{u.name} ({u.email})</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateShop(false)}>Annuler</Button>
-            <Button onClick={handleCreateShop} disabled={creatingShop} className="bg-blue-600 hover:bg-blue-700">
-              {creatingShop && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Créer
-            </Button>
-          </DialogFooter>
+          {/* Credentials + WhatsApp Send */}
+          {lastCredentials && (
+            <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 space-y-3">
+              <p className="text-sm font-semibold text-emerald-800">✅ Boutique créée — Identifiants du vendeur :</p>
+              <div className="text-sm space-y-1 text-emerald-700">
+                <p>📧 Email : <span className="font-mono font-semibold">{lastCredentials.email}</span></p>
+                <p>🔐 Mot de passe : <span className="font-mono font-semibold">{lastCredentials.password}</span></p>
+                <p>🌐 Boutique : <span className="font-mono">{lastCredentials.shopUrl}</span></p>
+              </div>
+              <div className="flex gap-2 pt-1">
+                <Button
+                  onClick={sendViaWhatsApp}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  Envoyer par WhatsApp
+                </Button>
+                <Button variant="outline" onClick={() => { setShowCreateShop(false); resetCreateForm() }}>
+                  Fermer
+                </Button>
+              </div>
+            </div>
+          )}
+          {!lastCredentials && (
+            <DialogFooter>
+              <Button variant="outline" onClick={() => { setShowCreateShop(false); resetCreateForm() }}>Annuler</Button>
+              <Button onClick={handleCreateShop} disabled={creatingShop} className="bg-blue-600 hover:bg-blue-700">
+                {creatingShop && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Créer
+              </Button>
+            </DialogFooter>
+          )}
         </DialogContent>
       </Dialog>
     </div>

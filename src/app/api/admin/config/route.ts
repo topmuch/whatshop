@@ -2,6 +2,37 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { verifyAdmin, adminUnauthorized } from '@/lib/admin-auth'
 
+const CONFIG_FIELDS = [
+  'saasName', 'primaryColor', 'logoUrl', 'defaultWhatsappMessage',
+  'standardPrice', 'proPrice', 'adminWhatsAppNumber',
+  'supportEmail', 'senderName', 'autoWelcomeEmail',
+  'notifyNewSeller', 'notifyNewOrder', 'notifyDomainRequest',
+  'notifySupportTicket', 'weeklyReport', 'lowStockAlerts',
+] as const
+
+function configToJson(config: any) {
+  return {
+    id: config.id,
+    saasName: config.saasName,
+    primaryColor: config.primaryColor,
+    logoUrl: config.logoUrl,
+    defaultWhatsappMessage: config.defaultWhatsappMessage,
+    standardPrice: config.standardPrice,
+    proPrice: config.proPrice,
+    adminWhatsAppNumber: config.adminWhatsAppNumber,
+    supportEmail: config.supportEmail,
+    senderName: config.senderName,
+    autoWelcomeEmail: config.autoWelcomeEmail,
+    notifyNewSeller: config.notifyNewSeller,
+    notifyNewOrder: config.notifyNewOrder,
+    notifyDomainRequest: config.notifyDomainRequest,
+    notifySupportTicket: config.notifySupportTicket,
+    weeklyReport: config.weeklyReport,
+    lowStockAlerts: config.lowStockAlerts,
+    updatedAt: config.updatedAt.toISOString(),
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     const admin = await verifyAdmin(request)
@@ -10,22 +41,10 @@ export async function GET(request: NextRequest) {
     let config = await db.saasConfig.findFirst()
 
     if (!config) {
-      config = await db.saasConfig.create({
-        data: {},
-      })
+      config = await db.saasConfig.create({ data: {} })
     }
 
-    return NextResponse.json({
-      id: config.id,
-      saasName: config.saasName,
-      primaryColor: config.primaryColor,
-      logoUrl: config.logoUrl,
-      defaultWhatsappMessage: config.defaultWhatsappMessage,
-      standardPrice: config.standardPrice,
-      proPrice: config.proPrice,
-      adminWhatsAppNumber: config.adminWhatsAppNumber,
-      updatedAt: config.updatedAt.toISOString(),
-    })
+    return NextResponse.json(configToJson(config))
   } catch (error) {
     console.error('Admin config get error:', error)
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
@@ -37,26 +56,15 @@ async function updateConfig(request: NextRequest) {
   if (!admin) return adminUnauthorized()
 
   const body = await request.json()
-  const {
-    saasName,
-    primaryColor,
-    logoUrl,
-    defaultWhatsappMessage,
-    standardPrice,
-    proPrice,
-    adminWhatsAppNumber,
-  } = body
 
   let config = await db.saasConfig.findFirst()
 
   const data: Record<string, unknown> = {}
-  if (saasName !== undefined) data.saasName = saasName
-  if (primaryColor !== undefined) data.primaryColor = primaryColor
-  if (logoUrl !== undefined) data.logoUrl = logoUrl
-  if (defaultWhatsappMessage !== undefined) data.defaultWhatsappMessage = defaultWhatsappMessage
-  if (standardPrice !== undefined) data.standardPrice = standardPrice
-  if (proPrice !== undefined) data.proPrice = proPrice
-  if (adminWhatsAppNumber !== undefined) data.adminWhatsAppNumber = adminWhatsAppNumber
+  for (const field of CONFIG_FIELDS) {
+    if (body[field] !== undefined) {
+      data[field] = body[field]
+    }
+  }
 
   if (!config) {
     config = await db.saasConfig.create({ data })
@@ -64,20 +72,9 @@ async function updateConfig(request: NextRequest) {
     config = await db.saasConfig.update({ where: { id: config.id }, data })
   }
 
-  return NextResponse.json({
-    id: config.id,
-    saasName: config.saasName,
-    primaryColor: config.primaryColor,
-    logoUrl: config.logoUrl,
-    defaultWhatsappMessage: config.defaultWhatsappMessage,
-    standardPrice: config.standardPrice,
-    proPrice: config.proPrice,
-    adminWhatsAppNumber: config.adminWhatsAppNumber,
-    updatedAt: config.updatedAt.toISOString(),
-  })
+  return NextResponse.json(configToJson(config))
 }
 
-// PUT and PATCH both use the same update logic
 export async function PUT(request: NextRequest) {
   try {
     return await updateConfig(request)

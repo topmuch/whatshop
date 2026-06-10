@@ -21,15 +21,16 @@ export async function GET(request: NextRequest) {
     })
 
     return NextResponse.json({
-      shops: shops.map(s => ({
-        id: s.id,
-        name: s.name,
-        slug: s.slug,
+      subscriptions: shops.map(s => ({
+        shopId: s.id,
+        shopName: s.name,
+        shopSlug: s.slug,
+        ownerName: s.owner.name,
+        ownerEmail: s.owner.email,
         plan: s.plan,
+        status: s.subscriptionStatus || 'NONE',
+        endDate: s.subscriptionEndDate?.toISOString() ?? null,
         isActive: s.isActive,
-        subscriptionStatus: s.subscriptionStatus,
-        subscriptionEndDate: s.subscriptionEndDate?.toISOString() ?? null,
-        owner: { id: s.owner.id, name: s.owner.name, email: s.owner.email },
         createdAt: s.createdAt.toISOString(),
       })),
     })

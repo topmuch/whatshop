@@ -189,6 +189,16 @@ model SaaSConfig {
   standardPrice          Int      @default(5000)
   proPrice               Int      @default(10000)
   adminWhatsAppNumber    String?
+  // Notification settings
+  supportEmail           String?
+  senderName             String?
+  autoWelcomeEmail       Boolean  @default(true)
+  notifyNewSeller        Boolean  @default(true)
+  notifyNewOrder         Boolean  @default(true)
+  notifyDomainRequest    Boolean  @default(false)
+  notifySupportTicket    Boolean  @default(true)
+  weeklyReport           Boolean  @default(false)
+  lowStockAlerts         Boolean  @default(false)
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
 }
