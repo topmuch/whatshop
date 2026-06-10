@@ -20,13 +20,7 @@ import {
   ArrowRight,
   Menu,
   Check,
-  Star,
-  MessageCircle,
   Store,
-  BarChart3,
-  Globe,
-  CreditCard,
-  Radio,
   PackagePlus,
   ShoppingCart,
   ChevronRight,
@@ -523,40 +517,34 @@ function SocialSelling() {
 /* ── FEATURES SECTION ── */
 const features = [
   {
-    icon: Store,
     title: 'Multi-Boutiques',
     desc: 'Gérez jusqu\'à 10 boutiques avec un seul compte',
-    color: 'bg-pink-100 text-pink-600',
+    image: '/landing/feature-multi-boutiques.png',
   },
   {
-    icon: MessageCircle,
     title: 'Commandes WhatsApp',
     desc: 'Recevez et gérez vos commandes directement sur WhatsApp',
-    color: 'bg-green-100 text-green-600',
+    image: '/landing/feature-whatsapp-orders.png',
   },
   {
-    icon: Radio,
     title: 'Mode Live',
     desc: 'Vendez en direct avec le mode TikTok Live',
-    color: 'bg-red-100 text-red-600',
+    image: '/landing/feature-live-mode.png',
   },
   {
-    icon: CreditCard,
     title: 'Mobile Money',
     desc: 'Acceptez Orange Money, MTN Mobile Money, Wave',
-    color: 'bg-amber-100 text-amber-600',
+    image: '/landing/feature-mobile-money.png',
   },
   {
-    icon: BarChart3,
     title: 'Statistiques',
     desc: 'Suivez vos ventes et performances en temps réel',
-    color: 'bg-emerald-100 text-emerald-600',
+    image: '/landing/feature-statistiques.png',
   },
   {
-    icon: Globe,
     title: 'Domaine personnalisé',
     desc: 'Votre propre nom de domaine professionnel',
-    color: 'bg-violet-100 text-violet-600',
+    image: '/landing/feature-domaine.png',
   },
 ]
 
@@ -593,30 +581,30 @@ function Features() {
           variants={stagger}
           className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"
         >
-          {features.map((f, i) => {
-            const IconComp = f.icon
-            return (
-              <motion.div key={i} variants={fadeUp} custom={i * 0.08}>
-                <Card className="h-full rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg hover:border-pink-100 transition-all duration-300 bg-white group">
-                  <CardContent className="p-6 flex flex-col items-start gap-4">
-                    <div
-                      className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${f.color} group-hover:scale-110 transition-transform duration-300`}
-                    >
-                      <IconComp className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900 mb-1.5 text-base">
-                        {f.title}
-                      </h3>
-                      <p className="text-sm text-gray-500 leading-relaxed">
-                        {f.desc}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )
-          })}
+          {features.map((f, i) => (
+            <motion.div key={i} variants={fadeUp} custom={i * 0.08}>
+              <Card className="h-full rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-pink-200 transition-all duration-300 bg-white group overflow-hidden">
+                <div className="relative aspect-[16/10] overflow-hidden">
+                  <Image
+                    src={f.image}
+                    alt={f.title}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                </div>
+                <CardContent className="p-5 flex flex-col gap-1.5">
+                  <h3 className="font-semibold text-gray-900 text-base">
+                    {f.title}
+                  </h3>
+                  <p className="text-sm text-gray-500 leading-relaxed">
+                    {f.desc}
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
         </motion.div>
       </div>
     </section>
