@@ -23,6 +23,7 @@ interface CartDrawerProps {
 export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
   const {
     cart,
+    shopSlug,
     publicShop,
     removeFromCart,
     updateCartQuantity,
@@ -34,9 +35,14 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
   const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0)
 
   const generateWhatsAppMessage = () => {
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
     const lines = cart.map((item) => {
       const lineTotal = item.price * item.quantity
-      return `- ${item.name} x${item.quantity} : ${lineTotal.toLocaleString('fr-FR')} FCFA`
+      const productUrl = shopSlug
+        ? `${baseUrl}/${shopSlug}?product=${item.productId}`
+        : ''
+      const linkLine = productUrl ? `\n  🔗 ${productUrl}` : ''
+      return `- ${item.name} x${item.quantity} : ${lineTotal.toLocaleString('fr-FR')} FCFA${linkLine}`
     })
 
     const message = `Bonjour,

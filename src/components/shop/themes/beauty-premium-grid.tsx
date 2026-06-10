@@ -1699,8 +1699,13 @@ export function BeautyPremiumShopPage() {
 
   function handleWhatsAppCheckout() {
     if (!publicShop) return
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
     const itemsText = cart
-      .map((c) => `💝 ${c.name} x${c.quantity} — ${(c.price * c.quantity).toLocaleString('fr-FR')} FCFA`)
+      .map((c) => {
+        const productUrl = shopSlug ? `${baseUrl}/${shopSlug}?product=${c.productId}` : ''
+        const linkLine = productUrl ? `\n   🔗 ${productUrl}` : ''
+        return `💝 ${c.name} x${c.quantity} — ${(c.price * c.quantity).toLocaleString('fr-FR')} FCFA${linkLine}`
+      })
       .join('\n')
     const msg = `Bonjour ${publicShop.name} ! 💖\n\nJe souhaite commander :\n\n${itemsText}\n\n━━━━━━━━━━━━━━\n💰 Total : ${total.toLocaleString('fr-FR')} FCFA\n\n📝 Mes informations :\nNom :\nAdresse :\nTéléphone :\n\nMerci beaucoup ! 🙏✨`
     const encoded = encodeURIComponent(msg)
