@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     results.push(`demo: ${demo.email}`)
 
     // Create demo shop if seller has none
-    const existingShop = await db.shop.findUnique({ where: { ownerId: demo.id } })
+    const existingShop = await db.shop.findFirst({ where: { ownerId: demo.id } })
     if (!existingShop) {
       await db.shop.create({
         data: {

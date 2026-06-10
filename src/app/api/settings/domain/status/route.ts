@@ -14,16 +14,16 @@ export async function GET(request: NextRequest) {
     // Find user with their shop
     const user = await db.user.findUnique({
       where: { email: userEmail },
-      include: { shop: true },
+      include: { shops: true },
     })
 
-    if (!user || !user.shop) {
+    if (!user || !user.shops?.[0]) {
       return NextResponse.json({ error: 'Boutique introuvable' }, { status: 404 })
     }
 
     // Find domain request for this shop
     const domainRequest = await db.domainRequest.findUnique({
-      where: { shopId: user.shop.id },
+      where: { shopId: user.shops[0].id },
     })
 
     if (!domainRequest) {

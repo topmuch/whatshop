@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { verifyAdmin, adminUnauthorized } from '@/lib/admin-auth'
 import { hashPassword } from '@/lib/auth'
+import { checkShopLimit, getOrCreateSubscription } from '@/lib/permissions'
 
 export async function GET(request: NextRequest) {
   try {
@@ -103,7 +104,7 @@ export async function POST(request: NextRequest) {
           email: ownerEmail,
           password: hashedPw,
           name: ownerName.trim(),
-          role: 'SELLER',
+          role: 'SELLER' as const,
         },
       })
       resolvedOwnerId = newUser.id
@@ -120,9 +121,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Ce slug est déjà utilisé' }, { status: 409 })
     }
 
-    const existingOwnerShop = await db.shop.findUnique({ where: { ownerId: resolvedOwnerId } })
-    if (existingOwnerShop) {
-      return NextResponse.json({ error: 'Cet utilisateur a déjà une boutique' }, { status: 409 })
+    // Ensure subscription exists and check shop limit
+    await getOrCreateSubscription(resolvedOwnerId)
+    const limitCheck = await checkShopLimit(resolvedOwnerId)
+    if (!limitCheck.allowed) {
+      return NextResponse.json(
+        { error: `Limite atteinte pour cet utilisateur (${limitCheck.currentCount}/${limitCheck.maxAllowed}). Mettez à niveau son abonnement.` },
+        { status: 403 }
+      )
     }
 
     const shop = await db.shop.create({

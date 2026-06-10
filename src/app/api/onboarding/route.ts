@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user already has a shop
-    const existingShop = await db.shop.findUnique({ where: { ownerId: userId } })
+    const existingShop = await db.shop.findFirst({ where: { ownerId: userId } })
     if (existingShop) {
       return NextResponse.json(
         { error: 'Vous avez déjà une boutique' },

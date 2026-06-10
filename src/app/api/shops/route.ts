@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { requireAuth, isValidSlug } from '@/lib/auth'
+import { checkShopLimit, getOrCreateSubscription } from '@/lib/permissions'
 
 // GET /api/shops?id=xxx or /api/shops?slug=xxx
 export async function GET(request: NextRequest) {
@@ -67,7 +68,6 @@ export async function PUT(request: NextRequest) {
     }
 
     const data: Record<string, unknown> = {}
-    // name is a required field in Prisma schema — never set to null
     if (name !== undefined && name !== null) {
       const trimmed = (typeof name === 'string' ? name : '').trim()
       if (trimmed) data.name = trimmed
@@ -103,6 +103,7 @@ export async function PUT(request: NextRequest) {
 }
 
 // POST /api/shops (auth required — creates shop for current user)
+// Vérifie l'abonnement actif et la limite de boutiques avant de créer.
 export async function POST(request: NextRequest) {
   try {
     const { user, response: errorResponse } = await requireAuth(request)
@@ -130,11 +131,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Slug déjà utilisé' }, { status: 409 })
     }
 
-    // Check if user already has a shop
-    const userShop = await db.shop.findUnique({ where: { ownerId: user.id } })
-    if (userShop) {
-      return NextResponse.json({ error: 'Vous avez déjà une boutique' }, { status: 400 })
+    // ─── VÉRIFICATION ABONNEMENT ─────────────────────────────────────────────
+    // Ensure user has a subscription record (auto-create STARTER/TRIAL if not)
+    await getOrCreateSubscription(user.id)
+
+    // Check shop limit
+    const limitCheck = await checkShopLimit(user.id)
+    if (!limitCheck.allowed) {
+      return NextResponse.json(
+        {
+          error: limitCheck.message,
+          currentCount: limitCheck.currentCount,
+          maxAllowed: limitCheck.maxAllowed,
+          planType: limitCheck.planType,
+        },
+        { status: 403 }
+      )
     }
+    // ─── FIN VÉRIFICATION ────────────────────────────────────────────────────
 
     const shop = await db.shop.create({
       data: {

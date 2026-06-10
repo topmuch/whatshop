@@ -4,6 +4,47 @@ import bcrypt from 'bcryptjs'
 
 const SALT_ROUNDS = 10
 
+// ─── TYPES ─────────────────────────────────────────────────────────────────────
+
+/** Minimal shop shape returned from DB (used in auth responses). */
+export interface AuthShop {
+  id: string
+  name: string
+  slug: string
+  description?: string | null
+  logo?: string | null
+  banner?: string | null
+  whatsapp: string
+  address?: string | null
+  phone?: string | null
+  plan: string
+  sector?: string | null
+  template: string
+  isActive: boolean
+  seoTitle?: string | null
+  seoDescription?: string | null
+  coverImageUrl?: string | null
+  customDomain?: string | null
+  customDomainStatus?: string | null
+  subscriptionStatus?: string | null
+  subscriptionEndDate?: string | null
+  heroImages?: string
+  promoBanners?: string
+  brands?: string
+}
+
+/** User type returned from auth functions — includes `shops` array + `shop` (first/primary). */
+export interface AuthUser {
+  id: string
+  email: string
+  name: string
+  role: string
+  shops: AuthShop[]
+  shop: AuthShop | null   // backward compat: primary shop (shops[0])
+}
+
+// ─── PASSWORD UTILITIES ───────────────────────────────────────────────────────
+
 /**
  * Hash a plaintext password using bcrypt.
  */
@@ -26,18 +67,20 @@ export function isHashed(password: string): boolean {
   return password.startsWith('$2b$') || password.startsWith('$2a$')
 }
 
+// ─── AUTHENTICATION ────────────────────────────────────────────────────────────
+
 /**
  * Authenticate a user by email and plain password.
- * Returns the user object on success, null on failure.
+ * Returns the user object (with shops array) on success, null on failure.
  * Also migrates plaintext passwords to bcrypt hashes on successful login.
  */
 export async function authenticateUser(
   email: string,
   plainPassword: string
-) {
+): Promise<AuthUser | null> {
   const user = await db.user.findUnique({
     where: { email },
-    include: { shop: true },
+    include: { shops: true },
   })
 
   if (!user) return null
@@ -50,7 +93,6 @@ export async function authenticateUser(
     // Legacy plain-text password — check directly, then migrate
     isMatch = user.password === plainPassword
     if (isMatch) {
-      // Migrate to bcrypt
       const hashed = await hashPassword(plainPassword)
       await db.user.update({
         where: { id: user.id },
@@ -60,23 +102,26 @@ export async function authenticateUser(
   }
 
   if (!isMatch) return null
-  return user
+
+  return mapUserWithShops(user)
 }
 
 /**
  * Get the authenticated user from the session cookie.
- * Returns the user object (with shop) on success, null on failure.
+ * Returns the user object (with shops array + primary shop) on success, null on failure.
  */
-export async function getAuthUser(request: NextRequest) {
+export async function getAuthUser(request: NextRequest): Promise<AuthUser | null> {
   const userEmail = request.cookies.get('whatsshop-user')?.value
   if (!userEmail) return null
 
   const user = await db.user.findUnique({
     where: { email: userEmail },
-    include: { shop: true },
+    include: { shops: true },
   })
 
-  return user
+  if (!user) return null
+
+  return mapUserWithShops(user)
 }
 
 /**
@@ -92,6 +137,7 @@ export async function requireAuth(request: NextRequest) {
 
 /**
  * Require a specific shop ownership — returns user+shop or error response.
+ * Uses the primary shop (shops[0]) unless a specific shopId is provided.
  */
 export async function requireShopOwner(request: NextRequest, shopId?: string) {
   const user = await getAuthUser(request)
@@ -102,10 +148,17 @@ export async function requireShopOwner(request: NextRequest, shopId?: string) {
     return { user: null, response: NextResponse.json({ error: 'Boutique introuvable' }, { status: 404 }) }
   }
   if (shopId && user.shop.id !== shopId) {
-    return { user: null, response: NextResponse.json({ error: 'Accès non autorisé' }, { status: 403 }) }
+    // Also check if the requested shopId belongs to this user (multi-shop)
+    const ownedShop = user.shops.find(s => s.id === shopId)
+    if (!ownedShop) {
+      return { user: null, response: NextResponse.json({ error: 'Accès non autorisé' }, { status: 403 }) }
+    }
+    return { user, shop: ownedShop, response: null }
   }
-  return { user, response: null }
+  return { user, shop: user.shop, response: null }
 }
+
+// ─── SLUG VALIDATION ──────────────────────────────────────────────────────────
 
 /**
  * Validate a shop slug format.
@@ -120,16 +173,17 @@ export function isValidSlug(slug: string): boolean {
     'static', 'images', 'uploads', '_next', 'favicon', 'robots', 'sitemap',
     'shop', 'shops', 'order', 'orders', 'product', 'products', 'category',
     'categories', 'settings', 'seed', 'live', 'support', 'auth', 'ai',
+    'reseller', 'revendeur',
   ]
   return !reserved.includes(slug.toLowerCase())
 }
+
+// ─── COOKIE MANAGEMENT ────────────────────────────────────────────────────────
 
 /**
  * Set the session cookie on a response.
  */
 export function setSessionCookie(response: NextResponse, email: string) {
-  // Default to non-secure in production unless explicitly enabled.
-  // Set COOKIE_SECURE=true when behind HTTPS (e.g. with a domain + SSL cert).
   const isSecure = process.env.COOKIE_SECURE === 'true'
   response.cookies.set('whatsshop-user', email, {
     httpOnly: true,
@@ -152,4 +206,52 @@ export function clearSessionCookie(response: NextResponse) {
     maxAge: 0,
     path: '/',
   })
+}
+
+// ─── INTERNAL HELPERS ──────────────────────────────────────────────────────────
+
+/**
+ * Map a Prisma user (with shops array) to AuthUser shape with `shop` (primary) computed.
+ */
+function mapUserWithShops(user: { id: string; email: string; name: string; role: string; shops: unknown[] }): AuthUser {
+  const shops = user.shops as AuthShop[]
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role,
+    shops,
+    shop: shops.length > 0 ? shops[0] : null,
+  }
+}
+
+/**
+ * Map a single shop from Prisma to the AuthShop shape.
+ */
+export function mapShopToAuthShop(shop: Record<string, unknown>): AuthShop {
+  return {
+    id: shop.id as string,
+    name: shop.name as string,
+    slug: shop.slug as string,
+    description: (shop.description as string) ?? null,
+    logo: (shop.logo as string) ?? null,
+    banner: (shop.banner as string) ?? null,
+    whatsapp: shop.whatsapp as string,
+    address: (shop.address as string) ?? null,
+    phone: (shop.phone as string) ?? null,
+    plan: shop.plan as string,
+    sector: (shop.sector as string) ?? null,
+    template: (shop.template as string) ?? 'classic',
+    isActive: shop.isActive as boolean,
+    seoTitle: (shop.seoTitle as string) ?? null,
+    seoDescription: (shop.seoDescription as string) ?? null,
+    coverImageUrl: (shop.coverImageUrl as string) ?? null,
+    customDomain: (shop.customDomain as string) ?? null,
+    customDomainStatus: (shop.customDomainStatus as string) ?? null,
+    subscriptionStatus: (shop.subscriptionStatus as string) ?? null,
+    subscriptionEndDate: shop.subscriptionEndDate ? new Date(shop.subscriptionEndDate as string).toISOString() : null,
+    heroImages: (shop.heroImages as string) ?? '[]',
+    promoBanners: (shop.promoBanners as string) ?? '[]',
+    brands: (shop.brands as string) ?? '[]',
+  }
 }

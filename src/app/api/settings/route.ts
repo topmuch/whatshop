@@ -12,17 +12,17 @@ export async function GET(request: NextRequest) {
 
     const user = await db.user.findUnique({
       where: { email: userEmail },
-      include: { shop: true },
+      include: { shops: true },
     })
 
-    if (!user || !user.shop) {
+    if (!user || !user.shops?.[0]) {
       return NextResponse.json({ error: 'Boutique introuvable' }, { status: 404 })
     }
 
     return NextResponse.json({
-      seoTitle: user.shop.seoTitle,
-      seoDescription: user.shop.seoDescription,
-      coverImageUrl: user.shop.coverImageUrl,
+      seoTitle: user.shops[0].seoTitle,
+      seoDescription: user.shops[0].seoDescription,
+      coverImageUrl: user.shops[0].coverImageUrl,
     })
   } catch (error) {
     console.error('Settings GET error:', error)
@@ -43,10 +43,10 @@ export async function PUT(request: NextRequest) {
     // Find user with their shop
     const user = await db.user.findUnique({
       where: { email: userEmail },
-      include: { shop: true },
+      include: { shops: true },
     })
 
-    if (!user || !user.shop) {
+    if (!user || !user.shops?.[0]) {
       return NextResponse.json({ error: 'Boutique introuvable' }, { status: 404 })
     }
 
@@ -62,7 +62,7 @@ export async function PUT(request: NextRequest) {
     if (banner !== undefined) data.banner = banner || null
 
     const updatedShop = await db.shop.update({
-      where: { id: user.shop.id },
+      where: { id: user.shops[0].id },
       data,
       select: {
         id: true, name: true, slug: true, seoTitle: true, seoDescription: true,

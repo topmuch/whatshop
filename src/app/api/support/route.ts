@@ -14,10 +14,10 @@ export async function POST(request: NextRequest) {
     // Find user with their shop
     const user = await db.user.findUnique({
       where: { email: userEmail },
-      include: { shop: true },
+      include: { shops: true },
     })
 
-    if (!user || !user.shop) {
+    if (!user || !user.shops?.[0]) {
       return NextResponse.json({ error: 'Boutique introuvable' }, { status: 404 })
     }
 
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
 
     const ticket = await db.supportTicket.create({
       data: {
-        shopId: user.shop.id,
+        shopId: user.shops[0].id,
         message: message.trim(),
         status: 'OPEN',
       },

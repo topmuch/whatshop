@@ -14,10 +14,10 @@ export async function POST(request: NextRequest) {
     // Find user with their shop
     const user = await db.user.findUnique({
       where: { email: userEmail },
-      include: { shop: true },
+      include: { shops: true },
     })
 
-    if (!user || !user.shop) {
+    if (!user || !user.shops?.[0]) {
       return NextResponse.json({ error: 'Boutique introuvable' }, { status: 404 })
     }
 
@@ -34,15 +34,15 @@ export async function POST(request: NextRequest) {
     const existingDomain = await db.domainRequest.findUnique({
       where: { domain: trimmedDomain },
     })
-    if (existingDomain && existingDomain.shopId !== user.shop.id) {
+    if (existingDomain && existingDomain.shopId !== user.shops[0].id) {
       return NextResponse.json({ error: 'Ce domaine est déjà pris' }, { status: 409 })
     }
 
     // Upsert domain request for this shop
     await db.domainRequest.upsert({
-      where: { shopId: user.shop.id },
+      where: { shopId: user.shops[0].id },
       create: {
-        shopId: user.shop.id,
+        shopId: user.shops[0].id,
         domain: trimmedDomain,
         status: 'PENDING',
       },
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
 
     // Update shop with pending domain status
     await db.shop.update({
-      where: { id: user.shop.id },
+      where: { id: user.shops[0].id },
       data: {
         customDomain: trimmedDomain,
         customDomainStatus: 'PENDING',

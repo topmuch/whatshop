@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
         where: { role: 'SELLER' },
         orderBy: { createdAt: 'desc' },
         take: 5,
-        include: { shop: { select: { name: true, plan: true } } },
+        include: { shops: { select: { name: true, plan: true } } },
       }),
       db.order.findMany({
         orderBy: { createdAt: 'desc' },
@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
         id: u.id,
         name: u.name,
         email: u.email,
-        shop: u.shop ? { name: u.shop.name, plan: u.shop.plan } : null,
+        shop: u.shops?.[0] ? { name: u.shops[0].name, plan: u.shops[0].plan } : null,
         createdAt: u.createdAt.toISOString(),
       })),
       recentOrders: recentOrders.map(o => ({

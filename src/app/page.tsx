@@ -8,6 +8,7 @@ import { AuthLogin } from '@/components/auth/auth-login'
 import { AuthRegister } from '@/components/auth/auth-register'
 import { OnboardingWizard } from '@/components/onboarding/onboarding-wizard'
 import { SellerDashboard } from '@/components/dashboard/seller-dashboard'
+import { ResellerDashboard } from '@/components/dashboard/dashboard-reseller'
 import { AdminDashboard } from '@/components/admin/admin-dashboard'
 import { PublicShop } from '@/components/shop/public-shop'
 import { PublicLayout } from '@/components/pages/public-layout'
@@ -73,6 +74,11 @@ function resolveViewFromPath(pathname: string): { view: AppView; shopSlug: strin
     return { view: 'admin', shopSlug: '' }
   }
 
+  // Reseller routes
+  if (slug.startsWith('reseller') || slug.startsWith('revendeur')) {
+    return { view: 'reseller', shopSlug: '' }
+  }
+
   // Auth routes
   if (slug === 'login' || slug === 'connexion') {
     return { view: 'login', shopSlug: '' }
@@ -122,7 +128,7 @@ function LoadingShell() {
 }
 
 export default function Home() {
-  const { view, setView, setUser, setShopSlug, shopSlug } = useAppStore()
+  const { view, setView, setUser, setShop, setShops, shopSlug } = useAppStore()
   const pathname = useClientPathname()
   const [hydrated, setHydrated] = useState(false)
 
@@ -142,25 +148,29 @@ export default function Home() {
       }
 
       // Always check session (including login/register views)
-      // This ensures that after login + HMR reload, the session is restored
-      if (urlView.view === 'landing' || urlView.view === 'dashboard' || urlView.view === 'admin' || urlView.view === 'login' || urlView.view === 'register' || urlView.view === 'onboarding') {
+      if (urlView.view === 'landing' || urlView.view === 'dashboard' || urlView.view === 'admin' || urlView.view === 'reseller' || urlView.view === 'login' || urlView.view === 'register' || urlView.view === 'onboarding') {
         try {
           const res = await fetch('/api/auth/session')
           if (res.ok) {
             const data = await res.json()
             if (data.user) {
               setUser(data.user)
+              // Set all shops for multi-shop support
+              if (data.shops) setShops(data.shops)
               if (data.shop) setShop(data.shop)
-              // Only redirect from landing/register/login; keep onboarding as-is so the wizard can complete
-              // BUT if user already has a shop and is on onboarding, redirect to dashboard
+
+              // Route based on role
               if (data.user.role === 'ADMIN' || data.user.role === 'SUPER_ADMIN') {
                 setView('admin')
-              } else if (!data.shop) {
-                // Seller without a shop → onboarding
+              } else if (data.user.role === 'RESELLER') {
+                setView('reseller')
+                window.history.replaceState(null, '', '/reseller')
+              } else if (!data.shop || (data.shops && data.shops.length === 0)) {
+                // Seller without shops → onboarding
                 setView('onboarding')
                 window.history.replaceState(null, '', '/onboarding')
               } else if (urlView.view === 'onboarding') {
-                // User has a shop but is on onboarding URL → go to dashboard
+                // User has shops but is on onboarding URL → go to dashboard
                 setView('dashboard')
                 window.history.replaceState(null, '', '/dashboard')
               } else {
@@ -198,6 +208,7 @@ export default function Home() {
       {effectiveView === 'register' && <AuthRegister />}
       {effectiveView === 'onboarding' && <OnboardingWizard />}
       {effectiveView === 'dashboard' && <SellerDashboard />}
+      {effectiveView === 'reseller' && <ResellerDashboard />}
       {effectiveView === 'admin' && <AdminDashboard />}
       {effectiveView === 'shop' && <PublicShop />}
 

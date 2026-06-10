@@ -1,4 +1,5 @@
 // WhatsShop SaaS - Multi-tenant e-commerce for African merchants
+// Architecture: Subscription linked to USER (not shop), multi-shop per user, reseller white-label
 
 generator client {
   provider = "prisma-client-js"
@@ -9,19 +10,84 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ─── ENUMS ──────────────────────────────────────────────────────────────────────
+
+enum Role {
+  SELLER
+  ADMIN
+  SUPER_ADMIN
+  RESELLER
+}
+
+enum PlanType {
+  STARTER  // 5000F — 1 boutique
+  PRO      // 8000F — 3 boutiques
+  BUSINESS // 20000F — 10 boutiques + domaine personnalisé
+}
+
+enum SubStatus {
+  TRIAL
+  ACTIVE
+  EXPIRED
+  CANCELLED
+  SUSPENDED
+}
+
+// ─── USER ──────────────────────────────────────────────────────────────────────
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
   password  String
   name      String
-  role      String   @default("SELLER") // SELLER | ADMIN | SUPER_ADMIN
+  role      Role     @default(SELLER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  shop     Shop?
-  orders   Order[]
-  domainReviews DomainRequest[] @relation("DomainReview")
+  // Relations
+  shops           Shop[]
+  orders          Order[]
+  domainReviews   DomainRequest[] @relation("DomainReview")
+  subscription    Subscription?
+  resellerProfile Reseller?
+  resellerClients User[]           @relation("ResellerClients")
+  resellerId      String?
+  reseller        User?            @relation("ResellerClients", fields: [resellerId], references: [id])
 }
+
+// ─── SUBSCRIPTION (liée au COMPTE UTILISATEUR, pas à la boutique) ─────────────
+
+model Subscription {
+  id               String    @id @default(cuid())
+  userId           String    @unique
+  planType         PlanType  @default(STARTER)
+  status           SubStatus @default(TRIAL)
+  maxShops         Int       @default(1)
+  startDate        DateTime  @default(now())
+  endDate          DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─── RESELLER (White-label) ────────────────────────────────────────────────────
+
+model Reseller {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  companyName  String?
+  logoUrl      String?
+  primaryColor String   @default("#EC4899")
+  commission   Int      @default(10) // pourcentage de commission
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─── SHOP (multi-boutiques par utilisateur) ────────────────────────────────────
 
 model Shop {
   id                    String   @id @default(cuid())
@@ -33,11 +99,11 @@ model Shop {
   whatsapp              String
   address               String?
   phone                 String?
-  plan                  String   @default("FREE") // FREE | STANDARD | PRO
+  plan                  String   @default("FREE") // FREE | STANDARD | PRO (backward compat, kept for per-shop features)
   sector                String?  // beaute, mode, electronique, alimentation, artisanat, sport, bijoux, maison, auto, autre
-  template              String   @default("classic") // classic | africa | minimal | elegant | neon | rose | ocean | sunset | jameela | xstore-fashion | xstore-electro | xstore-grocery | electrodepot
+  template              String   @default("classic")
   isActive              Boolean  @default(true)
-  ownerId               String   @unique
+  ownerId               String   // NO @unique — allows multiple shops per user
 
   // SEO & Appearance
   seoTitle              String?
@@ -58,7 +124,7 @@ model Shop {
   customDomainStatus     String?   @default("NONE") // NONE | PENDING | APPROVED | REJECTED
   customDomainRejectionReason String?
 
-  // Subscription (manual management)
+  // Subscription (manual management — legacy, kept for backward compat)
   subscriptionStatus     String?   @default("TRIAL") // TRIAL | ACTIVE | SUSPENDED | EXPIRED | CANCELLED
   subscriptionEndDate    DateTime?
 
@@ -84,6 +150,8 @@ model Shop {
   supportTickets SupportTicket[]
 }
 
+// ─── CATEGORY ──────────────────────────────────────────────────────────────────
+
 model Category {
   id          String   @id @default(cuid())
   name        String
@@ -95,6 +163,8 @@ model Category {
   shop     Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
   products Product[]
 }
+
+// ─── PRODUCT ───────────────────────────────────────────────────────────────────
 
 model Product {
   id          String   @id @default(cuid())
@@ -114,6 +184,8 @@ model Product {
   category Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
 }
 
+// ─── ORDER ─────────────────────────────────────────────────────────────────────
+
 model Order {
   id              String   @id @default(cuid())
   shopId          String
@@ -130,6 +202,8 @@ model Order {
   userId String?
 }
 
+// ─── VISIT ─────────────────────────────────────────────────────────────────────
+
 model Visit {
   id        String   @id @default(cuid())
   shopId    String
@@ -138,6 +212,8 @@ model Visit {
 
   shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
 }
+
+// ─── LIVE SESSION ──────────────────────────────────────────────────────────────
 
 model LiveSession {
   id              String   @id @default(cuid())
@@ -178,7 +254,7 @@ model Lead {
   session LiveSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 }
 
-// ─── NEW: SaaS Configuration (Singleton) ──────────────────────────────────────
+// ─── SaaS CONFIGURATION (Singleton) ────────────────────────────────────────────
 
 model SaaSConfig {
   id                     String   @id @default(cuid())
@@ -186,8 +262,13 @@ model SaaSConfig {
   primaryColor           String   @default("#EC4899")
   logoUrl                String?
   defaultWhatsappMessage String   @default("Bonjour, je souhaite commander le produit: {productName} - {productPrice} FCFA depuis votre boutique WhatsShop.")
+  // Plans pricing (FCFA)
+  starterPrice           Int      @default(5000)
+  proPrice               Int      @default(8000)
+  businessPrice          Int      @default(20000)
+  // Legacy fields (kept for backward compat)
   standardPrice          Int      @default(5000)
-  proPrice               Int      @default(10000)
+  proLegacyPrice         Int      @default(10000)
   adminWhatsAppNumber    String?
   // Notification settings
   supportEmail           String?
@@ -200,10 +281,10 @@ model SaaSConfig {
   weeklyReport           Boolean  @default(false)
   lowStockAlerts         Boolean  @default(false)
   createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
+  updatedAt              DateTime  @updatedAt
 }
 
-// ─── NEW: Promo Codes (SaaS-level) ─────────────────────────────────────────────
+// ─── PROMO CODES (SaaS-level) ─────────────────────────────────────────────────
 
 model PromoCode {
   id             String    @id @default(cuid())
@@ -217,7 +298,7 @@ model PromoCode {
   updatedAt      DateTime  @updatedAt
 }
 
-// ─── NEW: Custom Domain Requests ───────────────────────────────────────────────
+// ─── CUSTOM DOMAIN REQUESTS ────────────────────────────────────────────────────
 
 model DomainRequest {
   id              String   @id @default(cuid())
@@ -235,7 +316,7 @@ model DomainRequest {
   reviewer  User?   @relation("DomainReview", fields: [reviewerId], references: [id])
 }
 
-// ─── NEW: Support Tickets ──────────────────────────────────────────────────────
+// ─── SUPPORT TICKETS ──────────────────────────────────────────────────────────
 
 model SupportTicket {
   id        String   @id @default(cuid())
@@ -248,7 +329,7 @@ model SupportTicket {
   shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
 }
 
-// ─── NEW: Broadcast Messages ───────────────────────────────────────────────────
+// ─── BROADCAST MESSAGES ───────────────────────────────────────────────────────
 
 model BroadcastMessage {
   id        String   @id @default(cuid())

@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-export type AppView = 'landing' | 'login' | 'register' | 'onboarding' | 'dashboard' | 'shop' | 'admin' | 'about' | 'pricing' | 'contact' | 'privacy' | 'terms' | 'faq'
+export type AppView = 'landing' | 'login' | 'register' | 'onboarding' | 'dashboard' | 'reseller' | 'shop' | 'admin' | 'about' | 'pricing' | 'contact' | 'privacy' | 'terms' | 'faq'
 export type DashboardTab = 'overview' | 'products' | 'categories' | 'orders' | 'live' | 'settings' | 'ai-tools'
 export type AdminTab = 'admin-overview' | 'admin-subscriptions' | 'admin-domains' | 'admin-config' | 'admin-support' | 'admin-moderation' | 'admin-marketing' | 'admin-users' | 'admin-shops' | 'admin-orders' | 'admin-admins'
 
@@ -82,8 +82,10 @@ interface AppState {
   // Auth
   user: User | null
   shop: Shop | null
+  shops: Shop[]
   setUser: (user: User | null) => void
   setShop: (shop: Shop | null) => void
+  setShops: (shops: Shop[]) => void
   isAuthenticated: boolean
 
   // Cart (for public shop)
@@ -121,8 +123,10 @@ export const useAppStore = create<AppState>()(
       // Auth
       user: null,
       shop: null,
+      shops: [],
       setUser: (user) => set({ user, isAuthenticated: !!user }),
       setShop: (shop) => set({ shop }),
+      setShops: (shops) => set({ shops }),
       isAuthenticated: false,
 
       // Cart

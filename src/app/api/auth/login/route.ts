@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { authenticateUser, setSessionCookie, hashPassword } from '@/lib/auth'
+import { authenticateUser, setSessionCookie, hashPassword, mapShopToAuthShop } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { rateLimit, getClientIp, RATE_LIMITS } from '@/lib/rate-limit'
 
@@ -34,12 +34,13 @@ export async function POST(request: NextRequest) {
           name: process.env.SUPER_ADMIN_NAME || 'Super Admin',
           role: 'SUPER_ADMIN',
         },
-        include: { shop: true },
+        include: { shops: true },
       })
       console.log('[SETUP] First login — SUPER_ADMIN auto-created:', newAdmin.email)
 
       const response = NextResponse.json({
         user: { id: newAdmin.id, email: newAdmin.email, name: newAdmin.name, role: newAdmin.role },
+        shops: [],
         shop: null,
         setup: true,
       })
@@ -55,24 +56,8 @@ export async function POST(request: NextRequest) {
 
     const response = NextResponse.json({
       user: { id: user.id, email: user.email, name: user.name, role: user.role },
-      shop: user.shop ? {
-        id: user.shop.id,
-        name: user.shop.name,
-        slug: user.shop.slug,
-        description: user.shop.description,
-        logo: user.shop.logo,
-        banner: user.shop.banner,
-        whatsapp: user.shop.whatsapp,
-        address: user.shop.address,
-        phone: user.shop.phone,
-        plan: user.shop.plan,
-        sector: user.shop.sector,
-        template: user.shop.template || 'classic',
-        isActive: user.shop.isActive,
-        heroImages: user.shop.heroImages,
-        promoBanners: user.shop.promoBanners,
-        brands: user.shop.brands,
-      } : null,
+      shops: user.shops,
+      shop: user.shop ? mapShopToAuthShop(user.shop as unknown as Record<string, unknown>) : null,
     })
 
     setSessionCookie(response, user.email)
