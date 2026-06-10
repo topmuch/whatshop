@@ -178,6 +178,11 @@ export const useAppStore = create<AppState>()(
       name: 'boutiko-storage',
       partialize: (state) => ({
         cart: state.cart,
+        view: state.view,
+        user: state.user,
+        shop: state.shop,
+        shops: state.shops,
+        isAuthenticated: state.isAuthenticated,
       }),
     }
   )

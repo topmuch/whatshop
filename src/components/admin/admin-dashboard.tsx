@@ -1195,6 +1195,7 @@ function AdminSubscriptions() {
   const [statusFilter, setStatusFilter] = useState('all')
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [upgradeDialog, setUpgradeDialog] = useState<{ open: boolean; shopId: string; shopName: string; currentPlan: string }>({ open: false, shopId: '', shopName: '', currentPlan: '' })
 
   const loadSubscriptions = useCallback(async (status: string) => {
     setLoading(true)
@@ -1216,6 +1217,30 @@ function AdminSubscriptions() {
   useEffect(() => {
     loadSubscriptions(statusFilter)
   }, [statusFilter, loadSubscriptions])
+
+  async function handleUpgradePlan(shopId: string, newPlan: string) {
+    setActionLoading(`${shopId}-upgrade`)
+    try {
+      const res = await fetch('/api/admin/subscriptions', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ shopId, action: 'upgrade', newPlan }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        toast.success(data.message || 'Forfait mis à jour !')
+        setUpgradeDialog({ open: false, shopId: '', shopName: '', currentPlan: '' })
+        loadSubscriptions(statusFilter)
+      } else {
+        const data = await res.json()
+        toast.error(data.error || 'Erreur lors de la mise à niveau')
+      }
+    } catch {
+      toast.error('Erreur de connexion')
+    } finally {
+      setActionLoading(null)
+    }
+  }
 
   async function handleAction(shopId: string, action: string) {
     setActionLoading(`${shopId}-${action}`)
@@ -1351,6 +1376,15 @@ function AdminSubscriptions() {
                         </Button>
                         <Button
                           variant="ghost"
+                          size="sm"
+                          className="h-8 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50 gap-1"
+                          onClick={() => setUpgradeDialog({ open: true, shopId: sub.shopId, shopName: sub.shopName, currentPlan: sub.plan })}
+                        >
+                          <ArrowUpRight className="h-3 w-3" />
+                          Upgrade
+                        </Button>
+                        <Button
+                          variant="ghost"
                           size="icon"
                           className="h-8 w-8"
                           title="Voir la boutique"
@@ -1367,11 +1401,58 @@ function AdminSubscriptions() {
           </CardContent>
         </Card>
       )}
+
+      {/* Upgrade Dialog */}
+      <Dialog open={upgradeDialog.open} onOpenChange={(open) => !open && setUpgradeDialog({ open: false, shopId: '', shopName: '', currentPlan: '' })}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ArrowUpRight className="h-5 w-5 text-purple-600" />
+              Changer le forfait
+            </DialogTitle>
+            <DialogDescription>
+              Boutique : <strong>{upgradeDialog.shopName}</strong> — Actuel : <Badge variant="secondary">{upgradeDialog.currentPlan}</Badge>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            {(['STARTER', 'PRO', 'BUSINESS'] as const).map((plan) => {
+              const info: Record<string, { label: string; price: string; shops: string; color: string }> = {
+                STARTER: { label: 'Starter', price: '5 000', shops: '1 boutique', color: 'border-gray-300 hover:border-gray-400' },
+                PRO: { label: 'Pro', price: '8 000', shops: '3 boutiques', color: 'border-cyan-400 hover:border-cyan-500' },
+                BUSINESS: { label: 'Business', price: '20 000', shops: '10 boutiques', color: 'border-amber-400 hover:border-amber-500' },
+              }
+              const p = info[plan]
+              const isCurrent = upgradeDialog.currentPlan === plan
+              return (
+                <button
+                  key={plan}
+                  disabled={isCurrent || actionLoading !== null}
+                  onClick={() => handleUpgradePlan(upgradeDialog.shopId, plan)}
+                  className={`w-full flex items-center justify-between rounded-xl border-2 p-4 transition-all text-left ${isCurrent ? 'border-primary bg-primary/5 opacity-60 cursor-not-allowed' : p.color + ' hover:shadow-md cursor-pointer'}`}
+                >
+                  <div>
+                    <p className="font-bold text-sm">{p.label}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{p.shops}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-sm">{p.price} FCFA</p>
+                    <p className="text-[10px] text-muted-foreground">/mois</p>
+                  </div>
+                  {isCurrent && (
+                    <Badge variant="secondary" className="ml-2 text-[10px]">Actuel</Badge>
+                  )}
+                  {!isCurrent && actionLoading === `${upgradeDialog.shopId}-upgrade` && (
+                    <Loader2 className="h-4 w-4 animate-spin text-purple-600 ml-2" />
+                  )}
+                </button>
+              )
+            })}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
-
-// ─── DOMAINS TAB ─────────────────────────────────────────────────────────────
 
 function AdminDomains() {
   const [domains, setDomains] = useState<AdminDomain[]>([])
