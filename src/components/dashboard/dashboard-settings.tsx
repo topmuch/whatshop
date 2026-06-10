@@ -44,6 +44,8 @@ import {
   ChevronDown,
   Upload,
   LinkIcon,
+  Zap,
+  ArrowUpRight,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -616,12 +618,257 @@ export function DashboardSettings() {
     }
   }
 
+  // Subscription state
+  const [subscriptionData, setSubscriptionData] = useState<{
+    planType: string
+    status: string
+    maxShops: number
+    currentShopCount: number
+    endDate: string | null
+    planConfig: { label: string; price: number; maxShops: number; customDomain: boolean; features: string[] }
+    allPlans: { type: string; label: string; price: number; maxShops: number; customDomain: boolean; features: string[] }[]
+  } | null>(null)
+  const [subLoading, setSubLoading] = useState(true)
+  const [upgrading, setUpgrading] = useState<string | null>(null)
+
+  // Fetch subscription data
+  useEffect(() => {
+    fetch('/api/subscription')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) setSubscriptionData(data)
+      })
+      .catch(() => {})
+      .finally(() => setSubLoading(false))
+  }, [])
+
+  async function handleUpgrade(planType: string) {
+    setUpgrading(planType)
+    try {
+      const res = await fetch('/api/subscription', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ planType }),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        toast.error(err.error || 'Erreur lors de la mise à niveau')
+        return
+      }
+      const data = await res.json()
+      setSubscriptionData((prev) =>
+        prev
+          ? {
+              ...prev,
+              planType: data.planType,
+              status: data.status,
+              maxShops: data.maxShops,
+              endDate: data.endDate,
+              planConfig: prev.allPlans.find((p) => p.type === data.planType) || prev.planConfig,
+            }
+          : prev
+      )
+      toast.success(`Forfait mis à jour vers ${prevLabel(planType)} ! 🎉`)
+    } catch {
+      toast.error('Erreur de connexion')
+    } finally {
+      setUpgrading(null)
+    }
+  }
+
+  function prevLabel(planType: string) {
+    return subscriptionData?.allPlans.find((p) => p.type === planType)?.label || planType
+  }
+
   const currentPlan = shop?.plan || 'FREE'
   const limits = planLimits[currentPlan as keyof typeof planLimits] || planLimits.FREE
 
   return (
     <div className="space-y-6 max-w-3xl">
       <h1 className="text-2xl font-bold">Paramètres</h1>
+
+      {/* ═══ Subscription / Plan Card ═══ */}
+      <Card className="overflow-hidden">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2">
+            <Crown className="h-5 w-5 text-amber-500" />
+            Mon forfait
+          </CardTitle>
+          <CardDescription>
+            Gérez votre abonnement et créez jusqu&apos;à 10 boutiques
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {subLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : subscriptionData ? (
+            <>
+              {/* Current plan summary */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border p-4 mb-5"
+                style={{ borderColor: subscriptionData.planType === 'BUSINESS' ? '#D4AF37' : subscriptionData.planType === 'PRO' ? '#0891B2' : '#9ca3af' }}
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className="flex items-center justify-center w-11 h-11 rounded-xl"
+                    style={{
+                      background: subscriptionData.planType === 'BUSINESS'
+                        ? 'linear-gradient(135deg, #D4AF37, #F59E0B)'
+                        : subscriptionData.planType === 'PRO'
+                        ? 'linear-gradient(135deg, #0891B2, #06B6D4)'
+                        : 'linear-gradient(135deg, #6b7280, #9ca3af)',
+                    }}
+                  >
+                    <Zap className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-lg">{subscriptionData.planConfig.label}</span>
+                      <Badge
+                        variant="secondary"
+                        className={
+                          subscriptionData.status === 'ACTIVE'
+                            ? 'bg-green-100 text-green-700 hover:bg-green-100'
+                            : subscriptionData.status === 'TRIAL'
+                            ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-100'
+                            : 'bg-red-100 text-red-700 hover:bg-red-100'
+                        }
+                      >
+                        {subscriptionData.status === 'ACTIVE'
+                          ? 'Actif'
+                          : subscriptionData.status === 'TRIAL'
+                          ? 'Essai'
+                          : subscriptionData.status}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {subscriptionData.currentShopCount}/{subscriptionData.maxShops} boutiques utilisées
+                      {subscriptionData.endDate && (
+                        <span className="ml-2">
+                          · Expire le {new Date(subscriptionData.endDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold">{subscriptionData.planConfig.price.toLocaleString('fr-FR')}</p>
+                  <p className="text-xs text-muted-foreground">FCFA/mois</p>
+                </div>
+              </div>
+
+              {/* Shop usage bar */}
+              <div className="mb-5">
+                <div className="flex items-center justify-between text-sm mb-1.5">
+                  <span className="text-muted-foreground">Boutiques utilisées</span>
+                  <span className="font-semibold">{subscriptionData.currentShopCount} / {subscriptionData.maxShops}</span>
+                </div>
+                <div className="h-2.5 rounded-full bg-muted overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{
+                      width: `${Math.min((subscriptionData.currentShopCount / subscriptionData.maxShops) * 100, 100)}%`,
+                      background: subscriptionData.currentShopCount >= subscriptionData.maxShops
+                        ? '#ef4444'
+                        : subscriptionData.planType === 'BUSINESS'
+                        ? '#D4AF37'
+                        : subscriptionData.planType === 'PRO'
+                        ? '#0891B2'
+                        : '#6b7280',
+                    }}
+                  />
+                </div>
+                {subscriptionData.currentShopCount >= subscriptionData.maxShops && (
+                  <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    Limite atteinte ! Passez à un forfait supérieur pour créer plus de boutiques.
+                  </p>
+                )}
+              </div>
+
+              {/* Available upgrades */}
+              {subscriptionData.allPlans
+                .filter((p) => p.type !== subscriptionData.planType)
+                .filter((p) => {
+                  const order = ['STARTER', 'PRO', 'BUSINESS']
+                  return order.indexOf(p.type) > order.indexOf(subscriptionData.planType)
+                })
+                .length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                    Passer à un forfait supérieur
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {subscriptionData.allPlans
+                      .filter((p) => p.type !== subscriptionData.planType)
+                      .filter((p) => {
+                        const order = ['STARTER', 'PRO', 'BUSINESS']
+                        return order.indexOf(p.type) > order.indexOf(subscriptionData.planType)
+                      })
+                      .map((plan) => (
+                        <div
+                          key={plan.type}
+                          className="relative rounded-xl border p-4 hover:shadow-md transition-shadow"
+                        >
+                          {plan.type === 'BUSINESS' && (
+                            <div className="absolute -top-2.5 left-4">
+                              <span className="bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                POPULAIRE
+                              </span>
+                            </div>
+                          )}
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="font-bold">{plan.label}</span>
+                            <div className="text-right">
+                              <span className="text-lg font-bold">{plan.price.toLocaleString('fr-FR')}</span>
+                              <span className="text-xs text-muted-foreground ml-0.5">FCFA/mois</span>
+                            </div>
+                          </div>
+                          <div className="space-y-1.5 mb-4">
+                            <p className="text-sm font-medium flex items-center gap-2">
+                              <Store className="h-3.5 w-3.5 text-green-600" />
+                              Jusqu&apos;à {plan.maxShops} boutique{plan.maxShops > 1 ? 's' : ''}
+                            </p>
+                            {plan.features.map((f) => (
+                              <p key={f} className="text-xs text-muted-foreground flex items-center gap-2">
+                                <Check className="h-3 w-3 text-green-500" />
+                                {f}
+                              </p>
+                            ))}
+                            {plan.customDomain && (
+                              <p className="text-xs text-muted-foreground flex items-center gap-2">
+                                <Globe className="h-3 w-3 text-blue-500" />
+                                Domaine personnalisé
+                              </p>
+                            )}
+                          </div>
+                          <Button
+                            className="w-full gap-1.5"
+                            size="sm"
+                            onClick={() => handleUpgrade(plan.type)}
+                            disabled={upgrading === plan.type}
+                          >
+                            {upgrading === plan.type ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <ArrowUpRight className="h-3.5 w-3.5" />
+                            )}
+                            Passer au {plan.label}
+                          </Button>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              Impossible de charger les informations d&apos;abonnement.
+            </p>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Shop Information */}
       <Card>

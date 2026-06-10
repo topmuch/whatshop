@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
         planLabel: planConfig.label,
         status: subscription.status,
         maxShops: subscription.maxShops,
-        canCreateShop: stats.shopCount < subscription.maxShops && subscription.status === 'ACTIVE',
+        canCreateShop: stats.shopCount < subscription.maxShops && (subscription.status === 'ACTIVE' || subscription.status === 'TRIAL'),
       },
     })
   } catch (error) {
