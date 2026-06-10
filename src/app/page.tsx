@@ -128,7 +128,7 @@ function LoadingShell() {
 }
 
 export default function Home() {
-  const { view, setView, setUser, setShop, setShops, shopSlug } = useAppStore()
+  const { view, setView, setUser, setShop, setShops, shopSlug, setShopSlug } = useAppStore()
   const pathname = useClientPathname()
   const [hydrated, setHydrated] = useState(false)
 
@@ -139,15 +139,19 @@ export default function Home() {
   // Once mounted + session checked, the store view takes over
   const effectiveView = view !== 'landing' ? view : urlView.view
 
-  // Check for existing session and sync store state
+  // Sync shop slug from URL into store — MUST be a separate effect with
+  // urlView.shopSlug as dependency so it works after hydration correction
+  // (useSyncExternalStore returns '/' on SSR, then '/shop-slug' on client).
+  useEffect(() => {
+    if (urlView.shopSlug && shopSlug !== urlView.shopSlug) {
+      setShopSlug(urlView.shopSlug)
+    }
+    }, [urlView.shopSlug, shopSlug])
+
+  // Check for existing session and hydrate
   useEffect(() => {
     const init = async () => {
-      // Sync shop slug from URL into store
-      if (urlView.shopSlug && shopSlug !== urlView.shopSlug) {
-        setShopSlug(urlView.shopSlug)
-      }
-
-      // Always check session (including login/register views)
+      // Only check session for non-shop views
       if (urlView.view === 'landing' || urlView.view === 'dashboard' || urlView.view === 'admin' || urlView.view === 'reseller' || urlView.view === 'login' || urlView.view === 'register' || urlView.view === 'onboarding') {
         try {
           const res = await fetch('/api/auth/session')
@@ -187,7 +191,7 @@ export default function Home() {
       setHydrated(true)
     }
     init()
-  }, [])
+  }, [urlView.view])
 
   // During SSR: show a neutral loading shell (prevents landing page flash)
   // After hydration: show the correct view immediately
