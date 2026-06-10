@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion'
 import { useAppStore } from '@/lib/store'
@@ -24,6 +24,7 @@ import {
   PackagePlus,
   ShoppingCart,
   ChevronRight,
+  X,
 } from 'lucide-react'
 
 /* ── ANIMATION VARIANTS ── */
@@ -71,14 +72,15 @@ function Counter({
 }
 
 /* ── LOGO ── */
-function Logo({ light = false }: { light?: boolean }) {
+function Logo({ light = false, size = 'default' }: { light?: boolean; size?: 'default' | 'large' }) {
+  const isLarge = size === 'large'
   return (
-    <div className="flex items-center gap-2.5">
-      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center shadow-lg shadow-pink-500/25">
-        <ShoppingBag className="w-5 h-5 text-white" />
+    <div className="flex items-center gap-3">
+      <div className={`${isLarge ? 'w-12 h-12' : 'w-10 h-10'} rounded-xl bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center shadow-lg shadow-pink-500/25`}>
+        <ShoppingBag className={`${isLarge ? 'w-6 h-6' : 'w-5 h-5'} text-white`} />
       </div>
       <span
-        className={`text-xl font-bold tracking-tight ${light ? 'text-white' : 'text-gray-900'}`}
+        className={`${isLarge ? 'text-2xl' : 'text-xl'} font-bold tracking-tight ${light ? 'text-white' : 'text-gray-900'}`}
       >
         Bouti<span className="text-pink-500">ko</span>
       </span>
@@ -86,86 +88,97 @@ function Logo({ light = false }: { light?: boolean }) {
   )
 }
 
-/* ── HEADER ── */
+/* ── HEADER (Linktree-style minimal) ── */
 function Header() {
   const { setView } = useAppStore()
   const [open, setOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    const handler = () => setScrolled(window.scrollY > 20)
+    window.addEventListener('scroll', handler, { passive: true })
+    return () => window.removeEventListener('scroll', handler)
+  }, [])
+
   const links = [
     { label: 'Fonctionnalités', href: '#features' },
     { label: 'Comment ça marche', href: '#how-it-works' },
     { label: 'Tarifs', href: '#pricing' },
     { label: 'FAQ', href: '#faq' },
   ]
+
   return (
-    <header className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-xl border-b border-gray-100/80">
-      <div className="mx-auto max-w-7xl flex h-16 items-center justify-between px-5 sm:px-8">
+    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white/90 backdrop-blur-2xl shadow-sm' : 'bg-transparent'}`}>
+      <div className="mx-auto max-w-7xl flex h-18 items-center justify-between px-5 sm:px-8">
         <Logo />
-        <nav className="hidden lg:flex items-center gap-8">
+
+        {/* Desktop nav - minimal pills */}
+        <nav className="hidden lg:flex items-center gap-2">
           {links.map((l) => (
             <a
               key={l.href}
               href={l.href}
-              className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+              className="text-base font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-100 px-4 py-2 rounded-full transition-all duration-200"
             >
               {l.label}
             </a>
           ))}
         </nav>
+
         <div className="hidden lg:flex items-center gap-3">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setView('login')}
-            className="text-gray-600"
+            className="text-gray-500 hover:text-gray-900 text-base"
           >
-            Se connecter
+            Connexion
           </Button>
           <Button
             size="sm"
             onClick={() => setView('register')}
-            className="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white shadow-lg shadow-pink-500/25 rounded-full px-5"
+            className="bg-gray-900 hover:bg-gray-800 text-white rounded-full px-6 text-base font-medium shadow-lg shadow-gray-900/20"
           >
-            Commencer gratuitement
+            Commencer
           </Button>
         </div>
+
+        {/* Mobile sheet */}
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild className="lg:hidden">
-            <Button variant="ghost" size="icon">
-              <Menu className="h-5 w-5" />
+            <Button variant="ghost" size="icon" className="rounded-full hover:bg-gray-100">
+              <Menu className="h-6 w-6 text-gray-700" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" className="w-72">
-            <SheetTitle className="mb-6">
-              <Logo />
-            </SheetTitle>
-            <nav className="flex flex-col gap-4">
+          <SheetContent side="right" className="w-80 p-0">
+            <div className="flex items-center justify-between p-6">
+              <Logo size="large" />
+              <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setOpen(false)}>
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            <nav className="flex flex-col gap-1 px-4">
               {links.map((l) => (
                 <a
                   key={l.href}
                   href={l.href}
                   onClick={() => setOpen(false)}
-                  className="text-base font-medium text-gray-600 py-2"
+                  className="text-xl font-medium text-gray-700 py-3.5 px-4 rounded-2xl hover:bg-gray-50 transition-colors"
                 >
                   {l.label}
                 </a>
               ))}
-              <Separator />
+              <div className="my-4" />
               <Button
-                variant="ghost"
-                className="w-full justify-start"
-                onClick={() => {
-                  setOpen(false)
-                  setView('login')
-                }}
+                variant="outline"
+                className="w-full justify-center rounded-2xl h-13 text-lg font-medium mb-3"
+                onClick={() => { setOpen(false); setView('login') }}
               >
-                Se connecter
+                Connexion
               </Button>
               <Button
-                className="w-full rounded-full bg-gradient-to-r from-pink-500 to-rose-500"
-                onClick={() => {
-                  setOpen(false)
-                  setView('register')
-                }}
+                className="w-full justify-center rounded-2xl bg-gray-900 hover:bg-gray-800 text-white h-13 text-lg font-medium"
+                onClick={() => { setOpen(false); setView('register') }}
               >
                 Commencer gratuitement
               </Button>
@@ -177,11 +190,72 @@ function Header() {
   )
 }
 
+/* ── STORY SLIDER (Linktree / Instagram Stories style) ── */
+const stories = [
+  { label: 'Boutiques', image: '/landing/story-boutique.png' },
+  { label: 'Clients', image: '/landing/story-cliente.png' },
+  { label: 'Vendeuses', image: '/landing/story-vendeuse.png' },
+  { label: 'Paiements', image: '/landing/story-paiement.png' },
+  { label: 'Produits', image: '/landing/story-produits.png' },
+  { label: 'Live', image: '/landing/story-live.png' },
+]
+
+function StorySlider() {
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={vp}
+      transition={{ duration: 0.5 }}
+      className="py-8 bg-white"
+    >
+      <div className="mx-auto max-w-7xl px-5 sm:px-8">
+        <div
+          ref={scrollRef}
+          className="flex gap-5 sm:gap-6 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
+          {stories.map((story, i) => (
+            <div key={i} className="flex flex-col items-center gap-2.5 snap-center shrink-0 cursor-pointer group">
+              <div className="relative">
+                {/* Gradient ring */}
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full p-[3px] bg-gradient-to-br from-pink-500 via-rose-500 to-orange-400 group-hover:from-pink-400 group-hover:via-rose-400 group-hover:to-orange-300 transition-all duration-300 group-hover:shadow-lg group-hover:shadow-pink-500/30 group-hover:scale-105">
+                  <div className="w-full h-full rounded-full p-[2px] bg-white">
+                    <div className="w-full h-full rounded-full overflow-hidden">
+                      <Image
+                        src={story.image}
+                        alt={story.label}
+                        width={200}
+                        height={200}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <span className="text-sm sm:text-base font-semibold text-gray-700 group-hover:text-pink-600 transition-colors">
+                {story.label}
+              </span>
+            </div>
+          ))}
+        </div>
+        <style>{`
+          .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+          }
+        `}</style>
+      </div>
+    </motion.section>
+  )
+}
+
 /* ── HERO ── */
 function Hero() {
   const { setView } = useAppStore()
   return (
-    <section className="relative min-h-screen flex items-center overflow-hidden">
+    <section className="relative min-h-screen flex items-center overflow-hidden pt-18">
       {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-white via-pink-50/40 to-rose-50/60" />
       <div className="absolute top-20 right-1/4 w-[500px] h-[500px] bg-pink-200/20 rounded-full blur-[120px]" />
@@ -199,7 +273,7 @@ function Hero() {
             <motion.div variants={fadeUp} custom={0}>
               <Badge
                 variant="secondary"
-                className="bg-emerald-50 text-emerald-700 border border-emerald-200/60 px-4 py-1.5 text-sm font-medium mb-6 inline-flex items-center gap-2"
+                className="bg-emerald-50 text-emerald-700 border border-emerald-200/60 px-5 py-2 text-base font-medium mb-8 inline-flex items-center gap-2"
               >
                 🚀 La plateforme #1 en Afrique
               </Badge>
@@ -207,7 +281,7 @@ function Hero() {
             <motion.h1
               variants={fadeUp}
               custom={0.1}
-              className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-gray-900 leading-[1.1]"
+              className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-gray-900 leading-[1.05]"
             >
               Vendez sur WhatsApp
               <br />
@@ -218,7 +292,7 @@ function Hero() {
             <motion.p
               variants={fadeUp}
               custom={0.2}
-              className="mt-6 text-lg sm:text-xl text-gray-600 max-w-lg leading-relaxed"
+              className="mt-8 text-xl sm:text-2xl text-gray-600 max-w-lg leading-relaxed"
             >
               Créez votre boutique en ligne en 2 minutes. Recevez des commandes
               directement sur WhatsApp et développez votre activité.
@@ -226,24 +300,24 @@ function Hero() {
             <motion.div
               variants={fadeUp}
               custom={0.3}
-              className="mt-10 flex flex-col sm:flex-row gap-4"
+              className="mt-12 flex flex-col sm:flex-row gap-4"
             >
               <Button
                 size="lg"
                 onClick={() => setView('register')}
-                className="text-base px-8 py-6 h-auto font-semibold rounded-full bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white shadow-xl shadow-pink-500/30"
+                className="text-lg px-10 py-7 h-auto font-semibold rounded-full bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white shadow-xl shadow-pink-500/30"
               >
                 Commencer gratuitement{' '}
-                <ArrowRight className="w-4 h-4 ml-2" />
+                <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
               <a href="#how-it-works">
                 <Button
                   variant="outline"
                   size="lg"
-                  className="text-base px-8 py-6 h-auto font-semibold rounded-full border-gray-300 hover:bg-gray-50"
+                  className="text-lg px-10 py-7 h-auto font-semibold rounded-full border-gray-300 hover:bg-gray-50"
                 >
                   Voir la démo
-                  <ChevronRight className="w-4 h-4 ml-1" />
+                  <ChevronRight className="w-5 h-5 ml-1" />
                 </Button>
               </a>
             </motion.div>
@@ -285,7 +359,7 @@ function Hero() {
               ].map((social) => (
                 <div
                   key={social.name}
-                  className={`w-11 h-11 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 transition-colors duration-200 ${social.color} hover:bg-white hover:shadow-md cursor-pointer`}
+                  className={`w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 transition-all duration-200 ${social.color} hover:bg-white hover:shadow-md hover:scale-110 cursor-pointer`}
                   title={social.name}
                 >
                   <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
@@ -336,15 +410,14 @@ const bannerWords = [
 ]
 
 function ScrollingBanner() {
-  // Duplicate the list for seamless infinite loop
   const items = [...bannerWords, ...bannerWords]
   return (
-    <div className="relative overflow-hidden bg-gradient-to-r from-pink-500 via-rose-500 to-pink-500 py-3.5">
+    <div className="relative overflow-hidden bg-gradient-to-r from-pink-500 via-rose-500 to-pink-500 py-4">
       <div className="flex animate-marquee whitespace-nowrap">
         {items.map((word, i) => (
           <span
             key={i}
-            className="inline-flex items-center gap-3 mx-4 text-sm sm:text-base font-semibold text-white/90"
+            className="inline-flex items-center gap-3 mx-5 text-base sm:text-lg font-bold text-white/90"
           >
             {word}
             <span className="text-white/40">✦</span>
@@ -369,33 +442,32 @@ function ScrollingBanner() {
 
 function HowItWorks() {
   return (
-    <section id="how-it-works" className="py-20 md:py-28 bg-white">
+    <section id="how-it-works" className="py-24 md:py-32 bg-white">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <motion.div
           initial="hidden"
           whileInView="visible"
           viewport={vp}
           variants={stagger}
-          className="text-center mb-16"
+          className="text-center mb-20"
         >
           <motion.h2
             variants={fadeUp}
             custom={0}
-            className="text-3xl sm:text-4xl font-bold text-gray-900"
+            className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900"
           >
             Comment ça marche ?
           </motion.h2>
           <motion.p
             variants={fadeUp}
             custom={0.1}
-            className="mt-4 text-gray-500 text-lg max-w-xl mx-auto"
+            className="mt-5 text-gray-500 text-xl sm:text-2xl max-w-2xl mx-auto"
           >
             Lancez votre boutique en ligne en 3 étapes simples
           </motion.p>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-8 md:gap-12 relative">
-          {/* Connecting line (desktop) */}
+        <div className="grid md:grid-cols-3 gap-10 md:gap-14 relative">
           <div className="hidden md:block absolute top-12 left-[20%] right-[20%] h-px bg-gradient-to-r from-pink-200 via-pink-300 to-pink-200" />
 
           {steps.map((step, i) => {
@@ -411,17 +483,17 @@ function HowItWorks() {
                 className="text-center relative"
               >
                 <div className="inline-flex flex-col items-center">
-                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-pink-50 to-rose-50 border-2 border-pink-200 flex items-center justify-center mb-6 relative z-10">
-                    <IconComp className="w-8 h-8 text-pink-500" />
+                  <div className="w-28 h-28 rounded-full bg-gradient-to-br from-pink-50 to-rose-50 border-2 border-pink-200 flex items-center justify-center mb-8 relative z-10">
+                    <IconComp className="w-10 h-10 text-pink-500" />
                   </div>
-                  <div className="absolute -top-1 -right-1 md:right-auto md:-top-1 w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 to-rose-500 text-white text-sm font-bold flex items-center justify-center z-20">
+                  <div className="absolute -top-1 -right-1 md:right-auto md:-top-1 w-9 h-9 rounded-full bg-gradient-to-br from-pink-500 to-rose-500 text-white text-base font-bold flex items-center justify-center z-20">
                     {step.num}
                   </div>
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-2">
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">
                   {step.title}
                 </h3>
-                <p className="text-gray-500 text-sm leading-relaxed max-w-xs mx-auto">
+                <p className="text-gray-500 text-base sm:text-lg leading-relaxed max-w-xs mx-auto">
                   {step.desc}
                 </p>
               </motion.div>
@@ -436,10 +508,9 @@ function HowItWorks() {
 /* ── SOCIAL SELLING SHOWCASE ── */
 function SocialSelling() {
   return (
-    <section className="py-20 md:py-28 bg-gray-50/80">
+    <section className="py-24 md:py-32 bg-gray-50/80">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-          {/* Image */}
+        <div className="grid lg:grid-cols-2 gap-14 lg:gap-20 items-center">
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -462,7 +533,6 @@ function SocialSelling() {
             </div>
           </motion.div>
 
-          {/* Text */}
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -473,7 +543,7 @@ function SocialSelling() {
             <motion.h2
               variants={fadeUp}
               custom={0}
-              className="text-3xl sm:text-4xl font-bold text-gray-900 leading-tight"
+              className="text-4xl sm:text-5xl font-extrabold text-gray-900 leading-tight"
             >
               Vendez partout,{' '}
               <span className="text-pink-500">sur WhatsApp</span>, Instagram,
@@ -482,7 +552,7 @@ function SocialSelling() {
             <motion.p
               variants={fadeUp}
               custom={0.1}
-              className="mt-5 text-gray-600 text-lg leading-relaxed"
+              className="mt-6 text-gray-600 text-xl leading-relaxed"
             >
               Partagez vos produits en un clic sur tous vos canaux de vente.
               Vos clients commandent directement et vous recevez les commandes
@@ -491,7 +561,7 @@ function SocialSelling() {
             <motion.ul
               variants={fadeUp}
               custom={0.2}
-              className="mt-8 space-y-4"
+              className="mt-10 space-y-5"
             >
               {[
                 'Partagez vos liens produit partout',
@@ -499,11 +569,11 @@ function SocialSelling() {
                 'Compatible Instagram, TikTok, Facebook',
                 'Catalogue en ligne professionnel',
               ].map((item, i) => (
-                <li key={i} className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-pink-100 flex items-center justify-center shrink-0 mt-0.5">
-                    <Check className="w-3.5 h-3.5 text-pink-500" />
+                <li key={i} className="flex items-start gap-4">
+                  <div className="w-7 h-7 rounded-full bg-pink-100 flex items-center justify-center shrink-0 mt-0.5">
+                    <Check className="w-4 h-4 text-pink-500" />
                   </div>
-                  <span className="text-gray-700 font-medium">{item}</span>
+                  <span className="text-gray-700 text-lg font-medium">{item}</span>
                 </li>
               ))}
             </motion.ul>
@@ -550,26 +620,26 @@ const features = [
 
 function Features() {
   return (
-    <section id="features" className="py-20 md:py-28 bg-white">
+    <section id="features" className="py-24 md:py-32 bg-white">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <motion.div
           initial="hidden"
           whileInView="visible"
           viewport={vp}
           variants={stagger}
-          className="text-center mb-16"
+          className="text-center mb-20"
         >
           <motion.h2
             variants={fadeUp}
             custom={0}
-            className="text-3xl sm:text-4xl font-bold text-gray-900"
+            className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900"
           >
             Tout ce qu&apos;il vous faut pour vendre en ligne
           </motion.h2>
           <motion.p
             variants={fadeUp}
             custom={0.1}
-            className="mt-4 text-gray-500 text-lg max-w-xl mx-auto"
+            className="mt-5 text-gray-500 text-xl sm:text-2xl max-w-2xl mx-auto"
           >
             Des outils puissants conçus spécialement pour les vendeurs africains
           </motion.p>
@@ -579,7 +649,7 @@ function Features() {
           whileInView="visible"
           viewport={vp}
           variants={stagger}
-          className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"
+          className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8"
         >
           {features.map((f, i) => (
             <motion.div key={i} variants={fadeUp} custom={i * 0.08}>
@@ -594,11 +664,11 @@ function Features() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
                 </div>
-                <CardContent className="p-5 flex flex-col gap-1.5">
-                  <h3 className="font-semibold text-gray-900 text-base">
+                <CardContent className="p-6 flex flex-col gap-2">
+                  <h3 className="font-bold text-gray-900 text-lg">
                     {f.title}
                   </h3>
-                  <p className="text-sm text-gray-500 leading-relaxed">
+                  <p className="text-base text-gray-500 leading-relaxed">
                     {f.desc}
                   </p>
                 </CardContent>
@@ -614,19 +684,19 @@ function Features() {
 /* ── DASHBOARD PREVIEW ── */
 function DashboardPreview() {
   return (
-    <section className="py-20 md:py-28 bg-gray-50/80">
+    <section className="py-24 md:py-32 bg-gray-50/80">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <motion.div
           initial="hidden"
           whileInView="visible"
           viewport={vp}
           variants={stagger}
-          className="text-center mb-12"
+          className="text-center mb-16"
         >
           <motion.h2
             variants={fadeUp}
             custom={0}
-            className="text-3xl sm:text-4xl font-bold text-gray-900"
+            className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900"
           >
             Un tableau de bord{' '}
             <span className="text-pink-500">puissant</span>
@@ -634,7 +704,7 @@ function DashboardPreview() {
           <motion.p
             variants={fadeUp}
             custom={0.1}
-            className="mt-4 text-gray-500 text-lg max-w-2xl mx-auto"
+            className="mt-5 text-gray-500 text-xl sm:text-2xl max-w-3xl mx-auto"
           >
             Gérez vos produits, suivez vos ventes et analysez vos performances
             depuis une interface claire et intuitive.
@@ -712,32 +782,32 @@ const plans = [
 function Pricing() {
   const { setView } = useAppStore()
   return (
-    <section id="pricing" className="py-20 md:py-28 bg-white">
+    <section id="pricing" className="py-24 md:py-32 bg-white">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <motion.div
           initial="hidden"
           whileInView="visible"
           viewport={vp}
           variants={stagger}
-          className="text-center mb-16"
+          className="text-center mb-20"
         >
           <motion.h2
             variants={fadeUp}
             custom={0}
-            className="text-3xl sm:text-4xl font-bold text-gray-900"
+            className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900"
           >
             Des tarifs adaptés à vos ambitions
           </motion.h2>
           <motion.p
             variants={fadeUp}
             custom={0.1}
-            className="mt-4 text-gray-500 text-lg max-w-xl mx-auto"
+            className="mt-5 text-gray-500 text-xl sm:text-2xl max-w-2xl mx-auto"
           >
             Choisissez le plan qui correspond à votre activité. Changez à tout
             moment.
           </motion.p>
         </motion.div>
-        <div className="grid md:grid-cols-3 gap-6 lg:gap-8 max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-8 lg:gap-10 max-w-5xl mx-auto">
           {plans.map((p, i) => (
             <motion.div
               key={i}
@@ -750,7 +820,7 @@ function Pricing() {
             >
               {p.popular && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-                  <Badge className="bg-gradient-to-r from-pink-500 to-rose-500 text-white border-0 shadow-lg shadow-pink-500/25 text-xs font-bold px-4 py-1">
+                  <Badge className="bg-gradient-to-r from-pink-500 to-rose-500 text-white border-0 shadow-lg shadow-pink-500/25 text-sm font-bold px-5 py-1.5">
                     Plus Populaire
                   </Badge>
                 </div>
@@ -762,29 +832,29 @@ function Pricing() {
                     : 'border border-gray-200 shadow-sm hover:shadow-md'
                 } transition-shadow bg-white`}
               >
-                <CardContent className="pt-8 pb-8 px-6 flex flex-col flex-1">
-                  <div className="mb-6">
-                    <h3 className="text-sm font-bold tracking-wider text-gray-400 uppercase">
+                <CardContent className="pt-10 pb-10 px-7 flex flex-col flex-1">
+                  <div className="mb-8">
+                    <h3 className="text-base font-bold tracking-wider text-gray-400 uppercase">
                       {p.name}
                     </h3>
-                    <p className="text-sm text-gray-500 mt-1">{p.desc}</p>
+                    <p className="text-base text-gray-500 mt-1.5">{p.desc}</p>
                   </div>
-                  <div className="mb-6">
-                    <span className="text-4xl font-bold text-gray-900">
+                  <div className="mb-8">
+                    <span className="text-5xl font-extrabold text-gray-900">
                       {p.price}
                     </span>
-                    <span className="text-gray-400 font-medium ml-1">
+                    <span className="text-gray-400 font-medium text-lg ml-1.5">
                       FCFA/mois
                     </span>
                   </div>
-                  <ul className="space-y-3 mb-8 flex-1">
+                  <ul className="space-y-4 mb-10 flex-1">
                     {p.features.map((f, j) => (
                       <li
                         key={j}
-                        className="flex items-center gap-3 text-sm text-gray-600"
+                        className="flex items-center gap-3 text-base text-gray-600"
                       >
-                        <div className="w-5 h-5 rounded-full bg-pink-100 flex items-center justify-center shrink-0">
-                          <Check className="w-3 h-3 text-pink-500" />
+                        <div className="w-6 h-6 rounded-full bg-pink-100 flex items-center justify-center shrink-0">
+                          <Check className="w-3.5 h-3.5 text-pink-500" />
                         </div>
                         {f}
                       </li>
@@ -793,7 +863,7 @@ function Pricing() {
                   <Button
                     variant={p.popular ? 'default' : 'outline'}
                     onClick={() => setView('register')}
-                    className={`w-full rounded-full h-11 font-semibold ${
+                    className={`w-full rounded-full h-13 text-lg font-semibold ${
                       p.popular
                         ? 'bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 shadow-lg shadow-pink-500/25 text-white'
                         : 'border-gray-200 hover:bg-gray-50'
@@ -820,10 +890,9 @@ const stats = [
 
 function SocialProof() {
   return (
-    <section className="py-20 md:py-28 bg-white overflow-hidden">
+    <section className="py-24 md:py-32 bg-white overflow-hidden">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-          {/* Image */}
+        <div className="grid lg:grid-cols-2 gap-14 lg:gap-20 items-center">
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -845,7 +914,6 @@ function SocialProof() {
             </div>
           </motion.div>
 
-          {/* Stats */}
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -855,7 +923,7 @@ function SocialProof() {
             <motion.h2
               variants={fadeUp}
               custom={0}
-              className="text-3xl sm:text-4xl font-bold text-gray-900 leading-tight"
+              className="text-4xl sm:text-5xl font-extrabold text-gray-900 leading-tight"
             >
               Rejoignez une communauté de{' '}
               <span className="text-pink-500">vendeurs passionnés</span>
@@ -863,7 +931,7 @@ function SocialProof() {
             <motion.p
               variants={fadeUp}
               custom={0.1}
-              className="mt-5 text-gray-600 text-lg leading-relaxed"
+              className="mt-6 text-gray-600 text-xl leading-relaxed"
             >
               Des centaines de marchands africains font confiance à Boutiko
               pour développer leur activité en ligne. Rejoignez-les !
@@ -871,11 +939,11 @@ function SocialProof() {
             <motion.div
               variants={fadeUp}
               custom={0.2}
-              className="mt-10 grid grid-cols-3 gap-6"
+              className="mt-12 grid grid-cols-3 gap-8"
             >
               {stats.map((s, i) => (
                 <div key={i} className="text-center lg:text-left">
-                  <p className="text-3xl sm:text-4xl font-bold text-gray-900">
+                  <p className="text-4xl sm:text-5xl font-extrabold text-gray-900">
                     {s.value % 1 === 0 ? (
                       <Counter value={s.value} />
                     ) : (
@@ -883,7 +951,7 @@ function SocialProof() {
                     )}
                     <span className="text-pink-500">{s.suffix}</span>
                   </p>
-                  <p className="text-sm text-gray-500 mt-1.5 font-medium">
+                  <p className="text-base text-gray-500 mt-2 font-medium">
                     {s.label}
                   </p>
                 </div>
@@ -922,26 +990,26 @@ const faqItems = [
 
 function FAQ() {
   return (
-    <section id="faq" className="py-20 md:py-28 bg-gray-50/80">
+    <section id="faq" className="py-24 md:py-32 bg-gray-50/80">
       <div className="mx-auto max-w-3xl px-5 sm:px-8">
         <motion.div
           initial="hidden"
           whileInView="visible"
           viewport={vp}
           variants={stagger}
-          className="text-center mb-12"
+          className="text-center mb-16"
         >
           <motion.h2
             variants={fadeUp}
             custom={0}
-            className="text-3xl sm:text-4xl font-bold text-gray-900"
+            className="text-4xl sm:text-5xl font-extrabold text-gray-900"
           >
             Questions fréquentes
           </motion.h2>
           <motion.p
             variants={fadeUp}
             custom={0.1}
-            className="mt-4 text-gray-500 text-lg"
+            className="mt-5 text-gray-500 text-xl"
           >
             Tout ce que vous devez savoir pour commencer
           </motion.p>
@@ -960,10 +1028,10 @@ function FAQ() {
                 value={`item-${i}`}
                 className="border-gray-200"
               >
-                <AccordionTrigger className="text-left text-base font-semibold text-gray-900 hover:text-pink-500 hover:no-underline py-5">
+                <AccordionTrigger className="text-left text-lg font-semibold text-gray-900 hover:text-pink-500 hover:no-underline py-6">
                   {item.q}
                 </AccordionTrigger>
-                <AccordionContent className="text-gray-600 leading-relaxed text-base">
+                <AccordionContent className="text-gray-600 leading-relaxed text-lg">
                   {item.a}
                 </AccordionContent>
               </AccordionItem>
@@ -979,7 +1047,7 @@ function FAQ() {
 function FinalCTA() {
   const { setView } = useAppStore()
   return (
-    <section className="py-20 md:py-28 bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 relative overflow-hidden">
+    <section className="py-24 md:py-32 bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(255,255,255,0.15),transparent_50%)]" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(255,255,255,0.1),transparent_40%)]" />
       <motion.div
@@ -992,7 +1060,7 @@ function FinalCTA() {
         <motion.h2
           variants={fadeUp}
           custom={0}
-          className="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight"
+          className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-white leading-tight"
         >
           Prêt à lancer votre boutique
           <br className="hidden sm:block" /> en ligne ?
@@ -1000,19 +1068,19 @@ function FinalCTA() {
         <motion.p
           variants={fadeUp}
           custom={0.1}
-          className="mt-5 text-lg text-white/80 max-w-xl mx-auto"
+          className="mt-6 text-xl text-white/80 max-w-2xl mx-auto"
         >
           Rejoignez des centaines de vendeurs africains qui font confiance à
           Boutiko pour développer leur activité.
         </motion.p>
-        <motion.div variants={fadeUp} custom={0.2} className="mt-10">
+        <motion.div variants={fadeUp} custom={0.2} className="mt-12">
           <Button
             size="lg"
             onClick={() => setView('register')}
-            className="text-base px-10 py-6 h-auto font-semibold rounded-full bg-white text-pink-600 hover:bg-white/90 shadow-2xl shadow-black/20"
+            className="text-lg px-12 py-7 h-auto font-semibold rounded-full bg-white text-pink-600 hover:bg-white/90 shadow-2xl shadow-black/20"
           >
             Créer ma boutique gratuitement{' '}
-            <ArrowRight className="w-4 h-4 ml-2" />
+            <ArrowRight className="w-5 h-5 ml-2" />
           </Button>
         </motion.div>
       </motion.div>
@@ -1024,13 +1092,13 @@ function FinalCTA() {
 function Footer() {
   const { setView } = useAppStore()
   return (
-    <footer className="bg-white border-t border-gray-100 py-12 mt-auto">
+    <footer className="bg-white border-t border-gray-100 py-14 mt-auto">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-12">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <Logo />
-            <p className="mt-4 text-sm text-gray-500 leading-relaxed max-w-xs">
+            <p className="mt-5 text-base text-gray-500 leading-relaxed max-w-xs">
               La plateforme e-commerce #1 pour les vendeurs africains. Vendez
               sur WhatsApp comme un pro.
             </p>
@@ -1038,7 +1106,7 @@ function Footer() {
 
           {/* Produit */}
           <div>
-            <h4 className="font-semibold text-gray-900 mb-4 text-sm uppercase tracking-wider">
+            <h4 className="font-semibold text-gray-900 mb-5 text-base uppercase tracking-wider">
               Produit
             </h4>
             <ul className="space-y-3">
@@ -1050,7 +1118,7 @@ function Footer() {
                 <li key={l.view}>
                   <button
                     onClick={() => setView(l.view)}
-                    className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
+                    className="text-base text-gray-500 hover:text-gray-900 transition-colors"
                   >
                     {l.label}
                   </button>
@@ -1061,7 +1129,7 @@ function Footer() {
 
           {/* Entreprise */}
           <div>
-            <h4 className="font-semibold text-gray-900 mb-4 text-sm uppercase tracking-wider">
+            <h4 className="font-semibold text-gray-900 mb-5 text-base uppercase tracking-wider">
               Entreprise
             </h4>
             <ul className="space-y-3">
@@ -1072,7 +1140,7 @@ function Footer() {
                 <li key={l.view}>
                   <button
                     onClick={() => setView(l.view)}
-                    className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
+                    className="text-base text-gray-500 hover:text-gray-900 transition-colors"
                   >
                     {l.label}
                   </button>
@@ -1083,10 +1151,10 @@ function Footer() {
 
           {/* Paiements */}
           <div>
-            <h4 className="font-semibold text-gray-900 mb-4 text-sm uppercase tracking-wider">
+            <h4 className="font-semibold text-gray-900 mb-5 text-base uppercase tracking-wider">
               Paiements
             </h4>
-            <ul className="space-y-3 text-sm text-gray-500">
+            <ul className="space-y-3 text-base text-gray-500">
               <li>Orange Money</li>
               <li>MTN Mobile Money</li>
               <li>Wave</li>
@@ -1096,20 +1164,20 @@ function Footer() {
 
         <Separator />
 
-        <div className="mt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <p className="text-sm text-gray-400">
+        <div className="mt-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <p className="text-base text-gray-400">
             © {new Date().getFullYear()} Boutiko. Tous droits réservés.
           </p>
-          <div className="flex gap-6">
+          <div className="flex gap-8">
             <button
               onClick={() => setView('privacy')}
-              className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-base text-gray-400 hover:text-gray-600 transition-colors"
             >
               Confidentialité
             </button>
             <button
               onClick={() => setView('terms')}
-              className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-base text-gray-400 hover:text-gray-600 transition-colors"
             >
               Conditions
             </button>
@@ -1127,6 +1195,7 @@ export function LandingPage() {
       <Header />
       <main className="flex-1">
         <Hero />
+        <StorySlider />
         <ScrollingBanner />
         <HowItWorks />
         <SocialSelling />
