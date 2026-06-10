@@ -55,5 +55,23 @@ export async function GET(request: NextRequest) {
 export async function DELETE() {
   const response = NextResponse.json({ success: true })
   clearSessionCookie(response)
+
+  // Also clear god-mode cookies so a super admin fully logs out
+  const isSecure = process.env.COOKIE_SECURE === 'true'
+  response.cookies.set('whatsshop-god-mode', '', {
+    httpOnly: true,
+    secure: isSecure,
+    sameSite: 'lax',
+    maxAge: 0,
+    path: '/',
+  })
+  response.cookies.set('whatsshop-god-mode-user', '', {
+    httpOnly: false,
+    secure: isSecure,
+    sameSite: 'lax',
+    maxAge: 0,
+    path: '/',
+  })
+
   return response
 }

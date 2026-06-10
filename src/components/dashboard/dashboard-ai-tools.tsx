@@ -417,7 +417,7 @@ function ContentGenerator({ preselectedProduct }: { preselectedProduct?: Product
 
 function QrCodePoster() {
   const { shop } = useAppStore()
-  const [qrSvg, setQrSvg] = useState<string | null>(null)
+  const [qrImage, setQrImage] = useState<string | null>(null)
   const [generating, setGenerating] = useState(false)
   const [showPoster, setShowPoster] = useState(false)
   const posterRef = useRef<HTMLDivElement>(null)
@@ -441,7 +441,7 @@ function QrCodePoster() {
         return
       }
       const data = await res.json()
-      setQrSvg(data.svg)
+      setQrImage(data.dataUrl)
       toast.success('QR code généré !')
     } catch {
       toast.error('Erreur de connexion')
@@ -451,23 +451,19 @@ function QrCodePoster() {
   }
 
   function downloadQrCode() {
-    if (!qrSvg) return
+    if (!qrImage) return
 
-    // Convert SVG to PNG data URL for download
-    const svgBlob = new Blob([qrSvg], { type: 'image/svg+xml' })
-    const url = URL.createObjectURL(svgBlob)
     const a = document.createElement('a')
-    a.href = url
-    a.download = `qr-code-${shop?.slug || 'boutique'}.svg`
+    a.href = qrImage
+    a.download = `qr-code-${shop?.slug || 'boutique'}.png`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
-    URL.revokeObjectURL(url)
     toast.success('QR code téléchargé !')
   }
 
   function handlePrintPoster() {
-    if (!posterRef.current) return
+    if (!posterRef.current || !qrImage) return
     const printWindow = window.open('', '_blank')
     if (!printWindow) {
       toast.error('Impossible d\'ouvrir la fenêtre d\'impression')
@@ -485,7 +481,7 @@ function QrCodePoster() {
           .poster h1 { font-size: 28px; font-weight: 800; color: #25D366; margin-bottom: 8px; }
           .poster .subtitle { font-size: 14px; color: #666; margin-bottom: 24px; }
           .poster .qr-container { margin: 20px auto; }
-          .poster .qr-container svg { width: 250px; height: 250px; }
+          .poster .qr-container img { width: 250px; height: 250px; }
           .poster .url { font-size: 16px; color: #333; font-weight: 600; margin-top: 16px; }
           .poster .cta { font-size: 14px; color: #25D366; font-weight: 600; margin-top: 12px; text-transform: uppercase; letter-spacing: 1px; }
           .poster .divider { width: 60px; height: 3px; background: #25D366; margin: 20px auto; border-radius: 2px; }
@@ -496,7 +492,7 @@ function QrCodePoster() {
           <h1>${shop?.name || 'Ma Boutique'}</h1>
           <div class="divider"></div>
           <p class="subtitle">Commandez en ligne, recevez chez vous</p>
-          <div class="qr-container">${qrSvg}</div>
+          <div class="qr-container"><img src="${qrImage}" alt="QR Code" /></div>
           <p class="url">${shopUrl}</p>
           <p class="cta">📱 Scannez pour commander</p>
         </div>
@@ -583,7 +579,7 @@ function QrCodePoster() {
       )}
 
       {/* QR Code display */}
-      {qrSvg && !generating && (
+      {qrImage && !generating && (
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -594,10 +590,11 @@ function QrCodePoster() {
             <CardContent className="p-6">
               <div className="flex flex-col items-center text-center">
                 <div
-                  className="bg-white rounded-xl p-4 shadow-sm border"
-                  dangerouslySetInnerHTML={{ __html: qrSvg }}
+                  className="bg-white rounded-xl p-4 shadow-sm border flex items-center justify-center"
                   style={{ width: '200px', height: '200px' }}
-                />
+                >
+                  <img src={qrImage} alt="QR Code" className="w-full h-full object-contain" />
+                </div>
                 <p className="text-sm font-medium mt-4">{shop?.name}</p>
                 <p className="text-xs text-muted-foreground mt-1">{shopUrl}</p>
 
@@ -642,7 +639,9 @@ function QrCodePoster() {
                       <h3 className="text-2xl font-extrabold text-green-600">{shop?.name || 'Ma Boutique'}</h3>
                       <div className="w-16 h-0.5 bg-green-500 rounded mx-auto my-3" />
                       <p className="text-sm text-gray-500">Commandez en ligne, recevez chez vous</p>
-                      <div className="my-6 flex justify-center" dangerouslySetInnerHTML={{ __html: qrSvg }} style={{ width: '180px', height: '180px' }} />
+                      <div className="my-6 flex justify-center" style={{ width: '180px', height: '180px' }}>
+                        <img src={qrImage} alt="QR Code" className="w-full h-full object-contain" />
+                      </div>
                       <p className="font-mono font-semibold text-sm text-gray-800">{shopUrl}</p>
                       <p className="text-green-600 font-bold text-sm mt-3 uppercase tracking-wider">
                         📱 Scannez pour commander

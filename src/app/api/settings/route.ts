@@ -22,6 +22,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       seoTitle: user.shops[0].seoTitle,
       seoDescription: user.shops[0].seoDescription,
+      seoKeywords: user.shops[0].seoKeywords,
+      ogImage: user.shops[0].ogImage,
       coverImageUrl: user.shops[0].coverImageUrl,
     })
   } catch (error) {
@@ -51,12 +53,14 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { seoTitle, seoDescription, coverImageUrl, logo, banner } = body
+    const { seoTitle, seoDescription, seoKeywords, ogImage, coverImageUrl, logo, banner } = body
 
     // Build update data with only provided fields
     const data: Record<string, unknown> = {}
     if (seoTitle !== undefined) data.seoTitle = seoTitle || null
     if (seoDescription !== undefined) data.seoDescription = seoDescription || null
+    if (seoKeywords !== undefined) data.seoKeywords = seoKeywords || null
+    if (ogImage !== undefined) data.ogImage = ogImage || null
     if (coverImageUrl !== undefined) data.coverImageUrl = coverImageUrl || null
     if (logo !== undefined) data.logo = logo || null
     if (banner !== undefined) data.banner = banner || null
@@ -66,7 +70,7 @@ export async function PUT(request: NextRequest) {
       data,
       select: {
         id: true, name: true, slug: true, seoTitle: true, seoDescription: true,
-        coverImageUrl: true, logo: true, banner: true,
+        seoKeywords: true, ogImage: true, coverImageUrl: true, logo: true, banner: true,
       },
     })
 

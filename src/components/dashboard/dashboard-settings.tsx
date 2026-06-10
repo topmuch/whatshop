@@ -17,7 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { TemplateSelector } from '@/components/dashboard/template-selector'
+import { templates, type TemplateId } from '@/lib/templates'
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible'
 import {
   Check,
@@ -46,6 +46,15 @@ import {
   LinkIcon,
 } from 'lucide-react'
 import { toast } from 'sonner'
+
+const templateOptions = [
+  { id: 'minimal', name: 'Classique', description: 'Épuré et professionnel', color: '#18181b', gradient: 'linear-gradient(135deg, #18181b, #52525b)' },
+  { id: 'rose', name: 'Mode', description: 'Doux et tendance', color: '#EC4899', gradient: 'linear-gradient(135deg, #EC4899, #F9A8D4)' },
+  { id: 'jameela', name: 'Beauté', description: 'Luxe et élégance', color: '#C8A882', gradient: 'linear-gradient(135deg, #C8A882, #C9788F)' },
+  { id: 'ocean', name: 'Tech', description: 'Moderne et frais', color: '#0891B2', gradient: 'linear-gradient(135deg, #0891B2, #06B6D4)' },
+  { id: 'xstore-grocery', name: 'Épicerie', description: 'Fraîcheur alimentaire', color: '#00A651', gradient: 'linear-gradient(135deg, #00A651, #16A34A)' },
+  { id: 'sunset', name: 'Flash Live', description: 'Énergie vibrante', color: '#F97316', gradient: 'linear-gradient(135deg, #F97316, #EF4444)' },
+] as const
 
 const planLimits = {
   FREE: { products: 10, price: '0 FCFA/mois', features: { categories: true, orders: true, whatsapp: true, customLogo: false, analytics: false } },
@@ -82,6 +91,7 @@ export function DashboardSettings() {
   const [logoUrlInput, setLogoUrlInput] = useState('')
   const [banner, setBanner] = useState('')
   const [template, setTemplate] = useState('classic')
+  const [accentColor, setAccentColor] = useState('#25D366')
 
   // Hero images (slider)
   const [heroImages, setHeroImages] = useState<string[]>([])
@@ -108,6 +118,8 @@ export function DashboardSettings() {
   // SEO form state
   const [seoTitle, setSeoTitle] = useState('')
   const [seoDescription, setSeoDescription] = useState('')
+  const [seoKeywords, setSeoKeywords] = useState('')
+  const [ogImage, setOgImage] = useState('')
   const [coverImageUrl, setCoverImageUrl] = useState('')
   const [seoSaving, setSeoSaving] = useState(false)
 
@@ -136,6 +148,7 @@ export function DashboardSettings() {
       setLogo(shop.logo || '')
       setBanner(shop.banner || '')
       setTemplate(shop.template || 'classic')
+      setAccentColor((shop as unknown as Record<string, unknown>).accentColor as string || templates[(shop.template as TemplateId) || 'classic']?.colors?.primary || '#25D366')
 
       // Parse hero images from shop data
       try {
@@ -188,6 +201,8 @@ export function DashboardSettings() {
           if (data) {
             setSeoTitle(data.seoTitle || '')
             setSeoDescription(data.seoDescription || '')
+            setSeoKeywords(data.seoKeywords || '')
+            setOgImage(data.ogImage || '')
             setCoverImageUrl(data.coverImageUrl || '')
           }
         })
@@ -483,6 +498,7 @@ export function DashboardSettings() {
           logo,
           banner,
           template,
+          accentColor,
           heroImages: JSON.stringify(heroImages),
           promoBanners: JSON.stringify(promoBanners),
           brands: JSON.stringify(brands),
@@ -508,6 +524,7 @@ export function DashboardSettings() {
         phone: updatedShop.phone,
         plan: updatedShop.plan,
         template: updatedShop.template || 'classic',
+        accentColor: updatedShop.accentColor || accentColor,
         isActive: updatedShop.isActive,
         heroImages: updatedShop.heroImages,
         promoBanners: updatedShop.promoBanners,
@@ -519,6 +536,7 @@ export function DashboardSettings() {
           ...publicShop,
           ...updatedShop,
           template: updatedShop.template || 'classic',
+          accentColor: updatedShop.accentColor || accentColor,
           heroImages: updatedShop.heroImages,
           promoBanners: updatedShop.promoBanners,
           brands: updatedShop.brands,
@@ -547,6 +565,8 @@ export function DashboardSettings() {
         body: JSON.stringify({
           seoTitle,
           seoDescription,
+          seoKeywords,
+          ogImage,
           coverImageUrl,
         }),
       })
@@ -1216,41 +1236,128 @@ export function DashboardSettings() {
         </CardContent>
       </Card>
 
-      {/* Template Theme */}
+      {/* Template de la boutique */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Palette className="h-5 w-5 text-primary" />
-            Thème de la boutique
+            Template de la boutique
           </CardTitle>
           <CardDescription>
-            Choisissez un thème pour personnaliser l&apos;apparence de votre boutique publique
+            Choisissez un template pour personnaliser l&apos;apparence de votre boutique.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <TemplateSelector currentTemplate={template} onSelect={setTemplate} />
+        <CardContent className="space-y-6">
+          {/* Template grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {templateOptions.map((opt) => {
+              const isActive = template === opt.id
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => {
+                    setTemplate(opt.id)
+                    setAccentColor(opt.color)
+                  }}
+                  className={`relative flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all duration-200 cursor-pointer ${
+                    isActive
+                      ? 'border-primary shadow-md bg-primary/5'
+                      : 'border-muted hover:border-muted-foreground/30 hover:bg-muted/30'
+                  }`}
+                >
+                  {/* Colored preview box */}
+                  <div
+                    className="w-12 h-12 rounded-lg flex-shrink-0 shadow-sm"
+                    style={{ background: opt.gradient }}
+                  />
+                  {/* Name */}
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-semibold ${isActive ? 'text-primary' : 'text-foreground'}`}>{
+                      opt.name
+                    }</p>
+                    <p className="text-xs text-muted-foreground">{opt.description}</p>
+                  </div>
+                  {/* Selected indicator */}
+                  {isActive && (
+                    <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                      <Check className="h-3 w-3 text-primary-foreground" />
+                    </div>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+
+          <Separator />
+
+          {/* Color customization */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Couleur d&apos;accent</Label>
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <input
+                  type="color"
+                  value={accentColor}
+                  onChange={(e) => setAccentColor(e.target.value)}
+                  className="w-10 h-10 rounded-lg border border-muted cursor-pointer appearance-none bg-transparent [&::-webkit-color-swatch-wrapper]:p-0.5 [&::-webkit-color-swatch]:rounded-md [&::-webkit-color-swatch]:border-none"
+                />
+              </div>
+              <Input
+                value={accentColor}
+                onChange={(e) => {
+                  const val = e.target.value
+                  if (/^#[0-9A-Fa-f]{0,6}$/.test(val)) {
+                    setAccentColor(val)
+                  }
+                }}
+                placeholder="#25D366"
+                maxLength={7}
+                className="flex-1 h-10 font-mono text-sm"
+              />
+            </div>
+            {/* Live preview */}
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-muted-foreground">Aperçu :</span>
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-md" style={{ backgroundColor: accentColor }} />
+                <div className="h-2 w-16 rounded-full" style={{ backgroundColor: accentColor, opacity: 0.6 }} />
+                <div className="h-2 w-10 rounded-full" style={{ backgroundColor: accentColor, opacity: 0.3 }} />
+              </div>
+            </div>
+          </div>
+
+          <Button onClick={handleSave} disabled={saving} className="gap-2">
+            {saving ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Check className="h-4 w-4" />
+            )}
+            Enregistrer le template
+          </Button>
         </CardContent>
       </Card>
 
-      {/* SEO & Apparence */}
+      {/* SEO & Référencement */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Search className="h-5 w-5 text-primary" />
-            SEO &amp; Apparence
+            SEO &amp; Référencement
           </CardTitle>
           <CardDescription>
-            Optimisez le référencement et l&apos;apparence de votre boutique sur les réseaux sociaux
+            Optimisez le référencement de votre boutique sur les moteurs de recherche.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Titre SEO */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="seo-title" className="flex items-center gap-2">
                 <Type className="h-3.5 w-3.5 text-muted-foreground" />
-                SEO Title
+                Titre SEO
               </Label>
-              <span className="text-xs text-muted-foreground tabular-nums">
+              <span className={`text-xs tabular-nums ${seoTitle.length > 60 ? 'text-red-500 font-medium' : 'text-muted-foreground'}`}>
                 {seoTitle.length}/60
               </span>
             </div>
@@ -1260,18 +1367,19 @@ export function DashboardSettings() {
               onChange={(e) => {
                 if (e.target.value.length <= 60) setSeoTitle(e.target.value)
               }}
-              placeholder="Titre de votre boutique (60 caractères max)"
+              placeholder="Ma Boutique - Produits de qualité"
               maxLength={60}
             />
           </div>
 
+          {/* Description SEO */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="seo-description" className="flex items-center gap-2">
                 <Type className="h-3.5 w-3.5 text-muted-foreground" />
-                Meta Description
+                Description SEO
               </Label>
-              <span className="text-xs text-muted-foreground tabular-nums">
+              <span className={`text-xs tabular-nums ${seoDescription.length > 160 ? 'text-red-500 font-medium' : 'text-muted-foreground'}`}>
                 {seoDescription.length}/160
               </span>
             </div>
@@ -1281,23 +1389,75 @@ export function DashboardSettings() {
               onChange={(e) => {
                 if (e.target.value.length <= 160) setSeoDescription(e.target.value)
               }}
-              placeholder="Description de votre boutique pour les moteurs de recherche (160 caractères max)"
+              placeholder="Découvrez nos produits de qualité à des prix imbattables..."
               rows={3}
               maxLength={160}
             />
           </div>
 
+          {/* Mots-clés SEO */}
           <div className="space-y-2">
-            <Label htmlFor="seo-cover" className="flex items-center gap-2">
-              <ImagePlus className="h-3.5 w-3.5 text-muted-foreground" />
-              Image de couverture (Open Graph)
+            <Label htmlFor="seo-keywords" className="flex items-center gap-2">
+              <Type className="h-3.5 w-3.5 text-muted-foreground" />
+              Mots-clés SEO
             </Label>
             <Input
-              id="seo-cover"
+              id="seo-keywords"
+              value={seoKeywords}
+              onChange={(e) => setSeoKeywords(e.target.value)}
+              placeholder="mode, beaute, vetements"
+            />
+            <p className="text-xs text-muted-foreground">
+              Séparez les mots-clés par des virgules
+            </p>
+          </div>
+
+          {/* Image OG */}
+          <div className="space-y-2">
+            <Label htmlFor="og-image" className="flex items-center gap-2">
+              <ImagePlus className="h-3.5 w-3.5 text-muted-foreground" />
+              Image OG
+            </Label>
+            <Input
+              id="og-image"
+              type="url"
+              value={ogImage}
+              onChange={(e) => setOgImage(e.target.value)}
+              placeholder="https://..."
+            />
+            {ogImage && (
+              <div className="mt-2 rounded-lg border border-muted overflow-hidden">
+                <img
+                  src={ogImage}
+                  alt="Aperçu Image OG"
+                  className="w-full h-32 object-cover"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Image de couverture */}
+          <div className="space-y-2">
+            <Label htmlFor="cover-image-url" className="flex items-center gap-2">
+              <ImagePlus className="h-3.5 w-3.5 text-muted-foreground" />
+              Image de couverture
+            </Label>
+            <Input
+              id="cover-image-url"
+              type="url"
               value={coverImageUrl}
               onChange={(e) => setCoverImageUrl(e.target.value)}
-              placeholder="https://example.com/cover.jpg"
+              placeholder="https://..."
             />
+            {coverImageUrl && (
+              <div className="mt-2 rounded-lg border border-muted overflow-hidden">
+                <img
+                  src={coverImageUrl}
+                  alt="Aperçu image de couverture"
+                  className="w-full h-32 object-cover"
+                />
+              </div>
+            )}
           </div>
 
           <Button onClick={handleSeoSave} disabled={seoSaving} className="gap-2">
@@ -1306,7 +1466,7 @@ export function DashboardSettings() {
             ) : (
               <Check className="h-4 w-4" />
             )}
-            Enregistrer SEO
+            Enregistrer le référencement
           </Button>
         </CardContent>
       </Card>

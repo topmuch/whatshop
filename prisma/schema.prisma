@@ -36,13 +36,16 @@ enum SubStatus {
 // ─── USER ──────────────────────────────────────────────────────────────────────
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  name      String
-  role      Role     @default(SELLER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(cuid())
+  email       String   @unique
+  password    String
+  name        String
+  role        Role     @default(SELLER)
+  isSuspended Boolean  @default(false)
+  suspendedAt DateTime?
+  suspendedReason String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   // Relations
   shops           Shop[]
@@ -102,12 +105,15 @@ model Shop {
   plan                  String   @default("FREE") // FREE | STANDARD | PRO (backward compat, kept for per-shop features)
   sector                String?  // beaute, mode, electronique, alimentation, artisanat, sport, bijoux, maison, auto, autre
   template              String   @default("classic")
+  accentColor           String   @default("#25D366")
   isActive              Boolean  @default(true)
   ownerId               String   // NO @unique — allows multiple shops per user
 
-  // SEO & Appearance
+  // SEO & Open Graph
   seoTitle              String?
   seoDescription        String?
+  seoKeywords           String?
+  ogImage               String?
   coverImageUrl         String?
 
   // Hero Slider (JSON array of image URLs)
@@ -280,6 +286,8 @@ model SaaSConfig {
   notifySupportTicket    Boolean  @default(true)
   weeklyReport           Boolean  @default(false)
   lowStockAlerts         Boolean  @default(false)
+  // Moderation
+  forbiddenKeywords     String   @default("") // JSON array of forbidden words for shop names, product names
   createdAt              DateTime @default(now())
   updatedAt              DateTime  @updatedAt
 }

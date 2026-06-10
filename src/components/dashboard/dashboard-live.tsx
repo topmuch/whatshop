@@ -55,7 +55,9 @@ export function DashboardLive() {
   // ── State ──
   const [isLive, setIsLive] = useState(false)
   const [endTime, setEndTime] = useState<number | null>(null)
+  const [startTime, setStartTime] = useState<number | null>(null)
   const [timeLeft, setTimeLeft] = useState('00:00')
+  const [elapsedTime, setElapsedTime] = useState('00:00:00')
   const [pinnedProductId, setPinnedProductId] = useState<string | null>(null)
   const [promoCode, setPromoCode] = useState<{ code: string; discountPercent: number } | null>(null)
   const [whatsappClicks, setWhatsappClicks] = useState(0)
@@ -123,6 +125,7 @@ export function DashboardLive() {
     socket.on('live:stateUpdate', (data: {
       isLive: boolean
       endTime?: number
+      startTime?: number
       pinnedProductId?: string | null
       promoCode?: { code: string; discountPercent: number } | null
       viewers?: number
@@ -130,6 +133,8 @@ export function DashboardLive() {
       setIsLive(data.isLive)
       if (data.endTime) setEndTime(data.endTime)
       else setEndTime(null)
+      if (data.startTime) setStartTime(data.startTime)
+      else setStartTime(null)
       if (data.pinnedProductId !== undefined) setPinnedProductId(data.pinnedProductId)
       if (data.promoCode !== undefined) setPromoCode(data.promoCode)
       if (data.viewers !== undefined) setConnectedViewers(data.viewers)
@@ -146,34 +151,49 @@ export function DashboardLive() {
     }
   }, [shop])
 
-  // ── Countdown Timer ──
+  // ── Countdown Timer & Elapsed Timer ──
   useEffect(() => {
-    if (!isLive || !endTime) {
+    if (!isLive) {
       setTimeLeft('00:00')
+      setElapsedTime('00:00:00')
       return
     }
 
     function tick() {
-      const remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000))
-      const minutes = Math.floor(remaining / 60)
-      const seconds = remaining % 60
-      setTimeLeft(
-        `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
-      )
-      if (remaining <= 0) {
-        // Auto-stop the live
-        setIsLive(false)
-        setEndTime(null)
-        setPinnedProductId(null)
-        setPromoCode(null)
-        toast.info('Le live est terminé !')
+      // Elapsed time
+      if (startTime) {
+        const elapsed = Math.floor((Date.now() - startTime) / 1000)
+        const h = Math.floor(elapsed / 3600)
+        const m = Math.floor((elapsed % 3600) / 60)
+        const s = elapsed % 60
+        setElapsedTime(
+          `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+        )
+      }
+
+      // Remaining time
+      if (endTime) {
+        const remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000))
+        const minutes = Math.floor(remaining / 60)
+        const seconds = remaining % 60
+        setTimeLeft(
+          `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+        )
+        if (remaining <= 0) {
+          setIsLive(false)
+          setEndTime(null)
+          setStartTime(null)
+          setPinnedProductId(null)
+          setPromoCode(null)
+          toast.info('Le live est terminé !')
+        }
       }
     }
 
     tick()
     const interval = setInterval(tick, 1000)
     return () => clearInterval(interval)
-  }, [isLive, endTime])
+  }, [isLive, endTime, startTime])
 
   // ── Actions ──
   function handleToggleLive() {
@@ -181,8 +201,10 @@ export function DashboardLive() {
     if (!isLive) {
       // Start live for 30 minutes
       const newEnd = Date.now() + 30 * 60 * 1000
-      socketRef.current.emit('live:toggle', { isLive: true, endTime: newEnd })
+      const newStart = Date.now()
+      socketRef.current.emit('live:toggle', { isLive: true, endTime: newEnd, startTime: newStart })
       setEndTime(newEnd)
+      setStartTime(newStart)
       setIsLive(true)
       setWhatsappClicks(0)
       setPinnedProductId(null)
@@ -192,6 +214,7 @@ export function DashboardLive() {
       socketRef.current.emit('live:toggle', { isLive: false })
       setIsLive(false)
       setEndTime(null)
+      setStartTime(null)
       setPinnedProductId(null)
       setPromoCode(null)
       toast.info('Live arrêté.')
@@ -267,6 +290,14 @@ export function DashboardLive() {
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Elapsed timer */}
+            {isLive && (
+              <div className="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2">
+                <Clock className="h-4 w-4 text-red-400" />
+                <span className="font-mono text-sm text-red-400 tabular-nums">{elapsedTime}</span>
+              </div>
+            )}
+
             {/* WhatsApp clicks */}
             <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 rounded-lg px-4 py-2">
               <MessageCircle className="h-5 w-5 text-emerald-400" />
@@ -288,6 +319,63 @@ export function DashboardLive() {
       </header>
 
       <main className="p-4 sm:p-6 space-y-6 max-w-6xl mx-auto">
+        {/* ─── Pinned Product (prominently at top when live) ─── */}
+        {isLive && pinnedProductId && (() => {
+          const pinnedProduct = products.find((p) => p.id === pinnedProductId)
+          if (!pinnedProduct) return null
+          const pinnedImage = pinnedProduct.image || (pinnedProduct.images && pinnedProduct.images[0])
+          return (
+            <section className="bg-gradient-to-br from-yellow-500/10 via-gray-900 to-gray-900 border-2 border-yellow-500/40 rounded-xl p-4 sm:p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Pin className="h-5 w-5 text-yellow-400" />
+                <h2 className="text-lg font-semibold text-yellow-300">Produit épinglé</h2>
+                <Badge className="bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 gap-1 ml-auto">
+                  <Star className="h-3 w-3" /> En vedette
+                </Badge>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden flex-shrink-0 bg-gray-800 border border-yellow-500/30">
+                  {pinnedImage ? (
+                    <img src={pinnedImage} alt={pinnedProduct.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-500 text-2xl">📦</div>
+                  )}
+                  <div className="absolute top-0 right-0 bg-yellow-500 text-black p-0.5 rounded-bl-lg">
+                    <Star className="h-3 w-3 fill-current" />
+                  </div>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-lg font-bold text-white truncate">{pinnedProduct.name}</p>
+                  <p className="text-xl font-bold text-yellow-400">{formatPrice(pinnedProduct.price)}</p>
+                  {pinnedProduct.description && (
+                    <p className="text-xs text-gray-400 mt-1 line-clamp-2">{pinnedProduct.description}</p>
+                  )}
+                </div>
+                <div className="flex flex-col gap-2 flex-shrink-0">
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleOutOfStock(pinnedProduct.id)}
+                    className="text-xs gap-1"
+                  >
+                    <AlertTriangle className="h-3 w-3" />
+                    ÉPUISÉ
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handlePinProduct(pinnedProduct.id)}
+                    className="text-xs gap-1 bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 hover:text-white"
+                  >
+                    <Pin className="h-3 w-3" />
+                    Désépingler
+                  </Button>
+                </div>
+              </div>
+            </section>
+          )
+        })()}
+
         {/* ─── Live Status Controller ─── */}
         <section className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6">
           <div className="flex flex-col items-center text-center gap-4">
@@ -319,8 +407,14 @@ export function DashboardLive() {
             {/* Countdown + extend (only when live) */}
             {isLive && endTime && (
               <div className="flex flex-col items-center gap-3">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2 text-gray-400">
+                    <Clock className="h-4 w-4" />
+                    <span className="text-sm">Durée</span>
+                    <span className="font-mono text-lg text-white tabular-nums">{elapsedTime}</span>
+                  </div>
+                </div>
                 <div className="flex items-center gap-2 text-gray-400">
-                  <Clock className="h-4 w-4" />
                   <span className="text-sm">Temps restant</span>
                 </div>
                 <p className="text-4xl sm:text-5xl font-mono font-bold text-red-500 tabular-nums tracking-wider">
@@ -351,21 +445,16 @@ export function DashboardLive() {
 
         {/* ─── Main Grid ─── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* ─── Left Column: Flash Pin + Stats ─── */}
+          {/* ─── Left Column: Product Pin + Stats ─── */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Flash Pin Section */}
+            {/* Produit épinglé selector */}
             {isLive && (
               <section className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-semibold flex items-center gap-2">
                     <Pin className="h-5 w-5 text-yellow-400" />
-                    📌 Produit du Moment
+                    📌 Produit épinglé
                   </h2>
-                  {pinnedProductId && (
-                    <Badge className="bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 gap-1">
-                      <Star className="h-3 w-3" /> Épinglé
-                    </Badge>
-                  )}
                 </div>
 
                 {loadingProducts ? (
@@ -395,7 +484,6 @@ export function DashboardLive() {
                             }
                           `}
                         >
-                          {/* Product image */}
                           <div className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-700">
                             {product.image || (product.images && product.images.length > 0) ? (
                               <img
@@ -414,8 +502,6 @@ export function DashboardLive() {
                               </div>
                             )}
                           </div>
-
-                          {/* Product info */}
                           <div className="flex-1 min-w-0">
                             <p className={`text-sm font-medium truncate ${isPinned ? 'text-yellow-300' : 'text-white'}`}>
                               {product.name}
@@ -424,22 +510,6 @@ export function DashboardLive() {
                               {formatPrice(product.price)}
                             </p>
                           </div>
-
-                          {/* Actions for pinned product */}
-                          {isPinned && (
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                handleOutOfStock(product.id)
-                              }}
-                              className="text-xs px-2 py-1 h-7 flex-shrink-0 gap-1"
-                            >
-                              <AlertTriangle className="h-3 w-3" />
-                              ÉPUISÉ
-                            </Button>
-                          )}
                         </button>
                       )
                     })}
@@ -471,29 +541,20 @@ export function DashboardLive() {
                 📊 Statistiques en Direct
               </h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                {/* Total clicks */}
                 <div className="bg-gray-800/50 rounded-lg p-4 text-center border border-gray-700/50">
                   <MessageCircle className="h-6 w-6 text-emerald-400 mx-auto mb-2" />
                   <p className="text-3xl font-bold text-emerald-400">{whatsappClicks}</p>
                   <p className="text-xs text-gray-400 mt-1">Clics WhatsApp</p>
                 </div>
 
-                {/* Live duration */}
                 <div className="bg-gray-800/50 rounded-lg p-4 text-center border border-gray-700/50">
                   <Clock className="h-6 w-6 text-blue-400 mx-auto mb-2" />
-                  <p className="text-3xl font-bold text-blue-400">
-                    {isLive && endTime
-                      ? (() => {
-                          const elapsed = Math.floor((Date.now() - (endTime - 30 * 60 * 1000)) / 60000)
-                          return `${Math.max(0, elapsed)}m`
-                        })()
-                      : '0m'
-                    }
+                  <p className="text-2xl font-bold text-blue-400 font-mono tabular-nums">
+                    {isLive ? elapsedTime : '00:00:00'}
                   </p>
                   <p className="text-xs text-gray-400 mt-1">Durée du live</p>
                 </div>
 
-                {/* Connected viewers */}
                 <div className="bg-gray-800/50 rounded-lg p-4 text-center border border-gray-700/50 col-span-2 sm:col-span-1">
                   <Radio className="h-6 w-6 text-purple-400 mx-auto mb-2" />
                   <p className="text-3xl font-bold text-purple-400">{connectedViewers}</p>

@@ -86,6 +86,9 @@ import {
   ShieldCheck,
   Crown,
   MessageCircle,
+  Building2,
+  Ban,
+  DollarSign,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
@@ -112,6 +115,21 @@ interface AdminStats {
   recentOrders: { id: string; shopName: string; customerName: string; total: number; status: string; createdAt: string }[]
 }
 
+interface EnhancedAdminStats extends AdminStats {
+  mrr: number
+  activeSubscriptions: number
+  trialSubscriptions: number
+  expiredSubscriptions: number
+  churnRate: number
+  suspendedUsers: number
+  totalResellers: number
+  activeResellers: number
+  pendingDomains: number
+  flaggedShops: number
+  subscriptionGrowth: { month: string; newSubscriptions: number }[]
+  revenueByPlan: { STARTER: number; PRO: number; BUSINESS: number }
+}
+
 interface AdminUser {
   id: string
   name: string
@@ -119,6 +137,9 @@ interface AdminUser {
   createdAt: string
   shop: { id: string; name: string; plan: string; isActive: boolean; productCount: number; orderCount: number } | null
   orderCount: number
+  isSuspended: boolean
+  suspendedReason?: string
+  role: string
 }
 
 interface AdminShop {
@@ -209,6 +230,8 @@ interface PlatformConfig {
   adminWhatsappNumber: string
   standardPrice: number
   proPrice: number
+  starterPrice: number
+  businessPrice: number
   supportEmail: string
   senderName: string
   autoWelcomeEmail: boolean
@@ -218,6 +241,7 @@ interface PlatformConfig {
   notifySupportTicket: boolean
   weeklyReport: boolean
   lowStockAlerts: boolean
+  forbiddenKeywords?: string
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -235,6 +259,9 @@ const formatDate = (dateStr: string) =>
 const planVariant = (plan: string) => {
   switch (plan) {
     case 'FREE': return 'secondary' as const
+    case 'STARTER': return 'default' as const
+    case 'PRO': return 'outline' as const
+    case 'BUSINESS': return 'outline' as const
     case 'STANDARD': return 'default' as const
     case 'PREMIUM': return 'outline' as const
     default: return 'secondary' as const
@@ -297,6 +324,7 @@ const navGroups = [
       { id: 'admin-support' as AdminTab, label: 'Support', icon: <LifeBuoy className="h-5 w-5" /> },
       { id: 'admin-moderation' as AdminTab, label: 'Modération', icon: <Flag className="h-5 w-5" /> },
       { id: 'admin-marketing' as AdminTab, label: 'Marketing', icon: <Megaphone className="h-5 w-5" /> },
+      { id: 'admin-resellers' as AdminTab, label: 'Revendeurs', icon: <Building2 className="h-5 w-5" /> },
     ],
   },
   {
@@ -319,18 +347,21 @@ function AdminSidebarContent() {
     try {
       const res = await fetch('/api/auth/session', { method: 'DELETE' })
       if (res.ok) {
-        // Cookie cleared, now reset state and redirect
+        // Clear non-httpOnly cookies client-side as well
+        document.cookie = 'whatsshop-god-mode-user=; path=/; max-age=0'
+        // Reset Zustand state
         setUser(null)
         setShop(null)
         setView('landing')
         window.history.replaceState(null, '', '/')
-        // Use replace to avoid back-button returning to admin
         window.location.replace('/')
         return
       }
     } catch { /* ignore */ }
-    // Fallback: clear cookie client-side and redirect anyway
+    // Fallback: clear cookies client-side and redirect anyway
     document.cookie = 'whatsshop-user=; path=/; max-age=0'
+    document.cookie = 'whatsshop-god-mode=; path=/; max-age=0'
+    document.cookie = 'whatsshop-god-mode-user=; path=/; max-age=0'
     setUser(null)
     setShop(null)
     setView('landing')
@@ -423,7 +454,24 @@ export function AdminDashboard() {
   const { user, setUser, setView, setShop } = useAppStore()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [godModeUser, setGodModeUser] = useState<string | null>(null)
   const { isDark, toggleTheme } = useThemeMode()
+
+  useEffect(() => {
+    if (typeof document !== 'undefined' && document.cookie.includes('whatsshop-god-mode')) {
+      const match = document.cookie.match(/whatsshop-god-mode-user=([^;]+)/)
+      setGodModeUser(match ? decodeURIComponent(match[1]) : 'Utilisateur')
+    }
+  }, [])
+
+  async function exitGodMode() {
+    try {
+      await fetch('/api/admin/god-mode', { method: 'DELETE' })
+      window.location.reload()
+    } catch {
+      window.location.reload()
+    }
+  }
 
   useEffect(() => {
     // If user data is already set (e.g. just logged in), skip session fetch
@@ -470,6 +518,19 @@ export function AdminDashboard() {
 
   return (
     <div className="min-h-screen flex bg-muted/30">
+      {/* God Mode Banner */}
+      {godModeUser && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-red-600 text-white px-4 py-2 flex items-center justify-center gap-3 text-sm">
+          <span>🔴 MODE DIEU — Vous êtes connecté en tant que {godModeUser}.</span>
+          <button
+            onClick={exitGodMode}
+            className="underline font-medium hover:no-underline"
+          >
+            Quitter le mode Dieu
+          </button>
+        </div>
+      )}
+
       {/* Desktop sidebar */}
       <aside className="hidden lg:flex lg:w-64 lg:flex-col bg-gradient-to-b from-blue-600 to-blue-800 border-r border-blue-500/30 min-h-screen sticky top-0">
         <AdminSidebarContent />
@@ -544,6 +605,8 @@ function AdminContent() {
       return <AdminShops />
     case 'admin-orders':
       return <AdminOrders />
+    case 'admin-resellers':
+      return <AdminResellers />
     default:
       return <AdminOverview />
   }
@@ -552,7 +615,7 @@ function AdminContent() {
 // ─── OVERVIEW TAB ────────────────────────────────────────────────────────────
 
 function AdminOverview() {
-  const [stats, setStats] = useState<AdminStats | null>(null)
+  const [stats, setStats] = useState<EnhancedAdminStats | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -561,7 +624,7 @@ function AdminOverview() {
         const res = await fetch('/api/admin/stats')
         if (res.ok) {
           const data = await res.json()
-          setStats(data)
+          setStats(data as EnhancedAdminStats)
         }
       } catch {
         toast.error('Erreur lors du chargement des statistiques')
@@ -583,18 +646,33 @@ function AdminOverview() {
       ]
     : []
 
+  const enhancedCards = stats
+    ? [
+        { label: 'MRR', value: formatCurrency(stats.mrr || 0), icon: <DollarSign className="h-5 w-5" />, cardBg: 'bg-gradient-to-br from-rose-600 to-pink-700' },
+        { label: 'Abonnements actifs', value: stats.activeSubscriptions || 0, icon: <CheckCircle className="h-5 w-5" />, cardBg: 'bg-gradient-to-br from-green-500 to-green-600' },
+        { label: 'Taux de churn', value: `${stats.churnRate || 0}%`, icon: <TrendingUp className="h-5 w-5" />, cardBg: stats.churnRate > 10 ? 'bg-gradient-to-br from-red-500 to-red-600' : 'bg-gradient-to-br from-green-500 to-green-600' },
+        { label: 'Revendeurs actifs', value: stats.activeResellers || 0, icon: <Building2 className="h-5 w-5" />, cardBg: 'bg-gradient-to-br from-purple-500 to-purple-700' },
+      ]
+    : []
+
   const planChartData = stats
     ? [
-        { plan: 'Gratuit', count: stats.shopsByPlan.FREE, fill: 'var(--color-free)' },
-        { plan: 'Standard', count: stats.shopsByPlan.STANDARD, fill: 'var(--color-standard)' },
-        { plan: 'Premium', count: stats.shopsByPlan.PREMIUM, fill: 'var(--color-premium)' },
+        { plan: 'Starter', count: stats.revenueByPlan?.STARTER || stats.shopsByPlan?.STARTER || 0, fill: 'var(--color-starter)' },
+        { plan: 'Pro', count: stats.revenueByPlan?.PRO || stats.shopsByPlan?.PRO || 0, fill: 'var(--color-pro)' },
+        { plan: 'Business', count: stats.revenueByPlan?.BUSINESS || stats.shopsByPlan?.BUSINESS || 0, fill: 'var(--color-business)' },
       ]
     : []
 
   const chartConfig = {
-    free: { label: 'Gratuit', color: '#94a3b8' },
-    standard: { label: 'Standard', color: '#22c55e' },
-    premium: { label: 'Premium', color: '#f59e0b' },
+    starter: { label: 'Starter', color: '#22c55e' },
+    pro: { label: 'Pro', color: '#3b82f6' },
+    business: { label: 'Business', color: '#f59e0b' },
+  }
+
+  const growthChartData = stats?.subscriptionGrowth || []
+
+  const growthChartConfig = {
+    newSubscriptions: { label: 'Nouveaux', color: '#22c55e' },
   }
 
   if (loading) {
@@ -641,10 +719,54 @@ function AdminOverview() {
         ))}
       </div>
 
+      {/* Enhanced Stat Cards */}
+      {enhancedCards.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {enhancedCards.map((card, i) => (
+            <motion.div
+              key={card.label}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 + i * 0.05 }}
+            >
+              <Card className={`p-4 overflow-hidden ${card.cardBg}`}>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-white/20 text-white">
+                    {card.icon}
+                  </div>
+                </div>
+                <p className="text-2xl font-bold text-white">{card.value}</p>
+                <p className="text-xs text-white/80 mt-1">{card.label}</p>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+      )}
+
+      {/* Subscription Growth Chart */}
+      {growthChartData.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Croissance des abonnements</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer config={growthChartConfig} className="h-[200px] w-full">
+              <BarChart data={growthChartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" tickFormatter={(v) => String(v)} />
+                <YAxis tickFormatter={(v) => String(v)} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Bar dataKey="newSubscriptions" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Chart */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Boutiques par plan</CardTitle>
+          <CardTitle className="text-base">Revenus par plan</CardTitle>
         </CardHeader>
         <CardContent>
           <ChartContainer config={chartConfig} className="h-[200px] w-full">
@@ -1124,8 +1246,9 @@ function AdminDomains() {
 
 function AdminConfig() {
   // Pricing state
-  const [standardPrice, setStandardPrice] = useState('')
+  const [starterPrice, setStarterPrice] = useState('')
   const [proPrice, setProPrice] = useState('')
+  const [businessPrice, setBusinessPrice] = useState('')
   const [savingPricing, setSavingPricing] = useState(false)
 
   // Platform config state
@@ -1137,6 +1260,8 @@ function AdminConfig() {
     adminWhatsappNumber: '',
     standardPrice: 0,
     proPrice: 0,
+    starterPrice: 0,
+    businessPrice: 0,
     supportEmail: 'contact@boutiko.com',
     senderName: 'Boutiko',
     autoWelcomeEmail: true,
@@ -1174,6 +1299,8 @@ function AdminConfig() {
             adminWhatsappNumber: data.adminWhatsappNumber ?? prev.adminWhatsappNumber,
             standardPrice: data.standardPrice ?? prev.standardPrice,
             proPrice: data.proPrice ?? prev.proPrice,
+            starterPrice: data.starterPrice ?? prev.starterPrice,
+            businessPrice: data.businessPrice ?? prev.businessPrice,
             supportEmail: data.supportEmail ?? prev.supportEmail,
             senderName: data.senderName ?? prev.senderName,
             autoWelcomeEmail: data.autoWelcomeEmail ?? prev.autoWelcomeEmail,
@@ -1184,8 +1311,9 @@ function AdminConfig() {
             weeklyReport: data.weeklyReport ?? prev.weeklyReport,
             lowStockAlerts: data.lowStockAlerts ?? prev.lowStockAlerts,
           }))
-          setStandardPrice(String(data.standardPrice || ''))
+          setStarterPrice(String(data.starterPrice || ''))
           setProPrice(String(data.proPrice || ''))
+          setBusinessPrice(String(data.businessPrice || ''))
         }
       } catch {
         toast.error('Erreur lors du chargement de la configuration')
@@ -1221,7 +1349,7 @@ function AdminConfig() {
       const res = await fetch('/api/admin/config', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ standardPrice: Number(standardPrice), proPrice: Number(proPrice) }),
+        body: JSON.stringify({ starterPrice: Number(starterPrice), proPrice: Number(proPrice), businessPrice: Number(businessPrice) }),
       })
       if (res.ok) {
         toast.success('Tarifs mis à jour')
@@ -1385,13 +1513,13 @@ function AdminConfig() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="standard-price">Prix Standard (FCFA)</Label>
+              <Label htmlFor="starter-price">Prix Starter (FCFA)</Label>
               <Input
-                id="standard-price"
+                id="starter-price"
                 type="number"
                 placeholder="0"
-                value={standardPrice}
-                onChange={(e) => setStandardPrice(e.target.value)}
+                value={starterPrice}
+                onChange={(e) => setStarterPrice(e.target.value)}
               />
             </div>
             <div className="space-y-2">
@@ -1402,6 +1530,16 @@ function AdminConfig() {
                 placeholder="0"
                 value={proPrice}
                 onChange={(e) => setProPrice(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="business-price">Prix Business (FCFA)</Label>
+              <Input
+                id="business-price"
+                type="number"
+                placeholder="0"
+                value={businessPrice}
+                onChange={(e) => setBusinessPrice(e.target.value)}
               />
             </div>
             <Button onClick={savePricing} disabled={savingPricing} className="bg-blue-600 hover:bg-blue-700">
@@ -1974,6 +2112,68 @@ function AdminModeration() {
   const [flaggedShops, setFlaggedShops] = useState<FlaggedShop[]>([])
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [forbiddenKeywords, setForbiddenKeywords] = useState<string[]>([])
+  const [newKeyword, setNewKeyword] = useState('')
+  const [savingKeyword, setSavingKeyword] = useState(false)
+
+  useEffect(() => {
+    async function loadConfig() {
+      try {
+        const res = await fetch('/api/admin/config')
+        if (res.ok) {
+          const data = await res.json()
+          if (data.forbiddenKeywords) {
+            try {
+              const parsed = JSON.parse(data.forbiddenKeywords)
+              setForbiddenKeywords(Array.isArray(parsed) ? parsed : [])
+            } catch {
+              setForbiddenKeywords([])
+            }
+          }
+        }
+      } catch { /* ignore */ }
+    }
+    loadConfig()
+  }, [])
+
+  async function saveKeywords(keywords: string[]) {
+    setSavingKeyword(true)
+    try {
+      const res = await fetch('/api/admin/config', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ forbiddenKeywords: JSON.stringify(keywords) }),
+      })
+      if (res.ok) {
+        toast.success('Mots-clés interdits mis à jour')
+      } else {
+        toast.error('Erreur lors de la mise à jour')
+      }
+    } catch {
+      toast.error('Erreur lors de la mise à jour')
+    } finally {
+      setSavingKeyword(false)
+    }
+  }
+
+  function addKeyword() {
+    const kw = newKeyword.trim().toLowerCase()
+    if (!kw) return
+    if (forbiddenKeywords.includes(kw)) {
+      toast.error('Ce mot-clé existe déjà')
+      return
+    }
+    const updated = [...forbiddenKeywords, kw]
+    setForbiddenKeywords(updated)
+    setNewKeyword('')
+    saveKeywords(updated)
+  }
+
+  function removeKeyword(kw: string) {
+    const updated = forbiddenKeywords.filter(k => k !== kw)
+    setForbiddenKeywords(updated)
+    saveKeywords(updated)
+  }
 
   const loadFlaggedShops = useCallback(async () => {
     setLoading(true)
@@ -2018,6 +2218,48 @@ function AdminModeration() {
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Modération</h2>
+
+      {/* Forbidden Keywords */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Mots-clés interdits</CardTitle>
+          <CardDescription>Gérez les mots-clés interdits dans les noms de boutiques et produits.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex gap-2">
+            <Input
+              placeholder="Ajouter un mot-clé..."
+              value={newKeyword}
+              onChange={(e) => setNewKeyword(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addKeyword() } }}
+              disabled={savingKeyword}
+            />
+            <Button onClick={addKeyword} disabled={savingKeyword || !newKeyword.trim()} className="bg-blue-600 hover:bg-blue-700 shrink-0">
+              <Plus className="h-4 w-4 mr-2" />
+              Ajouter
+            </Button>
+          </div>
+          {forbiddenKeywords.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Aucun mot-clé interdit défini.</p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {forbiddenKeywords.map((kw) => (
+                <Badge key={kw} variant="secondary" className="gap-1 pr-1">
+                  {kw}
+                  <button
+                    type="button"
+                    onClick={() => removeKeyword(kw)}
+                    className="ml-1 rounded-full p-0.5 hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+                    disabled={savingKeyword}
+                  >
+                    <XCircle className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {loading ? (
         <Card>
@@ -2207,6 +2449,8 @@ function AdminUsers() {
   const [newUserEmail, setNewUserEmail] = useState('')
   const [newUserPassword, setNewUserPassword] = useState('')
   const [creatingUser, setCreatingUser] = useState(false)
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [suspendDialog, setSuspendDialog] = useState<{ open: boolean; user: AdminUser | null; reason: string }>({ open: false, user: null, reason: '' })
 
   const loadUsers = useCallback(async (searchTerm: string) => {
     setLoading(true)
@@ -2259,6 +2503,96 @@ function AdminUsers() {
     }
   }
 
+  async function handleGodMode(u: AdminUser) {
+    if (!confirm(`Vous allez prendre le contrôle du compte de ${u.name}. Continuez ?`)) return
+    setActionLoading(`god-${u.id}`)
+    try {
+      const res = await fetch('/api/admin/god-mode', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: u.id }),
+      })
+      if (res.ok) {
+        toast.success(`Mode Dieu activé pour ${u.name}`)
+        window.location.reload()
+      } else {
+        const data = await res.json()
+        toast.error(data.error || 'Erreur lors de l\'activation du mode Dieu')
+      }
+    } catch {
+      toast.error('Erreur lors de l\'activation du mode Dieu')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  async function handleSuspend() {
+    if (!suspendDialog.user || !suspendDialog.reason.trim()) {
+      toast.error('Veuillez saisir une raison de suspension')
+      return
+    }
+    setActionLoading(`suspend-${suspendDialog.user.id}`)
+    try {
+      const res = await fetch(`/api/admin/users/${suspendDialog.user.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'suspend', reason: suspendDialog.reason }),
+      })
+      if (res.ok) {
+        toast.success(`Utilisateur ${suspendDialog.user.name} suspendu`)
+        setSuspendDialog({ open: false, user: null, reason: '' })
+        loadUsers(search)
+      } else {
+        const data = await res.json()
+        toast.error(data.error || 'Erreur lors de la suspension')
+      }
+    } catch {
+      toast.error('Erreur lors de la suspension')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  async function handleUnsuspend(u: AdminUser) {
+    setActionLoading(`unsuspend-${u.id}`)
+    try {
+      const res = await fetch(`/api/admin/users/${u.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'unsuspend' }),
+      })
+      if (res.ok) {
+        toast.success(`Utilisateur ${u.name} réactivé`)
+        loadUsers(search)
+      } else {
+        toast.error('Erreur lors de la réactivation')
+      }
+    } catch {
+      toast.error('Erreur lors de la réactivation')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  async function handleDeleteUser(u: AdminUser) {
+    if (!confirm(`Supprimer l'utilisateur "${u.name}" ? Cette action est irréversible.`)) return
+    setActionLoading(`delete-${u.id}`)
+    try {
+      const res = await fetch(`/api/admin/users/${u.id}`, { method: 'DELETE' })
+      if (res.ok) {
+        toast.success(`Utilisateur "${u.name}" supprimé`)
+        loadUsers(search)
+      } else {
+        const data = await res.json()
+        toast.error(data.error || 'Erreur lors de la suppression')
+      }
+    } catch {
+      toast.error('Erreur lors de la suppression')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -2304,18 +2638,28 @@ function AdminUsers() {
                 <TableRow>
                   <TableHead>Nom</TableHead>
                   <TableHead>Email</TableHead>
+                  <TableHead>Rôle</TableHead>
                   <TableHead>Boutique</TableHead>
                   <TableHead>Plan</TableHead>
                   <TableHead className="text-center">Produits</TableHead>
                   <TableHead className="text-center">Commandes</TableHead>
                   <TableHead>Date</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {users.map((u) => (
                   <TableRow key={u.id}>
-                    <TableCell className="font-medium">{u.name}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{u.name}</span>
+                        {u.isSuspended && <Badge variant="destructive" className="bg-red-100 text-red-700 hover:bg-red-100 text-[10px]">Suspendu</Badge>}
+                      </div>
+                    </TableCell>
                     <TableCell className="text-muted-foreground">{u.email}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-[10px]">{u.role}</Badge>
+                    </TableCell>
                     <TableCell>{u.shop?.name || <span className="text-muted-foreground">—</span>}</TableCell>
                     <TableCell>
                       {u.shop ? (
@@ -2325,6 +2669,52 @@ function AdminUsers() {
                     <TableCell className="text-center">{u.shop?.productCount ?? '—'}</TableCell>
                     <TableCell className="text-center">{(u.shop?.orderCount ?? u.orderCount) ?? '—'}</TableCell>
                     <TableCell className="text-muted-foreground">{formatDate(u.createdAt)}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1 flex-wrap justify-center">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          title="Mode Dieu"
+                          onClick={() => handleGodMode(u)}
+                          disabled={actionLoading === `god-${u.id}`}
+                        >
+                          {actionLoading === `god-${u.id}` ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4 text-purple-600" />}
+                        </Button>
+                        {u.isSuspended ? (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            title="Réactiver"
+                            onClick={() => handleUnsuspend(u)}
+                            disabled={actionLoading === `unsuspend-${u.id}`}
+                          >
+                            {actionLoading === `unsuspend-${u.id}` ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4 text-emerald-600" />}
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            title="Suspendre"
+                            onClick={() => setSuspendDialog({ open: true, user: u, reason: '' })}
+                          >
+                            <Ban className="h-4 w-4 text-amber-600" />
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          title="Supprimer"
+                          onClick={() => handleDeleteUser(u)}
+                          disabled={actionLoading === `delete-${u.id}`}
+                        >
+                          {actionLoading === `delete-${u.id}` ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -2332,6 +2722,37 @@ function AdminUsers() {
           </CardContent>
         </Card>
       )}
+
+      {/* Suspend Dialog */}
+      <Dialog open={suspendDialog.open} onOpenChange={(open) => setSuspendDialog(prev => ({ ...prev, open }))}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Suspendre l&apos;utilisateur</DialogTitle>
+            <DialogDescription>
+              Suspendre le compte de &quot;{suspendDialog.user?.name}&quot;. L&apos;utilisateur ne pourra plus se connecter.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="suspend-reason">Raison de la suspension</Label>
+              <Textarea
+                id="suspend-reason"
+                placeholder="Expliquez pourquoi cet utilisateur est suspendu..."
+                value={suspendDialog.reason}
+                onChange={(e) => setSuspendDialog(prev => ({ ...prev, reason: e.target.value }))}
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSuspendDialog({ open: false, user: null, reason: '' })}>Annuler</Button>
+            <Button onClick={handleSuspend} disabled={actionLoading === `suspend-${suspendDialog.user?.id}`} className="bg-amber-600 hover:bg-amber-700">
+              {actionLoading === `suspend-${suspendDialog.user?.id}` && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Suspendre
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Create User Dialog */}
       <Dialog open={showCreateUser} onOpenChange={setShowCreateUser}>
@@ -2577,8 +2998,9 @@ function AdminShops() {
           <SelectContent>
             <SelectItem value="all">Tous les plans</SelectItem>
             <SelectItem value="FREE">Gratuit</SelectItem>
-            <SelectItem value="STANDARD">Standard</SelectItem>
-            <SelectItem value="PREMIUM">Premium</SelectItem>
+            <SelectItem value="STARTER">Starter</SelectItem>
+            <SelectItem value="PRO">Pro</SelectItem>
+            <SelectItem value="BUSINESS">Business</SelectItem>
           </SelectContent>
         </Select>
         <div className="relative flex-1 max-w-sm">
@@ -2740,8 +3162,9 @@ function AdminShops() {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="FREE">Gratuit</SelectItem>
-                  <SelectItem value="STANDARD">Standard</SelectItem>
-                  <SelectItem value="PREMIUM">Premium</SelectItem>
+                  <SelectItem value="STARTER">Starter</SelectItem>
+                  <SelectItem value="PRO">Pro</SelectItem>
+                  <SelectItem value="BUSINESS">Business</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -3209,6 +3632,372 @@ function AdminAdmins() {
           </CardContent>
         </Card>
       )}
+    </div>
+  )
+}
+
+// ─── RESELLERS TAB ──────────────────────────────────────────────────────────
+
+interface AdminReseller {
+  id: string
+  name: string
+  email: string
+  companyName: string
+  commission: number
+  clientCount: number
+  isActive: boolean
+  primaryColor: string
+  createdAt: string
+}
+
+function AdminResellers() {
+  const [resellers, setResellers] = useState<AdminReseller[]>([])
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [loading, setLoading] = useState(true)
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
+
+  const [showCreateDialog, setShowCreateDialog] = useState(false)
+  const [createForm, setCreateForm] = useState({ name: '', email: '', password: '', companyName: '', commission: '' })
+  const [creating, setCreating] = useState(false)
+
+  const [showEditDialog, setShowEditDialog] = useState(false)
+  const [editForm, setEditForm] = useState<{ id: string; companyName: string; primaryColor: string; commission: string; isActive: boolean }>({ id: '', companyName: '', primaryColor: '', commission: '', isActive: true })
+  const [saving, setSaving] = useState(false)
+
+  const loadResellers = useCallback(async (s: string, st: string) => {
+    setLoading(true)
+    try {
+      const params = new URLSearchParams()
+      if (s) params.set('search', s)
+      if (st && st !== 'all') params.set('status', st)
+      const res = await fetch(`/api/admin/resellers?${params.toString()}`)
+      if (res.ok) {
+        const data = await res.json()
+        setResellers(data.resellers || [])
+      }
+    } catch {
+      toast.error('Erreur lors du chargement des revendeurs')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadResellers(search, statusFilter)
+  }, [search, statusFilter, loadResellers])
+
+  async function handleCreate() {
+    if (!createForm.name.trim() || !createForm.email.trim() || !createForm.password.trim() || !createForm.companyName.trim()) {
+      toast.error('Veuillez remplir tous les champs obligatoires')
+      return
+    }
+    setCreating(true)
+    try {
+      const res = await fetch('/api/admin/resellers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: createForm.name,
+          email: createForm.email,
+          password: createForm.password,
+          companyName: createForm.companyName,
+          commission: Number(createForm.commission) || 0,
+        }),
+      })
+      if (res.ok) {
+        toast.success('Revendeur créé avec succès')
+        setShowCreateDialog(false)
+        setCreateForm({ name: '', email: '', password: '', companyName: '', commission: '' })
+        loadResellers(search, statusFilter)
+      } else {
+        const data = await res.json()
+        toast.error(data.error || 'Erreur lors de la création')
+      }
+    } catch {
+      toast.error('Erreur lors de la création')
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  function openEditDialog(r: AdminReseller) {
+    setEditForm({
+      id: r.id,
+      companyName: r.companyName,
+      primaryColor: r.primaryColor,
+      commission: String(r.commission),
+      isActive: r.isActive,
+    })
+    setShowEditDialog(true)
+  }
+
+  async function handleSave() {
+    setSaving(true)
+    try {
+      const res = await fetch(`/api/admin/resellers/${editForm.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          companyName: editForm.companyName,
+          primaryColor: editForm.primaryColor,
+          commission: Number(editForm.commission) || 0,
+          isActive: editForm.isActive,
+        }),
+      })
+      if (res.ok) {
+        toast.success('Revendeur mis à jour')
+        setShowEditDialog(false)
+        loadResellers(search, statusFilter)
+      } else {
+        const data = await res.json()
+        toast.error(data.error || 'Erreur lors de la mise à jour')
+      }
+    } catch {
+      toast.error('Erreur lors de la mise à jour')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const filteredResellers = statusFilter === 'all'
+    ? resellers
+    : resellers.filter(r => statusFilter === 'active' ? r.isActive : !r.isActive)
+
+  const totalClients = resellers.reduce((sum, r) => sum + (r.clientCount || 0), 0)
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Revendeurs</h2>
+        <Button onClick={() => setShowCreateDialog(true)} className="bg-blue-600 hover:bg-blue-700">
+          <UserPlus className="h-4 w-4 mr-2" />
+          Créer un revendeur
+        </Button>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <Card className="p-4">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-blue-100 text-blue-600">
+              <Building2 className="h-5 w-5" />
+            </div>
+          </div>
+          <p className="text-2xl font-bold">{resellers.length}</p>
+          <p className="text-xs text-muted-foreground mt-1">Total revendeurs</p>
+        </Card>
+        <Card className="p-4">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-emerald-100 text-emerald-600">
+              <CheckCircle className="h-5 w-5" />
+            </div>
+          </div>
+          <p className="text-2xl font-bold">{resellers.filter(r => r.isActive).length}</p>
+          <p className="text-xs text-muted-foreground mt-1">Revendeurs actifs</p>
+        </Card>
+        <Card className="p-4">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-purple-100 text-purple-600">
+              <Users className="h-5 w-5" />
+            </div>
+          </div>
+          <p className="text-2xl font-bold">{totalClients}</p>
+          <p className="text-xs text-muted-foreground mt-1">Total clients</p>
+        </Card>
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-full sm:w-[160px]">
+            <SelectValue placeholder="Statut" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tous les statuts</SelectItem>
+            <SelectItem value="active">Actif</SelectItem>
+            <SelectItem value="inactive">Inactif</SelectItem>
+          </SelectContent>
+        </Select>
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Rechercher..."
+            className="pl-9"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* Table */}
+      {loading ? (
+        <Card>
+          <CardContent className="p-4 space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
+          </CardContent>
+        </Card>
+      ) : filteredResellers.length === 0 ? (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <Building2 className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+            <p className="text-muted-foreground">Aucun revendeur trouvé</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardContent className="p-0 overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nom</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Entreprise</TableHead>
+                  <TableHead className="text-center">Commission</TableHead>
+                  <TableHead className="text-center">Clients</TableHead>
+                  <TableHead>Statut</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredResellers.map((r) => (
+                  <TableRow key={r.id}>
+                    <TableCell className="font-medium">{r.name}</TableCell>
+                    <TableCell className="text-muted-foreground">{r.email}</TableCell>
+                    <TableCell>{r.companyName}</TableCell>
+                    <TableCell className="text-center">{r.commission}%</TableCell>
+                    <TableCell className="text-center">{r.clientCount || 0}</TableCell>
+                    <TableCell>
+                      <Badge variant={r.isActive ? 'outline' : 'secondary'} className={r.isActive ? 'border-emerald-500 text-emerald-700 bg-emerald-50' : ''}>
+                        {r.isActive ? 'Actif' : 'Inactif'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{formatDate(r.createdAt)}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center justify-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => openEditDialog(r)}
+                          title="Modifier"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => {
+                            setActionLoading(r.id)
+                            fetch(`/api/admin/resellers/${r.id}`, {
+                              method: 'PATCH',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ isActive: !r.isActive }),
+                            }).then(res => {
+                              if (res.ok) {
+                                toast.success(r.isActive ? 'Revendeur désactivé' : 'Revendeur activé')
+                                loadResellers(search, statusFilter)
+                              }
+                            }).catch(() => toast.error('Erreur')).finally(() => setActionLoading(null))
+                          }}
+                          disabled={actionLoading === r.id}
+                          title={r.isActive ? 'Désactiver' : 'Activer'}
+                        >
+                          {actionLoading === r.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Power className={`h-4 w-4 ${r.isActive ? 'text-amber-600' : 'text-emerald-600'}`} />}
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Create Dialog */}
+      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Créer un revendeur</DialogTitle>
+            <DialogDescription>Ajoutez un nouveau revendeur à la plateforme.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="create-reseller-name">Nom</Label>
+              <Input id="create-reseller-name" placeholder="Nom complet" value={createForm.name} onChange={(e) => setCreateForm(prev => ({ ...prev, name: e.target.value }))} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="create-reseller-email">Email</Label>
+              <Input id="create-reseller-email" type="email" placeholder="email@exemple.com" value={createForm.email} onChange={(e) => setCreateForm(prev => ({ ...prev, email: e.target.value }))} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="create-reseller-password">Mot de passe</Label>
+              <Input id="create-reseller-password" type="password" placeholder="Mot de passe" value={createForm.password} onChange={(e) => setCreateForm(prev => ({ ...prev, password: e.target.value }))} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="create-reseller-company">Nom de l&apos;entreprise</Label>
+              <Input id="create-reseller-company" placeholder="Ma société" value={createForm.companyName} onChange={(e) => setCreateForm(prev => ({ ...prev, companyName: e.target.value }))} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="create-reseller-commission">Commission (%)</Label>
+              <Input id="create-reseller-commission" type="number" placeholder="10" value={createForm.commission} onChange={(e) => setCreateForm(prev => ({ ...prev, commission: e.target.value }))} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>Annuler</Button>
+            <Button onClick={handleCreate} disabled={creating} className="bg-blue-600 hover:bg-blue-700">
+              {creating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Créer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Modifier le revendeur</DialogTitle>
+            <DialogDescription>Mettez à jour les informations du revendeur.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-reseller-company">Nom de l&apos;entreprise</Label>
+              <Input id="edit-reseller-company" value={editForm.companyName} onChange={(e) => setEditForm(prev => ({ ...prev, companyName: e.target.value }))} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-reseller-color">Couleur principale</Label>
+              <div className="flex items-center gap-2">
+                <Input id="edit-reseller-color" placeholder="#3b82f6" value={editForm.primaryColor} onChange={(e) => setEditForm(prev => ({ ...prev, primaryColor: e.target.value }))} className="flex-1" />
+                <div className="w-10 h-10 rounded-md border" style={{ backgroundColor: editForm.primaryColor }} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-reseller-commission">Commission (%)</Label>
+              <Input id="edit-reseller-commission" type="number" placeholder="10" value={editForm.commission} onChange={(e) => setEditForm(prev => ({ ...prev, commission: e.target.value }))} />
+            </div>
+            <div className="flex items-center justify-between py-2">
+              <div className="space-y-0.5">
+                <Label>Actif</Label>
+                <p className="text-xs text-muted-foreground">Le revendeur peut se connecter</p>
+              </div>
+              <Switch checked={editForm.isActive} onCheckedChange={(checked) => setEditForm(prev => ({ ...prev, isActive: checked }))} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditDialog(false)}>Annuler</Button>
+            <Button onClick={handleSave} disabled={saving} className="bg-blue-600 hover:bg-blue-700">
+              {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Enregistrer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
