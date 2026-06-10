@@ -150,10 +150,15 @@ export default function Home() {
             const data = await res.json()
             if (data.user) {
               setUser(data.user)
+              if (data.shop) setShop(data.shop)
               // Only redirect from landing/register/login; keep onboarding as-is so the wizard can complete
               if (urlView.view !== 'onboarding') {
                 if (data.user.role === 'ADMIN' || data.user.role === 'SUPER_ADMIN') {
                   setView('admin')
+                } else if (!data.shop) {
+                  // Seller without a shop → onboarding
+                  setView('onboarding')
+                  window.history.replaceState(null, '', '/onboarding')
                 } else {
                   setView('dashboard')
                 }

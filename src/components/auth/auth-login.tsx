@@ -56,6 +56,10 @@ export function AuthLogin() {
       if (data.user.role === 'ADMIN' || data.user.role === 'SUPER_ADMIN') {
         setView('admin')
         window.history.replaceState(null, '', '/admin')
+      } else if (!data.shop) {
+        // New seller without a shop → go to onboarding
+        setView('onboarding')
+        window.history.replaceState(null, '', '/onboarding')
       } else {
         setView('dashboard')
         window.history.replaceState(null, '', '/dashboard')

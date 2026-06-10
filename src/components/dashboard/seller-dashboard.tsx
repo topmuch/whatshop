@@ -49,6 +49,8 @@ function SidebarContent() {
     setUser(null)
     setShop(null)
     setView('landing')
+    window.history.replaceState(null, '', '/')
+    window.location.href = '/'
   }
 
   return (
