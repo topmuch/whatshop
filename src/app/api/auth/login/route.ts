@@ -12,13 +12,16 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { email, password } = await request.json()
+    const body = await request.json()
+    const { email, password } = body
+    console.log('[LOGIN DEBUG] email:', email, 'password length:', password?.length, 'ip:', ip, 'origin:', request.headers.get('origin'), 'referer:', request.headers.get('referer'))
 
     if (!email || !password) {
       return NextResponse.json({ error: 'Email et mot de passe requis' }, { status: 400 })
     }
 
     const user = await authenticateUser(email, password)
+    console.log('[LOGIN DEBUG] authenticateUser result:', user ? user.email + ' / ' + user.role : 'NULL')
 
     if (!user) {
       return NextResponse.json({ error: 'Identifiants incorrects' }, { status: 401 })
