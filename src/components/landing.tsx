@@ -190,7 +190,7 @@ function Header() {
   )
 }
 
-/* ── STORY SLIDER (auto-sliding, 3 visible at a time) ── */
+/* ── STORY CIRCLES (6 visibles, sous le hero) ── */
 const stories = [
   { label: 'Boutiques', image: '/landing/story-boutique.png' },
   { label: 'Clients', image: '/landing/story-cliente.png' },
@@ -200,79 +200,36 @@ const stories = [
   { label: 'Live', image: '/landing/story-live.png' },
 ]
 
-function StorySlider() {
-  const [slide, setSlide] = useState(0)
-  const totalSlides = 2 // 6 items / 3 per page = 2 slides
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setSlide((prev) => (prev + 1) % totalSlides)
-    }, 3500)
-    return () => clearInterval(timer)
-  }, [])
-
-  const storySize = 'w-36 h-36 sm:w-44 sm:h-44 md:w-48 md:h-48 lg:w-52 lg:h-52'
-
+function StoryCircles() {
   return (
     <motion.section
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={vp}
       transition={{ duration: 0.5 }}
-      className="py-16 bg-white"
+      className="py-10 bg-white"
     >
-      <div className="mx-auto max-w-7xl px-5 sm:px-8">
-        <div className="overflow-hidden">
-          <div
-            className="flex transition-transform duration-700 ease-in-out"
-            style={{ transform: `translateX(-${slide * 100}%)` }}
-          >
-            {/* Duplicate slides for seamless loop */}
-            {[0, 1].map((pageIdx) => (
-              <div
-                key={pageIdx}
-                className="flex w-full shrink-0 justify-center gap-6 sm:gap-8 md:gap-10 lg:gap-14"
-              >
-                {stories.slice(pageIdx * 3, pageIdx * 3 + 3).map((story, i) => (
-                  <div key={`${pageIdx}-${i}`} className="flex flex-col items-center gap-3 snap-center shrink-0 cursor-pointer group">
-                    <div className="relative">
-                      <div className={`${storySize} rounded-full p-[3px] bg-gradient-to-br from-pink-500 via-rose-500 to-orange-400 group-hover:from-pink-400 group-hover:via-rose-400 group-hover:to-orange-300 transition-all duration-300 group-hover:shadow-2xl group-hover:shadow-pink-500/40 group-hover:scale-105`}>
-                        <div className="w-full h-full rounded-full p-[2px] bg-white">
-                          <div className="w-full h-full rounded-full overflow-hidden">
-                            <Image
-                              src={story.image}
-                              alt={story.label}
-                              width={300}
-                              height={300}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <span className="text-sm sm:text-base font-bold text-gray-700 group-hover:text-pink-600 transition-colors">
-                      {story.label}
-                    </span>
+      <div className="mx-auto max-w-5xl px-5 sm:px-8">
+        <div className="flex justify-center gap-4 sm:gap-6 md:gap-8 flex-wrap">
+          {stories.map((story, i) => (
+            <div key={i} className="flex flex-col items-center gap-2 cursor-pointer group">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full p-[2px] bg-gradient-to-br from-pink-500 via-rose-500 to-orange-400 group-hover:from-pink-400 group-hover:via-rose-400 group-hover:to-orange-300 transition-all duration-300 group-hover:shadow-lg group-hover:shadow-pink-500/30 group-hover:scale-110">
+                <div className="w-full h-full rounded-full p-[1.5px] bg-white">
+                  <div className="w-full h-full rounded-full overflow-hidden">
+                    <Image
+                      src={story.image}
+                      alt={story.label}
+                      width={200}
+                      height={200}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-                ))}
+                </div>
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Dot indicators */}
-        <div className="flex justify-center gap-2 mt-8">
-          {Array.from({ length: totalSlides }).map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setSlide(i)}
-              className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-                slide === i
-                  ? 'bg-gradient-to-r from-pink-500 to-orange-400 w-8'
-                  : 'bg-gray-200 hover:bg-gray-300'
-              }`}
-              aria-label={`Slide ${i + 1}`}
-            />
+              <span className="text-xs sm:text-sm font-semibold text-gray-600 group-hover:text-pink-600 transition-colors">
+                {story.label}
+              </span>
+            </div>
           ))}
         </div>
       </div>
@@ -1223,7 +1180,7 @@ export function LandingPage() {
       <Header />
       <main className="flex-1">
         <Hero />
-        <StorySlider />
+        <StoryCircles />
         <ScrollingBanner />
         <HowItWorks />
         <SocialSelling />
