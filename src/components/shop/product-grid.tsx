@@ -1,11 +1,11 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { motion } from 'framer-motion'
 import { type Product, type Category, useAppStore } from '@/lib/store'
 import { ProductCard } from '@/components/shop/product-card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Search, Package } from 'lucide-react'
 
 interface ProductGridProps {
@@ -44,34 +44,20 @@ export function ProductGrid({ products, categories, isLoading }: ProductGridProp
 
   if (isLoading) {
     return (
-      <div className="w-full max-w-6xl mx-auto px-4">
-        {/* Search skeleton */}
-        <div className="mb-4">
-          <Skeleton className="h-10 w-full max-w-md rounded-lg" />
-        </div>
-        {/* Category pills skeleton */}
-        <div className="mb-6 flex gap-2 overflow-x-auto pb-2">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-8 w-20 rounded-full flex-shrink-0" />
-          ))}
-        </div>
-        {/* Product grid skeleton */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="flex flex-col gap-2">
-              <Skeleton className="aspect-square w-full rounded-xl" />
-              <Skeleton className="h-4 w-3/4" />
-              <Skeleton className="h-5 w-1/2" />
-              <Skeleton className="h-8 w-full rounded-lg" />
-            </div>
-          ))}
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative size-10">
+            <div className="absolute inset-0 rounded-full border-2 border-muted-foreground/20" />
+            <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-primary animate-spin" />
+          </div>
+          <p className="text-sm text-muted-foreground">Chargement...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="w-full max-w-6xl mx-auto px-4">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { duration: 0.3 } }} className="w-full max-w-6xl mx-auto px-4">
       {/* Search */}
       <div className="mb-4">
         <div className="relative max-w-md">
@@ -155,6 +141,6 @@ export function ProductGrid({ products, categories, isLoading }: ProductGridProp
           ))}
         </div>
       )}
-    </div>
+    </motion.div>
   )
 }

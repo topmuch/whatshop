@@ -1521,45 +1521,13 @@ function BeautySearchBar({
 
 function BeautyLoadingSkeleton() {
   return (
-    <div className="min-h-screen" style={{ background: ROSE.cream }}>
-      {/* Header skeleton */}
-      <div className="h-[64px] border-b flex items-center justify-between px-4" style={{ borderColor: ROSE.border, background: ROSE.cream }}>
-        <Skeleton className="h-10 w-[180px] rounded-xl" />
-        <div className="hidden md:flex gap-6">
-          <Skeleton className="h-6 w-16" />
-          <Skeleton className="h-6 w-24" />
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="flex flex-col items-center gap-4">
+        <div className="relative size-10">
+          <div className="absolute inset-0 rounded-full border-2 border-muted-foreground/20" />
+          <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-primary animate-spin" />
         </div>
-        <Skeleton className="h-10 w-10 rounded-full" />
-      </div>
-
-      {/* Hero skeleton */}
-      <div className="px-4 py-8">
-        <div className="max-w-[1200px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Skeleton className="w-full rounded-2xl" style={{ aspectRatio: '4/5', maxHeight: '500px' }} />
-          <div className="flex flex-col gap-4 py-8">
-            <Skeleton className="h-4 w-32 mx-auto md:mx-0" />
-            <Skeleton className="h-10 w-64 mx-auto md:mx-0" />
-            <Skeleton className="h-16 w-full" />
-            <Skeleton className="h-12 w-48 mx-auto md:mx-0 rounded-full" />
-          </div>
-        </div>
-      </div>
-
-      {/* Products skeleton */}
-      <div className="max-w-[1200px] mx-auto px-4 lg:px-6 py-6">
-        <Skeleton className="h-8 w-40 mb-6" />
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="flex flex-col gap-3 rounded-2xl overflow-hidden" style={{ boxShadow: ROSE.shadow }}>
-              <Skeleton className="w-full" style={{ aspectRatio: '3/4' }} />
-              <div className="p-4 space-y-2">
-                <Skeleton className="h-4 w-full rounded-lg" />
-                <Skeleton className="h-5 w-24 rounded-lg" />
-                <Skeleton className="h-10 w-full rounded-xl" />
-              </div>
-            </div>
-          ))}
-        </div>
+        <p className="text-sm text-muted-foreground">Chargement...</p>
       </div>
     </div>
   )
@@ -1749,7 +1717,7 @@ export function BeautyPremiumShopPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col relative" style={{ background: ROSE.cream, color: ROSE.text }}>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { duration: 0.3 } }} className="min-h-screen flex flex-col relative" style={{ background: ROSE.cream, color: ROSE.text }}>
       {/* Dot pattern background */}
       <DotPattern />
 
@@ -2002,6 +1970,6 @@ export function BeautyPremiumShopPage() {
 
       {/* Bottom padding when cart is visible */}
       {cart.length > 0 && <div className="h-[60px]" />}
-    </div>
+    </motion.div>
   )
 }

@@ -1264,42 +1264,13 @@ function LuxeSearchBar({
 
 function LuxeLoadingSkeleton() {
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #FFE5E5 0%, #FFFDD0 50%, #FFE5E5 100%)' }}>
-      {/* Menu skeleton */}
-      <div className="h-[70px] border-b border-white/30 flex items-center px-4 backdrop-blur-xl bg-white/60">
-        <Skeleton className="h-[70px] w-[200px] rounded-xl" />
-        <div className="flex-1 flex justify-center gap-6">
-          <Skeleton className="h-8 w-20 rounded-full" />
-          <Skeleton className="h-8 w-28 rounded-full" />
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="flex flex-col items-center gap-4">
+        <div className="relative size-10">
+          <div className="absolute inset-0 rounded-full border-2 border-muted-foreground/20" />
+          <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-primary animate-spin" />
         </div>
-      </div>
-      {/* Stories skeleton */}
-      <div className="flex gap-4 px-4 py-4 overflow-hidden">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="shrink-0 flex flex-col items-center gap-2">
-            <Skeleton className="w-16 h-16 sm:w-20 sm:h-20 rounded-full" />
-            <Skeleton className="h-3 w-16 rounded" />
-          </div>
-        ))}
-      </div>
-      {/* Hero skeleton */}
-      <div className="px-4 py-2">
-        <Skeleton className="w-full rounded-2xl mx-auto" style={{ aspectRatio: '1180 / 600', maxHeight: '600px' }} />
-      </div>
-      {/* Products skeleton */}
-      <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-6">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="flex flex-col gap-2 rounded-2xl overflow-hidden backdrop-blur-xl" style={{ background: THEME.glassBg, border: `1px solid ${THEME.glassBorder}` }}>
-              <Skeleton className="w-full" style={{ aspectRatio: '336 / 320' }} />
-              <div className="p-4 space-y-2">
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-3 w-24" />
-                <Skeleton className="h-9 w-full rounded-full" />
-              </div>
-            </div>
-          ))}
-        </div>
+        <p className="text-sm text-muted-foreground">Chargement...</p>
       </div>
     </div>
   )
@@ -1480,7 +1451,7 @@ export function LuxeFashionShopPage() {
   }
 
   return (
-    <div
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { duration: 0.3 } }}
       className="min-h-screen flex flex-col"
       style={{
         background: 'linear-gradient(135deg, #FFE5E5 0%, #FFFDD0 50%, #FFE5E5 100%)',
@@ -1727,6 +1698,6 @@ export function LuxeFashionShopPage() {
 
       {/* Bottom padding when cart is visible */}
       {cart.length > 0 && <div className="h-[60px]" />}
-    </div>
+    </motion.div>
   )
 }

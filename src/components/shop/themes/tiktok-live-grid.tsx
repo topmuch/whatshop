@@ -1340,37 +1340,13 @@ function TikTokFooter({
 
 function TikTokLoadingSkeleton() {
   return (
-    <div className="min-h-screen" style={{ background: TT.darkBg }}>
-      {/* LIVE banner skeleton */}
-      <div className="h-14" style={{ background: 'linear-gradient(90deg, #33101a, #2a0a0a, #33101a)' }} />
-
-      {/* Header skeleton */}
-      <div className="h-[60px] border-b flex items-center px-4" style={{ borderColor: TT.border }}>
-        <Skeleton className="h-[40px] w-[160px] rounded-lg" />
-        <div className="flex-1 flex justify-center gap-6">
-          <Skeleton className="h-8 w-20 rounded-lg" />
-          <Skeleton className="h-8 w-24 rounded-lg" />
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="flex flex-col items-center gap-4">
+        <div className="relative size-10">
+          <div className="absolute inset-0 rounded-full border-2 border-muted-foreground/20" />
+          <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-primary animate-spin" />
         </div>
-      </div>
-
-      {/* Products skeleton */}
-      <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-6">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div
-              key={i}
-              className="flex flex-col gap-2 rounded-xl overflow-hidden"
-              style={{ background: TT.cardBg, border: `1px solid ${TT.border}` }}
-            >
-              <Skeleton className="w-full" style={{ aspectRatio: '1 / 1' }} />
-              <div className="p-3 space-y-2">
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-3 w-24" />
-                <Skeleton className="h-9 w-full rounded-lg" />
-              </div>
-            </div>
-          ))}
-        </div>
+        <p className="text-sm text-muted-foreground">Chargement...</p>
       </div>
     </div>
   )
@@ -1583,7 +1559,7 @@ export function TikTokLiveShopPage() {
   }
 
   return (
-    <div
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { duration: 0.3 } }}
       className="min-h-screen flex flex-col"
       style={{
         background: TT.darkBg,
@@ -1830,6 +1806,6 @@ export function TikTokLiveShopPage() {
           </span>
         </a>
       )}
-    </div>
+    </motion.div>
   )
 }

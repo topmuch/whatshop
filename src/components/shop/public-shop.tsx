@@ -40,7 +40,7 @@ import {
   Globe,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, type Variants } from 'framer-motion'
 import { ShopHeroCarousel } from './shop-hero-carousel'
 import { TemplateProvider } from './template-provider'
 import { LiveShopFeatures } from './live-shop-features'
@@ -522,30 +522,21 @@ function ShopContent() {
     return <BeautyPremiumShopPage />
   }
 
-  // ── Loading skeleton ──
+  // ── Loading state: minimal spinner instead of visible skeleton ──
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="sticky top-0 z-40 bg-background border-b">
-          <div className="max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
-            <Skeleton className="h-9 w-9 rounded-lg" />
-            <Skeleton className="h-9 flex-1 max-w-md rounded-lg" />
-            <Skeleton className="h-9 w-9 rounded-lg" />
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex flex-col items-center gap-4"
+        >
+          <div className="relative size-10">
+            <div className="absolute inset-0 rounded-full border-2 border-muted-foreground/20" />
+            <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-primary animate-spin" />
           </div>
-        </div>
-        <Skeleton className="h-48 md:h-64 w-full" />
-        <div className="max-w-5xl mx-auto p-4">
-          <div className="flex gap-2 mb-4">
-            {[1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} className="h-8 w-20 rounded-full" />
-            ))}
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Skeleton key={i} className="h-72 rounded-xl" />
-            ))}
-          </div>
-        </div>
+          <p className="text-sm text-muted-foreground">Chargement de la boutique...</p>
+        </motion.div>
       </div>
     )
   }
@@ -567,8 +558,20 @@ function ShopContent() {
   const totalProductCount = publicProducts.filter((p) => p.isAvailable).length
   const isSearching = searchQuery.trim().length > 0
 
+  // Fade-in wrapper for smooth content appearance
+  const contentVariants: Variants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { duration: 0.3, ease: 'easeOut' } },
+  }
+
   return (
-    <div className="min-h-screen pb-20 relative" style={{ background: 'var(--tpl-bg)', color: 'var(--tpl-text)' }}>
+    <motion.div
+      className="min-h-screen pb-20 relative"
+      style={{ background: 'var(--tpl-bg)', color: 'var(--tpl-text)' }}
+      variants={contentVariants}
+      initial="hidden"
+      animate="visible"
+    >
       {/* Decorative background pattern */}
       <DecorativeBackground pattern={decorative.pattern} gradientBg={decorative.gradientBg} />
 
@@ -1617,7 +1620,7 @@ function ShopContent() {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   )
 }
 

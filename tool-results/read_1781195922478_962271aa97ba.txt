@@ -1,0 +1,1732 @@
+     1→'use client'
+     2→
+     3→/**
+     4→ * LuxeFashionShopPage — Template luxe-fashion
+     5→ * Glassmorphism luxury theme with champagne gold & blush pink palette.
+     6→ *
+     7→ * Layout:
+     8→ *   1. Header (glassmorphism nav)
+     9→ *   2. Instagram Stories bar
+    10→ *   3. Hero Section (gradient overlay, "Nouvelle Collection" badge)
+    11→ *   4. Categories (horizontal scrollable gold pills)
+    12→ *   5. Products (glassmorphism cards)
+    13→ *   6. Testimonials
+    14→ *   7. Footer (dark + gold)
+    15→ *   8. Cart Drawer (slide-up glassmorphism)
+    16→ *   9. WhatsApp FAB (pulse animation)
+    17→ *
+    18→ * Color palette: Champagne Gold #D4AF37, Blush Pink #FFE5E5
+    19→ */
+    20→
+    21→import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
+    22→import { motion, AnimatePresence } from 'framer-motion'
+    23→import { toast } from 'sonner'
+    24→import { Button } from '@/components/ui/button'
+    25→import { Input } from '@/components/ui/input'
+    26→import { Badge } from '@/components/ui/badge'
+    27→import { Skeleton } from '@/components/ui/skeleton'
+    28→import { ScrollArea } from '@/components/ui/scroll-area'
+    29→import { Separator } from '@/components/ui/separator'
+    30→import {
+    31→  Search,
+    32→  X,
+    33→  Plus,
+    34→  Minus,
+    35→  Trash2,
+    36→  Package,
+    37→  ShoppingBag,
+    38→  ChevronRight,
+    39→  MessageCircle,
+    40→  ShoppingCart,
+    41→  ArrowLeft,
+    42→  Star,
+    43→  Eye,
+    44→  Sparkles,
+    45→  Heart,
+    46→  Quote,
+    47→  ChevronUp,
+    48→  ChevronDown,
+    49→  Gem,
+    50→} from 'lucide-react'
+    51→import { useAppStore, type Product, type Category } from '@/lib/store'
+    52→import { formatPrice, openWhatsApp } from '@/lib/shared'
+    53→
+    54→// ─── Color Palette: CHAMPAGNE GOLD LUXE ───
+    55→const GOLD = {
+    56→  primary: '#D4AF37',
+    57→  dark: '#B8860B',
+    58→  light: '#FFFDD0',
+    59→} as const
+    60→
+    61→const THEME = {
+    62→  gold: '#D4AF37',
+    63→  goldDark: '#B8860B',
+    64→  goldLight: '#FFFDD0',
+    65→  pink: '#FFE5E5',
+    66→  pinkDeep: '#FFD6D6',
+    67→  cream: '#FFFDD0',
+    68→  white: '#FFFFFF',
+    69→  text: '#1a1a1a',
+    70→  textMuted: '#8B7355',
+    71→  whatsapp: '#25D366',
+    72→  whatsappFg: '#FFFFFF',
+    73→  glassBg: 'rgba(255, 255, 255, 0.25)',
+    74→  glassBorder: 'rgba(255, 255, 255, 0.30)',
+    75→} as const
+    76→
+    77→type SortOption = 'recent' | 'price-asc' | 'price-desc'
+    78→
+    79→// ─── Instagram Stories Data ───
+    80→const STORIES = [
+    81→  { label: 'Nouvelle Collection', emoji: '✨' },
+    82→  { label: 'Bestsellers', emoji: '🔥' },
+    83→  { label: 'Promos', emoji: '🎁' },
+    84→  { label: 'Tendances', emoji: '💎' },
+    85→  { label: 'Exclusivités', emoji: '👑' },
+    86→  { label: 'Coup de Cœur', emoji: '❤️' },
+    87→]
+    88→
+    89→// ─── Testimonials Data ───
+    90→const TESTIMONIALS = [
+    91→  { name: 'Aminata D.', text: 'Qualité exceptionnelle ! Les tissus sont magnifiques et la livraison est rapide.', stars: 5 },
+    92→  { name: 'Fatou S.', text: 'J\'adore cette boutique. Des pièces uniques et un service client au top !', stars: 5 },
+    93→  { name: 'Mariama B.', text: 'Mes commandes sont toujours parfaites. Je recommande vivement à toutes mes amies.', stars: 5 },
+    94→]
+    95→
+    96→// ═══════════════════════════════════════════════════════════════
+    97→// HEADER — Glassmorphism navigation
+    98→// ═══════════════════════════════════════════════════════════════
+    99→
+   100→function LuxeHeader({
+   101→  shopName,
+   102→  logo,
+   103→  whatsapp,
+   104→  cartCount,
+   105→  onNavAccueil,
+   106→  onNavProduits,
+   107→  onCartClick,
+   108→}: {
+   109→  shopName: string
+   110→  logo?: string
+   111→  whatsapp?: string
+   112→  cartCount: number
+   113→  onNavAccueil: () => void
+   114→  onNavProduits: () => void
+   115→  onCartClick: () => void
+   116→}) {
+   117→  const [mobileOpen, setMobileOpen] = useState(false)
+   118→
+   119→  return (
+   120→    <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/60 border-b border-white/30">
+   121→      <div className="max-w-[1400px] mx-auto px-4 lg:px-6">
+   122→        <div className="flex items-center justify-between h-[70px]">
+   123→          {/* Logo */}
+   124→          <button onClick={onNavAccueil} className="flex items-center gap-2 shrink-0">
+   125→            {logo && logo.length > 0 ? (
+   126→              <img
+   127→                src={logo}
+   128→                alt={shopName}
+   129→                className="h-[70px] w-[200px] object-contain"
+   130→              />
+   131→            ) : (
+   132→              <div className="flex items-center gap-2">
+   133→                <div
+   134→                  className="flex items-center justify-center w-11 h-11 rounded-full"
+   135→                  style={{ background: `linear-gradient(135deg, ${THEME.gold}, ${THEME.goldDark})`, color: THEME.white }}
+   136→                >
+   137→                  <Gem className="size-5" />
+   138→                </div>
+   139→                <div className="text-left">
+   140→                  <span className="font-serif text-lg font-bold tracking-wide" style={{ color: THEME.text }}>
+   141→                    {shopName}
+   142→                  </span>
+   143→                  <span className="block text-[10px] uppercase tracking-widest" style={{ color: THEME.textMuted }}>
+   144→                    Maison de Mode
+   145→                  </span>
+   146→                </div>
+   147→              </div>
+   148→            )}
+   149→          </button>
+   150→
+   151→          {/* Desktop Navigation */}
+   152→          <nav className="hidden md:flex items-center gap-1">
+   153→            <button
+   154→              onClick={onNavAccueil}
+   155→              className="px-5 py-2 text-sm font-semibold rounded-xl transition-all duration-200 hover:bg-white/40"
+   156→              style={{ color: THEME.text }}
+   157→            >
+   158→              Accueil
+   159→            </button>
+   160→            <button
+   161→              onClick={onNavProduits}
+   162→              className="px-5 py-2 text-sm font-semibold rounded-xl transition-all duration-200 hover:bg-white/40"
+   163→              style={{ color: THEME.text }}
+   164→            >
+   165→              Collections
+   166→            </button>
+   167→            {whatsapp && (
+   168→              <a
+   169→                href={`https://wa.me/${whatsapp.replace(/\D/g, '')}`}
+   170→                target="_blank"
+   171→                rel="noopener noreferrer"
+   172→                className="px-5 py-2 text-sm font-semibold rounded-xl transition-all duration-200 hover:bg-white/40 flex items-center gap-1.5"
+   173→                style={{ color: THEME.text }}
+   174→              >
+   175→                Contactez Nous
+   176→              </a>
+   177→            )}
+   178→          </nav>
+   179→
+   180→          {/* Cart + Mobile menu */}
+   181→          <div className="flex items-center gap-2">
+   182→            <Button
+   183→              variant="ghost"
+   184→              size="icon"
+   185→              className="relative h-10 w-10 rounded-full hover:bg-white/40"
+   186→              onClick={onCartClick}
+   187→            >
+   188→              <ShoppingCart className="size-5" style={{ color: THEME.text }} />
+   189→              {cartCount > 0 && (
+   190→                <span
+   191→                  className="absolute -top-1 -right-1 text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center text-white"
+   192→                  style={{ background: THEME.gold }}
+   193→                >
+   194→                  {cartCount > 9 ? '9+' : cartCount}
+   195→                </span>
+   196→              )}
+   197→            </Button>
+   198→
+   199→            {/* Mobile hamburger */}
+   200→            <button
+   201→              onClick={() => setMobileOpen(!mobileOpen)}
+   202→              className="md:hidden flex flex-col gap-1 p-2"
+   203→              aria-label="Menu"
+   204→            >
+   205→              <span
+   206→                className="block w-5 h-0.5 rounded transition-all"
+   207→                style={{ background: mobileOpen ? 'transparent' : THEME.text }}
+   208→              />
+   209→              <span
+   210→                className="block w-5 h-0.5 rounded transition-all"
+   211→                style={{
+   212→                  background: THEME.text,
+   213→                  transform: mobileOpen ? 'rotate(45deg) translate(3px, 3px)' : 'none',
+   214→                }}
+   215→              />
+   216→              <span
+   217→                className="block w-5 h-0.5 rounded transition-all"
+   218→                style={{
+   219→                  background: THEME.text,
+   220→                  transform: mobileOpen ? 'rotate(-45deg) translate(3px, -3px)' : 'none',
+   221→                }}
+   222→              />
+   223→            </button>
+   224→          </div>
+   225→        </div>
+   226→      </div>
+   227→
+   228→      {/* Mobile Menu Dropdown */}
+   229→      <AnimatePresence>
+   230→        {mobileOpen && (
+   231→          <motion.div
+   232→            initial={{ height: 0, opacity: 0 }}
+   233→            animate={{ height: 'auto', opacity: 1 }}
+   234→            exit={{ height: 0, opacity: 0 }}
+   235→            transition={{ duration: 0.2 }}
+   236→            className="md:hidden overflow-hidden border-t border-white/30 backdrop-blur-xl bg-white/80"
+   237→          >
+   238→            <div className="px-4 py-3 space-y-1">
+   239→              <button
+   240→                onClick={() => { onNavAccueil(); setMobileOpen(false) }}
+   241→                className="block w-full text-left px-4 py-3 text-sm font-semibold rounded-xl hover:bg-white/40 transition-colors"
+   242→                style={{ color: THEME.text }}
+   243→              >
+   244→                Accueil
+   245→              </button>
+   246→              <button
+   247→                onClick={() => { onNavProduits(); setMobileOpen(false) }}
+   248→                className="block w-full text-left px-4 py-3 text-sm font-semibold rounded-xl hover:bg-white/40 transition-colors"
+   249→                style={{ color: THEME.text }}
+   250→              >
+   251→                Collections
+   252→              </button>
+   253→              {whatsapp && (
+   254→                <a
+   255→                  href={`https://wa.me/${whatsapp.replace(/\D/g, '')}`}
+   256→                  target="_blank"
+   257→                  rel="noopener noreferrer"
+   258→                  onClick={() => setMobileOpen(false)}
+   259→                  className="block w-full text-left px-4 py-3 text-sm font-semibold rounded-xl hover:bg-white/40 transition-colors"
+   260→                  style={{ color: THEME.text }}
+   261→                >
+   262→                  Contactez Nous
+   263→                </a>
+   264→              )}
+   265→            </div>
+   266→          </motion.div>
+   267→        )}
+   268→      </AnimatePresence>
+   269→    </header>
+   270→  )
+   271→}
+   272→
+   273→// ═══════════════════════════════════════════════════════════════
+   274→// INSTAGRAM STORIES BAR
+   275→// ═══════════════════════════════════════════════════════════════
+   276→
+   277→function LuxeStories({
+   278→  onStoryClick,
+   279→  activeStory,
+   280→}: {
+   281→  onStoryClick: (label: string) => void
+   282→  activeStory: string | null
+   283→}) {
+   284→  return (
+   285→    <section className="w-full py-4">
+   286→      <div className="max-w-[1400px] mx-auto px-4 lg:px-6">
+   287→        <div className="flex gap-4 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+   288→          {STORIES.map((story) => {
+   289→            const isActive = activeStory === story.label
+   290→            return (
+   291→              <button
+   292→                key={story.label}
+   293→                onClick={() => onStoryClick(isActive ? '' : story.label)}
+   294→                className="shrink-0 flex flex-col items-center gap-2 group"
+   295→              >
+   296→                <div
+   297→                  className="relative flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full p-[3px] transition-transform duration-300 group-hover:scale-105"
+   298→                  style={{
+   299→                    background: isActive
+   300→                      ? `conic-gradient(from 0deg, ${THEME.gold}, ${THEME.goldDark}, ${THEME.gold}, ${THEME.goldDark})`
+   301→                      : `linear-gradient(135deg, ${THEME.gold}66, ${THEME.goldDark}66)`,
+   302→                  }}
+   303→                >
+   304→                  <div
+   305→                    className="w-full h-full rounded-full flex items-center justify-center bg-white/80 backdrop-blur-sm text-2xl sm:text-3xl"
+   306→                  >
+   307→                    {story.emoji}
+   308→                  </div>
+   309→                  {/* Active ring glow */}
+   310→                  {isActive && (
+   311→                    <motion.div
+   312→                      layoutId="story-glow"
+   313→                      className="absolute inset-0 rounded-full"
+   314→                      style={{ boxShadow: `0 0 20px ${THEME.gold}80` }}
+   315→                      transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+   316→                    />
+   317→                  )}
+   318→                </div>
+   319→                <span
+   320→                  className="text-[10px] sm:text-xs font-medium text-center max-w-[72px] leading-tight"
+   321→                  style={{ color: isActive ? THEME.goldDark : THEME.textMuted }}
+   322→                >
+   323→                  {story.label}
+   324→                </span>
+   325→              </button>
+   326→            )
+   327→          })}
+   328→        </div>
+   329→      </div>
+   330→    </section>
+   331→  )
+   332→}
+   333→
+   334→// ═══════════════════════════════════════════════════════════════
+   335→// HERO SECTION
+   336→// ═══════════════════════════════════════════════════════════════
+   337→
+   338→function LuxeHero({
+   339→  shopName,
+   340→  heroImages,
+   341→  whatsapp,
+   342→  onShopNow,
+   343→}: {
+   344→  shopName: string
+   345→  heroImages?: string
+   346→  whatsapp?: string
+   347→  onShopNow: () => void
+   348→}) {
+   349→  const [currentSlide, setCurrentSlide] = useState(0)
+   350→  const images: string[] = useMemo(() => {
+   351→    if (!heroImages) return []
+   352→    try {
+   353→      const parsed = JSON.parse(heroImages)
+   354→      return Array.isArray(parsed) ? parsed.filter((img: string) => img && img.length > 0) : []
+   355→    } catch {
+   356→      return heroImages ? [heroImages] : []
+   357→    }
+   358→  }, [heroImages])
+   359→
+   360→  useEffect(() => {
+   361→    if (images.length <= 1) return
+   362→    const timer = setInterval(() => {
+   363→      setCurrentSlide((prev) => (prev + 1) % images.length)
+   364→    }, 5000)
+   365→    return () => clearInterval(timer)
+   366→  }, [images.length])
+   367→
+   368→  return (
+   369→    <section className="w-full">
+   370→      <div
+   371→        className="relative w-full overflow-hidden"
+   372→        style={{ aspectRatio: '1180 / 600', maxHeight: '600px' }}
+   373→      >
+   374→        {images.length > 0 ? (
+   375→          <AnimatePresence mode="wait">
+   376→            <motion.div
+   377→              key={currentSlide}
+   378→              initial={{ opacity: 0 }}
+   379→              animate={{ opacity: 1 }}
+   380→              exit={{ opacity: 0 }}
+   381→              transition={{ duration: 0.6 }}
+   382→              className="absolute inset-0"
+   383→            >
+   384→              <img
+   385→                src={images[currentSlide]}
+   386→                alt={`${shopName} - Bannière ${currentSlide + 1}`}
+   387→                className="w-full h-full object-cover"
+   388→              />
+   389→              <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent" />
+   390→            </motion.div>
+   391→          </AnimatePresence>
+   392→        ) : (
+   393→          <div
+   394→            className="absolute inset-0 flex items-center"
+   395→            style={{
+   396→              background: `linear-gradient(135deg, ${THEME.goldDark} 0%, ${THEME.gold} 30%, ${THEME.pinkDeep} 70%, ${THEME.pink} 100%)`,
+   397→            }}
+   398→          >
+   399→            {/* Decorative elements */}
+   400→            <div className="absolute top-10 right-20 w-72 h-72 rounded-full opacity-10 bg-white" />
+   401→            <div className="absolute bottom-10 right-40 w-48 h-48 rounded-full opacity-5 bg-white" />
+   402→            <div className="absolute top-1/3 right-1/4 w-96 h-96 rounded-full opacity-5 bg-white" />
+   403→
+   404→            <div className="relative z-10 px-8 sm:px-16 max-w-2xl">
+   405→              <motion.div
+   406→                initial={{ opacity: 0, y: 20 }}
+   407→                animate={{ opacity: 1, y: 0 }}
+   408→                transition={{ duration: 0.5 }}
+   409→              >
+   410→                <div
+   411→                  className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider text-white mb-6"
+   412→                  style={{ background: `${THEME.gold}CC` }}
+   413→                >
+   414→                  <Sparkles className="size-3.5" />
+   415→                  Nouvelle Collection
+   416→                </div>
+   417→                <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight mb-4 tracking-wide">
+   418→                  L&apos;Élégance <br />
+   419→                  <span style={{ color: THEME.goldLight }}>à l&apos;état pur</span>
+   420→                </h1>
+   421→                <p className="text-white/80 text-base sm:text-lg mb-8 max-w-lg font-sans">
+   422→                  Découvrez notre sélection exclusive de pièces de mode, conçues pour sublimer votre style.
+   423→                </p>
+   424→                <div className="flex flex-wrap gap-3">
+   425→                  <button
+   426→                    onClick={onShopNow}
+   427→                    className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full text-white font-bold text-sm transition-all duration-300 hover:scale-105 hover:shadow-lg"
+   428→                    style={{ background: THEME.gold, color: THEME.text }}
+   429→                  >
+   430→                    Découvrir
+   431→                    <ChevronRight className="size-4" />
+   432→                  </button>
+   433→                  {whatsapp && (
+   434→                    <a
+   435→                      href={`https://wa.me/${whatsapp.replace(/\D/g, '')}`}
+   436→                      target="_blank"
+   437→                      rel="noopener noreferrer"
+   438→                      className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full text-white font-bold text-sm border-2 border-white/30 backdrop-blur-sm transition-all duration-300 hover:bg-white/10"
+   439→                    >
+   440→                      <MessageCircle className="size-4" />
+   441→                      WhatsApp
+   442→                    </a>
+   443→                  )}
+   444→                </div>
+   445→              </motion.div>
+   446→            </div>
+   447→          </div>
+   448→        )}
+   449→
+   450→        {/* Slide indicators */}
+   451→        {images.length > 1 && (
+   452→          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 z-20">
+   453→            {images.map((_, idx) => (
+   454→              <button
+   455→                key={idx}
+   456→                onClick={() => setCurrentSlide(idx)}
+   457→                className="h-2 rounded-full transition-all duration-300"
+   458→                style={{
+   459→                  width: idx === currentSlide ? '24px' : '8px',
+   460→                  background: idx === currentSlide ? THEME.gold : 'rgba(255,255,255,0.5)',
+   461→                }}
+   462→                aria-label={`Slide ${idx + 1}`}
+   463→              />
+   464→            ))}
+   465→          </div>
+   466→        )}
+   467→      </div>
+   468→    </section>
+   469→  )
+   470→}
+   471→
+   472→// ═══════════════════════════════════════════════════════════════
+   473→// CATEGORIES — Horizontal scrollable gold pills
+   474→// ═══════════════════════════════════════════════════════════════
+   475→
+   476→function LuxeCategories({
+   477→  categories,
+   478→  products,
+   479→  activeCategory,
+   480→  onCategoryClick,
+   481→}: {
+   482→  categories: Category[]
+   483→  products: Product[]
+   484→  activeCategory: string | null
+   485→  onCategoryClick: (id: string | null) => void
+   486→}) {
+   487→  const getCategoryCount = (catId?: string) =>
+   488→    products.filter((p) => p.categoryId === catId && p.isAvailable).length
+   489→
+   490→  const totalAvailable = products.filter((p) => p.isAvailable).length
+   491→
+   492→  if (categories.length === 0) return null
+   493→
+   494→  return (
+   495→    <section className="w-full py-5">
+   496→      <div className="max-w-[1400px] mx-auto px-4 lg:px-6">
+   497→        <div className="flex items-center gap-3 mb-4">
+   498→          <div className="w-8 h-[2px] rounded-full" style={{ background: THEME.gold }} />
+   499→          <h2 className="font-serif text-lg font-bold tracking-wide" style={{ color: THEME.text }}>
+   500→            Nos Catégories
+   501→          </h2>
+   502→        </div>
+   503→
+   504→        <div className="flex gap-2.5 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+   505→          {/* Tous */}
+   506→          <button
+   507→            onClick={() => onCategoryClick(null)}
+   508→            className="shrink-0 flex items-center gap-1.5 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300"
+   509→            style={
+   510→              activeCategory === null
+   511→                ? { background: `linear-gradient(135deg, ${THEME.gold}, ${THEME.goldDark})`, color: THEME.white, boxShadow: `0 4px 16px ${THEME.gold}44` }
+   512→                : { background: THEME.glassBg, color: THEME.text, border: `1px solid ${THEME.glassBorder}`, backdropFilter: 'blur(12px)' }
+   513→            }
+   514→          >
+   515→            Tous
+   516→            <span className="text-xs opacity-70">({totalAvailable})</span>
+   517→          </button>
+   518→
+   519→          {categories.map((cat) => {
+   520→            const count = getCategoryCount(cat.id)
+   521→            const isActive = activeCategory === cat.id
+   522→            return (
+   523→              <button
+   524→                key={cat.id}
+   525→                onClick={() => onCategoryClick(isActive ? null : cat.id)}
+   526→                className="shrink-0 flex items-center gap-1.5 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300"
+   527→                style={
+   528→                  isActive
+   529→                    ? { background: `linear-gradient(135deg, ${THEME.gold}, ${THEME.goldDark})`, color: THEME.white, boxShadow: `0 4px 16px ${THEME.gold}44` }
+   530→                    : { background: THEME.glassBg, color: THEME.text, border: `1px solid ${THEME.glassBorder}`, backdropFilter: 'blur(12px)' }
+   531→                }
+   532→              >
+   533→                {cat.name}
+   534→                <span className="text-xs opacity-70">({count})</span>
+   535→              </button>
+   536→            )
+   537→          })}
+   538→        </div>
+   539→      </div>
+   540→    </section>
+   541→  )
+   542→}
+   543→
+   544→// ═══════════════════════════════════════════════════════════════
+   545→// PRODUCT CARD — Glassmorphism
+   546→// ═══════════════════════════════════════════════════════════════
+   547→
+   548→function LuxeProductCard({
+   549→  product,
+   550→  index,
+   551→  onProductClick,
+   552→  onAddToCart,
+   553→  getCartQuantity,
+   554→  updateCartQuantity,
+   555→  whatsapp,
+   556→}: {
+   557→  product: Product
+   558→  index: number
+   559→  onProductClick: (product: Product) => void
+   560→  onAddToCart: (product: Product) => void
+   561→  getCartQuantity: (id: string) => number
+   562→  updateCartQuantity: (id: string, qty: number) => void
+   563→  whatsapp?: string
+   564→}) {
+   565→  const cartQty = getCartQuantity(product.id)
+   566→  const inStock = (product.stock ?? 0) > 0
+   567→  const isNew = product.createdAt && (Date.now() - new Date(product.createdAt).getTime()) < 7 * 24 * 60 * 60 * 1000
+   568→
+   569→  return (
+   570→    <motion.div
+   571→      initial={{ opacity: 0, y: 30 }}
+   572→      animate={{ opacity: 1, y: 0 }}
+   573→      transition={{ duration: 0.5, delay: Math.min(index * 0.06, 0.6) }}
+   574→      className="group flex flex-col overflow-hidden rounded-2xl backdrop-blur-xl cursor-pointer transition-all duration-500 hover:-translate-y-[5px] hover:scale-[1.03] hover:shadow-2xl"
+   575→      style={{
+   576→        background: THEME.glassBg,
+   577→        border: `1px solid ${THEME.glassBorder}`,
+   578→      }}
+   579→      onClick={() => onProductClick(product)}
+   580→    >
+   581→      {/* Image */}
+   582→      <div className="relative w-full overflow-hidden" style={{ aspectRatio: '336 / 320' }}>
+   583→        {product.image ? (
+   584→          <img
+   585→            src={product.image}
+   586→            alt={product.name}
+   587→            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+   588→            loading="lazy"
+   589→          />
+   590→        ) : (
+   591→          <div className="flex h-full w-full items-center justify-center" style={{ background: `${THEME.goldLight}60` }}>
+   592→            <Package className="size-16" style={{ color: THEME.gold }} />
+   593→          </div>
+   594→        )}
+   595→
+   596→        {/* Hover overlay */}
+   597→        <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-all duration-300">
+   598→          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center gap-2">
+   599→            <div className="flex items-center justify-center w-11 h-11 rounded-full backdrop-blur-md bg-white/70 shadow-lg">
+   600→              <Eye className="size-5" style={{ color: THEME.goldDark }} />
+   601→            </div>
+   602→            <div className="flex items-center justify-center w-11 h-11 rounded-full backdrop-blur-md bg-white/70 shadow-lg">
+   603→              <Heart className="size-5" style={{ color: THEME.goldDark }} />
+   604→            </div>
+   605→          </div>
+   606→        </div>
+   607→
+   608→        {/* Badges */}
+   609→        {!inStock && (
+   610→          <div className="absolute top-3 left-3">
+   611→            <Badge className="bg-red-500 text-white border-none text-[10px] font-bold rounded-full px-2.5">
+   612→              Rupture
+   613→            </Badge>
+   614→          </div>
+   615→        )}
+   616→        {isNew && inStock && (
+   617→          <div className="absolute top-3 left-3">
+   618→            <Badge
+   619→              className="text-white border-none text-[10px] font-bold rounded-full px-2.5"
+   620→              style={{ background: `linear-gradient(135deg, ${THEME.gold}, ${THEME.goldDark})` }}
+   621→            >
+   622→              Nouvelle Collection
+   623→            </Badge>
+   624→          </div>
+   625→        )}
+   626→        {product.categoryName && (
+   627→          <div className="absolute top-3 right-3">
+   628→            <Badge
+   629→              className="text-white border-none text-[10px] font-bold rounded-full px-2.5 backdrop-blur-md"
+   630→              style={{ background: `${THEME.text}88` }}
+   631→            >
+   632→              {product.categoryName}
+   633→            </Badge>
+   634→          </div>
+   635→        )}
+   636→      </div>
+   637→
+   638→      {/* Product info */}
+   639→      <div className="flex flex-col gap-2 p-4">
+   640→        <h3 className="font-serif font-bold text-sm line-clamp-2 leading-snug tracking-wide" style={{ color: THEME.text }}>
+   641→          {product.name}
+   642→        </h3>
+   643→
+   644→        {/* Stock */}
+   645→        <div className="flex items-center gap-1">
+   646→          {inStock ? (
+   647→            <span className="text-[11px] font-medium" style={{ color: '#22c55e' }}>
+   648→              ✓ En stock
+   649→            </span>
+   650→          ) : (
+   651→            <span className="text-[11px] font-medium text-red-500">
+   652→              Rupture de stock
+   653→            </span>
+   654→          )}
+   655→        </div>
+   656→
+   657→        {/* Price */}
+   658→        <div className="mt-1">
+   659→          <span
+   660→            className="inline-block px-3 py-1.5 rounded-full text-sm font-bold font-serif"
+   661→            style={{ background: `${THEME.gold}18`, color: THEME.goldDark, border: `1px solid ${THEME.gold}33` }}
+   662→          >
+   663→            {formatPrice(product.price)}
+   664→          </span>
+   665→        </div>
+   666→
+   667→        <div className="flex-1" />
+   668→
+   669→        {/* Actions */}
+   670→        <div className="mt-1">
+   671→          {cartQty === 0 ? (
+   672→            <div className="flex gap-1.5">
+   673→              <Button
+   674→                onClick={(e) => {
+   675→                  e.nativeEvent.stopImmediatePropagation()
+   676→                  onAddToCart(product)
+   677→                  toast.success(`${product.name} ajouté au panier !`)
+   678→                }}
+   679→                className="flex-1 gap-1.5 text-white font-semibold rounded-full text-sm h-9 transition-all duration-200 hover:shadow-lg"
+   680→                style={{ background: `linear-gradient(135deg, ${THEME.gold}, ${THEME.goldDark})` }}
+   681→                disabled={!product.isAvailable || !inStock}
+   682→              >
+   683→                <Plus className="size-3.5" />
+   684→                Ajouter
+   685→              </Button>
+   686→              {whatsapp && (
+   687→                <Button
+   688→                  onClick={(e) => {
+   689→                    e.nativeEvent.stopImmediatePropagation()
+   690→                    openWhatsApp(product, whatsapp)
+   691→                  }}
+   692→                  className="gap-1.5 font-semibold rounded-full text-sm h-9 px-3 transition-all duration-200 hover:shadow-lg"
+   693→                  style={{ background: THEME.whatsapp, color: THEME.whatsappFg }}
+   694→                  disabled={!product.isAvailable || !inStock}
+   695→                >
+   696→                  <MessageCircle className="size-3.5" />
+   697→                </Button>
+   698→              )}
+   699→            </div>
+   700→          ) : (
+   701→            <div
+   702→              className="flex items-center justify-between rounded-full p-1 backdrop-blur-md"
+   703→              style={{ background: `${THEME.gold}15`, border: `1px solid ${THEME.gold}33` }}
+   704→            >
+   705→              <Button
+   706→                variant="ghost"
+   707→                size="icon"
+   708→                className="size-8 rounded-full"
+   709→                style={{ color: THEME.goldDark }}
+   710→                onClick={(e) => { e.nativeEvent.stopImmediatePropagation(); updateCartQuantity(product.id, cartQty - 1) }}
+   711→              >
+   712→                {cartQty === 1 ? (
+   713→                  <Trash2 className="size-3.5 text-red-500" />
+   714→                ) : (
+   715→                  <Minus className="size-3.5" />
+   716→                )}
+   717→              </Button>
+   718→              <span className="min-w-[2rem] text-center font-bold text-sm" style={{ color: THEME.text }}>
+   719→                {cartQty}
+   720→              </span>
+   721→              <Button
+   722→                variant="ghost"
+   723→                size="icon"
+   724→                className="size-8 rounded-full"
+   725→                style={{ color: THEME.goldDark }}
+   726→                onClick={(e) => { e.nativeEvent.stopImmediatePropagation(); updateCartQuantity(product.id, cartQty + 1) }}
+   727→              >
+   728→                <Plus className="size-3.5" />
+   729→              </Button>
+   730→              {whatsapp && (
+   731→                <Button
+   732→                  variant="ghost"
+   733→                  size="icon"
+   734→                  className="size-8 rounded-full"
+   735→                  style={{ color: THEME.whatsapp }}
+   736→                  onClick={(e) => { e.nativeEvent.stopImmediatePropagation(); openWhatsApp(product, whatsapp, cartQty) }}
+   737→                >
+   738→                  <MessageCircle className="size-3.5" />
+   739→                </Button>
+   740→              )}
+   741→            </div>
+   742→          )}
+   743→        </div>
+   744→      </div>
+   745→    </motion.div>
+   746→  )
+   747→}
+   748→
+   749→// ═══════════════════════════════════════════════════════════════
+   750→// PRODUCT DETAIL — Full-screen glassmorphism overlay
+   751→// ═══════════════════════════════════════════════════════════════
+   752→
+   753→function LuxeProductDetail({
+   754→  product,
+   755→  whatsapp,
+   756→  onClose,
+   757→  onAddToCart,
+   758→  cartQty,
+   759→  updateCartQuantity,
+   760→}: {
+   761→  product: Product
+   762→  whatsapp?: string
+   763→  onClose: () => void
+   764→  onAddToCart: (product: Product, qty: number) => void
+   765→  cartQty: number
+   766→  updateCartQuantity: (id: string, qty: number) => void
+   767→}) {
+   768→  const [qty, setQty] = useState(1)
+   769→  const [imgIndex, setImgIndex] = useState(0)
+   770→
+   771→  const productImages = product.images?.length ? product.images : product.image ? [product.image] : []
+   772→  const inStock = (product.stock ?? 0) > 0
+   773→
+   774→  function handleAdd(qty: number) {
+   775→    for (let i = 0; i < qty; i++) {
+   776→      onAddToCart(product, 1)
+   777→    }
+   778→    toast.success(`${product.name} (x${qty}) ajouté au panier !`)
+   779→  }
+   780→
+   781→  return (
+   782→    <motion.div
+   783→      initial={{ opacity: 0, y: 20 }}
+   784→      animate={{ opacity: 1, y: 0 }}
+   785→      exit={{ opacity: 0, y: -20 }}
+   786→      transition={{ duration: 0.25 }}
+   787→      className="max-w-[1400px] mx-auto px-4 lg:px-6 py-6"
+   788→    >
+   789→      {/* Back button */}
+   790→      <button
+   791→        onClick={onClose}
+   792→        className="flex items-center gap-2 text-sm font-semibold mb-6 transition-all duration-200 hover:opacity-70 group"
+   793→        style={{ color: THEME.goldDark }}
+   794→      >
+   795→        <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-1" />
+   796→        Retour à la boutique
+   797→      </button>
+   798→
+   799→      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+   800→        {/* Image */}
+   801→        <div>
+   802→          <div className="aspect-square rounded-2xl overflow-hidden backdrop-blur-xl" style={{ background: `${THEME.goldLight}40`, border: `1px solid ${THEME.glassBorder}` }}>
+   803→            {productImages[imgIndex] ? (
+   804→              <img
+   805→                src={productImages[imgIndex]}
+   806→                alt={product.name}
+   807→                className="w-full h-full object-cover"
+   808→              />
+   809→            ) : (
+   810→              <div className="w-full h-full flex items-center justify-center">
+   811→                <Package className="size-20" style={{ color: THEME.gold }} />
+   812→              </div>
+   813→            )}
+   814→          </div>
+   815→          {/* Thumbnails */}
+   816→          {productImages.length > 1 && (
+   817→            <div className="flex gap-2 mt-3 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+   818→              {productImages.map((img, idx) => (
+   819→                <button
+   820→                  key={idx}
+   821→                  onClick={() => setImgIndex(idx)}
+   822→                  className="shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition-all duration-200"
+   823→                  style={{
+   824→                    borderColor: idx === imgIndex ? THEME.gold : THEME.glassBorder,
+   825→                    opacity: idx === imgIndex ? 1 : 0.5,
+   826→                  }}
+   827→                >
+   828→                  <img src={img} alt="" className="w-full h-full object-cover" />
+   829→                </button>
+   830→              ))}
+   831→            </div>
+   832→          )}
+   833→        </div>
+   834→
+   835→        {/* Info */}
+   836→        <div className="flex flex-col gap-4">
+   837→          {/* Badges */}
+   838→          <div className="flex items-center gap-2 flex-wrap">
+   839→            {product.categoryName && (
+   840→              <Badge className="text-xs text-white rounded-full px-3" style={{ background: `linear-gradient(135deg, ${THEME.gold}, ${THEME.goldDark})` }}>
+   841→                {product.categoryName}
+   842→              </Badge>
+   843→            )}
+   844→            {!inStock && (
+   845→              <Badge className="bg-red-500 text-white text-xs border-none rounded-full px-3">
+   846→                Rupture de stock
+   847→              </Badge>
+   848→            )}
+   849→          </div>
+   850→
+   851→          <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-wide" style={{ color: THEME.text }}>
+   852→            {product.name}
+   853→          </h1>
+   854→
+   855→          <p className="font-serif text-2xl font-bold" style={{ color: THEME.goldDark }}>
+   856→            {formatPrice(product.price)}
+   857→          </p>
+   858→
+   859→          {product.description && (
+   860→            <p className="text-sm leading-relaxed" style={{ color: THEME.textMuted }}>
+   861→              {product.description}
+   862→            </p>
+   863→          )}
+   864→
+   865→          {inStock && product.stock !== undefined && (
+   866→            <p className="text-sm" style={{ color: THEME.textMuted }}>
+   867→              En stock ({product.stock} disponibles)
+   868→            </p>
+   869→          )}
+   870→
+   871→          {/* Quantity stepper */}
+   872→          <div className="p-5 rounded-2xl backdrop-blur-xl" style={{ background: THEME.glassBg, border: `1px solid ${THEME.glassBorder}` }}>
+   873→            <p className="text-sm font-semibold mb-3 font-serif" style={{ color: THEME.text }}>Quantité</p>
+   874→            <div className="flex items-center gap-4 mb-4">
+   875→              <div className="flex items-center rounded-full" style={{ border: `1px solid ${THEME.glassBorder}` }}>
+   876→                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={() => setQty(Math.max(1, qty - 1))}>
+   877→                  <Minus className="size-4" />
+   878→                </Button>
+   879→                <span className="min-w-[36px] text-center font-bold text-base" style={{ color: THEME.text }}>{qty}</span>
+   880→                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={() => setQty(qty + 1)}>
+   881→                  <Plus className="size-4" />
+   882→                </Button>
+   883→              </div>
+   884→              <span className="text-lg font-bold font-serif" style={{ color: THEME.goldDark }}>
+   885→                {formatPrice(product.price * qty)}
+   886→              </span>
+   887→            </div>
+   888→
+   889→            <Button
+   890→              className="w-full h-12 gap-2 text-sm font-bold text-white rounded-full transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
+   891→              style={{ background: `linear-gradient(135deg, ${THEME.gold}, ${THEME.goldDark})` }}
+   892→              disabled={!inStock}
+   893→              onClick={() => handleAdd(qty)}
+   894→            >
+   895→              <ShoppingCart className="size-5" />
+   896→              Ajouter au panier
+   897→            </Button>
+   898→          </div>
+   899→
+   900→          {/* WhatsApp */}
+   901→          {whatsapp && (
+   902→            <Button
+   903→              className="w-full h-12 gap-2 text-sm font-bold rounded-full transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
+   904→              style={{ background: THEME.whatsapp, color: THEME.whatsappFg }}
+   905→              disabled={!inStock}
+   906→              onClick={() => openWhatsApp(product, whatsapp, qty)}
+   907→            >
+   908→              <MessageCircle className="size-5" />
+   909→              Commander sur WhatsApp
+   910→            </Button>
+   911→          )}
+   912→        </div>
+   913→      </div>
+   914→    </motion.div>
+   915→  )
+   916→}
+   917→
+   918→// ═══════════════════════════════════════════════════════════════
+   919→// TESTIMONIALS — 3 cards with gold stars
+   920→// ═══════════════════════════════════════════════════════════════
+   921→
+   922→function LuxeTestimonials() {
+   923→  return (
+   924→    <section className="w-full py-12">
+   925→      <div className="max-w-[1400px] mx-auto px-4 lg:px-6">
+   926→        <div className="flex items-center gap-3 mb-8 justify-center">
+   927→          <div className="w-8 h-[2px] rounded-full" style={{ background: THEME.gold }} />
+   928→          <h2 className="font-serif text-2xl font-bold tracking-wide text-center" style={{ color: THEME.text }}>
+   929→            Ce que disent nos clientes
+   930→          </h2>
+   931→          <div className="w-8 h-[2px] rounded-full" style={{ background: THEME.gold }} />
+   932→        </div>
+   933→
+   934→        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+   935→          {TESTIMONIALS.map((t, idx) => (
+   936→            <motion.div
+   937→              key={idx}
+   938→              initial={{ opacity: 0, y: 20 }}
+   939→              whileInView={{ opacity: 1, y: 0 }}
+   940→              viewport={{ once: true }}
+   941→              transition={{ duration: 0.5, delay: idx * 0.15 }}
+   942→              className="rounded-2xl p-6 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+   943→              style={{ background: THEME.glassBg, border: `1px solid ${THEME.glassBorder}` }}
+   944→            >
+   945→              {/* Quote icon */}
+   946→              <Quote className="size-6 mb-3" style={{ color: THEME.gold }} />
+   947→
+   948→              {/* Stars */}
+   949→              <div className="flex gap-0.5 mb-3">
+   950→                {Array.from({ length: t.stars }).map((_, i) => (
+   951→                  <Star key={i} className="size-4 fill-current" style={{ color: THEME.gold }} />
+   952→                ))}
+   953→              </div>
+   954→
+   955→              {/* Text */}
+   956→              <p className="text-sm leading-relaxed mb-4" style={{ color: THEME.text }}>
+   957→                &ldquo;{t.text}&rdquo;
+   958→              </p>
+   959→
+   960→              {/* Author */}
+   961→              <div className="flex items-center gap-3">
+   962→                <div
+   963→                  className="flex items-center justify-center w-10 h-10 rounded-full text-xs font-bold text-white"
+   964→                  style={{ background: `linear-gradient(135deg, ${THEME.gold}, ${THEME.goldDark})` }}
+   965→                >
+   966→                  {t.name.split(' ').map(n => n[0]).join('')}
+   967→                </div>
+   968→                <span className="text-sm font-semibold" style={{ color: THEME.textMuted }}>
+   969→                  {t.name}
+   970→                </span>
+   971→              </div>
+   972→            </motion.div>
+   973→          ))}
+   974→        </div>
+   975→      </div>
+   976→    </section>
+   977→  )
+   978→}
+   979→
+   980→// ═══════════════════════════════════════════════════════════════
+   981→// CART DRAWER — Slide-up glassmorphism
+   982→// ═══════════════════════════════════════════════════════════════
+   983→
+   984→function LuxeCartDrawer({
+   985→  expanded,
+   986→  onToggle,
+   987→  onClear,
+   988→  onCheckout,
+   989→  total,
+   990→  itemCount,
+   991→  cart,
+   992→  updateCartQuantity,
+   993→}: {
+   994→  expanded: boolean
+   995→  onToggle: () => void
+   996→  onClear: () => void
+   997→  onCheckout: () => void
+   998→  total: number
+   999→  itemCount: number
+  1000→  cart: { id: string; productId: string; name: string; price: number; image?: string; quantity: number }[]
+  1001→  updateCartQuantity: (id: string, qty: number) => void
+  1002→}) {
+  1003→  return (
+  1004→    <motion.div
+  1005→      initial={{ y: 100 }}
+  1006→      animate={{ y: 0 }}
+  1007→      exit={{ y: 100 }}
+  1008→      transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+  1009→      className="fixed bottom-0 left-0 right-0 z-50 shadow-[0_-4px_30px_rgba(0,0,0,0.1)]"
+  1010→    >
+  1011→      {/* Expanded cart */}
+  1012→      <AnimatePresence>
+  1013→        {expanded && (
+  1014→          <motion.div
+  1015→            initial={{ height: 0 }}
+  1016→            animate={{ height: 'auto' }}
+  1017→            exit={{ height: 0 }}
+  1018→            transition={{ duration: 0.25 }}
+  1019→            className="overflow-hidden backdrop-blur-xl border-t"
+  1020→            style={{ background: 'rgba(255,255,255,0.85)', borderColor: THEME.glassBorder }}
+  1021→          >
+  1022→            <ScrollArea className="max-h-64">
+  1023→              <div className="max-w-[1400px] mx-auto p-4 space-y-3">
+  1024→                <div className="flex items-center justify-between mb-2">
+  1025→                  <h3 className="font-serif font-bold text-sm" style={{ color: THEME.text }}>
+  1026→                    Votre panier ({itemCount} article{itemCount !== 1 ? 's' : ''})
+  1027→                  </h3>
+  1028→                  <Button variant="ghost" size="sm" className="text-red-500 h-7 text-xs" onClick={onClear}>
+  1029→                    <Trash2 className="size-3 mr-1" />
+  1030→                    Tout supprimer
+  1031→                  </Button>
+  1032→                </div>
+  1033→                {cart.map((item) => (
+  1034→                  <div key={item.id} className="flex items-center gap-3">
+  1035→                    <div className="w-12 h-12 rounded-xl shrink-0 overflow-hidden" style={{ background: `${THEME.goldLight}60` }}>
+  1036→                      {item.image ? (
+  1037→                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+  1038→                      ) : (
+  1039→                        <div className="w-full h-full flex items-center justify-center">
+  1040→                          <Package className="size-5" style={{ color: THEME.gold }} />
+  1041→                        </div>
+  1042→                      )}
+  1043→                    </div>
+  1044→                    <div className="flex-1 min-w-0">
+  1045→                      <p className="text-sm font-medium line-clamp-1" style={{ color: THEME.text }}>{item.name}</p>
+  1046→                      <p className="text-xs font-bold font-serif" style={{ color: THEME.goldDark }}>{formatPrice(item.price)}</p>
+  1047→                    </div>
+  1048→                    <div className="flex items-center rounded-full" style={{ background: `${THEME.gold}15` }}>
+  1049→                      <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => updateCartQuantity(item.productId, item.quantity - 1)}>
+  1050→                        {item.quantity === 1 ? <Trash2 className="size-3 text-red-500" /> : <Minus className="size-3" />}
+  1051→                      </Button>
+  1052→                      <span className="text-sm font-semibold min-w-[24px] text-center">{item.quantity}</span>
+  1053→                      <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => updateCartQuantity(item.productId, item.quantity + 1)}>
+  1054→                        <Plus className="size-3" />
+  1055→                      </Button>
+  1056→                    </div>
+  1057→                    <span className="text-sm font-bold w-24 text-right font-serif" style={{ color: THEME.goldDark }}>
+  1058→                      {formatPrice(item.price * item.quantity)}
+  1059→                    </span>
+  1060→                  </div>
+  1061→                ))}
+  1062→                <Separator />
+  1063→                <div className="flex items-center justify-between font-bold font-serif" style={{ color: THEME.text }}>
+  1064→                  <span>Total</span>
+  1065→                  <span style={{ color: THEME.goldDark }}>{formatPrice(total)}</span>
+  1066→                </div>
+  1067→              </div>
+  1068→            </ScrollArea>
+  1069→          </motion.div>
+  1070→        )}
+  1071→      </AnimatePresence>
+  1072→
+  1073→      {/* Cart bar */}
+  1074→      <div className="backdrop-blur-xl border-t px-4 py-3" style={{ background: 'rgba(255,255,255,0.90)', borderColor: THEME.glassBorder }}>
+  1075→        <div className="max-w-[1400px] mx-auto flex items-center gap-3">
+  1076→          <Button
+  1077→            variant="outline"
+  1078→            size="sm"
+  1079→            className="h-10 gap-1.5 shrink-0 rounded-full"
+  1080→            style={{ borderColor: THEME.glassBorder, color: THEME.text }}
+  1081→            onClick={onToggle}
+  1082→          >
+  1083→            {expanded ? <ChevronDown className="size-4" /> : <ChevronUp className="size-4" />}
+  1084→            <Badge className="px-1.5 h-5 text-xs text-white rounded-full" style={{ background: THEME.gold }}>
+  1085→              {itemCount}
+  1086→            </Badge>
+  1087→            <span className="hidden sm:inline text-sm">panier</span>
+  1088→          </Button>
+  1089→
+  1090→          <div className="flex-1">
+  1091→            <p className="text-xs" style={{ color: THEME.textMuted }}>Total</p>
+  1092→            <p className="font-bold text-sm font-serif" style={{ color: THEME.goldDark }}>{formatPrice(total)}</p>
+  1093→          </div>
+  1094→
+  1095→          <Button
+  1096→            className="h-10 gap-2 font-semibold text-sm rounded-full px-6 transition-all duration-300 hover:shadow-lg"
+  1097→            style={{ background: THEME.whatsapp, color: THEME.whatsappFg }}
+  1098→            onClick={onCheckout}
+  1099→          >
+  1100→            <MessageCircle className="size-4" />
+  1101→            <span className="hidden sm:inline">Commander via WhatsApp</span>
+  1102→            <span className="sm:hidden">Commander</span>
+  1103→          </Button>
+  1104→        </div>
+  1105→      </div>
+  1106→    </motion.div>
+  1107→  )
+  1108→}
+  1109→
+  1110→// ═══════════════════════════════════════════════════════════════
+  1111→// FOOTER — Minimal dark with gold accents
+  1112→// ═══════════════════════════════════════════════════════════════
+  1113→
+  1114→function LuxeFooter({
+  1115→  shopName,
+  1116→  whatsapp,
+  1117→  phone,
+  1118→  address,
+  1119→}: {
+  1120→  shopName: string
+  1121→  whatsapp?: string
+  1122→  phone?: string
+  1123→  address?: string
+  1124→}) {
+  1125→  return (
+  1126→    <footer className="w-full mt-12" style={{ background: '#1a1a1a' }}>
+  1127→      <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-10">
+  1128→        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+  1129→          {/* Brand */}
+  1130→          <div className="flex flex-col items-center md:items-start gap-2">
+  1131→            <div className="flex items-center gap-2">
+  1132→              <Gem className="size-5" style={{ color: THEME.gold }} />
+  1133→              <span className="font-serif text-lg font-bold text-white tracking-wide">{shopName}</span>
+  1134→            </div>
+  1135→            <p className="text-xs" style={{ color: THEME.textMuted }}>
+  1136→              L&apos;élégance à portée de clic
+  1137→            </p>
+  1138→            {whatsapp && (
+  1139→              <span className="text-xs" style={{ color: `${THEME.textMuted}CC` }}>
+  1140→                {whatsapp}
+  1141→              </span>
+  1142→            )}
+  1143→          </div>
+  1144→
+  1145→          {/* Quick links */}
+  1146→          <div className="flex items-center gap-6 text-xs" style={{ color: `${THEME.textMuted}CC` }}>
+  1147→            {phone && <span>{phone}</span>}
+  1148→            {address && <span>{address}</span>}
+  1149→          </div>
+  1150→        </div>
+  1151→
+  1152→        <Separator className="my-6" style={{ background: `${THEME.gold}22` }} />
+  1153→
+  1154→        {/* Copyright */}
+  1155→        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+  1156→          <p className="text-xs" style={{ color: `${THEME.textMuted}88` }}>
+  1157→            © {new Date().getFullYear()} {shopName}. Tous droits réservés.
+  1158→          </p>
+  1159→          <p className="text-xs" style={{ color: `${THEME.textMuted}88` }}>
+  1160→            Propulsé par <span className="font-semibold" style={{ color: THEME.gold }}>Boutiko</span>
+  1161→          </p>
+  1162→        </div>
+  1163→      </div>
+  1164→    </footer>
+  1165→  )
+  1166→}
+  1167→
+  1168→// ═══════════════════════════════════════════════════════════════
+  1169→// SEARCH BAR
+  1170→// ═══════════════════════════════════════════════════════════════
+  1171→
+  1172→function LuxeSearchBar({
+  1173→  searchQuery,
+  1174→  onSearchChange,
+  1175→  sortBy,
+  1176→  onSortChange,
+  1177→  resultCount,
+  1178→  isSearching,
+  1179→}: {
+  1180→  searchQuery: string
+  1181→  onSearchChange: (q: string) => void
+  1182→  sortBy: SortOption
+  1183→  onSortChange: (s: SortOption) => void
+  1184→  resultCount: number
+  1185→  isSearching: boolean
+  1186→}) {
+  1187→  const [localSearch, setLocalSearch] = useState(searchQuery)
+  1188→  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  1189→
+  1190→  useEffect(() => {
+  1191→    setLocalSearch(searchQuery)
+  1192→  }, [searchQuery])
+  1193→
+  1194→  const handleChange = useCallback(
+  1195→    (value: string) => {
+  1196→      setLocalSearch(value)
+  1197→      if (timerRef.current) clearTimeout(timerRef.current)
+  1198→      timerRef.current = setTimeout(() => onSearchChange(value), 300)
+  1199→    },
+  1200→    [onSearchChange]
+  1201→  )
+  1202→
+  1203→  return (
+  1204→    <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+  1205→      <div className="relative flex-1">
+  1206→        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4" style={{ color: THEME.textMuted }} />
+  1207→        <Input
+  1208→          type="text"
+  1209→          placeholder="Rechercher un produit..."
+  1210→          value={localSearch}
+  1211→          onChange={(e) => handleChange(e.target.value)}
+  1212→          className="pl-10 pr-10 h-11 rounded-full text-sm backdrop-blur-md"
+  1213→          style={{
+  1214→            background: THEME.glassBg,
+  1215→            borderColor: THEME.glassBorder,
+  1216→            color: THEME.text,
+  1217→          }}
+  1218→        />
+  1219→        {localSearch && (
+  1220→          <button
+  1221→            onClick={() => handleChange('')}
+  1222→            className="absolute right-3.5 top-1/2 -translate-y-1/2 transition-colors"
+  1223→            style={{ color: THEME.textMuted }}
+  1224→            aria-label="Effacer"
+  1225→          >
+  1226→            <X className="size-4" />
+  1227→          </button>
+  1228→        )}
+  1229→      </div>
+  1230→
+  1231→      {/* Sort */}
+  1232→      <div className="relative">
+  1233→        <select
+  1234→          value={sortBy}
+  1235→          onChange={(e) => onSortChange(e.target.value as SortOption)}
+  1236→          className="appearance-none h-11 px-4 pr-10 rounded-full text-sm font-medium cursor-pointer backdrop-blur-md"
+  1237→          style={{
+  1238→            background: THEME.glassBg,
+  1239→            color: THEME.text,
+  1240→            border: `1px solid ${THEME.glassBorder}`,
+  1241→          }}
+  1242→        >
+  1243→          <option value="recent">Plus récents</option>
+  1244→          <option value="price-asc">Prix croissant</option>
+  1245→          <option value="price-desc">Prix décroissant</option>
+  1246→        </select>
+  1247→        <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 size-4 rotate-90" style={{ color: THEME.textMuted }} />
+  1248→      </div>
+  1249→
+  1250→      {/* Results count */}
+  1251→      {isSearching && (
+  1252→        <div className="flex items-center gap-1.5 text-sm" style={{ color: THEME.textMuted }}>
+  1253→          <ShoppingBag className="size-4" />
+  1254→          {resultCount} résultat{resultCount !== 1 ? 's' : ''}
+  1255→        </div>
+  1256→      )}
+  1257→    </div>
+  1258→  )
+  1259→}
+  1260→
+  1261→// ═══════════════════════════════════════════════════════════════
+  1262→// LOADING SKELETON
+  1263→// ═══════════════════════════════════════════════════════════════
+  1264→
+  1265→function LuxeLoadingSkeleton() {
+  1266→  return (
+  1267→    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #FFE5E5 0%, #FFFDD0 50%, #FFE5E5 100%)' }}>
+  1268→      {/* Menu skeleton */}
+  1269→      <div className="h-[70px] border-b border-white/30 flex items-center px-4 backdrop-blur-xl bg-white/60">
+  1270→        <Skeleton className="h-[70px] w-[200px] rounded-xl" />
+  1271→        <div className="flex-1 flex justify-center gap-6">
+  1272→          <Skeleton className="h-8 w-20 rounded-full" />
+  1273→          <Skeleton className="h-8 w-28 rounded-full" />
+  1274→        </div>
+  1275→      </div>
+  1276→      {/* Stories skeleton */}
+  1277→      <div className="flex gap-4 px-4 py-4 overflow-hidden">
+  1278→        {Array.from({ length: 5 }).map((_, i) => (
+  1279→          <div key={i} className="shrink-0 flex flex-col items-center gap-2">
+  1280→            <Skeleton className="w-16 h-16 sm:w-20 sm:h-20 rounded-full" />
+  1281→            <Skeleton className="h-3 w-16 rounded" />
+  1282→          </div>
+  1283→        ))}
+  1284→      </div>
+  1285→      {/* Hero skeleton */}
+  1286→      <div className="px-4 py-2">
+  1287→        <Skeleton className="w-full rounded-2xl mx-auto" style={{ aspectRatio: '1180 / 600', maxHeight: '600px' }} />
+  1288→      </div>
+  1289→      {/* Products skeleton */}
+  1290→      <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-6">
+  1291→        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+  1292→          {Array.from({ length: 8 }).map((_, i) => (
+  1293→            <div key={i} className="flex flex-col gap-2 rounded-2xl overflow-hidden backdrop-blur-xl" style={{ background: THEME.glassBg, border: `1px solid ${THEME.glassBorder}` }}>
+  1294→              <Skeleton className="w-full" style={{ aspectRatio: '336 / 320' }} />
+  1295→              <div className="p-4 space-y-2">
+  1296→                <Skeleton className="h-4 w-full" />
+  1297→                <Skeleton className="h-3 w-24" />
+  1298→                <Skeleton className="h-9 w-full rounded-full" />
+  1299→              </div>
+  1300→            </div>
+  1301→          ))}
+  1302→        </div>
+  1303→      </div>
+  1304→    </div>
+  1305→  )
+  1306→}
+  1307→
+  1308→// ═══════════════════════════════════════════════════════════════
+  1309→// MAIN: LuxeFashionShopPage — Page complète du template luxe-fashion
+  1310→// ═══════════════════════════════════════════════════════════════
+  1311→
+  1312→export function LuxeFashionShopPage() {
+  1313→  const {
+  1314→    shopSlug,
+  1315→    setView,
+  1316→    publicShop,
+  1317→    setPublicShop,
+  1318→    publicProducts,
+  1319→    setPublicProducts,
+  1320→    publicCategories,
+  1321→    setPublicCategories,
+  1322→    cart,
+  1323→    addToCart,
+  1324→    updateCartQuantity,
+  1325→    clearCart,
+  1326→    getCartTotal,
+  1327→  } = useAppStore()
+  1328→
+  1329→  const [loading, setLoading] = useState(true)
+  1330→  const [searchQuery, setSearchQuery] = useState('')
+  1331→  const [activeCategory, setActiveCategory] = useState<string | null>(null)
+  1332→  const [sortBy, setSortBy] = useState<SortOption>('recent')
+  1333→  const [cartExpanded, setCartExpanded] = useState(false)
+  1334→  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  1335→  const [activeStory, setActiveStory] = useState<string | null>(null)
+  1336→  const scrollRef = useRef<HTMLDivElement>(null)
+  1337→
+  1338→  // Scroll to top when a product is selected
+  1339→  useEffect(() => {
+  1340→    if (selectedProduct) {
+  1341→      window.scrollTo({ top: 0, behavior: 'smooth' })
+  1342→    }
+  1343→  }, [selectedProduct])
+  1344→
+  1345→  // ── Fetch shop data ──
+  1346→  const fetchShop = useCallback(async () => {
+  1347→    if (!shopSlug) return
+  1348→    setLoading(true)
+  1349→    try {
+  1350→      const shopRes = await fetch(`/api/shops/${shopSlug}`)
+  1351→      if (!shopRes.ok) return
+  1352→      const shopData = await shopRes.json()
+  1353→      setPublicShop(shopData)
+  1354→      fetch(`/api/shops/${shopSlug}/visit`, { method: 'POST' }).catch(() => {})
+  1355→      const [prodRes, catRes] = await Promise.all([
+  1356→        fetch(`/api/shops/${shopSlug}/products`),
+  1357→        fetch(`/api/shops/${shopSlug}/categories`),
+  1358→      ])
+  1359→      if (prodRes.ok) setPublicProducts(await prodRes.json())
+  1360→      if (catRes.ok) setPublicCategories(await catRes.json())
+  1361→    } catch {
+  1362→      // Error loading
+  1363→    } finally {
+  1364→      setLoading(false)
+  1365→    }
+  1366→  }, [shopSlug, setPublicShop, setPublicProducts, setPublicCategories])
+  1367→
+  1368→  useEffect(() => {
+  1369→    fetchShop()
+  1370→  }, [fetchShop])
+  1371→
+  1372→  // ── Filter & sort products ──
+  1373→  const filteredProducts = useMemo(() => {
+  1374→    let products = publicProducts.filter((p) => p.isAvailable)
+  1375→
+  1376→    // Story filter: "Bestsellers" shows first 10, "Promos" shows cheapest, etc.
+  1377→    if (activeStory === 'Bestsellers') {
+  1378→      products = products.slice(0, 10)
+  1379→    } else if (activeStory === 'Promos') {
+  1380→      products = [...products].sort((a, b) => a.price - b.price).slice(0, 10)
+  1381→    } else if (activeStory === 'Nouvelle Collection') {
+  1382→      const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
+  1383→      const newProducts = products.filter(p => p.createdAt && new Date(p.createdAt).getTime() > weekAgo)
+  1384→      if (newProducts.length > 0) products = newProducts
+  1385→    }
+  1386→
+  1387→    if (activeCategory) products = products.filter((p) => p.categoryId === activeCategory)
+  1388→    if (searchQuery.trim()) {
+  1389→      const q = searchQuery.toLowerCase().trim()
+  1390→      products = products.filter(
+  1391→        (p) =>
+  1392→          p.name.toLowerCase().includes(q) ||
+  1393→          (p.description && p.description.toLowerCase().includes(q)) ||
+  1394→          (p.categoryName && p.categoryName.toLowerCase().includes(q))
+  1395→      )
+  1396→    }
+  1397→    switch (sortBy) {
+  1398→      case 'price-asc':
+  1399→        products = [...products].sort((a, b) => a.price - b.price)
+  1400→        break
+  1401→      case 'price-desc':
+  1402→        products = [...products].sort((a, b) => b.price - a.price)
+  1403→        break
+  1404→    }
+  1405→    return products
+  1406→  }, [publicProducts, activeCategory, searchQuery, sortBy, activeStory])
+  1407→
+  1408→  const total = getCartTotal()
+  1409→  const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0)
+  1410→  const totalProductCount = publicProducts.filter((p) => p.isAvailable).length
+  1411→  const isSearching = searchQuery.trim().length > 0
+  1412→
+  1413→  // ── Handlers ──
+  1414→  function handleAddToCart(product: Product, qty: number = 1) {
+  1415→    const cartImage = (product.images && product.images[0]) || product.image || undefined
+  1416→    addToCart({ productId: product.id, name: product.name, price: product.price, image: cartImage, quantity: qty })
+  1417→  }
+  1418→
+  1419→  function getCartQuantity(productId: string): number {
+  1420→    return cart.find((c) => c.productId === productId)?.quantity || 0
+  1421→  }
+  1422→
+  1423→  function handleNavAccueil() {
+  1424→    setSelectedProduct(null)
+  1425→    setActiveCategory(null)
+  1426→    setSearchQuery('')
+  1427→    setActiveStory(null)
+  1428→    window.scrollTo({ top: 0, behavior: 'smooth' })
+  1429→  }
+  1430→
+  1431→  function handleNavProduits() {
+  1432→    setSelectedProduct(null)
+  1433→    setActiveCategory(null)
+  1434→    setSearchQuery('')
+  1435→    scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
+  1436→  }
+  1437→
+  1438→  function handleWhatsAppCheckout() {
+  1439→    if (!publicShop) return
+  1440→    const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
+  1441→    const itemsText = cart
+  1442→      .map((c) => {
+  1443→        const productUrl = shopSlug ? `${baseUrl}/${shopSlug}?product=${c.productId}` : ''
+  1444→        const linkLine = productUrl ? `\n   🔗 ${productUrl}` : ''
+  1445→        return `🛍 ${c.name} x${c.quantity} — ${(c.price * c.quantity).toLocaleString('fr-FR')} FCFA${linkLine}`
+  1446→      })
+  1447→      .join('\n')
+  1448→    const msg = `Bonjour ${publicShop.name} ! 👋\n\nJe souhaite commander :\n\n${itemsText}\n\n━━━━━━━━━━━━━━\n💰 Total : ${total.toLocaleString('fr-FR')} FCFA\n\n📝 Mes informations :\nNom :\nAdresse :\nTéléphone :\n\nMerci ! 🙏`
+  1449→    const encoded = encodeURIComponent(msg)
+  1450→    const phone = publicShop.whatsapp?.replace(/\D/g, '') || ''
+  1451→    window.open(`https://wa.me/${phone}?text=${encoded}`, '_blank')
+  1452→  }
+  1453→
+  1454→  // ── Loading ──
+  1455→  if (loading) return <LuxeLoadingSkeleton />
+  1456→
+  1457→  // ── Shop not found ──
+  1458→  if (!publicShop) {
+  1459→    return (
+  1460→      <div
+  1461→        className="min-h-screen flex items-center justify-center p-4"
+  1462→        style={{ background: 'linear-gradient(135deg, #FFE5E5 0%, #FFFDD0 50%, #FFE5E5 100%)' }}
+  1463→      >
+  1464→        <div className="text-center backdrop-blur-xl rounded-2xl p-8" style={{ background: THEME.glassBg, border: `1px solid ${THEME.glassBorder}` }}>
+  1465→          <div className="flex items-center justify-center w-20 h-20 rounded-full mx-auto mb-4" style={{ background: `${THEME.gold}20` }}>
+  1466→            <Package className="size-10" style={{ color: THEME.goldDark }} />
+  1467→          </div>
+  1468→          <h2 className="font-serif text-xl font-bold mb-2 tracking-wide" style={{ color: THEME.text }}>Boutique introuvable</h2>
+  1469→          <p className="text-sm mb-4" style={{ color: THEME.textMuted }}>Cette boutique n&apos;existe pas ou a été désactivée.</p>
+  1470→          <Button
+  1471→            onClick={() => setView('landing')}
+  1472→            className="text-white font-semibold rounded-full"
+  1473→            style={{ background: `linear-gradient(135deg, ${THEME.gold}, ${THEME.goldDark})` }}
+  1474→          >
+  1475→            Retour à l&apos;accueil
+  1476→          </Button>
+  1477→        </div>
+  1478→      </div>
+  1479→    )
+  1480→  }
+  1481→
+  1482→  return (
+  1483→    <div
+  1484→      className="min-h-screen flex flex-col"
+  1485→      style={{
+  1486→        background: 'linear-gradient(135deg, #FFE5E5 0%, #FFFDD0 50%, #FFE5E5 100%)',
+  1487→        color: THEME.text,
+  1488→      }}
+  1489→    >
+  1490→      {/* ═══ HEADER ═══ */}
+  1491→      <LuxeHeader
+  1492→        shopName={publicShop.name}
+  1493→        logo={publicShop.logo}
+  1494→        whatsapp={publicShop.whatsapp}
+  1495→        cartCount={itemCount}
+  1496→        onNavAccueil={handleNavAccueil}
+  1497→        onNavProduits={handleNavProduits}
+  1498→        onCartClick={() => cart.length > 0 && setCartExpanded(!cartExpanded)}
+  1499→      />
+  1500→
+  1501→      <main className="flex-1">
+  1502→        <AnimatePresence mode="wait">
+  1503→          {selectedProduct ? (
+  1504→            /* ═══ PRODUCT DETAIL ═══ */
+  1505→            <LuxeProductDetail
+  1506→              key={selectedProduct.id}
+  1507→              product={selectedProduct}
+  1508→              whatsapp={publicShop.whatsapp}
+  1509→              onClose={() => setSelectedProduct(null)}
+  1510→              onAddToCart={(product, qty) => {
+  1511→                for (let i = 0; i < qty; i++) handleAddToCart(product, 1)
+  1512→              }}
+  1513→              cartQty={getCartQuantity(selectedProduct.id)}
+  1514→              updateCartQuantity={updateCartQuantity}
+  1515→            />
+  1516→          ) : (
+  1517→            /* ═══ MAIN LAYOUT ═══ */
+  1518→            <motion.div
+  1519→              key="main"
+  1520→              initial={{ opacity: 0 }}
+  1521→              animate={{ opacity: 1 }}
+  1522→              exit={{ opacity: 0 }}
+  1523→              transition={{ duration: 0.15 }}
+  1524→            >
+  1525→              {/* ═══ INSTAGRAM STORIES ═══ */}
+  1526→              <LuxeStories
+  1527→                onStoryClick={(label) => {
+  1528→                  setActiveStory(label)
+  1529→                  setSelectedProduct(null)
+  1530→                  setActiveCategory(null)
+  1531→                  scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
+  1532→                }}
+  1533→                activeStory={activeStory}
+  1534→              />
+  1535→
+  1536→              {/* ═══ HERO ═══ */}
+  1537→              <LuxeHero
+  1538→                shopName={publicShop.name}
+  1539→                heroImages={publicShop.heroImages}
+  1540→                whatsapp={publicShop.whatsapp}
+  1541→                onShopNow={handleNavProduits}
+  1542→              />
+  1543→
+  1544→              {/* ═══ CATEGORIES ═══ */}
+  1545→              <LuxeCategories
+  1546→                categories={publicCategories}
+  1547→                products={publicProducts}
+  1548→                activeCategory={activeCategory}
+  1549→                onCategoryClick={(id) => {
+  1550→                  setActiveCategory(id)
+  1551→                  setSelectedProduct(null)
+  1552→                  setActiveStory(null)
+  1553→                  scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
+  1554→                }}
+  1555→              />
+  1556→
+  1557→              {/* ═══ PRODUCTS ═══ */}
+  1558→              <section className="w-full">
+  1559→                <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-6 space-y-6" ref={scrollRef}>
+  1560→                  {/* Section title */}
+  1561→                  <div className="flex items-center gap-3">
+  1562→                    <div className="w-8 h-[2px] rounded-full" style={{ background: THEME.gold }} />
+  1563→                    <h2 className="font-serif text-lg font-bold tracking-wide" style={{ color: THEME.text }}>
+  1564→                      {activeStory ? activeStory : 'Nos Collections'}
+  1565→                    </h2>
+  1566→                    <span className="text-sm" style={{ color: THEME.textMuted }}>
+  1567→                      ({filteredProducts.length} article{filteredProducts.length !== 1 ? 's' : ''})
+  1568→                    </span>
+  1569→                  </div>
+  1570→
+  1571→                  {/* Search + Sort */}
+  1572→                  <LuxeSearchBar
+  1573→                    searchQuery={searchQuery}
+  1574→                    onSearchChange={setSearchQuery}
+  1575→                    sortBy={sortBy}
+  1576→                    onSortChange={setSortBy}
+  1577→                    resultCount={filteredProducts.length}
+  1578→                    isSearching={isSearching}
+  1579→                  />
+  1580→
+  1581→                  {/* Loading skeletons for search */}
+  1582→                  {isSearching && filteredProducts.length === 0 && publicProducts.length > 0 && (
+  1583→                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+  1584→                      {Array.from({ length: 8 }).map((_, i) => (
+  1585→                        <div key={i} className="flex flex-col gap-2 rounded-2xl overflow-hidden backdrop-blur-xl" style={{ background: THEME.glassBg, border: `1px solid ${THEME.glassBorder}` }}>
+  1586→                          <Skeleton className="w-full" style={{ aspectRatio: '336 / 320' }} />
+  1587→                          <div className="p-4 space-y-2">
+  1588→                            <Skeleton className="h-4 w-full" />
+  1589→                            <Skeleton className="h-3 w-24" />
+  1590→                            <Skeleton className="h-9 w-full rounded-full" />
+  1591→                          </div>
+  1592→                        </div>
+  1593→                      ))}
+  1594→                    </div>
+  1595→                  )}
+  1596→
+  1597→                  {/* Empty state */}
+  1598→                  {!isSearching && publicProducts.length === 0 && (
+  1599→                    <div className="flex flex-col items-center justify-center py-20 text-center">
+  1600→                      <div className="flex items-center justify-center w-20 h-20 rounded-full mb-4" style={{ background: `${THEME.gold}20` }}>
+  1601→                        <Package className="size-10" style={{ color: THEME.goldDark }} />
+  1602→                      </div>
+  1603→                      <h3 className="font-serif text-lg font-bold" style={{ color: THEME.text }}>Aucun produit disponible</h3>
+  1604→                      <p className="mt-1 text-sm max-w-md" style={{ color: THEME.textMuted }}>
+  1605→                        Cette boutique n&apos;a pas encore de produits. Revenez bientôt !
+  1606→                      </p>
+  1607→                    </div>
+  1608→                  )}
+  1609→
+  1610→                  {/* Empty search */}
+  1611→                  {filteredProducts.length === 0 && publicProducts.length > 0 && (
+  1612→                    <motion.div
+  1613→                      initial={{ opacity: 0, scale: 0.95 }}
+  1614→                      animate={{ opacity: 1, scale: 1 }}
+  1615→                      className="flex flex-col items-center justify-center py-16 text-center"
+  1616→                    >
+  1617→                      <div className="flex items-center justify-center w-16 h-16 rounded-full mb-4" style={{ background: `${THEME.gold}20` }}>
+  1618→                        <Search className="size-7" style={{ color: THEME.goldDark }} />
+  1619→                      </div>
+  1620→                      <h3 className="font-serif text-lg font-bold" style={{ color: THEME.text }}>Aucun résultat trouvé</h3>
+  1621→                      <p className="mt-1 text-sm max-w-md" style={{ color: THEME.textMuted }}>
+  1622→                        {searchQuery
+  1623→                          ? `Aucun produit ne correspond à "${searchQuery}".`
+  1624→                          : 'Aucun produit dans cette catégorie.'}
+  1625→                      </p>
+  1626→                      <Button
+  1627→                        variant="outline"
+  1628→                        size="sm"
+  1629→                        className="mt-4 rounded-full"
+  1630→                        style={{ borderColor: THEME.gold, color: THEME.goldDark }}
+  1631→                        onClick={() => { setSearchQuery(''); setActiveCategory(null); setActiveStory(null) }}
+  1632→                      >
+  1633→                        Réinitialiser les filtres
+  1634→                      </Button>
+  1635→                    </motion.div>
+  1636→                  )}
+  1637→
+  1638→                  {/* Product Grid */}
+  1639→                  <AnimatePresence mode="wait">
+  1640→                    <motion.div
+  1641→                      key={activeCategory + searchQuery + sortBy + activeStory}
+  1642→                      initial={{ opacity: 0 }}
+  1643→                      animate={{ opacity: 1 }}
+  1644→                      exit={{ opacity: 0 }}
+  1645→                      transition={{ duration: 0.3 }}
+  1646→                      className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+  1647→                    >
+  1648→                      {filteredProducts.map((product, index) => (
+  1649→                        <LuxeProductCard
+  1650→                          key={product.id}
+  1651→                          product={product}
+  1652→                          index={index}
+  1653→                          onProductClick={setSelectedProduct}
+  1654→                          onAddToCart={(p) => handleAddToCart(p, 1)}
+  1655→                          getCartQuantity={getCartQuantity}
+  1656→                          updateCartQuantity={updateCartQuantity}
+  1657→                          whatsapp={publicShop.whatsapp}
+  1658→                        />
+  1659→                      ))}
+  1660→                    </motion.div>
+  1661→                  </AnimatePresence>
+  1662→                </div>
+  1663→              </section>
+  1664→
+  1665→              {/* ═══ TESTIMONIALS ═══ */}
+  1666→              <LuxeTestimonials />
+  1667→            </motion.div>
+  1668→          )}
+  1669→        </AnimatePresence>
+  1670→      </main>
+  1671→
+  1672→      {/* ═══ FOOTER ═══ */}
+  1673→      <LuxeFooter
+  1674→        shopName={publicShop.name}
+  1675→        whatsapp={publicShop.whatsapp}
+  1676→        phone={publicShop.phone}
+  1677→        address={publicShop.address}
+  1678→      />
+  1679→
+  1680→      {/* ═══ CART DRAWER ═══ */}
+  1681→      <AnimatePresence>
+  1682→        {cart.length > 0 && (
+  1683→          <LuxeCartDrawer
+  1684→            expanded={cartExpanded}
+  1685→            onToggle={() => setCartExpanded(!cartExpanded)}
+  1686→            onClear={clearCart}
+  1687→            onCheckout={handleWhatsAppCheckout}
+  1688→            total={total}
+  1689→            itemCount={itemCount}
+  1690→            cart={cart}
+  1691→            updateCartQuantity={updateCartQuantity}
+  1692→          />
+  1693→        )}
+  1694→      </AnimatePresence>
+  1695→
+  1696→      {/* ═══ PULSE WHATSAPP FAB ═══ */}
+  1697→      {publicShop.whatsapp && (
+  1698→        <a
+  1699→          href={`https://wa.me/${publicShop.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Bonjour ${publicShop.name} ! 👋\nJe suis intéressé(e) par vos produits.`)}`}
+  1700→          target="_blank"
+  1701→          rel="noopener noreferrer"
+  1702→          className="fixed bottom-[80px] right-5 z-50 flex items-center gap-2 justify-center px-5 py-3 rounded-full shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl group"
+  1703→          style={{ background: THEME.whatsapp, color: THEME.whatsappFg }}
+  1704→          title={`Contacter ${publicShop.name} sur WhatsApp`}
+  1705→        >
+  1706→          {/* Pulse animation ring */}
+  1707→          <span
+  1708→            className="absolute inset-0 rounded-full animate-ping opacity-25"
+  1709→            style={{ background: THEME.whatsapp }}
+  1710→          />
+  1711→          <span
+  1712→            className="absolute inset-0 rounded-full animate-pulse opacity-15"
+  1713→            style={{ background: THEME.whatsapp, animationDelay: '0.5s' }}
+  1714→          />
+  1715→          <MessageCircle className="size-5 relative z-10" />
+  1716→          <span className="text-sm font-bold relative z-10">Commander</span>
+  1717→
+  1718→          {/* Tooltip */}
+  1719→          <span
+  1720→            className="absolute right-full mr-3 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"
+  1721→            style={{ background: '#1a1a1a', color: 'white' }}
+  1722→          >
+  1723→            {publicShop.whatsapp}
+  1724→          </span>
+  1725→        </a>
+  1726→      )}
+  1727→
+  1728→      {/* Bottom padding when cart is visible */}
+  1729→      {cart.length > 0 && <div className="h-[60px]" />}
+  1730→    </div>
+  1731→  )
+  1732→}

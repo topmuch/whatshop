@@ -1,0 +1,819 @@
+     1→'use client'
+     2→
+     3→import { useState, useEffect, useMemo, useCallback } from 'react'
+     4→import { motion, AnimatePresence } from 'framer-motion'
+     5→import { toast } from 'sonner'
+     6→import {
+     7→  Search,
+     8→  X,
+     9→  Plus,
+    10→  Minus,
+    11→  Trash2,
+    12→  Package,
+    13→  ShoppingBag,
+    14→  Flame,
+    15→  Sparkles,
+    16→  Truck,
+    17→  Lock,
+    18→  CheckCircle,
+    19→  Phone,
+    20→  Clock,
+    21→  ArrowRight,
+    22→  Leaf,
+    23→} from 'lucide-react'
+    24→import { Input } from '@/components/ui/input'
+    25→import { Button } from '@/components/ui/button'
+    26→import {
+    27→  Select,
+    28→  SelectContent,
+    29→  SelectItem,
+    30→  SelectTrigger,
+    31→  SelectValue,
+    32→} from '@/components/ui/select'
+    33→import { Product as ProductType, formatPrice } from '@/lib/shared'
+    34→
+    35→// ─── Types ───────────────────────────────────────────────────────────────────
+    36→
+    37→interface GroceryGridProps {
+    38→  filteredProducts: ProductType[]
+    39→  publicCategories: any[]
+    40→  publicProducts: ProductType[]
+    41→  activeCategory: string | null
+    42→  searchQuery: string
+    43→  sortBy: 'recent' | 'price-asc' | 'price-desc'
+    44→  isSearching: boolean
+    45→  totalProductCount: number
+    46→  onCategoryClick: (id: string | null) => void
+    47→  onProductClick: (product: ProductType) => void
+    48→  onAddToCart: (product: ProductType) => void
+    49→  getCartQuantity: (productId: string) => number
+    50→  updateCartQuantity: (productId: string, qty: number) => void
+    51→  onSortChange: (sort: string) => void
+    52→  onSearchChange: (query: string) => void
+    53→  shopName: string
+    54→  whatsapp?: string
+    55→}
+    56→
+    57→// ─── Constants ───────────────────────────────────────────────────────────────
+    58→
+    59→const GROCERY_COLORS = {
+    60→  green: '#00A651',
+    61→  red: '#ff4757',
+    62→  dark: '#1a1a1a',
+    63→  greenLight: '#e8f8ef',
+    64→  orange: '#FF6B35',
+    65→}
+    66→
+    67→const GROCERY_EMOJIS: Record<string, string> = {
+    68→  boissons: '🥤',
+    69→  drinks: '🥤',
+    70→  snacks: '🍪',
+    71→  conserve: '🥫',
+    72→  conserves: '🥫',
+    73→  épices: '🌶️',
+    74→  epices: '🌶️',
+    75→  spices: '🌶️',
+    76→  fruits: '🍎',
+    77→  legumes: '🥕',
+    78→  légumes: '🥕',
+    79→  vegetables: '🥕',
+    80→  viandes: '🥩',
+    81→  meats: '🥩',
+    82→  poissons: '🐟',
+    83→  fish: '🐟',
+    84→  laitier: '🧀',
+    85→  dairy: '🧀',
+    86→  boulangerie: '🍞',
+    87→  bakery: '🍞',
+    88→  sucre: '🍬',
+    89→  sugar: '🍬',
+    90→  céréales: '🌾',
+    91→  cereales: '🌾',
+    92→  cereals: '🌾',
+    93→  huile: '🫒',
+    94→  oil: '🫒',
+    95→  savon: '🧴',
+    96→  savons: '🧴',
+    97→  hygiène: '🧼',
+    98→  hygiene: '🧼',
+    99→  entretien: '🧹',
+   100→  bio: '🌱',
+   101→  organic: '🌱',
+   102→  frais: '🥬',
+   103→  frozen: '🧊',
+   104→  surgelé: '🧊',
+   105→  bebe: '🍼',
+   106→  bébé: '🍼',
+   107→  bébé: '🍼',
+   108→}
+   109→
+   110→const TRUST_BADGES = [
+   111→  { icon: Truck, label: 'Livraison Rapide' },
+   112→  { icon: Lock, label: 'Paiement Sécurisé' },
+   113→  { icon: CheckCircle, label: 'Qualité Garantie' },
+   114→  { icon: Phone, label: 'Service Client 24/7' },
+   115→]
+   116→
+   117→// ─── Helpers ────────────────────────────────────────────────────────────────
+   118→
+   119→function getGroceryEmoji(name: string): string {
+   120→  const lower = name.toLowerCase().trim()
+   121→  for (const [key, emoji] of Object.entries(GROCERY_EMOJIS)) {
+   122→    if (lower.includes(key)) return emoji
+   123→  }
+   124→  return '🛒'
+   125→}
+   126→
+   127→// ─── Countdown Timer ────────────────────────────────────────────────────────
+   128→
+   129→function useCountdown(initialSeconds = 5 * 3600) {
+   130→  const [seconds, setSeconds] = useState(initialSeconds)
+   131→
+   132→  useEffect(() => {
+   133→    const timer = setInterval(() => {
+   134→      setSeconds((prev) => {
+   135→        if (prev <= 0) return initialSeconds
+   136→        return prev - 1
+   137→      })
+   138→    }, 1000)
+   139→    return () => clearInterval(timer)
+   140→  }, [initialSeconds])
+   141→
+   142→  const h = Math.floor(seconds / 3600)
+   143→  const m = Math.floor((seconds % 3600) / 60)
+   144→  const s = seconds % 60
+   145→
+   146→  return {
+   147→    hours: String(h).padStart(2, '0'),
+   148→    minutes: String(m).padStart(2, '0'),
+   149→    seconds: String(s).padStart(2, '0'),
+   150→    isExpired: seconds <= 0,
+   151→  }
+   152→}
+   153→
+   154→// ─── Component ───────────────────────────────────────────────────────────────
+   155→
+   156→export function GroceryGrid({
+   157→  filteredProducts,
+   158→  publicCategories,
+   159→  publicProducts,
+   160→  activeCategory,
+   161→  searchQuery,
+   162→  sortBy,
+   163→  isSearching,
+   164→  totalProductCount,
+   165→  onCategoryClick,
+   166→  onProductClick,
+   167→  onAddToCart,
+   168→  getCartQuantity,
+   169→  updateCartQuantity,
+   170→  onSortChange,
+   171→  onSearchChange,
+   172→  shopName,
+   173→  whatsapp,
+   174→}: GroceryGridProps) {
+   175→  const countdown = useCountdown(5 * 3600)
+   176→  const isFiltering = isSearching || activeCategory !== null || searchQuery.trim() !== ''
+   177→
+   178→  // Sort products
+   179→  const sortedProducts = useMemo(() => {
+   180→    const products = [...filteredProducts]
+   181→    switch (sortBy) {
+   182→      case 'price-asc':
+   183→        return products.sort((a, b) => a.price - b.price)
+   184→      case 'price-desc':
+   185→        return products.sort((a, b) => b.price - a.price)
+   186→      case 'recent':
+   187→      default:
+   188→        return products.sort((a, b) => {
+   189→          const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0
+   190→          const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0
+   191→          return dateB - dateA
+   192→        })
+   193→    }
+   194→  }, [filteredProducts, sortBy])
+   195→
+   196→  const handleAddToCart = useCallback(
+   197→    (product: ProductType) => {
+   198→      onAddToCart(product)
+   199→      toast.success(`${product.name} ajouté au panier`, {
+   200→        description: formatPrice(product.price),
+   201→      })
+   202→    },
+   203→    [onAddToCart]
+   204→  )
+   205→
+   206→  const handleQuantityChange = useCallback(
+   207→    (productId: string, qty: number) => {
+   208→      if (qty <= 0) {
+   209→        updateCartQuantity(productId, 0)
+   210→        toast.info('Produit retiré du panier')
+   211→      } else {
+   212→        updateCartQuantity(productId, qty)
+   213→      }
+   214→    },
+   215→    [updateCartQuantity]
+   216→  )
+   217→
+   218→  return (
+   219→    <div className="w-full max-w-6xl mx-auto">
+   220→      {/* ── 1. Delivery Info Bar ────────────────────────────────────────── */}
+   221→      <motion.div
+   222→        initial={{ opacity: 0, y: -20 }}
+   223→        animate={{ opacity: 1, y: 0 }}
+   224→        className="mb-6 rounded-xl px-4 py-3.5 flex items-center justify-center gap-3 text-white font-semibold text-sm sm:text-base"
+   225→        style={{ backgroundColor: GROCERY_COLORS.green }}
+   226→      >
+   227→        <Truck className="size-5 flex-shrink-0" />
+   228→        <span>🚚 Livraison gratuite dès 10 000 FCFA</span>
+   229→        {whatsapp && (
+   230→          <a
+   231→            href={`https://wa.me/${whatsapp}`}
+   232→            target="_blank"
+   233→            rel="noopener noreferrer"
+   234→            className="ml-2 hidden sm:inline-flex items-center gap-1 text-xs font-medium bg-white/20 hover:bg-white/30 px-3 py-1 rounded-full transition-colors"
+   235→          >
+   236→            Commander via WhatsApp
+   237→            <ArrowRight className="size-3" />
+   238→          </a>
+   239→        )}
+   240→      </motion.div>
+   241→
+   242→      {/* ── 2. Circular Categories ──────────────────────────────────────── */}
+   243→      {publicCategories.length > 0 && (
+   244→        <motion.section
+   245→          initial={{ opacity: 0, y: 10 }}
+   246→          animate={{ opacity: 1, y: 0 }}
+   247→          transition={{ delay: 0.1 }}
+   248→          className="mb-6"
+   249→        >
+   250→          <div className="flex gap-4 overflow-x-auto pb-3 scrollbar-none">
+   251→            {/* All category circle */}
+   252→            <motion.button
+   253→              whileHover={{ scale: 1.08 }}
+   254→              whileTap={{ scale: 0.95 }}
+   255→              onClick={() => onCategoryClick(null)}
+   256→              className="flex flex-col items-center gap-1.5 flex-shrink-0 cursor-pointer"
+   257→            >
+   258→              <div
+   259→                className={`flex items-center justify-center rounded-full text-2xl transition-all ${
+   260→                  activeCategory === null
+   261→                    ? 'ring-3 shadow-lg scale-110'
+   262→                    : 'hover:ring-2'
+   263→                }`}
+   264→                style={{
+   265→                  width: 64,
+   266→                  height: 64,
+   267→                  backgroundColor:
+   268→                    activeCategory === null
+   269→                      ? GROCERY_COLORS.green
+   270→                      : '#f3f4f6',
+   271→                  ringColor:
+   272→                    activeCategory === null
+   273→                      ? GROCERY_COLORS.green
+   274→                      : '#d1d5db',
+   275→                }}
+   276→              >
+   277→                <span className={activeCategory === null ? 'text-white' : ''}>
+   278→                  🛒
+   279→                </span>
+   280→              </div>
+   281→              <span
+   282→                className="text-xs font-medium text-center leading-tight max-w-[64px] truncate"
+   283→                style={{
+   284→                  color:
+   285→                    activeCategory === null
+   286→                      ? GROCERY_COLORS.green
+   287→                      : GROCERY_COLORS.dark,
+   288→                }}
+   289→              >
+   290→                Tout
+   291→              </span>
+   292→            </motion.button>
+   293→
+   294→            {publicCategories.map((cat, index) => {
+   295→              const emoji = getGroceryEmoji(cat.name)
+   296→              const isActive = activeCategory === cat.id
+   297→              return (
+   298→                <motion.button
+   299→                  key={cat.id}
+   300→                  initial={{ opacity: 0, scale: 0.8 }}
+   301→                  animate={{ opacity: 1, scale: 1 }}
+   302→                  transition={{ delay: 0.05 * index }}
+   303→                  whileHover={{ scale: 1.08 }}
+   304→                  whileTap={{ scale: 0.95 }}
+   305→                  onClick={() =>
+   306→                    onCategoryClick(isActive ? null : cat.id)
+   307→                  }
+   308→                  className="flex flex-col items-center gap-1.5 flex-shrink-0 cursor-pointer"
+   309→                >
+   310→                  <div
+   311→                    className={`flex items-center justify-center rounded-full text-2xl transition-all ${
+   312→                      isActive ? 'ring-3 shadow-lg scale-110' : 'hover:ring-2'
+   313→                    }`}
+   314→                    style={{
+   315→                      width: 64,
+   316→                      height: 64,
+   317→                      backgroundColor: isActive
+   318→                        ? GROCERY_COLORS.green
+   319→                        : '#f3f4f6',
+   320→                      ringColor: isActive
+   321→                        ? GROCERY_COLORS.green
+   322→                        : '#d1d5db',
+   323→                    }}
+   324→                  >
+   325→                    <span className={isActive ? 'text-white' : ''}>
+   326→                      {emoji}
+   327→                    </span>
+   328→                  </div>
+   329→                  <span
+   330→                    className="text-xs font-medium text-center leading-tight max-w-[64px] truncate"
+   331→                    style={{
+   332→                      color: isActive
+   333→                        ? GROCERY_COLORS.green
+   334→                        : GROCERY_COLORS.dark,
+   335→                    }}
+   336→                  >
+   337→                    {cat.name}
+   338→                  </span>
+   339→                </motion.button>
+   340→              )
+   341→            })}
+   342→          </div>
+   343→        </motion.section>
+   344→      )}
+   345→
+   346→      {/* ── 3. Search Bar + Sort ────────────────────────────────────────── */}
+   347→      <motion.div
+   348→        initial={{ opacity: 0, y: 10 }}
+   349→        animate={{ opacity: 1, y: 0 }}
+   350→        transition={{ delay: 0.15 }}
+   351→        className="mb-6 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center"
+   352→      >
+   353→        <div className="relative flex-1">
+   354→          <Search
+   355→            className="absolute left-3 top-1/2 -translate-y-1/2 size-4"
+   356→            style={{ color: '#9ca3af' }}
+   357→          />
+   358→          <Input
+   359→            type="text"
+   360→            placeholder="Rechercher un produit..."
+   361→            value={searchQuery}
+   362→            onChange={(e) => onSearchChange(e.target.value)}
+   363→            className="pl-10 pr-10 h-11 rounded-xl border-gray-200 focus-visible:border-[#00A651] focus-visible:ring-[#00A651]/20"
+   364→          />
+   365→          {searchQuery && (
+   366→            <button
+   367→              onClick={() => onSearchChange('')}
+   368→              className="absolute right-3 top-1/2 -translate-y-1/2 size-5 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+   369→            >
+   370→              <X className="size-3.5 text-gray-400" />
+   371→            </button>
+   372→          )}
+   373→        </div>
+   374→
+   375→        <Select
+   376→          value={sortBy}
+   377→          onValueChange={onSortChange}
+   378→        >
+   379→          <SelectTrigger className="w-full sm:w-44 h-11 rounded-xl border-gray-200">
+   380→            <SelectValue placeholder="Trier par" />
+   381→          </SelectTrigger>
+   382→          <SelectContent>
+   383→            <SelectItem value="recent">Plus récents</SelectItem>
+   384→            <SelectItem value="price-asc">Prix croissant</SelectItem>
+   385→            <SelectItem value="price-desc">Prix décroissant</SelectItem>
+   386→          </SelectContent>
+   387→        </Select>
+   388→      </motion.div>
+   389→
+   390→      {/* ── 4. Deal of the Day ───────────────────────────────────────────── */}
+   391→      {!isFiltering && publicProducts.length > 0 && (
+   392→        <motion.section
+   393→          initial={{ opacity: 0, y: 15 }}
+   394→          animate={{ opacity: 1, y: 0 }}
+   395→          transition={{ delay: 0.2 }}
+   396→          className="mb-8"
+   397→        >
+   398→          <div
+   399→            className="relative overflow-hidden rounded-2xl p-5 sm:p-6"
+   400→            style={{
+   401→              background: `linear-gradient(135deg, ${GROCERY_COLORS.red}, #e03e4f)`,
+   402→            }}
+   403→          >
+   404→            <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+   405→            <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
+   406→
+   407→            <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+   408→              <div className="flex items-center gap-3">
+   409→                <div className="flex items-center justify-center size-12 bg-white/20 rounded-xl">
+   410→                  <Flame className="size-6 text-white" />
+   411→                </div>
+   412→                <div>
+   413→                  <h3 className="text-white font-bold text-lg sm:text-xl flex items-center gap-2">
+   414→                    Deal du Jour
+   415→                    <Sparkles className="size-4 sm:size-5 text-yellow-300" />
+   416→                  </h3>
+   417→                  <p className="text-white/80 text-sm mt-0.5">
+   418→                    Offres spéciales à ne pas manquer !
+   419→                  </p>
+   420→                </div>
+   421→              </div>
+   422→
+   423→              <div className="flex items-center gap-3">
+   424→                <div className="flex items-center gap-1.5">
+   425→                  <Clock className="size-4 text-white/70" />
+   426→                  {[
+   427→                    countdown.hours,
+   428→                    countdown.minutes,
+   429→                    countdown.seconds,
+   430→                  ].map((val, i) => (
+   431→                    <div key={i} className="flex items-center gap-1.5">
+   432→                      <span className="inline-flex items-center justify-center bg-white text-[#ff4757] font-bold text-lg rounded-lg w-10 h-10">
+   433→                        {val}
+   434→                      </span>
+   435→                      {i < 2 && (
+   436→                        <span className="text-white font-bold text-sm">:</span>
+   437→                      )}
+   438→                    </div>
+   439→                  ))}
+   440→                </div>
+   441→
+   442→                <Button
+   443→                  onClick={() => {
+   444→                    onSearchChange('')
+   445→                    onCategoryClick(null)
+   446→                    toast.info('Découvrez nos offres du jour !')
+   447→                  }}
+   448→                  className="bg-white text-[#ff4757] hover:bg-white/90 font-semibold rounded-xl px-4 h-10 shadow-md transition-all"
+   449→                >
+   450→                  Voir les offres
+   451→                  <ArrowRight className="size-4 ml-1" />
+   452→                </Button>
+   453→              </div>
+   454→            </div>
+   455→          </div>
+   456→        </motion.section>
+   457→      )}
+   458→
+   459→      {/* ── 5. Product Grid ─────────────────────────────────────────────── */}
+   460→      {sortedProducts.length === 0 ? (
+   461→        <EmptyState
+   462→          searchQuery={searchQuery}
+   463→          isSearching={isSearching}
+   464→          onReset={() => {
+   465→            onSearchChange('')
+   466→            onCategoryClick(null)
+   467→          }}
+   468→        />
+   469→      ) : (
+   470→        <>
+   471→          <AnimatePresence mode="wait">
+   472→            <motion.div
+   473→              key={`${activeCategory}-${searchQuery}-${sortBy}`}
+   474→              initial={{ opacity: 0 }}
+   475→              animate={{ opacity: 1 }}
+   476→              exit={{ opacity: 0 }}
+   477→              transition={{ duration: 0.2 }}
+   478→            >
+   479→              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+   480→                {sortedProducts.map((product, index) => (
+   481→                  <GroceryProductCard
+   482→                    key={product.id}
+   483→                    product={product}
+   484→                    index={index}
+   485→                    cartQuantity={getCartQuantity(product.id)}
+   486→                    onAddToCart={handleAddToCart}
+   487→                    onUpdateQuantity={handleQuantityChange}
+   488→                    onProductClick={onProductClick}
+   489→                  />
+   490→                ))}
+   491→              </div>
+   492→            </motion.div>
+   493→          </AnimatePresence>
+   494→
+   495→          {/* Product count */}
+   496→          <motion.p
+   497→            initial={{ opacity: 0 }}
+   498→            animate={{ opacity: 1 }}
+   499→            className="text-center text-sm text-gray-400 mt-6"
+   500→          >
+   501→            {sortedProducts.length} produit{sortedProducts.length > 1 ? 's' : ''} affiché{sortedProducts.length > 1 ? 's' : ''}
+   502→          </motion.p>
+   503→        </>
+   504→      )}
+   505→
+   506→      {/* ── 6. Promotional Grid ─────────────────────────────────────────── */}
+   507→      {!isFiltering && publicProducts.length > 0 && (
+   508→        <motion.section
+   509→          initial={{ opacity: 0, y: 20 }}
+   510→          animate={{ opacity: 1, y: 0 }}
+   511→          transition={{ delay: 0.3 }}
+   512→          className="mt-10 mb-10"
+   513→        >
+   514→          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   515→            {/* Promo Card 1 - Green */}
+   516→            <motion.div
+   517→              whileHover={{ scale: 1.02 }}
+   518→              className="relative overflow-hidden rounded-2xl p-6 cursor-pointer"
+   519→              style={{
+   520→                background: `linear-gradient(135deg, #00A651, #00C853)`,
+   521→              }}
+   522→            >
+   523→              <div className="absolute top-3 right-4 text-5xl opacity-80">
+   524→                🍎🥕
+   525→              </div>
+   526→              <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-white/10 rounded-full" />
+   527→              <h3 className="text-white font-bold text-xl relative z-10">
+   528→                Fruits & Légumes Frais
+   529→              </h3>
+   530→              <p className="text-white/80 text-sm mt-1.5 relative z-10">
+   531→                Produits frais sélectionnés chaque jour
+   532→              </p>
+   533→              <Button
+   534→                onClick={() => {
+   535→                  const fruitsCat = publicCategories.find((c) =>
+   536→                    c.name.toLowerCase().includes('fruit')
+   537→                  )
+   538→                  if (fruitsCat) {
+   539→                    onCategoryClick(fruitsCat.id)
+   540→                  } else {
+   541→                    onCategoryClick(null)
+   542→                    toast.info('Découvrez nos fruits et légumes !')
+   543→                  }
+   544→                }}
+   545→                className="mt-4 bg-white text-[#00A651] hover:bg-white/90 font-semibold rounded-full px-5 relative z-10"
+   546→              >
+   547→                Explorer
+   548→                <ArrowRight className="size-4 ml-1" />
+   549→              </Button>
+   550→            </motion.div>
+   551→
+   552→            {/* Promo Card 2 - Orange */}
+   553→            <motion.div
+   554→              whileHover={{ scale: 1.02 }}
+   555→              className="relative overflow-hidden rounded-2xl p-6 cursor-pointer"
+   556→              style={{
+   557→                background: `linear-gradient(135deg, #FF6B35, #FF8C42)`,
+   558→              }}
+   559→            >
+   560→              <div className="absolute top-3 right-4 text-5xl opacity-80">
+   561→                🌱🌿
+   562→              </div>
+   563→              <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-white/10 rounded-full" />
+   564→              <h3 className="text-white font-bold text-xl relative z-10">
+   565→                Produits Bio
+   566→              </h3>
+   567→              <p className="text-white/80 text-sm mt-1.5 relative z-10">
+   568→                100% naturel, pour votre santé
+   569→              </p>
+   570→              <Button
+   571→                onClick={() => {
+   572→                  const bioCat = publicCategories.find((c) =>
+   573→                    c.name.toLowerCase().includes('bio')
+   574→                  )
+   575→                  if (bioCat) {
+   576→                    onCategoryClick(bioCat.id)
+   577→                  } else {
+   578→                    onCategoryClick(null)
+   579→                    toast.info('Découvrez nos produits bio !')
+   580→                  }
+   581→                }}
+   582→                className="mt-4 bg-white text-[#FF6B35] hover:bg-white/90 font-semibold rounded-full px-5 relative z-10"
+   583→              >
+   584→                Explorer
+   585→                <ArrowRight className="size-4 ml-1" />
+   586→              </Button>
+   587→            </motion.div>
+   588→          </div>
+   589→        </motion.section>
+   590→      )}
+   591→
+   592→      {/* ── 7. Trust Badges ─────────────────────────────────────────────── */}
+   593→      <motion.section
+   594→        initial={{ opacity: 0, y: 20 }}
+   595→        animate={{ opacity: 1, y: 0 }}
+   596→        transition={{ delay: 0.4 }}
+   597→        className="mb-10"
+   598→      >
+   599→        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+   600→          {TRUST_BADGES.map((badge, index) => (
+   601→            <motion.div
+   602→              key={badge.label}
+   603→              initial={{ opacity: 0, y: 10 }}
+   604→              animate={{ opacity: 1, y: 0 }}
+   605→              transition={{ delay: 0.45 + index * 0.05 }}
+   606→              whileHover={{ y: -2 }}
+   607→              className="flex flex-col items-center gap-2.5 p-4 rounded-xl bg-gray-50 border border-gray-100"
+   608→            >
+   609→              <div
+   610→                className="flex items-center justify-center size-10 rounded-full"
+   611→                style={{ backgroundColor: GROCERY_COLORS.greenLight }}
+   612→              >
+   613→                <badge.icon
+   614→                  className="size-5"
+   615→                  style={{ color: GROCERY_COLORS.green }}
+   616→                />
+   617→              </div>
+   618→              <span
+   619→                className="text-xs font-medium text-center leading-tight"
+   620→                style={{ color: GROCERY_COLORS.dark }}
+   621→              >
+   622→                {badge.label}
+   623→              </span>
+   624→            </motion.div>
+   625→          ))}
+   626→        </div>
+   627→      </motion.section>
+   628→    </div>
+   629→  )
+   630→}
+   631→
+   632→// ─── Product Card ────────────────────────────────────────────────────────────
+   633→
+   634→interface GroceryProductCardProps {
+   635→  product: ProductType
+   636→  index: number
+   637→  cartQuantity: number
+   638→  onAddToCart: (product: ProductType) => void
+   639→  onUpdateQuantity: (productId: string, qty: number) => void
+   640→  onProductClick: (product: ProductType) => void
+   641→}
+   642→
+   643→function GroceryProductCard({
+   644→  product,
+   645→  index,
+   646→  cartQuantity,
+   647→  onAddToCart,
+   648→  onUpdateQuantity,
+   649→  onProductClick,
+   650→}: GroceryProductCardProps) {
+   651→  return (
+   652→    <motion.div
+   653→      initial={{ opacity: 0, y: 15 }}
+   654→      animate={{ opacity: 1, y: 0 }}
+   655→      transition={{ delay: Math.min(index * 0.04, 0.3), duration: 0.3 }}
+   656→      whileHover={{ y: -4 }}
+   657→      className="group flex flex-col rounded-xl border border-gray-100 bg-white overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+   658→    >
+   659→      {/* Product Image */}
+   660→      <div
+   661→        className="relative aspect-square bg-gray-50 overflow-hidden cursor-pointer"
+   662→        onClick={() => onProductClick(product)}
+   663→      >
+   664→        {product.image || product.images?.[0] ? (
+   665→          <img
+   666→            src={product.image || product.images?.[0]}
+   667→            alt={product.name}
+   668→            className="size-full object-cover group-hover:scale-105 transition-transform duration-300"
+   669→            loading="lazy"
+   670→          />
+   671→        ) : (
+   672→          <div className="flex items-center justify-center size-full">
+   673→            <div className="flex flex-col items-center gap-2 text-gray-300">
+   674→              <ShoppingBag className="size-10" />
+   675→              <span className="text-xs">Pas d&apos;image</span>
+   676→            </div>
+   677→          </div>
+   678→        )}
+   679→
+   680→        {/* Stock indicator */}
+   681→        {product.stock !== undefined && product.stock <= 3 && product.stock > 0 && (
+   682→          <div className="absolute top-2 left-2 z-10">
+   683→            <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-700 text-[10px] font-semibold px-2 py-0.5 rounded-full">
+   684→              <Leaf className="size-3" />
+   685→              Stock limité
+   686→            </span>
+   687→          </div>
+   688→        )}
+   689→      </div>
+   690→
+   691→      {/* Product Info */}
+   692→      <div className="flex flex-col gap-2 p-3">
+   693→        {/* Product Name */}
+   694→        <h4
+   695→          className="text-sm font-medium leading-tight line-clamp-2 cursor-pointer hover:underline"
+   696→          style={{ color: GROCERY_COLORS.dark }}
+   697→          onClick={() => onProductClick(product)}
+   698→          title={product.name}
+   699→        >
+   700→          {product.name}
+   701→        </h4>
+   702→
+   703→        {/* Price */}
+   704→        <p className="font-bold text-base" style={{ color: GROCERY_COLORS.green }}>
+   705→          {formatPrice(product.price)}
+   706→        </p>
+   707→
+   708→        {/* Add to Cart / Quantity Control */}
+   709→        {cartQuantity === 0 ? (
+   710→          <motion.button
+   711→            whileHover={{ scale: 1.03 }}
+   712→            whileTap={{ scale: 0.97 }}
+   713→            onClick={(e) => {
+   714→              e.stopPropagation()
+   715→              onAddToCart(product)
+   716→            }}
+   717→            disabled={!product.isAvailable}
+   718→            className="mt-1 w-full flex items-center justify-center gap-1.5 h-9 rounded-lg text-sm font-semibold text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+   719→            style={{
+   720→              backgroundColor: product.isAvailable
+   721→                ? GROCERY_COLORS.green
+   722→                : '#9ca3af',
+   723→            }}
+   724→          >
+   725→            <Plus className="size-3.5" />
+   726→            Ajouter
+   727→          </motion.button>
+   728→        ) : (
+   729→          <motion.div
+   730→            initial={{ scale: 0.9, opacity: 0 }}
+   731→            animate={{ scale: 1, opacity: 1 }}
+   732→            className="mt-1 flex items-center justify-center gap-0"
+   733→          >
+   734→            <button
+   735→              onClick={(e) => {
+   736→                e.stopPropagation()
+   737→                if (cartQuantity === 1) {
+   738→                  onUpdateQuantity(product.id, 0)
+   739→                } else {
+   740→                  onUpdateQuantity(product.id, cartQuantity - 1)
+   741→                }
+   742→              }}
+   743→              className="flex items-center justify-center size-9 rounded-l-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+   744→            >
+   745→              {cartQuantity === 1 ? (
+   746→                <Trash2 className="size-3.5 text-red-400" />
+   747→              ) : (
+   748→                <Minus className="size-3.5 text-gray-500" />
+   749→              )}
+   750→            </button>
+   751→            <span
+   752→              className="flex items-center justify-center h-9 min-w-[40px] px-2 text-sm font-bold border-y border-gray-200"
+   753→              style={{ color: GROCERY_COLORS.green }}
+   754→            >
+   755→              {cartQuantity}
+   756→            </span>
+   757→            <button
+   758→              onClick={(e) => {
+   759→                e.stopPropagation()
+   760→                onUpdateQuantity(product.id, cartQuantity + 1)
+   761→              }}
+   762→              className="flex items-center justify-center size-9 rounded-r-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+   763→            >
+   764→              <Plus className="size-3.5 text-gray-500" />
+   765→            </button>
+   766→          </motion.div>
+   767→        )}
+   768→      </div>
+   769→    </motion.div>
+   770→  )
+   771→}
+   772→
+   773→// ─── Empty State ─────────────────────────────────────────────────────────────
+   774→
+   775→function EmptyState({
+   776→  searchQuery,
+   777→  isSearching,
+   778→  onReset,
+   779→}: {
+   780→  searchQuery: string
+   781→  isSearching: boolean
+   782→  onReset: () => void
+   783→}) {
+   784→  return (
+   785→    <motion.div
+   786→      initial={{ opacity: 0, y: 20 }}
+   787→      animate={{ opacity: 1, y: 0 }}
+   788→      className="flex flex-col items-center justify-center py-20 text-center"
+   789→    >
+   790→      <div className="flex items-center justify-center size-20 rounded-full bg-gray-50 mb-5">
+   791→        <Package className="size-10 text-gray-300" />
+   792→      </div>
+   793→      <h3
+   794→        className="text-xl font-bold"
+   795→        style={{ color: GROCERY_COLORS.dark }}
+   796→      >
+   797→        Aucun produit trouvé
+   798→      </h3>
+   799→      <p className="mt-2 text-sm text-gray-400 max-w-sm">
+   800→        {searchQuery
+   801→          ? `Aucun résultat pour "${searchQuery}". Essayez d'autres mots-clés.`
+   802→          : 'Cette catégorie ne contient pas encore de produits.'}
+   803→      </p>
+   804→      {(searchQuery || isSearching) && (
+   805→        <Button
+   806→          onClick={onReset}
+   807→          className="mt-5 rounded-xl px-5 font-semibold"
+   808→          style={{
+   809→            backgroundColor: GROCERY_COLORS.green,
+   810→            color: 'white',
+   811→          }}
+   812→        >
+   813→          Réinitialiser les filtres
+   814→        </Button>
+   815→      )}
+   816→    </motion.div>
+   817→  )
+   818→}
+   819→

@@ -1342,34 +1342,13 @@ function ElectroSearchBar({
 
 function ElectroLoadingSkeleton() {
   return (
-    <div className="min-h-screen bg-white">
-      {/* Menu skeleton */}
-      <div className="h-[70px] border-b flex items-center px-4">
-        <Skeleton className="h-[82px] w-[255px] rounded-lg" />
-        <div className="flex-1 flex justify-center gap-6">
-          <Skeleton className="h-8 w-20 rounded-lg" />
-          <Skeleton className="h-8 w-28 rounded-lg" />
-          <Skeleton className="h-8 w-32 rounded-lg" />
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="flex flex-col items-center gap-4">
+        <div className="relative size-10">
+          <div className="absolute inset-0 rounded-full border-2 border-muted-foreground/20" />
+          <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-primary animate-spin" />
         </div>
-      </div>
-      {/* Slide skeleton */}
-      <div className="px-4 py-4">
-        <Skeleton className="w-full rounded-2xl mx-auto" style={{ aspectRatio: '1180 / 600', maxHeight: '600px' }} />
-      </div>
-      {/* Products skeleton */}
-      <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-6">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="flex flex-col gap-2 rounded-xl overflow-hidden" style={{ border: `1px solid ${BLUE.border}` }}>
-              <Skeleton className="w-full" style={{ aspectRatio: '336 / 280' }} />
-              <div className="p-3 space-y-2">
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-3 w-24" />
-                <Skeleton className="h-9 w-full rounded-lg" />
-              </div>
-            </div>
-          ))}
-        </div>
+        <p className="text-sm text-muted-foreground">Chargement...</p>
       </div>
     </div>
   )
@@ -1529,7 +1508,7 @@ export function ElectroShopPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: BLUE.bg, color: BLUE.text }}>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { duration: 0.3 } }} className="min-h-screen flex flex-col" style={{ background: BLUE.bg, color: BLUE.text }}>
       {/* ═══ SECTION 1 : MENU ═══ */}
       <ElectroMenu
         shopName={publicShop.name}
@@ -1750,6 +1729,6 @@ export function ElectroShopPage() {
 
       {/* Bottom padding when cart is visible */}
       {cart.length > 0 && <div className="h-[60px]" />}
-    </div>
+    </motion.div>
   )
 }
