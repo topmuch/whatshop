@@ -1,10 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-// Known public page paths that should be handled by the SPA
-const PUBLIC_PAGES = [
-  'about', 'a-propos', 'pricing', 'tarifs', 'contact', 'contactez-nous',
-  'privacy', 'confidentialite', 'terms', 'conditions', 'faq', 'aide',
-]
+// Routes that have their own page.tsx — let Next.js handle them directly
+const APP_ROUTES = new Set([
+  'login', 'connexion',
+  'inscription', 'register',
+  'onboarding',
+  'dashboard',
+  'reseller', 'revendeur',
+  'admin',
+  'about', 'a-propos',
+  'tarifs', 'pricing',
+  'contact', 'contactez-nous',
+  'faq', 'aide',
+  'privacy', 'confidentialite',
+  'terms', 'conditions',
+])
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -22,12 +32,9 @@ export function proxy(request: NextRequest) {
 
   const slug = pathname.slice(1).toLowerCase()
 
-  // Check if this is a known public page path
-  if (PUBLIC_PAGES.includes(slug)) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/'
-    url.searchParams.set('page', slug)
-    return NextResponse.rewrite(url)
+  // Let Next.js handle known app routes (they have their own page.tsx)
+  if (APP_ROUTES.has(slug)) {
+    return NextResponse.next()
   }
 
   // If the path looks like a shop slug (single segment, no slashes, alphanumeric with hyphens)
@@ -38,7 +45,7 @@ export function proxy(request: NextRequest) {
     return NextResponse.rewrite(url)
   }
 
-  // For any other path, rewrite to / so the SPA can handle it
+  // For any other unknown path, rewrite to / so the SPA fallback handles it
   const url = request.nextUrl.clone()
   url.pathname = '/'
   return NextResponse.rewrite(url)
