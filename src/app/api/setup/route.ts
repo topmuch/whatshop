@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { hashPassword } from '@/lib/auth'
+import { Prisma } from '@prisma/client'
 
 /**
  * GET /api/setup
@@ -15,7 +16,6 @@ import { hashPassword } from '@/lib/auth'
  *
  * Query parameter:
  *   ?force=1  — Force update email/password even if SUPER_ADMIN exists.
- *               Should be called once after changing env vars on an existing deployment.
  */
 export async function GET(request: NextRequest) {
   try {
@@ -25,6 +25,15 @@ export async function GET(request: NextRequest) {
     const email = process.env.SUPER_ADMIN_EMAIL || 'admin@boutiko.pro'
     const password = process.env.SUPER_ADMIN_PASSWORD || 'Admin123!'
     const name = process.env.SUPER_ADMIN_NAME || 'Super Admin'
+
+    if (password.length < 6) {
+      return NextResponse.json({
+        ok: false,
+        error: 'SUPER_ADMIN_PASSWORD doit contenir au moins 6 caractères.',
+      }, { status: 400 })
+    }
+
+    const hashedPassword = await hashPassword(password)
 
     // Check if a SUPER_ADMIN already exists
     const existingSuperAdmin = await db.user.findFirst({
@@ -37,20 +46,19 @@ export async function GET(request: NextRequest) {
         message: 'Un SUPER_ADMIN existe déjà. Aucune action nécessaire.',
         email: existingSuperAdmin.email,
         role: existingSuperAdmin.role,
-        hint: 'Utilisez ?force=1 pour mettre à jour les identifiants depuis les variables d\'environnement.',
+        hint: "Utilisez ?force=1 pour mettre à jour les identifiants depuis les variables d'environnement.",
       })
     }
 
-    if (password.length < 6) {
-      return NextResponse.json({
-        ok: false,
-        error: 'SUPER_ADMIN_PASSWORD doit contenir au moins 6 caractères.',
-      }, { status: 400 })
-    }
-
-    const hashedPassword = await hashPassword(password)
-
     if (existingSuperAdmin && forceUpdate) {
+      // Check if another user already has the target email
+      const userWithNewEmail = await db.user.findUnique({ where: { email } })
+
+      if (userWithNewEmail && userWithNewEmail.id !== existingSuperAdmin.id) {
+        // Delete the user that occupies the target email, then update the SUPER_ADMIN
+        await db.user.delete({ where: { id: userWithNewEmail.id } })
+      }
+
       // Update existing SUPER_ADMIN with new env vars
       await db.user.update({
         where: { id: existingSuperAdmin.id },
@@ -64,13 +72,13 @@ export async function GET(request: NextRequest) {
 
       return NextResponse.json({
         ok: true,
-        message: `SUPER_ADMIN mis à jour avec succès !`,
+        message: 'SUPER_ADMIN mis à jour avec succès !',
         email,
         role: 'SUPER_ADMIN',
       })
     }
 
-    // Check if email is already taken by another role
+    // No SUPER_ADMIN exists — check if email is already taken
     const existingUser = await db.user.findUnique({ where: { email } })
     if (existingUser) {
       // Upgrade existing user to SUPER_ADMIN
@@ -109,9 +117,12 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error('[SETUP] Error:', error)
-    return NextResponse.json({
-      ok: false,
-      error: 'Erreur serveur lors du setup.',
-    }, { status: 500 })
+
+    // Return the real error in dev for debugging
+    const message = process.env.NODE_ENV === 'development'
+      ? String(error)
+      : 'Erreur serveur lors du setup.'
+
+    return NextResponse.json({ ok: false, error: message }, { status: 500 })
   }
 }
