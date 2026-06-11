@@ -28,6 +28,7 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from '@/components/ui/tooltip'
+import { Card, CardContent } from '@/components/ui/card'
 import {
   LayoutDashboard,
   Package,
@@ -43,6 +44,7 @@ import {
   Radio,
   Plus,
   Megaphone,
+  Crown,
 } from 'lucide-react'
 import { useThemeMode } from '@/lib/use-theme'
 import { DashboardOverview } from './dashboard-overview'
@@ -427,7 +429,14 @@ function SidebarContent({
       {/* Navigation */}
       <ScrollArea className="flex-1 px-3 py-2">
         <nav className="flex flex-col gap-1">
-          {navItems.map((item) => (
+          {navItems
+            .filter((item) => {
+              if (consolidatedStats?.subscription.planType === 'STARTER') {
+                return item.id !== 'live' && item.id !== 'ai-tools'
+              }
+              return true
+            })
+            .map((item) => (
             <Button
               key={item.id}
               variant={dashboardTab === item.id ? 'secondary' : 'ghost'}
@@ -482,6 +491,30 @@ function SidebarContent({
 }
 
 /* ------------------------------------------------------------------ */
+/*  Upgrade Prompt (for locked features)                                */
+/* ------------------------------------------------------------------ */
+
+function UpgradePrompt({ feature, plan }: { feature: string; plan: string }) {
+  return (
+    <Card className="max-w-md mx-auto mt-12">
+      <CardContent className="flex flex-col items-center text-center py-12 gap-4">
+        <div className="w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+          <Crown className="h-8 w-8 text-amber-600 dark:text-amber-400" />
+        </div>
+        <h2 className="text-xl font-bold">Fonctionnalité premium</h2>
+        <p className="text-muted-foreground">
+          {feature} est disponible à partir du plan {plan}.
+        </p>
+        <Button onClick={() => window.location.href = '/tarifs'} className="gap-2">
+          <Crown className="h-4 w-4" />
+          Voir les offres
+        </Button>
+      </CardContent>
+    </Card>
+  )
+}
+
+/* ------------------------------------------------------------------ */
 /*  Dashboard Content (tab rendering)                                   */
 /* ------------------------------------------------------------------ */
 
@@ -507,10 +540,16 @@ function DashboardContent({ consolidatedStats }: { consolidatedStats: Consolidat
     case 'orders':
       return <DashboardOrders />
     case 'live':
+      if (consolidatedStats?.subscription.planType === 'STARTER') {
+        return <UpgradePrompt feature="Live TikTok" plan="Pro" />
+      }
       return <DashboardLive />
     case 'settings':
       return <DashboardSettings />
     case 'ai-tools':
+      if (consolidatedStats?.subscription.planType === 'STARTER') {
+        return <UpgradePrompt feature="Outils IA" plan="Pro" />
+      }
       return <DashboardAiTools />
     case 'marketing-kit':
       return <MarketingKit />
@@ -645,7 +684,7 @@ export function SellerDashboard() {
       <div className="min-h-screen flex items-center justify-center bg-muted/30">
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 border-4 border-pink-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-muted-foreground">Chargement...</p>
+          <p className="text-sm text-muted-foreground">Boutiko</p>
         </div>
       </div>
     )

@@ -1378,7 +1378,7 @@ function ElectroLoadingSkeleton() {
           <div className="absolute inset-0 rounded-full border-2 border-muted-foreground/20" />
           <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-primary animate-spin" />
         </div>
-        <p className="text-sm text-muted-foreground">Chargement...</p>
+        <p className="text-sm text-muted-foreground">Boutiko</p>
       </div>
     </div>
   )

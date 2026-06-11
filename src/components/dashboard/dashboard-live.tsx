@@ -81,6 +81,9 @@ export function DashboardLive() {
   const endTimeRef = useRef(endTime)
   endTimeRef.current = endTime
 
+  const productsRef = useRef(products)
+  productsRef.current = products
+
   // ── Fetch Products ──
   useEffect(() => {
     if (!shop) return
@@ -209,6 +212,12 @@ export function DashboardLive() {
       setWhatsappClicks(0)
       setPinnedProductId(null)
       setPromoCode(null)
+      // Auto-pin first available product
+      const firstAvailable = productsRef.current.find((p) => p.isAvailable && (p.image || (p.images && p.images[0])))
+      if (firstAvailable) {
+        setPinnedProductId(firstAvailable.id)
+        socketRef.current.emit('live:pin', { productId: firstAvailable.id })
+      }
       toast.success('Live démarré !')
     } else {
       socketRef.current.emit('live:toggle', { isLive: false })
@@ -262,7 +271,7 @@ export function DashboardLive() {
 
   if (!shop) {
     return (
-      <div className="bg-gray-950 text-white min-h-screen flex items-center justify-center">
+      <div className="bg-gray-950 text-white flex items-center justify-center py-20">
         <div className="text-center space-y-4">
           <AlertTriangle className="h-12 w-12 text-yellow-500 mx-auto" />
           <p className="text-gray-400 text-lg">Aucune boutique configurée</p>
@@ -273,7 +282,7 @@ export function DashboardLive() {
   }
 
   return (
-    <div className="bg-gray-950 text-white min-h-screen">
+    <div className="bg-gray-950 text-white">
       {/* ─── Header Bar ─── */}
       <header className="sticky top-0 z-20 bg-gray-950/90 backdrop-blur-md border-b border-gray-800 px-4 sm:px-6 py-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
