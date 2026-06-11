@@ -15,6 +15,9 @@ COPY . .
 RUN bunx prisma generate
 
 # Build Next.js standalone output
+ENV NEXT_PUBLIC_BASE_URL=https://boutiko.pro
+ENV NEXT_PUBLIC_APP_URL=https://boutiko.pro
+ENV DATABASE_URL=file:/dev/null
 RUN bun run build
 
 # ─── Production stage ───────────────────────────────────────
@@ -41,8 +44,10 @@ COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma/
 COPY --from=builder /app/node_modules/sharp ./node_modules/sharp
 COPY --from=builder /app/node_modules/@img ./node_modules/@img
 
-# Create db directory
-RUN mkdir -p /app/db
+# Create db + uploads directories
+RUN mkdir -p /app/db /app/uploads && chmod -R 755 /app/uploads
+
+ENV UPLOADS_DIR=/app/uploads
 
 EXPOSE 3000
 

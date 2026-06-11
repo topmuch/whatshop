@@ -1,6 +1,9 @@
 import { MetadataRoute } from "next";
 import { db } from "@/lib/db";
 
+// Force dynamic rendering — the sitemap queries the DB which doesn't exist at build time
+export const dynamic = "force-dynamic";
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://boutiko.pro";
 
@@ -16,17 +19,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/privacy`, lastModified: new Date(), changeFrequency: "yearly", priority: 0.3 },
   ];
 
-  const shops = await db.shop.findMany({
-    where: { isActive: true },
-    select: { slug: true, updatedAt: true },
-  });
-
-  const shopPages: MetadataRoute.Sitemap = shops.map((shop) => ({
-    url: `${baseUrl}/s/${shop.slug}`,
-    lastModified: shop.updatedAt,
-    changeFrequency: "weekly" as const,
-    priority: 0.7,
-  }));
+  let shopPages: MetadataRoute.Sitemap = [];
+  try {
+    const shops = await db.shop.findMany({
+      where: { isActive: true },
+      select: { slug: true, updatedAt: true },
+    });
+    shopPages = shops.map((shop) => ({
+      url: `${baseUrl}/${shop.slug}`,
+      lastModified: shop.updatedAt,
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    }));
+  } catch {
+    // DB not available yet (build time, first deploy) — serve static pages only
+  }
 
   return [...staticPages, ...shopPages];
 }

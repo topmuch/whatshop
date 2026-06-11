@@ -1,8 +1,8 @@
-# WhatsShop - Dockerfile for Coolify
+# Boutiko - Dockerfile for Coolify
 FROM node:20-alpine
 
 # Install required packages
-RUN apk add --no-cache git libc6-compat sqlite
+RUN apk add --no-cache git libc6-compat sqlite vips-dev
 
 WORKDIR /app
 
@@ -17,17 +17,20 @@ RUN bunx prisma generate
 
 # Build the application
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV DATABASE_URL=file:/app/data/whatshop.db
+ENV DATABASE_URL=file:/app/data/boutiko.db
+ENV NEXT_PUBLIC_BASE_URL=https://boutiko.pro
+ENV NEXT_PUBLIC_APP_URL=https://boutiko.pro
 RUN bun run build
 
-# Create data directory
-RUN mkdir -p /app/data
+# Create data + uploads directories
+RUN mkdir -p /app/data /app/uploads && chmod -R 755 /app/uploads
 
 EXPOSE 3000
 
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
-ENV DATABASE_URL=file:/app/data/whatshop.db
+ENV DATABASE_URL=file:/app/data/boutiko.db
+ENV UPLOADS_DIR=/app/uploads
 
 # Push DB schema, seed production data, then start server
 CMD ["sh", "-c", "npx prisma db push --skip-generate && bun scripts/seed-production.ts && node .next/standalone/server.js"]
