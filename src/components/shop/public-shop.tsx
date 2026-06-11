@@ -52,6 +52,7 @@ import { ElectroDepotGrid } from './themes/electrodepot-grid'
 import { LuxeFashionShopPage } from './themes/luxe-fashion-grid'
 import { TikTokLiveShopPage } from './themes/tiktok-live-grid'
 import { BeautyPremiumShopPage } from './themes/beauty-premium-grid'
+import { CosmikaBeautyShopPage } from './themes/cosmika-beauty-grid'
 
 type SortOption = 'recent' | 'price-asc' | 'price-desc'
 
@@ -566,6 +567,9 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
   }
   if (template.id === 'beauty-premium') {
     return <BeautyPremiumShopPage />
+  }
+  if (template.id === 'cosmika-beauty') {
+    return <CosmikaBeautyShopPage />
   }
 
   // ── Loading state: minimal spinner instead of visible skeleton ──

@@ -143,6 +143,20 @@ model Shop {
   primaryColor          String   @default("#EC4899")
   secondaryColor        String?
 
+  // Cosmika Beauty template customization
+  heroTitle             String?
+  heroSubtitle          String?
+  heroTagline           String?
+  heroImageUrl          String?
+  productsTitle         String?
+  productsTagline       String?
+  categoriesTitle       String?
+  categoriesTagline     String?
+  testimonialsTitle     String?
+  testimonialsTagline   String?
+  trustBadges           String   @default("[]")  // JSON array of {emoji, title, subtitle, order}
+  footerLinks           String   @default("[]")  // JSON array of {section, label, url}
+
   // Moderation
   isFlagged              Boolean   @default(false)
   flaggedReason          String?
@@ -162,6 +176,7 @@ model Shop {
   supportTickets SupportTicket[]
   shippingZones ShippingZone[]
   marketingAssets MarketingAsset[]
+  testimonials   Testimonial[]
 }
 
 // ─── CATEGORY ──────────────────────────────────────────────────────────────────
@@ -177,6 +192,24 @@ model Category {
 
   shop     Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
   products Product[]
+}
+
+// ─── TESTIMONIAL ─────────────────────────────────────────────────────────────
+
+model Testimonial {
+  id           String   @id @default(cuid())
+  shopId       String
+  clientName   String
+  clientAvatar String?
+  comment      String
+  rating       Int      @default(5)
+  isDisplayed  Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@index([shopId])
 }
 
 // ─── PRODUCT ───────────────────────────────────────────────────────────────────

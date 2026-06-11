@@ -33,6 +33,18 @@ export interface AuthShop {
   brands?: string
   primaryColor?: string
   secondaryColor?: string
+  heroTitle?: string
+  heroSubtitle?: string
+  heroTagline?: string
+  heroImageUrl?: string
+  productsTitle?: string
+  productsTagline?: string
+  categoriesTitle?: string
+  categoriesTagline?: string
+  testimonialsTitle?: string
+  testimonialsTagline?: string
+  trustBadges?: string
+  footerLinks?: string
 }
 
 /** User type returned from auth functions — includes `shops` array + `shop` (first/primary). */

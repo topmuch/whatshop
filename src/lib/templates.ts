@@ -1,4 +1,4 @@
-export type TemplateId = 'classic' | 'africa' | 'minimal' | 'elegant' | 'neon' | 'rose' | 'ocean' | 'sunset' | 'jameela' | 'xstore-fashion' | 'xstore-electro' | 'xstore-grocery' | 'electrodepot' | 'luxe-fashion' | 'tiktok-live' | 'beauty-premium'
+export type TemplateId = 'classic' | 'africa' | 'minimal' | 'elegant' | 'neon' | 'rose' | 'ocean' | 'sunset' | 'jameela' | 'xstore-fashion' | 'xstore-electro' | 'xstore-grocery' | 'electrodepot' | 'luxe-fashion' | 'tiktok-live' | 'beauty-premium' | 'cosmika-beauty'
 
 export interface ShopTemplate {
   id: TemplateId
@@ -48,10 +48,13 @@ export interface ShopTemplate {
     badgePosition: 'top-left' | 'top-right' | 'overlay'
     badgeStyle: 'pill' | 'rounded' | 'tag'
     categoryStyle: 'pill' | 'underline' | 'button' | 'circle' | 'circle-image'
-    heroStyle: 'full' | 'contained' | 'minimal' | 'dark' | 'gradient' | 'fashion-split' | 'grocery-banner' | 'electrodepot-wide'
+    heroStyle: 'full' | 'contained' | 'minimal' | 'dark' | 'gradient' | 'fashion-split' | 'grocery-banner' | 'electrodepot-wide' | 'full-image'
     priceStyle: 'bold' | 'elegant' | 'minimal' | 'tag' | 'beauty-elegant' | 'fashion-bold' | 'electro-highlight'
     buttonStyle: 'filled' | 'outlined' | 'ghost' | 'rounded' | 'pill'
     footerStyle: 'standard' | 'dark' | 'minimal' | 'gradient' | 'electrodepot-footer'
+    showSearch?: boolean
+    showSort?: boolean
+    showCart?: boolean
   }
   decorative: {
     pattern: 'none' | 'dots' | 'lines' | 'kente' | 'waves' | 'gradient'
@@ -1009,6 +1012,68 @@ export const templates: Record<TemplateId, ShopTemplate> = {
       pattern: 'dots',
       gradientBg: 'radial-gradient(circle at top left, rgba(183,110,121,0.04) 0%, transparent 50%)',
       divider: 'line',
+      headerDecoration: null,
+    },
+  },
+  'cosmika-beauty': {
+    id: 'cosmika-beauty',
+    name: 'Cosmika Beauty',
+    description: 'Élégance et glamour pour les boutiques de cosmétiques',
+    emoji: '💎',
+    colors: {
+      primary: '#E11D48',
+      primaryFg: '#fff',
+      accent: '#F59E0B',
+      bg: '#FFFFFF',
+      card: '#FFFFFF',
+      cardHover: '#FDF2F8',
+      text: '#1F2937',
+      textMuted: '#6B7280',
+      border: '#FCE7F3',
+      badgeNew: '#E11D48',
+      badgePromo: '#F59E0B',
+      cartBg: '#1F2937',
+      headerBg: '#111827',
+      filterActive: '#E11D48',
+      filterActiveFg: '#fff',
+      priceColor: '#E11D48',
+      ctaBg: '#111827',
+      ctaFg: '#FFFFFF',
+      heroOverlay: 'rgba(0,0,0,0.5)',
+      heroBadge: '#F59E0B',
+      heroText: '#FFFFFF',
+    },
+    cardStyle: {
+      rounded: '1rem',
+      shadow: '0 1px 3px rgba(0,0,0,0.1)',
+      imageRounded: '0.75rem',
+      overflow: 'hidden',
+      border: '1px solid #FCE7F3',
+      hoverBorder: '1px solid #E11D48',
+      hoverScale: '1.02',
+    },
+    layout: {
+      gridCols: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6',
+      headerStyle: 'luxury-dark',
+      cardLayout: 'beauty',
+      showCardBorder: true,
+      cardPadding: 'p-0',
+      imageSize: 'aspect-square',
+      badgePosition: 'top-left',
+      badgeStyle: 'pill',
+      categoryStyle: 'circle-image',
+      heroStyle: 'full-image',
+      priceStyle: 'beauty-elegant',
+      buttonStyle: 'rounded',
+      footerStyle: 'dark',
+      showSearch: true,
+      showSort: true,
+      showCart: true,
+    },
+    decorative: {
+      pattern: 'none',
+      gradientBg: null,
+      divider: 'gradient',
       headerDecoration: null,
     },
   },

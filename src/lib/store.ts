@@ -48,6 +48,34 @@ export interface Shop {
   brands?: string
   primaryColor?: string
   secondaryColor?: string
+  heroTitle?: string
+  heroSubtitle?: string
+  heroTagline?: string
+  heroImageUrl?: string
+  productsTitle?: string
+  productsTagline?: string
+  categoriesTitle?: string
+  categoriesTagline?: string
+  testimonialsTitle?: string
+  testimonialsTagline?: string
+  trustBadges?: string
+  footerLinks?: string
+}
+
+export interface Testimonial {
+  id: string
+  clientName: string
+  clientAvatar?: string
+  comment: string
+  rating: number
+  createdAt: string
+}
+
+export interface TrustBadge {
+  emoji: string
+  title: string
+  subtitle: string
+  order: number
 }
 
 export interface Product {
