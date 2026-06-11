@@ -1,0 +1,794 @@
+     1→'use client'
+     2→
+     3→import { useState, useEffect, useMemo, useCallback } from 'react'
+     4→import { motion, AnimatePresence } from 'framer-motion'
+     5→import { toast } from 'sonner'
+     6→import {
+     7→  Search,
+     8→  X,
+     9→  Plus,
+    10→  Minus,
+    11→  Trash2,
+    12→  Package,
+    13→  ShoppingBag,
+    14→  Flame,
+    15→  Sparkles,
+    16→  Truck,
+    17→  Lock,
+    18→  CheckCircle,
+    19→  Phone,
+    20→  Clock,
+    21→  ArrowRight,
+    22→  Leaf,
+    23→} from 'lucide-react'
+    24→import { Input } from '@/components/ui/input'
+    25→import { Button } from '@/components/ui/button'
+    26→import {
+    27→  Select,
+    28→  SelectContent,
+    29→  SelectItem,
+    30→  SelectTrigger,
+    31→  SelectValue,
+    32→} from '@/components/ui/select'
+    33→import { Product as ProductType, formatPrice } from '@/lib/shared'
+    34→
+    35→// ─── Types ───────────────────────────────────────────────────────────────────
+    36→
+    37→interface GroceryGridProps {
+    38→  filteredProducts: ProductType[]
+    39→  publicCategories: any[]
+    40→  publicProducts: ProductType[]
+    41→  activeCategory: string | null
+    42→  searchQuery: string
+    43→  sortBy: 'recent' | 'price-asc' | 'price-desc'
+    44→  isSearching: boolean
+    45→  totalProductCount: number
+    46→  onCategoryClick: (id: string | null) => void
+    47→  onProductClick: (product: ProductType) => void
+    48→  onAddToCart: (product: ProductType) => void
+    49→  getCartQuantity: (productId: string) => number
+    50→  updateCartQuantity: (productId: string, qty: number) => void
+    51→  onSortChange: (sort: string) => void
+    52→  onSearchChange: (query: string) => void
+    53→  shopName: string
+    54→  whatsapp?: string
+    55→}
+    56→
+    57→// ─── Constants ───────────────────────────────────────────────────────────────
+    58→
+    59→const GROCERY_COLORS = {
+    60→  green: '#00A651',
+    61→  red: '#ff4757',
+    62→  dark: '#1a1a1a',
+    63→  greenLight: '#e8f8ef',
+    64→  orange: '#FF6B35',
+    65→}
+    66→
+    67→const GROCERY_EMOJIS: Record<string, string> = {
+    68→  boissons: '🥤',
+    69→  drinks: '🥤',
+    70→  snacks: '🍪',
+    71→  conserve: '🥫',
+    72→  conserves: '🥫',
+    73→  épices: '🌶️',
+    74→  epices: '🌶️',
+    75→  spices: '🌶️',
+    76→  fruits: '🍎',
+    77→  legumes: '🥕',
+    78→  légumes: '🥕',
+    79→  vegetables: '🥕',
+    80→  viandes: '🥩',
+    81→  meats: '🥩',
+    82→  poissons: '🐟',
+    83→  fish: '🐟',
+    84→  laitier: '🧀',
+    85→  dairy: '🧀',
+    86→  boulangerie: '🍞',
+    87→  bakery: '🍞',
+    88→  sucre: '🍬',
+    89→  sugar: '🍬',
+    90→  céréales: '🌾',
+    91→  cereales: '🌾',
+    92→  cereals: '🌾',
+    93→  huile: '🫒',
+    94→  oil: '🫒',
+    95→  savon: '🧴',
+    96→  savons: '🧴',
+    97→  hygiène: '🧼',
+    98→  hygiene: '🧼',
+    99→  entretien: '🧹',
+   100→  bio: '🌱',
+   101→  organic: '🌱',
+   102→  frais: '🥬',
+   103→  frozen: '🧊',
+   104→  surgelé: '🧊',
+   105→  bebe: '🍼',
+   106→  bébé: '🍼',
+   107→  bébé: '🍼',
+   108→}
+   109→
+   110→const TRUST_BADGES = [
+   111→  { icon: Truck, label: 'Livraison Rapide' },
+   112→  { icon: Lock, label: 'Paiement Sécurisé' },
+   113→  { icon: CheckCircle, label: 'Qualité Garantie' },
+   114→  { icon: Phone, label: 'Service Client 24/7' },
+   115→]
+   116→
+   117→// ─── Helpers ────────────────────────────────────────────────────────────────
+   118→
+   119→function getGroceryEmoji(name: string): string {
+   120→  const lower = name.toLowerCase().trim()
+   121→  for (const [key, emoji] of Object.entries(GROCERY_EMOJIS)) {
+   122→    if (lower.includes(key)) return emoji
+   123→  }
+   124→  return '🛒'
+   125→}
+   126→
+   127→// ─── Countdown Timer ────────────────────────────────────────────────────────
+   128→
+   129→function useCountdown(initialSeconds = 5 * 3600) {
+   130→  const [seconds, setSeconds] = useState(initialSeconds)
+   131→
+   132→  useEffect(() => {
+   133→    const timer = setInterval(() => {
+   134→      setSeconds((prev) => {
+   135→        if (prev <= 0) return initialSeconds
+   136→        return prev - 1
+   137→      })
+   138→    }, 1000)
+   139→    return () => clearInterval(timer)
+   140→  }, [initialSeconds])
+   141→
+   142→  const h = Math.floor(seconds / 3600)
+   143→  const m = Math.floor((seconds % 3600) / 60)
+   144→  const s = seconds % 60
+   145→
+   146→  return {
+   147→    hours: String(h).padStart(2, '0'),
+   148→    minutes: String(m).padStart(2, '0'),
+   149→    seconds: String(s).padStart(2, '0'),
+   150→    isExpired: seconds <= 0,
+   151→  }
+   152→}
+   153→
+   154→// ─── Component ───────────────────────────────────────────────────────────────
+   155→
+   156→export function GroceryGrid({
+   157→  filteredProducts,
+   158→  publicCategories,
+   159→  publicProducts,
+   160→  activeCategory,
+   161→  searchQuery,
+   162→  sortBy,
+   163→  isSearching,
+   164→  totalProductCount,
+   165→  onCategoryClick,
+   166→  onProductClick,
+   167→  onAddToCart,
+   168→  getCartQuantity,
+   169→  updateCartQuantity,
+   170→  onSortChange,
+   171→  onSearchChange,
+   172→  shopName,
+   173→  whatsapp,
+   174→}: GroceryGridProps) {
+   175→  const countdown = useCountdown(5 * 3600)
+   176→  const isFiltering = isSearching || activeCategory !== null || searchQuery.trim() !== ''
+   177→
+   178→  // Sort products
+   179→  const sortedProducts = useMemo(() => {
+   180→    const products = [...filteredProducts]
+   181→    switch (sortBy) {
+   182→      case 'price-asc':
+   183→        return products.sort((a, b) => a.price - b.price)
+   184→      case 'price-desc':
+   185→        return products.sort((a, b) => b.price - a.price)
+   186→      case 'recent':
+   187→      default:
+   188→        return products.sort((a, b) => {
+   189→          const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0
+   190→          const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0
+   191→          return dateB - dateA
+   192→        })
+   193→    }
+   194→  }, [filteredProducts, sortBy])
+   195→
+   196→  const handleAddToCart = useCallback(
+   197→    (product: ProductType) => {
+   198→      onAddToCart(product)
+   199→      toast.success(`${product.name} ajouté au panier`, {
+   200→        description: formatPrice(product.price),
+   201→      })
+   202→    },
+   203→    [onAddToCart]
+   204→  )
+   205→
+   206→  const handleQuantityChange = useCallback(
+   207→    (productId: string, qty: number) => {
+   208→      if (qty <= 0) {
+   209→        updateCartQuantity(productId, 0)
+   210→        toast.info('Produit retiré du panier')
+   211→      } else {
+   212→        updateCartQuantity(productId, qty)
+   213→      }
+   214→    },
+   215→    [updateCartQuantity]
+   216→  )
+   217→
+   218→  return (
+   219→    <div className="w-full max-w-6xl mx-auto">
+   220→      {/* ── 1. Delivery Info Bar ────────────────────────────────────────── */}
+   221→      <div
+   222→        className="mb-6 rounded-xl px-4 py-3.5 flex items-center justify-center gap-3 text-white font-semibold text-sm sm:text-base"
+   223→        style={{ backgroundColor: GROCERY_COLORS.green }}
+   224→      >
+   225→        <Truck className="size-5 flex-shrink-0" />
+   226→        <span>🚚 Livraison gratuite dès 10 000 FCFA</span>
+   227→        {whatsapp && (
+   228→          <a
+   229→            href={`https://wa.me/${whatsapp}`}
+   230→            target="_blank"
+   231→            rel="noopener noreferrer"
+   232→            className="ml-2 hidden sm:inline-flex items-center gap-1 text-xs font-medium bg-white/20 hover:bg-white/30 px-3 py-1 rounded-full transition-colors"
+   233→          >
+   234→            Commander via WhatsApp
+   235→            <ArrowRight className="size-3" />
+   236→          </a>
+   237→        )}
+   238→      </div>
+   239→
+   240→      {/* ── 2. Circular Categories ──────────────────────────────────────── */}
+   241→      {publicCategories.length > 0 && (
+   242→        <section
+   243→          className="mb-6"
+   244→        >
+   245→          <div className="flex gap-4 overflow-x-auto pb-3 scrollbar-none">
+   246→            {/* All category circle */}
+   247→            <motion.button
+   248→              whileHover={{ scale: 1.08 }}
+   249→              whileTap={{ scale: 0.95 }}
+   250→              onClick={() => onCategoryClick(null)}
+   251→              className="flex flex-col items-center gap-1.5 flex-shrink-0 cursor-pointer"
+   252→            >
+   253→              <div
+   254→                className={`flex items-center justify-center rounded-full text-2xl transition-all ${
+   255→                  activeCategory === null
+   256→                    ? 'ring-3 shadow-lg scale-110'
+   257→                    : 'hover:ring-2'
+   258→                }`}
+   259→                style={{
+   260→                  width: 64,
+   261→                  height: 64,
+   262→                  backgroundColor:
+   263→                    activeCategory === null
+   264→                      ? GROCERY_COLORS.green
+   265→                      : '#f3f4f6',
+   266→                  ringColor:
+   267→                    activeCategory === null
+   268→                      ? GROCERY_COLORS.green
+   269→                      : '#d1d5db',
+   270→                }}
+   271→              >
+   272→                <span className={activeCategory === null ? 'text-white' : ''}>
+   273→                  🛒
+   274→                </span>
+   275→              </div>
+   276→              <span
+   277→                className="text-xs font-medium text-center leading-tight max-w-[64px] truncate"
+   278→                style={{
+   279→                  color:
+   280→                    activeCategory === null
+   281→                      ? GROCERY_COLORS.green
+   282→                      : GROCERY_COLORS.dark,
+   283→                }}
+   284→              >
+   285→                Tout
+   286→              </span>
+   287→            </motion.button>
+   288→
+   289→            {publicCategories.map((cat, index) => {
+   290→              const emoji = getGroceryEmoji(cat.name)
+   291→              const isActive = activeCategory === cat.id
+   292→              return (
+   293→                <motion.button
+   294→                  key={cat.id}
+   295→                  initial={{ opacity: 0, scale: 0.8 }}
+   296→                  animate={{ opacity: 1, scale: 1 }}
+   297→                  transition={{ delay: 0.05 * index }}
+   298→                  whileHover={{ scale: 1.08 }}
+   299→                  whileTap={{ scale: 0.95 }}
+   300→                  onClick={() =>
+   301→                    onCategoryClick(isActive ? null : cat.id)
+   302→                  }
+   303→                  className="flex flex-col items-center gap-1.5 flex-shrink-0 cursor-pointer"
+   304→                >
+   305→                  <div
+   306→                    className={`flex items-center justify-center rounded-full text-2xl transition-all ${
+   307→                      isActive ? 'ring-3 shadow-lg scale-110' : 'hover:ring-2'
+   308→                    }`}
+   309→                    style={{
+   310→                      width: 64,
+   311→                      height: 64,
+   312→                      backgroundColor: isActive
+   313→                        ? GROCERY_COLORS.green
+   314→                        : '#f3f4f6',
+   315→                      ringColor: isActive
+   316→                        ? GROCERY_COLORS.green
+   317→                        : '#d1d5db',
+   318→                    }}
+   319→                  >
+   320→                    <span className={isActive ? 'text-white' : ''}>
+   321→                      {emoji}
+   322→                    </span>
+   323→                  </div>
+   324→                  <span
+   325→                    className="text-xs font-medium text-center leading-tight max-w-[64px] truncate"
+   326→                    style={{
+   327→                      color: isActive
+   328→                        ? GROCERY_COLORS.green
+   329→                        : GROCERY_COLORS.dark,
+   330→                    }}
+   331→                  >
+   332→                    {cat.name}
+   333→                  </span>
+   334→                </motion.button>
+   335→              )
+   336→            })}
+   337→          </div>
+   338→        </section>
+   339→      )}
+   340→
+   341→      {/* ── 3. Search Bar + Sort ────────────────────────────────────────── */}
+   342→      <div
+   343→        className="mb-6 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center"
+   344→      >
+   345→        <div className="relative flex-1">
+   346→          <Search
+   347→            className="absolute left-3 top-1/2 -translate-y-1/2 size-4"
+   348→            style={{ color: '#9ca3af' }}
+   349→          />
+   350→          <Input
+   351→            type="text"
+   352→            placeholder="Rechercher un produit..."
+   353→            value={searchQuery}
+   354→            onChange={(e) => onSearchChange(e.target.value)}
+   355→            className="pl-10 pr-10 h-11 rounded-xl border-gray-200 focus-visible:border-[#00A651] focus-visible:ring-[#00A651]/20"
+   356→          />
+   357→          {searchQuery && (
+   358→            <button
+   359→              onClick={() => onSearchChange('')}
+   360→              className="absolute right-3 top-1/2 -translate-y-1/2 size-5 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+   361→            >
+   362→              <X className="size-3.5 text-gray-400" />
+   363→            </button>
+   364→          )}
+   365→        </div>
+   366→
+   367→        <Select
+   368→          value={sortBy}
+   369→          onValueChange={onSortChange}
+   370→        >
+   371→          <SelectTrigger className="w-full sm:w-44 h-11 rounded-xl border-gray-200">
+   372→            <SelectValue placeholder="Trier par" />
+   373→          </SelectTrigger>
+   374→          <SelectContent>
+   375→            <SelectItem value="recent">Plus récents</SelectItem>
+   376→            <SelectItem value="price-asc">Prix croissant</SelectItem>
+   377→            <SelectItem value="price-desc">Prix décroissant</SelectItem>
+   378→          </SelectContent>
+   379→        </Select>
+   380→      </div>
+   381→
+   382→      {/* ── 4. Deal of the Day ───────────────────────────────────────────── */}
+   383→      {!isFiltering && publicProducts.length > 0 && (
+   384→        <section
+   385→          className="mb-8"
+   386→        >
+   387→          <div
+   388→            className="relative overflow-hidden rounded-2xl p-5 sm:p-6"
+   389→            style={{
+   390→              background: `linear-gradient(135deg, ${GROCERY_COLORS.red}, #e03e4f)`,
+   391→            }}
+   392→          >
+   393→            <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+   394→            <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
+   395→
+   396→            <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+   397→              <div className="flex items-center gap-3">
+   398→                <div className="flex items-center justify-center size-12 bg-white/20 rounded-xl">
+   399→                  <Flame className="size-6 text-white" />
+   400→                </div>
+   401→                <div>
+   402→                  <h3 className="text-white font-bold text-lg sm:text-xl flex items-center gap-2">
+   403→                    Deal du Jour
+   404→                    <Sparkles className="size-4 sm:size-5 text-yellow-300" />
+   405→                  </h3>
+   406→                  <p className="text-white/80 text-sm mt-0.5">
+   407→                    Offres spéciales à ne pas manquer !
+   408→                  </p>
+   409→                </div>
+   410→              </div>
+   411→
+   412→              <div className="flex items-center gap-3">
+   413→                <div className="flex items-center gap-1.5">
+   414→                  <Clock className="size-4 text-white/70" />
+   415→                  {[
+   416→                    countdown.hours,
+   417→                    countdown.minutes,
+   418→                    countdown.seconds,
+   419→                  ].map((val, i) => (
+   420→                    <div key={i} className="flex items-center gap-1.5">
+   421→                      <span className="inline-flex items-center justify-center bg-white text-[#ff4757] font-bold text-lg rounded-lg w-10 h-10">
+   422→                        {val}
+   423→                      </span>
+   424→                      {i < 2 && (
+   425→                        <span className="text-white font-bold text-sm">:</span>
+   426→                      )}
+   427→                    </div>
+   428→                  ))}
+   429→                </div>
+   430→
+   431→                <Button
+   432→                  onClick={() => {
+   433→                    onSearchChange('')
+   434→                    onCategoryClick(null)
+   435→                    toast.info('Découvrez nos offres du jour !')
+   436→                  }}
+   437→                  className="bg-white text-[#ff4757] hover:bg-white/90 font-semibold rounded-xl px-4 h-10 shadow-md transition-all"
+   438→                >
+   439→                  Voir les offres
+   440→                  <ArrowRight className="size-4 ml-1" />
+   441→                </Button>
+   442→              </div>
+   443→            </div>
+   444→          </div>
+   445→        </section>
+   446→      )}
+   447→
+   448→      {/* ── 5. Product Grid ─────────────────────────────────────────────── */}
+   449→      {sortedProducts.length === 0 ? (
+   450→        <EmptyState
+   451→          searchQuery={searchQuery}
+   452→          isSearching={isSearching}
+   453→          onReset={() => {
+   454→            onSearchChange('')
+   455→            onCategoryClick(null)
+   456→          }}
+   457→        />
+   458→      ) : (
+   459→        <>
+   460→          <AnimatePresence mode="wait">
+   461→            <motion.div
+   462→              key={`${activeCategory}-${searchQuery}-${sortBy}`}
+   463→              initial={{ opacity: 0 }}
+   464→              animate={{ opacity: 1 }}
+   465→              exit={{ opacity: 0 }}
+   466→              transition={{ duration: 0.2 }}
+   467→            >
+   468→              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+   469→                {sortedProducts.map((product, index) => (
+   470→                  <GroceryProductCard
+   471→                    key={product.id}
+   472→                    product={product}
+   473→                    index={index}
+   474→                    cartQuantity={getCartQuantity(product.id)}
+   475→                    onAddToCart={handleAddToCart}
+   476→                    onUpdateQuantity={handleQuantityChange}
+   477→                    onProductClick={onProductClick}
+   478→                  />
+   479→                ))}
+   480→              </div>
+   481→            </motion.div>
+   482→          </AnimatePresence>
+   483→
+   484→          {/* Product count */}
+   485→          <p
+   486→            className="text-center text-sm text-gray-400 mt-6"
+   487→          >
+   488→            {sortedProducts.length} produit{sortedProducts.length > 1 ? 's' : ''} affiché{sortedProducts.length > 1 ? 's' : ''}
+   489→          </p>
+   490→        </>
+   491→      )}
+   492→
+   493→      {/* ── 6. Promotional Grid ─────────────────────────────────────────── */}
+   494→      {!isFiltering && publicProducts.length > 0 && (
+   495→        <section
+   496→          className="mt-10 mb-10"
+   497→        >
+   498→          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   499→            {/* Promo Card 1 - Green */}
+   500→            <motion.div
+   501→              whileHover={{ scale: 1.02 }}
+   502→              className="relative overflow-hidden rounded-2xl p-6 cursor-pointer"
+   503→              style={{
+   504→                background: `linear-gradient(135deg, #00A651, #00C853)`,
+   505→              }}
+   506→            >
+   507→              <div className="absolute top-3 right-4 text-5xl opacity-80">
+   508→                🍎🥕
+   509→              </div>
+   510→              <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-white/10 rounded-full" />
+   511→              <h3 className="text-white font-bold text-xl relative z-10">
+   512→                Fruits & Légumes Frais
+   513→              </h3>
+   514→              <p className="text-white/80 text-sm mt-1.5 relative z-10">
+   515→                Produits frais sélectionnés chaque jour
+   516→              </p>
+   517→              <Button
+   518→                onClick={() => {
+   519→                  const fruitsCat = publicCategories.find((c) =>
+   520→                    c.name.toLowerCase().includes('fruit')
+   521→                  )
+   522→                  if (fruitsCat) {
+   523→                    onCategoryClick(fruitsCat.id)
+   524→                  } else {
+   525→                    onCategoryClick(null)
+   526→                    toast.info('Découvrez nos fruits et légumes !')
+   527→                  }
+   528→                }}
+   529→                className="mt-4 bg-white text-[#00A651] hover:bg-white/90 font-semibold rounded-full px-5 relative z-10"
+   530→              >
+   531→                Explorer
+   532→                <ArrowRight className="size-4 ml-1" />
+   533→              </Button>
+   534→            </motion.div>
+   535→
+   536→            {/* Promo Card 2 - Orange */}
+   537→            <motion.div
+   538→              whileHover={{ scale: 1.02 }}
+   539→              className="relative overflow-hidden rounded-2xl p-6 cursor-pointer"
+   540→              style={{
+   541→                background: `linear-gradient(135deg, #FF6B35, #FF8C42)`,
+   542→              }}
+   543→            >
+   544→              <div className="absolute top-3 right-4 text-5xl opacity-80">
+   545→                🌱🌿
+   546→              </div>
+   547→              <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-white/10 rounded-full" />
+   548→              <h3 className="text-white font-bold text-xl relative z-10">
+   549→                Produits Bio
+   550→              </h3>
+   551→              <p className="text-white/80 text-sm mt-1.5 relative z-10">
+   552→                100% naturel, pour votre santé
+   553→              </p>
+   554→              <Button
+   555→                onClick={() => {
+   556→                  const bioCat = publicCategories.find((c) =>
+   557→                    c.name.toLowerCase().includes('bio')
+   558→                  )
+   559→                  if (bioCat) {
+   560→                    onCategoryClick(bioCat.id)
+   561→                  } else {
+   562→                    onCategoryClick(null)
+   563→                    toast.info('Découvrez nos produits bio !')
+   564→                  }
+   565→                }}
+   566→                className="mt-4 bg-white text-[#FF6B35] hover:bg-white/90 font-semibold rounded-full px-5 relative z-10"
+   567→              >
+   568→                Explorer
+   569→                <ArrowRight className="size-4 ml-1" />
+   570→              </Button>
+   571→            </motion.div>
+   572→          </div>
+   573→        </section>
+   574→      )}
+   575→
+   576→      {/* ── 7. Trust Badges ─────────────────────────────────────────────── */}
+   577→      <section
+   578→        className="mb-10"
+   579→      >
+   580→        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+   581→          {TRUST_BADGES.map((badge, index) => (
+   582→            <motion.div
+   583→              key={badge.label}
+   584→              whileHover={{ y: -2 }}
+   585→              className="flex flex-col items-center gap-2.5 p-4 rounded-xl bg-gray-50 border border-gray-100"
+   586→            >
+   587→              <div
+   588→                className="flex items-center justify-center size-10 rounded-full"
+   589→                style={{ backgroundColor: GROCERY_COLORS.greenLight }}
+   590→              >
+   591→                <badge.icon
+   592→                  className="size-5"
+   593→                  style={{ color: GROCERY_COLORS.green }}
+   594→                />
+   595→              </div>
+   596→              <span
+   597→                className="text-xs font-medium text-center leading-tight"
+   598→                style={{ color: GROCERY_COLORS.dark }}
+   599→              >
+   600→                {badge.label}
+   601→              </span>
+   602→            </motion.div>
+   603→          ))}
+   604→        </div>
+   605→      </section>
+   606→    </div>
+   607→  )
+   608→}
+   609→
+   610→// ─── Product Card ────────────────────────────────────────────────────────────
+   611→
+   612→interface GroceryProductCardProps {
+   613→  product: ProductType
+   614→  index: number
+   615→  cartQuantity: number
+   616→  onAddToCart: (product: ProductType) => void
+   617→  onUpdateQuantity: (productId: string, qty: number) => void
+   618→  onProductClick: (product: ProductType) => void
+   619→}
+   620→
+   621→function GroceryProductCard({
+   622→  product,
+   623→  index,
+   624→  cartQuantity,
+   625→  onAddToCart,
+   626→  onUpdateQuantity,
+   627→  onProductClick,
+   628→}: GroceryProductCardProps) {
+   629→  return (
+   630→    <motion.div
+   631→      whileHover={{ y: -4 }}
+   632→      className="group flex flex-col rounded-xl border border-gray-100 bg-white overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+   633→    >
+   634→      {/* Product Image */}
+   635→      <div
+   636→        className="relative aspect-square bg-gray-50 overflow-hidden cursor-pointer"
+   637→        onClick={() => onProductClick(product)}
+   638→      >
+   639→        {product.image || product.images?.[0] ? (
+   640→          <img
+   641→            src={product.image || product.images?.[0]}
+   642→            alt={product.name}
+   643→            className="size-full object-cover group-hover:scale-105 transition-transform duration-300"
+   644→            loading="lazy"
+   645→            onLoad={(e) => { (e.target as HTMLImageElement).style.opacity = '1' }}
+   646→            style={{ opacity: 0, transition: 'opacity 0.3s ease' }}
+   647→          />
+   648→        ) : (
+   649→          <div className="flex items-center justify-center size-full">
+   650→            <div className="flex flex-col items-center gap-2 text-gray-300">
+   651→              <ShoppingBag className="size-10" />
+   652→              <span className="text-xs">Pas d&apos;image</span>
+   653→            </div>
+   654→          </div>
+   655→        )}
+   656→
+   657→        {/* Stock indicator */}
+   658→        {product.stock !== undefined && product.stock <= 3 && product.stock > 0 && (
+   659→          <div className="absolute top-2 left-2 z-10">
+   660→            <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-700 text-[10px] font-semibold px-2 py-0.5 rounded-full">
+   661→              <Leaf className="size-3" />
+   662→              Stock limité
+   663→            </span>
+   664→          </div>
+   665→        )}
+   666→      </div>
+   667→
+   668→      {/* Product Info */}
+   669→      <div className="flex flex-col gap-2 p-3">
+   670→        {/* Product Name */}
+   671→        <h4
+   672→          className="text-sm font-medium leading-tight line-clamp-2 cursor-pointer hover:underline"
+   673→          style={{ color: GROCERY_COLORS.dark }}
+   674→          onClick={() => onProductClick(product)}
+   675→          title={product.name}
+   676→        >
+   677→          {product.name}
+   678→        </h4>
+   679→
+   680→        {/* Price */}
+   681→        <p className="font-bold text-base" style={{ color: GROCERY_COLORS.green }}>
+   682→          {formatPrice(product.price)}
+   683→        </p>
+   684→
+   685→        {/* Add to Cart / Quantity Control */}
+   686→        {cartQuantity === 0 ? (
+   687→          <motion.button
+   688→            whileHover={{ scale: 1.03 }}
+   689→            whileTap={{ scale: 0.97 }}
+   690→            onClick={(e) => {
+   691→              e.stopPropagation()
+   692→              onAddToCart(product)
+   693→            }}
+   694→            disabled={!product.isAvailable}
+   695→            className="mt-1 w-full flex items-center justify-center gap-1.5 h-9 rounded-lg text-sm font-semibold text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+   696→            style={{
+   697→              backgroundColor: product.isAvailable
+   698→                ? GROCERY_COLORS.green
+   699→                : '#9ca3af',
+   700→            }}
+   701→          >
+   702→            <Plus className="size-3.5" />
+   703→            Ajouter
+   704→          </motion.button>
+   705→        ) : (
+   706→          <motion.div
+   707→            initial={{ scale: 0.9, opacity: 0 }}
+   708→            animate={{ scale: 1, opacity: 1 }}
+   709→            className="mt-1 flex items-center justify-center gap-0"
+   710→          >
+   711→            <button
+   712→              onClick={(e) => {
+   713→                e.stopPropagation()
+   714→                if (cartQuantity === 1) {
+   715→                  onUpdateQuantity(product.id, 0)
+   716→                } else {
+   717→                  onUpdateQuantity(product.id, cartQuantity - 1)
+   718→                }
+   719→              }}
+   720→              className="flex items-center justify-center size-9 rounded-l-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+   721→            >
+   722→              {cartQuantity === 1 ? (
+   723→                <Trash2 className="size-3.5 text-red-400" />
+   724→              ) : (
+   725→                <Minus className="size-3.5 text-gray-500" />
+   726→              )}
+   727→            </button>
+   728→            <span
+   729→              className="flex items-center justify-center h-9 min-w-[40px] px-2 text-sm font-bold border-y border-gray-200"
+   730→              style={{ color: GROCERY_COLORS.green }}
+   731→            >
+   732→              {cartQuantity}
+   733→            </span>
+   734→            <button
+   735→              onClick={(e) => {
+   736→                e.stopPropagation()
+   737→                onUpdateQuantity(product.id, cartQuantity + 1)
+   738→              }}
+   739→              className="flex items-center justify-center size-9 rounded-r-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+   740→            >
+   741→              <Plus className="size-3.5 text-gray-500" />
+   742→            </button>
+   743→          </motion.div>
+   744→        )}
+   745→      </div>
+   746→    </motion.div>
+   747→  )
+   748→}
+   749→
+   750→// ─── Empty State ─────────────────────────────────────────────────────────────
+   751→
+   752→function EmptyState({
+   753→  searchQuery,
+   754→  isSearching,
+   755→  onReset,
+   756→}: {
+   757→  searchQuery: string
+   758→  isSearching: boolean
+   759→  onReset: () => void
+   760→}) {
+   761→  return (
+   762→    <div
+   763→      className="flex flex-col items-center justify-center py-20 text-center"
+   764→    >
+   765→      <div className="flex items-center justify-center size-20 rounded-full bg-gray-50 mb-5">
+   766→        <Package className="size-10 text-gray-300" />
+   767→      </div>
+   768→      <h3
+   769→        className="text-xl font-bold"
+   770→        style={{ color: GROCERY_COLORS.dark }}
+   771→      >
+   772→        Aucun produit trouvé
+   773→      </h3>
+   774→      <p className="mt-2 text-sm text-gray-400 max-w-sm">
+   775→        {searchQuery
+   776→          ? `Aucun résultat pour "${searchQuery}". Essayez d'autres mots-clés.`
+   777→          : 'Cette catégorie ne contient pas encore de produits.'}
+   778→      </p>
+   779→      {(searchQuery || isSearching) && (
+   780→        <Button
+   781→          onClick={onReset}
+   782→          className="mt-5 rounded-xl px-5 font-semibold"
+   783→          style={{
+   784→            backgroundColor: GROCERY_COLORS.green,
+   785→            color: 'white',
+   786→          }}
+   787→        >
+   788→          Réinitialiser les filtres
+   789→        </Button>
+   790→      )}
+   791→    </div>
+   792→  )
+   793→}
+   794→

@@ -655,7 +655,7 @@ export function JameelaGrid({
       {/* ============================================================ */}
       {/*  MAIN CONTENT                                                 */}
       {/* ============================================================ */}
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode="wait" initial={false}>
         {/* No products found */}
         {filteredProducts.length === 0 ? (
           <motion.div

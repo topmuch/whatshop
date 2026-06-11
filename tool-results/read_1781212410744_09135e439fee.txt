@@ -1,0 +1,1810 @@
+     1→'use client'
+     2→
+     3→/**
+     4→ * TikTokLiveShopPage — Template xstore-tiktok-live
+     5→ * Ultra-high-energy Gen Z dark theme with LIVE feel, urgency triggers,
+     6→ * social proof, and massive WhatsApp CTA. All text in French.
+     7→ *
+     8→ * Color palette: Dark TikTok Energy
+     9→ *   RED: #FF0050, RED_ORANGE: #FE2C55, CYAN: #25F4EE
+    10→ *   DARK_BG: #0a0a0a, CARD_BG: #1a1a1a, CARD_HOVER: #222222
+    11→ *   TEXT: #ffffff, TEXT_MUTED: #aaaaaa
+    12→ *   GREEN (WhatsApp): #25D366, GREEN_DARK: #128C7E
+    13→ *   YELLOW: #FFD700
+    14→ */
+    15→
+    16→import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
+    17→import { motion, AnimatePresence } from 'framer-motion'
+    18→import { toast } from 'sonner'
+    19→import { Button } from '@/components/ui/button'
+    20→import { Input } from '@/components/ui/input'
+    21→import { Badge } from '@/components/ui/badge'
+    22→import { Skeleton } from '@/components/ui/skeleton'
+    23→import { ScrollArea } from '@/components/ui/scroll-area'
+    24→import { Separator } from '@/components/ui/separator'
+    25→import {
+    26→  Search,
+    27→  X,
+    28→  Plus,
+    29→  Minus,
+    30→  Trash2,
+    31→  Package,
+    32→  ShoppingBag,
+    33→  MessageCircle,
+    34→  ShoppingCart,
+    35→  ArrowLeft,
+    36→  Phone,
+    37→  MapPin,
+    38→  ChevronUp,
+    39→  ChevronDown,
+    40→  Zap,
+    41→  Eye,
+    42→  Clock,
+    43→} from 'lucide-react'
+    44→import { useAppStore, type Product, type Category } from '@/lib/store'
+    45→import { formatPrice, openWhatsApp } from '@/lib/shared'
+    46→
+    47→// ─── Couleurs du template TIKTOK LIVE ───
+    48→const TT = {
+    49→  red: '#FF0050',
+    50→  redOrange: '#FE2C55',
+    51→  cyan: '#25F4EE',
+    52→  darkBg: '#0a0a0a',
+    53→  cardBg: '#1a1a1a',
+    54→  cardHover: '#222222',
+    55→  text: '#ffffff',
+    56→  textMuted: '#aaaaaa',
+    57→  whatsapp: '#25D366',
+    58→  whatsappDark: '#128C7E',
+    59→  yellow: '#FFD700',
+    60→  border: '#2a2a2a',
+    61→} as const
+    62→
+    63→type SortOption = 'recent' | 'price-asc' | 'price-desc'
+    64→
+    65→// ─── Stable random values (generated once per session) ───
+    66→function useStableRandom(min: number, max: number) {
+    67→  const [val] = useState(() => Math.floor(Math.random() * (max - min + 1)) + min)
+    68→  return val
+    69→}
+    70→
+    71→// ═══════════════════════════════════════════════════════════════
+    72→// SECTION 1 : LIVE BANNER (top of page)
+    73→// ═══════════════════════════════════════════════════════════════
+    74→
+    75→function TikTokLiveBanner() {
+    76→  const viewerCount = useStableRandom(800, 1999)
+    77→  const [countdown, setCountdown] = useState(30 * 60) // 30 min default
+    78→
+    79→  useEffect(() => {
+    80→    const timer = setInterval(() => {
+    81→      setCountdown((prev) => (prev > 0 ? prev - 1 : 0))
+    82→    }, 1000)
+    83→    return () => clearInterval(timer)
+    84→  }, [])
+    85→
+    86→  const minutes = Math.floor(countdown / 60)
+    87→  const seconds = countdown % 60
+    88→  const pad = (n: number) => String(n).padStart(2, '0')
+    89→
+    90→  return (
+    91→    <div
+    92→      className="w-full relative overflow-hidden"
+    93→      style={{
+    94→        background: `linear-gradient(90deg, ${TT.redOrange}, ${TT.red}, ${TT.redOrange})`,
+    95→      }}
+    96→    >
+    97→      {/* Subtle animated glow behind */}
+    98→      <div
+    99→        className="absolute inset-0 opacity-30"
+   100→        style={{
+   101→          background: 'radial-gradient(ellipse at 30% 50%, rgba(255,255,255,0.15) 0%, transparent 70%)',
+   102→        }}
+   103→      />
+   104→
+   105→      <div className="relative z-10 flex items-center justify-center gap-4 sm:gap-8 px-4 py-3 sm:py-4 flex-wrap">
+   106→        {/* LIVE indicator */}
+   107→        <div className="flex items-center gap-2">
+   108→          <span
+   109→            className="relative flex items-center justify-center text-lg font-black uppercase tracking-wider text-white"
+   110→            style={{ textShadow: '0 0 12px rgba(255,0,80,0.8)' }}
+   111→          >
+   112→            <span
+   113→              className="absolute -left-5 top-1/2 -translate-y-1/2 inline-block w-2.5 h-2.5 rounded-full"
+   114→              style={{
+   115→                background: TT.yellow,
+   116→                boxShadow: `0 0 8px ${TT.yellow}, 0 0 16px ${TT.yellow}`,
+   117→                animation: 'ttPulse 1.2s ease-in-out infinite',
+   118→              }}
+   119→            />
+   120→            🔴 LIVE EN DIRECT
+   121→          </span>
+   122→        </div>
+   123→
+   124→        {/* Viewers badge */}
+   125→        <div
+   126→          className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs sm:text-sm font-bold text-white"
+   127→          style={{
+   128→            background: 'rgba(0,0,0,0.25)',
+   129→            backdropFilter: 'blur(4px)',
+   130→          }}
+   131→        >
+   132→          <Eye className="size-3.5 sm:size-4" />
+   133→          <span>{viewerCount.toLocaleString('fr-FR')}</span>
+   134→          <span className="hidden sm:inline">en ligne</span>
+   135→        </div>
+   136→
+   137→        {/* Countdown timer */}
+   138→        <div className="flex items-center gap-1">
+   139→          <Clock className="size-3.5 sm:size-4 text-white/80" />
+   140→          <div
+   141→            className="flex items-center gap-0.5 px-2.5 py-1 rounded-lg font-mono text-sm sm:text-base font-bold text-white"
+   142→            style={{
+   143→              background: 'rgba(0,0,0,0.35)',
+   144→              textShadow: `0 0 10px ${TT.cyan}, 0 0 20px ${TT.cyan}`,
+   145→              letterSpacing: '2px',
+   146→            }}
+   147→          >
+   148→            {pad(minutes)}:{pad(seconds)}
+   149→          </div>
+   150→        </div>
+   151→      </div>
+   152→
+   153→      {/* Shimmer overlay */}
+   154→      <div
+   155→        className="absolute inset-0 pointer-events-none"
+   156→        style={{
+   157→          background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.06) 50%, transparent 100%)',
+   158→          backgroundSize: '200% 100%',
+   159→          animation: 'ttShimmer 2.5s ease-in-out infinite',
+   160→        }}
+   161→      />
+   162→    </div>
+   163→  )
+   164→}
+   165→
+   166→// ═══════════════════════════════════════════════════════════════
+   167→// SECTION 2 : HEADER / MENU
+   168→// ═══════════════════════════════════════════════════════════════
+   169→
+   170→function TikTokHeader({
+   171→  shopName,
+   172→  logo,
+   173→  whatsapp,
+   174→  cartCount,
+   175→  onNavAccueil,
+   176→  onNavProduits,
+   177→  onCartClick,
+   178→}: {
+   179→  shopName: string
+   180→  logo?: string
+   181→  whatsapp?: string
+   182→  cartCount: number
+   183→  onNavAccueil: () => void
+   184→  onNavProduits: () => void
+   185→  onCartClick: () => void
+   186→}) {
+   187→  const [mobileOpen, setMobileOpen] = useState(false)
+   188→
+   189→  return (
+   190→    <header
+   191→      className="sticky top-0 z-50 border-b"
+   192→      style={{
+   193→        background: 'rgba(10,10,10,0.95)',
+   194→        backdropFilter: 'blur(12px)',
+   195→        borderColor: TT.border,
+   196→      }}
+   197→    >
+   198→      <div className="max-w-[1400px] mx-auto px-4 lg:px-6">
+   199→        <div className="flex items-center justify-between h-[60px]">
+   200→          {/* Logo */}
+   201→          <button onClick={onNavAccueil} className="flex items-center gap-2 shrink-0">
+   202→            {logo && logo.length > 0 ? (
+   203→              <img src={logo} alt={shopName} className="h-[50px] w-auto max-w-[200px] object-contain" />
+   204→            ) : (
+   205→              <div className="flex items-center gap-2">
+   206→                <div
+   207→                  className="flex items-center justify-center w-9 h-9 rounded-lg"
+   208→                  style={{ background: TT.redOrange }}
+   209→                >
+   210→                  <Zap className="size-5 text-white" />
+   211→                </div>
+   212→                <span className="text-base font-bold text-white truncate max-w-[160px]">{shopName}</span>
+   213→              </div>
+   214→            )}
+   215→          </button>
+   216→
+   217→          {/* Desktop Navigation */}
+   218→          <nav className="hidden md:flex items-center gap-1">
+   219→            <button
+   220→              onClick={onNavAccueil}
+   221→              className="px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 hover:bg-white/5"
+   222→              style={{ color: TT.text }}
+   223→            >
+   224→              Accueil
+   225→            </button>
+   226→            <button
+   227→              onClick={onNavProduits}
+   228→              className="px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 hover:bg-white/5"
+   229→              style={{ color: TT.text }}
+   230→            >
+   231→              Produits
+   232→            </button>
+   233→            {whatsapp && (
+   234→              <a
+   235→                href={`https://wa.me/${whatsapp.replace(/\D/g, '')}`}
+   236→                target="_blank"
+   237→                rel="noopener noreferrer"
+   238→                className="px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 hover:bg-white/5 flex items-center gap-1.5"
+   239→                style={{ color: TT.whatsapp }}
+   240→              >
+   241→                Contact
+   242→              </a>
+   243→            )}
+   244→          </nav>
+   245→
+   246→          {/* Cart + Mobile menu */}
+   247→          <div className="flex items-center gap-2">
+   248→            <Button
+   249→              variant="ghost"
+   250→              size="icon"
+   251→              className="relative h-10 w-10 rounded-lg hover:bg-white/5"
+   252→              onClick={onCartClick}
+   253→            >
+   254→              <ShoppingCart className="size-5" style={{ color: TT.text }} />
+   255→              {cartCount > 0 && (
+   256→                <span
+   257→                  className="absolute -top-1 -right-1 text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center text-white"
+   258→                  style={{ background: TT.redOrange }}
+   259→                >
+   260→                  {cartCount > 9 ? '9+' : cartCount}
+   261→                </span>
+   262→              )}
+   263→            </Button>
+   264→
+   265→            {/* Mobile hamburger */}
+   266→            <button
+   267→              onClick={() => setMobileOpen(!mobileOpen)}
+   268→              className="md:hidden flex flex-col gap-1 p-2"
+   269→              aria-label="Menu"
+   270→            >
+   271→              <span
+   272→                className="block w-5 h-0.5 rounded transition-all"
+   273→                style={{ background: mobileOpen ? 'transparent' : TT.text }}
+   274→              />
+   275→              <span
+   276→                className="block w-5 h-0.5 rounded transition-all"
+   277→                style={{
+   278→                  background: TT.text,
+   279→                  transform: mobileOpen ? 'rotate(45deg) translate(3px, 3px)' : 'none',
+   280→                }}
+   281→              />
+   282→              <span
+   283→                className="block w-5 h-0.5 rounded transition-all"
+   284→                style={{
+   285→                  background: TT.text,
+   286→                  transform: mobileOpen ? 'rotate(-45deg) translate(3px, -3px)' : 'none',
+   287→                }}
+   288→              />
+   289→            </button>
+   290→          </div>
+   291→        </div>
+   292→      </div>
+   293→
+   294→      {/* Mobile Menu Dropdown */}
+   295→      <AnimatePresence>
+   296→        {mobileOpen && (
+   297→          <motion.div
+   298→            initial={{ height: 0, opacity: 0 }}
+   299→            animate={{ height: 'auto', opacity: 1 }}
+   300→            exit={{ height: 0, opacity: 0 }}
+   301→            transition={{ duration: 0.2 }}
+   302→            className="md:hidden overflow-hidden border-t"
+   303→            style={{ borderColor: TT.border, background: TT.darkBg }}
+   304→          >
+   305→            <div className="px-4 py-3 space-y-1">
+   306→              <button
+   307→                onClick={() => {
+   308→                  onNavAccueil()
+   309→                  setMobileOpen(false)
+   310→                }}
+   311→                className="block w-full text-left px-4 py-3 text-sm font-semibold rounded-lg hover:bg-white/5 transition-colors"
+   312→                style={{ color: TT.text }}
+   313→              >
+   314→                Accueil
+   315→              </button>
+   316→              <button
+   317→                onClick={() => {
+   318→                  onNavProduits()
+   319→                  setMobileOpen(false)
+   320→                }}
+   321→                className="block w-full text-left px-4 py-3 text-sm font-semibold rounded-lg hover:bg-white/5 transition-colors"
+   322→                style={{ color: TT.text }}
+   323→              >
+   324→                Produits
+   325→              </button>
+   326→              {whatsapp && (
+   327→                <a
+   328→                  href={`https://wa.me/${whatsapp.replace(/\D/g, '')}`}
+   329→                  target="_blank"
+   330→                  rel="noopener noreferrer"
+   331→                  onClick={() => setMobileOpen(false)}
+   332→                  className="block w-full text-left px-4 py-3 text-sm font-semibold rounded-lg hover:bg-white/5 transition-colors"
+   333→                  style={{ color: TT.whatsapp }}
+   334→                >
+   335→                  Contact WhatsApp
+   336→                </a>
+   337→              )}
+   338→            </div>
+   339→          </motion.div>
+   340→        )}
+   341→      </AnimatePresence>
+   342→    </header>
+   343→  )
+   344→}
+   345→
+   346→// ═══════════════════════════════════════════════════════════════
+   347→// SECTION 3 : CATEGORIES (horizontal pills, red active)
+   348→// ═══════════════════════════════════════════════════════════════
+   349→
+   350→function TikTokCategories({
+   351→  categories,
+   352→  products,
+   353→  activeCategory,
+   354→  onCategoryClick,
+   355→}: {
+   356→  categories: Category[]
+   357→  products: Product[]
+   358→  activeCategory: string | null
+   359→  onCategoryClick: (id: string | null) => void
+   360→}) {
+   361→  const getCategoryCount = (catId?: string) =>
+   362→    products.filter((p) => p.categoryId === catId && p.isAvailable).length
+   363→
+   364→  const totalAvailable = products.filter((p) => p.isAvailable).length
+   365→
+   366→  if (categories.length === 0) return null
+   367→
+   368→  return (
+   369→    <section className="w-full" style={{ background: TT.darkBg }}>
+   370→      <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-4">
+   371→        <div className="flex gap-2 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+   372→          {/* Tous */}
+   373→          <button
+   374→            onClick={() => onCategoryClick(null)}
+   375→            className="shrink-0 flex items-center gap-1.5 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-200"
+   376→            style={
+   377→              activeCategory === null
+   378→                ? {
+   379→                    background: TT.redOrange,
+   380→                    color: TT.text,
+   381→                    boxShadow: `0 0 16px ${TT.redOrange}66`,
+   382→                  }
+   383→                : {
+   384→                    background: TT.cardBg,
+   385→                    color: TT.textMuted,
+   386→                    border: `1px solid ${TT.border}`,
+   387→                  }
+   388→            }
+   389→          >
+   390→            Tous
+   391→            <span className="text-xs opacity-70">({totalAvailable})</span>
+   392→          </button>
+   393→
+   394→          {categories.map((cat) => {
+   395→            const count = getCategoryCount(cat.id)
+   396→            return (
+   397→              <button
+   398→                key={cat.id}
+   399→                onClick={() => onCategoryClick(activeCategory === cat.id ? null : cat.id)}
+   400→                className="shrink-0 flex items-center gap-1.5 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-200"
+   401→                style={
+   402→                  activeCategory === cat.id
+   403→                    ? {
+   404→                        background: TT.redOrange,
+   405→                        color: TT.text,
+   406→                        boxShadow: `0 0 16px ${TT.redOrange}66`,
+   407→                      }
+   408→                    : {
+   409→                        background: TT.cardBg,
+   410→                        color: TT.textMuted,
+   411→                        border: `1px solid ${TT.border}`,
+   412→                      }
+   413→                }
+   414→              >
+   415→                {cat.name}
+   416→                <span className="text-xs opacity-70">({count})</span>
+   417→              </button>
+   418→            )
+   419→          })}
+   420→        </div>
+   421→      </div>
+   422→    </section>
+   423→  )
+   424→}
+   425→
+   426→// ═══════════════════════════════════════════════════════════════
+   427→// SECTION 4 : SOCIAL PROOF BANNER
+   428→// ═══════════════════════════════════════════════════════════════
+   429→
+   430→function TikTokSocialProof() {
+   431→  const buyerCount = useStableRandom(20, 50)
+   432→
+   433→  return (
+   434→    <motion.div
+   435→      initial={{ opacity: 0, y: 12 }}
+   436→      animate={{ opacity: 1, y: 0 }}
+   437→      transition={{ duration: 0.6, delay: 0.3 }}
+   438→      className="w-full"
+   439→      style={{ background: TT.darkBg }}
+   440→    >
+   441→      <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-3">
+   442→        <div
+   443→          className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-center"
+   444→          style={{
+   445→            background: 'linear-gradient(90deg, rgba(255,0,80,0.08), rgba(255,215,0,0.08), rgba(255,0,80,0.08))',
+   446→            border: `1px solid ${TT.border}`,
+   447→          }}
+   448→        >
+   449→          <span
+   450→            className="text-base sm:text-lg font-bold"
+   451→            style={{
+   452→              color: TT.yellow,
+   453→              animation: 'ttFirePulse 1.5s ease-in-out infinite',
+   454→            }}
+   455→          >
+   456→            🔥
+   457→          </span>
+   458→          <span className="text-sm sm:text-base font-semibold" style={{ color: TT.textMuted }}>
+   459→            <span style={{ color: TT.text, fontWeight: 800 }}>{buyerCount} personnes</span> ont
+   460→            acheté aujourd&apos;hui
+   461→          </span>
+   462→          <span
+   463→            className="text-base sm:text-lg font-bold"
+   464→            style={{
+   465→              color: TT.yellow,
+   466→              animation: 'ttFirePulse 1.5s ease-in-out infinite 0.3s',
+   467→            }}
+   468→          >
+   469→            🔥
+   470→          </span>
+   471→        </div>
+   472→      </div>
+   473→    </motion.div>
+   474→  )
+   475→}
+   476→
+   477→// ═══════════════════════════════════════════════════════════════
+   478→// SECTION 5 : PRODUCT CARD (dark, flash sale ribbon, stock warning)
+   479→// ═══════════════════════════════════════════════════════════════
+   480→
+   481→function TikTokProductCard({
+   482→  product,
+   483→  index,
+   484→  onProductClick,
+   485→  onAddToCart,
+   486→  getCartQuantity,
+   487→  updateCartQuantity,
+   488→  whatsapp,
+   489→}: {
+   490→  product: Product
+   491→  index: number
+   492→  onProductClick: (product: Product) => void
+   493→  onAddToCart: (product: Product) => void
+   494→  getCartQuantity: (id: string) => number
+   495→  updateCartQuantity: (id: string, qty: number) => void
+   496→  whatsapp?: string
+   497→}) {
+   498→  const cartQty = getCartQuantity(product.id)
+   499→  const inStock = (product.stock ?? 0) > 0
+   500→  const lowStock = inStock && (product.stock ?? 999) <= 5 && (product.stock ?? 999) > 0
+   501→
+   502→  return (
+   503→    <motion.div
+   504→      className="group flex flex-col overflow-hidden rounded-xl transition-all duration-300 cursor-pointer"
+   505→      style={{
+   506→        background: TT.cardBg,
+   507→        border: `1px solid ${TT.border}`,
+   508→      }}
+   509→      onClick={() => onProductClick(product)}
+   510→      whileTap={{ scale: 0.98 }}
+   511→      onMouseEnter={(e) => {
+   512→        e.currentTarget.style.boxShadow = `0 0 20px ${TT.redOrange}44, 0 4px 16px rgba(0,0,0,0.4)`
+   513→        e.currentTarget.style.borderColor = TT.redOrange
+   514→      }}
+   515→      onMouseLeave={(e) => {
+   516→        e.currentTarget.style.boxShadow = 'none'
+   517→        e.currentTarget.style.borderColor = TT.border
+   518→      }}
+   519→    >
+   520→      {/* Image */}
+   521→      <div className="relative w-full overflow-hidden bg-gray-800" style={{ aspectRatio: '1 / 1' }}>
+   522→        {product.image ? (
+   523→          <img
+   524→            src={product.image}
+   525→            alt={product.name}
+   526→            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+   527→            loading="lazy"
+   528→            onLoad={(e) => { (e.target as HTMLImageElement).style.opacity = '1' }}
+   529→            style={{ opacity: 0, transition: 'opacity 0.3s ease' }}
+   530→          />
+   531→        ) : (
+   532→          <div
+   533→            className="flex h-full w-full items-center justify-center"
+   534→            style={{ background: '#111' }}
+   535→          >
+   536→            <Package className="size-16" style={{ color: '#333' }} />
+   537→          </div>
+   538→        )}
+   539→
+   540→        {/* Hover overlay */}
+   541→        <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-all duration-300">
+   542→          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+   543→            <div
+   544→              className="flex items-center justify-center w-12 h-12 rounded-full"
+   545→              style={{ background: TT.redOrange, boxShadow: `0 0 20px ${TT.redOrange}66` }}
+   546→            >
+   547→              <Eye className="size-5 text-white" />
+   548→            </div>
+   549→          </div>
+   550→        </div>
+   551→
+   552→        {/* FLASH SALE ribbon */}
+   553→        <div
+   554→          className="absolute top-3 right-[-8px] px-3 py-1 text-[10px] font-black uppercase tracking-wider text-white z-10 overflow-hidden"
+   555→          style={{
+   556→            background: TT.red,
+   557→            boxShadow: `0 2px 8px ${TT.red}66`,
+   558→            transform: 'rotate(-12deg)',
+   559→          }}
+   560→        >
+   561→          {/* Shimmer overlay on ribbon */}
+   562→          <div
+   563→            className="absolute inset-0 pointer-events-none"
+   564→            style={{
+   565→              background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.25) 50%, transparent 100%)',
+   566→              backgroundSize: '200% 100%',
+   567→              animation: 'ttShimmer 2s ease-in-out infinite',
+   568→            }}
+   569→          />
+   570→          <span className="relative z-10">⚡ FLASH SALE</span>
+   571→        </div>
+   572→
+   573→        {/* Rupture badge */}
+   574→        {!inStock && (
+   575→          <div className="absolute top-2 left-2 z-10">
+   576→            <Badge className="bg-red-600 text-white border-none text-[10px] font-bold">Rupture</Badge>
+   577→          </div>
+   578→        )}
+   579→
+   580→        {/* Low stock warning */}
+   581→        {lowStock && (
+   582→          <div
+   583→            className="absolute bottom-2 left-2 right-2 z-10 text-center py-1 rounded-lg text-[11px] font-bold"
+   584→            style={{
+   585→              background: 'rgba(0,0,0,0.75)',
+   586→              backdropFilter: 'blur(4px)',
+   587→              color: TT.yellow,
+   588→              animation: 'ttTextPulse 2s ease-in-out infinite',
+   589→            }}
+   590→          >
+   591→            ⚡ Plus que {product.stock} en stock !
+   592→          </div>
+   593→        )}
+   594→      </div>
+   595→
+   596→      {/* Product info */}
+   597→      <div className="flex flex-col gap-1.5 p-3">
+   598→        <h3
+   599→          className="font-semibold text-sm line-clamp-2 leading-snug"
+   600→          style={{ color: TT.text }}
+   601→        >
+   602→          {product.name}
+   603→        </h3>
+   604→
+   605→        {/* Stock */}
+   606→        <div className="flex items-center gap-1">
+   607→          {inStock ? (
+   608→            !lowStock ? (
+   609→              <span className="text-[11px] font-medium" style={{ color: TT.whatsapp }}>
+   610→                ✓ En stock
+   611→              </span>
+   612→            ) : null
+   613→          ) : (
+   614→            <span className="text-[11px] font-medium" style={{ color: TT.red }}>
+   615→              Rupture de stock
+   616→            </span>
+   617→          )}
+   618→        </div>
+   619→
+   620→        {/* Price */}
+   621→        <div className="mt-1">
+   622→          <span
+   623→            className="inline-block px-2.5 py-1 rounded-lg text-sm font-bold"
+   624→            style={{
+   625→              color: TT.redOrange,
+   626→              background: 'rgba(254,44,85,0.1)',
+   627→              border: `1px solid ${TT.redOrange}33`,
+   628→            }}
+   629→          >
+   630→            {formatPrice(product.price)}
+   631→          </span>
+   632→        </div>
+   633→
+   634→        {/* Spacer */}
+   635→        <div className="flex-1" />
+   636→
+   637→        {/* Actions */}
+   638→        <div className="mt-1">
+   639→          {cartQty === 0 ? (
+   640→            <div className="flex gap-1.5">
+   641→              <Button
+   642→                onClick={(e) => {
+   643→                  e.nativeEvent.stopImmediatePropagation()
+   644→                  onAddToCart(product)
+   645→                  toast.success(`${product.name} ajouté au panier !`)
+   646→                }}
+   647→                className="flex-1 gap-1.5 text-white font-semibold rounded-lg text-sm h-9"
+   648→                style={{ background: TT.redOrange }}
+   649→                disabled={!product.isAvailable || !inStock}
+   650→              >
+   651→                <Plus className="size-3.5" />
+   652→                Ajouter
+   653→              </Button>
+   654→              {whatsapp && (
+   655→                <Button
+   656→                  onClick={(e) => {
+   657→                    e.nativeEvent.stopImmediatePropagation()
+   658→                    openWhatsApp(product, whatsapp)
+   659→                  }}
+   660→                  className="gap-1.5 font-semibold rounded-lg text-sm h-9 px-3 text-white"
+   661→                  style={{ background: TT.whatsapp }}
+   662→                  disabled={!product.isAvailable || !inStock}
+   663→                >
+   664→                  <MessageCircle className="size-3.5" />
+   665→                </Button>
+   666→              )}
+   667→            </div>
+   668→          ) : (
+   669→            <div
+   670→              className="flex items-center justify-between rounded-lg p-1"
+   671→              style={{
+   672→                background: 'rgba(254,44,85,0.1)',
+   673→                border: `1px solid ${TT.redOrange}33`,
+   674→              }}
+   675→            >
+   676→              <Button
+   677→                variant="ghost"
+   678→                size="icon"
+   679→                className="size-8"
+   680→                style={{ color: TT.redOrange }}
+   681→                onClick={(e) => {
+   682→                  e.nativeEvent.stopImmediatePropagation()
+   683→                  updateCartQuantity(product.id, cartQty - 1)
+   684→                }}
+   685→              >
+   686→                {cartQty === 1 ? (
+   687→                  <Trash2 className="size-3.5 text-red-500" />
+   688→                ) : (
+   689→                  <Minus className="size-3.5" />
+   690→                )}
+   691→              </Button>
+   692→              <span className="min-w-[2rem] text-center font-bold text-sm" style={{ color: TT.text }}>
+   693→                {cartQty}
+   694→              </span>
+   695→              <Button
+   696→                variant="ghost"
+   697→                size="icon"
+   698→                className="size-8"
+   699→                style={{ color: TT.redOrange }}
+   700→                onClick={(e) => {
+   701→                  e.nativeEvent.stopImmediatePropagation()
+   702→                  updateCartQuantity(product.id, cartQty + 1)
+   703→                }}
+   704→              >
+   705→                <Plus className="size-3.5" />
+   706→              </Button>
+   707→              {whatsapp && (
+   708→                <Button
+   709→                  variant="ghost"
+   710→                  size="icon"
+   711→                  className="size-8"
+   712→                  style={{ color: TT.whatsapp }}
+   713→                  onClick={(e) => {
+   714→                    e.nativeEvent.stopImmediatePropagation()
+   715→                    openWhatsApp(product, whatsapp, cartQty)
+   716→                  }}
+   717→                >
+   718→                  <MessageCircle className="size-3.5" />
+   719→                </Button>
+   720→              )}
+   721→            </div>
+   722→          )}
+   723→        </div>
+   724→      </div>
+   725→    </motion.div>
+   726→  )
+   727→}
+   728→
+   729→// ═══════════════════════════════════════════════════════════════
+   730→// SECTION 6 : TRUST BADGES ROW
+   731→// ═══════════════════════════════════════════════════════════════
+   732→
+   733→function TikTokTrustBadges() {
+   734→  const badges = [
+   735→    '✅ Paiement à la livraison',
+   736→    '✅ Retour gratuit',
+   737→    '✅ Garantie qualité',
+   738→  ]
+   739→
+   740→  return (
+   741→    <section className="w-full" style={{ background: TT.darkBg }}>
+   742→      <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-4">
+   743→        <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6">
+   744→          {badges.map((text) => (
+   745→            <span
+   746→              key={text}
+   747→              className="text-xs sm:text-sm font-medium"
+   748→              style={{ color: TT.textMuted }}
+   749→            >
+   750→              {text}
+   751→            </span>
+   752→          ))}
+   753→        </div>
+   754→      </div>
+   755→    </section>
+   756→  )
+   757→}
+   758→
+   759→// ═══════════════════════════════════════════════════════════════
+   760→// SECTION 7 : MASSIVE WHATSAPP CTA
+   761→// ═══════════════════════════════════════════════════════════════
+   762→
+   763→function TikTokWhatsAppCTA({ whatsapp, shopName }: { whatsapp?: string; shopName: string }) {
+   764→  if (!whatsapp) return null
+   765→
+   766→  return (
+   767→    <section className="w-full" style={{ background: TT.darkBg }}>
+   768→      <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-6">
+   769→        <motion.a
+   770→          href={`https://wa.me/${whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(
+   771→            `Bonjour ${shopName} ! 👋\nJe suis intéressé(e) par vos produits en LIVE.`
+   772→          )}`}
+   773→          target="_blank"
+   774→          rel="noopener noreferrer"
+   775→          className="flex items-center justify-center gap-3 w-full py-4 sm:py-5 rounded-2xl text-white font-black text-base sm:text-xl uppercase tracking-wide"
+   776→          style={{
+   777→            background: `linear-gradient(135deg, ${TT.whatsapp}, ${TT.whatsappDark})`,
+   778→            boxShadow: `0 4px 24px ${TT.whatsapp}44, 0 2px 8px rgba(0,0,0,0.3)`,
+   779→            animation: 'ttBounce 2s ease-in-out infinite',
+   780→          }}
+   781→          whileTap={{ scale: 0.97 }}
+   782→        >
+   783→          <ShoppingCart className="size-5 sm:size-6" />
+   784→          <span>Commander maintenant</span>
+   785→        </motion.a>
+   786→        <p className="text-center mt-2 text-xs sm:text-sm" style={{ color: TT.textMuted }}>
+   787→          🚀 Livraison 24h
+   788→        </p>
+   789→      </div>
+   790→    </section>
+   791→  )
+   792→}
+   793→
+   794→// ═══════════════════════════════════════════════════════════════
+   795→// SECTION 8 : PRODUCT DETAIL VIEW (dark overlay style)
+   796→// ═══════════════════════════════════════════════════════════════
+   797→
+   798→function TikTokProductDetail({
+   799→  product,
+   800→  whatsapp,
+   801→  onClose,
+   802→  onAddToCart,
+   803→  cartQty,
+   804→  updateCartQuantity,
+   805→}: {
+   806→  product: Product
+   807→  whatsapp?: string
+   808→  onClose: () => void
+   809→  onAddToCart: (product: Product, qty: number) => void
+   810→  cartQty: number
+   811→  updateCartQuantity: (id: string, qty: number) => void
+   812→}) {
+   813→  const [qty, setQty] = useState(1)
+   814→  const [imgIndex, setImgIndex] = useState(0)
+   815→
+   816→  const productImages = product.images?.length ? product.images : product.image ? [product.image] : []
+   817→  const inStock = (product.stock ?? 0) > 0
+   818→  const lowStock = inStock && (product.stock ?? 999) <= 5 && (product.stock ?? 999) > 0
+   819→
+   820→  function handleAdd(addQty: number) {
+   821→    for (let i = 0; i < addQty; i++) {
+   822→      onAddToCart(product, 1)
+   823→    }
+   824→    toast.success(`${product.name} (x${addQty}) ajouté au panier !`)
+   825→  }
+   826→
+   827→  return (
+   828→    <motion.div
+   829→      initial={{ opacity: 0, y: 20 }}
+   830→      animate={{ opacity: 1, y: 0 }}
+   831→      exit={{ opacity: 0, y: -20 }}
+   832→      transition={{ duration: 0.25 }}
+   833→      className="max-w-[1400px] mx-auto px-4 lg:px-6 py-6"
+   834→    >
+   835→      {/* Back button */}
+   836→      <button
+   837→        onClick={onClose}
+   838→        className="flex items-center gap-2 text-sm font-semibold mb-6 transition-colors hover:opacity-70"
+   839→        style={{ color: TT.redOrange }}
+   840→      >
+   841→        <ArrowLeft className="size-4" />
+   842→        Retour à la boutique
+   843→      </button>
+   844→
+   845→      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+   846→        {/* Image */}
+   847→        <div>
+   848→          <div className="aspect-square rounded-2xl overflow-hidden" style={{ background: '#111' }}>
+   849→            {productImages[imgIndex] ? (
+   850→              <img
+   851→                src={productImages[imgIndex]}
+   852→                alt={product.name}
+   853→                className="w-full h-full object-cover"
+   854→              />
+   855→            ) : (
+   856→              <div className="w-full h-full flex items-center justify-center">
+   857→                <Package className="size-20" style={{ color: '#333' }} />
+   858→              </div>
+   859→            )}
+   860→          </div>
+   861→          {/* Thumbnails */}
+   862→          {productImages.length > 1 && (
+   863→            <div className="flex gap-2 mt-3 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+   864→              {productImages.map((img, idx) => (
+   865→                <button
+   866→                  key={idx}
+   867→                  onClick={() => setImgIndex(idx)}
+   868→                  className="shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all"
+   869→                  style={{
+   870→                    borderColor: idx === imgIndex ? TT.redOrange : TT.border,
+   871→                    opacity: idx === imgIndex ? 1 : 0.5,
+   872→                  }}
+   873→                >
+   874→                  <img src={img} alt="" className="w-full h-full object-cover" />
+   875→                </button>
+   876→              ))}
+   877→            </div>
+   878→          )}
+   879→        </div>
+   880→
+   881→        {/* Info */}
+   882→        <div className="flex flex-col gap-4">
+   883→          {/* Flash sale badge */}
+   884→          <div className="flex items-center gap-2 flex-wrap">
+   885→            <span
+   886→              className="inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider text-white"
+   887→              style={{
+   888→                background: TT.red,
+   889→                boxShadow: `0 0 12px ${TT.red}55`,
+   890→              }}
+   891→            >
+   892→              ⚡ Flash Sale
+   893→            </span>
+   894→            {product.categoryName && (
+   895→              <Badge className="text-xs text-white" style={{ background: TT.cardBg, border: `1px solid ${TT.border}` }}>
+   896→                {product.categoryName}
+   897→              </Badge>
+   898→            )}
+   899→            {!inStock && (
+   900→              <Badge className="text-xs text-white border-none" style={{ background: '#991b1b' }}>
+   901→                Rupture de stock
+   902→              </Badge>
+   903→            )}
+   904→          </div>
+   905→
+   906→          <h1 className="text-2xl font-bold" style={{ color: TT.text }}>
+   907→            {product.name}
+   908→          </h1>
+   909→
+   910→          <p className="text-2xl font-extrabold" style={{ color: TT.redOrange }}>
+   911→            {formatPrice(product.price)}
+   912→          </p>
+   913→
+   914→          {/* Stock warning in detail */}
+   915→          {lowStock && (
+   916→            <p
+   917→              className="text-sm font-bold"
+   918→              style={{
+   919→                color: TT.yellow,
+   920→                animation: 'ttTextPulse 2s ease-in-out infinite',
+   921→              }}
+   922→            >
+   923→              ⚡ Plus que {product.stock} en stock — commandez vite !
+   924→            </p>
+   925→          )}
+   926→
+   927→          {inStock && !lowStock && (
+   928→            <p className="text-sm" style={{ color: TT.textMuted }}>
+   929→              ✓ En stock ({product.stock} disponibles)
+   930→            </p>
+   931→          )}
+   932→
+   933→          {product.description && (
+   934→            <p className="text-sm leading-relaxed" style={{ color: TT.textMuted }}>
+   935→              {product.description}
+   936→            </p>
+   937→          )}
+   938→
+   939→          {/* Quantity stepper */}
+   940→          <div
+   941→            className="p-4 rounded-xl"
+   942→            style={{ background: TT.cardBg, border: `1px solid ${TT.border}` }}
+   943→          >
+   944→            <p className="text-sm font-semibold mb-3" style={{ color: TT.text }}>Quantité</p>
+   945→            <div className="flex items-center gap-4 mb-4">
+   946→              <div
+   947→                className="flex items-center rounded-lg"
+   948→                style={{ border: `1px solid ${TT.border}` }}
+   949→              >
+   950→                <Button
+   951→                  variant="ghost"
+   952→                  size="icon"
+   953→                  className="h-9 w-9"
+   954→                  style={{ color: TT.redOrange }}
+   955→                  onClick={() => setQty(Math.max(1, qty - 1))}
+   956→                >
+   957→                  <Minus className="size-4" />
+   958→                </Button>
+   959→                <span className="min-w-[36px] text-center font-bold text-base" style={{ color: TT.text }}>
+   960→                  {qty}
+   961→                </span>
+   962→                <Button
+   963→                  variant="ghost"
+   964→                  size="icon"
+   965→                  className="h-9 w-9"
+   966→                  style={{ color: TT.redOrange }}
+   967→                  onClick={() => setQty(qty + 1)}
+   968→                >
+   969→                  <Plus className="size-4" />
+   970→                </Button>
+   971→              </div>
+   972→              <span className="text-lg font-bold" style={{ color: TT.redOrange }}>
+   973→                {formatPrice(product.price * qty)}
+   974→              </span>
+   975→            </div>
+   976→
+   977→            <Button
+   978→              className="w-full h-12 gap-2 text-sm font-bold text-white rounded-xl"
+   979→              style={{ background: TT.redOrange }}
+   980→              disabled={!inStock}
+   981→              onClick={() => handleAdd(qty)}
+   982→            >
+   983→              <ShoppingCart className="size-5" />
+   984→              Ajouter au panier
+   985→            </Button>
+   986→          </div>
+   987→
+   988→          {/* WhatsApp massive button */}
+   989→          {whatsapp && (
+   990→            <Button
+   991→              className="w-full h-14 gap-2 text-base font-black rounded-xl text-white"
+   992→              style={{
+   993→                background: `linear-gradient(135deg, ${TT.whatsapp}, ${TT.whatsappDark})`,
+   994→                boxShadow: `0 4px 16px ${TT.whatsapp}44`,
+   995→              }}
+   996→              disabled={!inStock}
+   997→              onClick={() => openWhatsApp(product, whatsapp, qty)}
+   998→            >
+   999→              <MessageCircle className="size-6" />
+  1000→              Commander sur WhatsApp
+  1001→            </Button>
+  1002→          )}
+  1003→        </div>
+  1004→      </div>
+  1005→    </motion.div>
+  1006→  )
+  1007→}
+  1008→
+  1009→// ═══════════════════════════════════════════════════════════════
+  1010→// SECTION 9 : CART DRAWER (dark slide-up)
+  1011→// ═══════════════════════════════════════════════════════════════
+  1012→
+  1013→function TikTokCartDrawer({
+  1014→  expanded,
+  1015→  onToggle,
+  1016→  onClear,
+  1017→  onCheckout,
+  1018→  total,
+  1019→  itemCount,
+  1020→  cart,
+  1021→  updateCartQuantity,
+  1022→}: {
+  1023→  expanded: boolean
+  1024→  onToggle: () => void
+  1025→  onClear: () => void
+  1026→  onCheckout: () => void
+  1027→  total: number
+  1028→  itemCount: number
+  1029→  cart: { id: string; productId: string; name: string; price: number; image?: string; quantity: number }[]
+  1030→  updateCartQuantity: (id: string, qty: number) => void
+  1031→}) {
+  1032→  return (
+  1033→    <motion.div
+  1034→      initial={{ y: 100 }}
+  1035→      animate={{ y: 0 }}
+  1036→      exit={{ y: 100 }}
+  1037→      transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+  1038→      className="fixed bottom-0 left-0 right-0 z-50"
+  1039→      style={{
+  1040→        boxShadow: '0 -4px 20px rgba(0,0,0,0.5)',
+  1041→      }}
+  1042→    >
+  1043→      {/* Expanded cart */}
+  1044→      <AnimatePresence>
+  1045→        {expanded && (
+  1046→          <motion.div
+  1047→            initial={{ height: 0 }}
+  1048→            animate={{ height: 'auto' }}
+  1049→            exit={{ height: 0 }}
+  1050→            transition={{ duration: 0.25 }}
+  1051→            className="overflow-hidden border-t"
+  1052→            style={{ background: TT.cardBg, borderColor: TT.border }}
+  1053→          >
+  1054→            <ScrollArea className="max-h-64">
+  1055→              <div className="max-w-[1400px] mx-auto p-4 space-y-3">
+  1056→                <div className="flex items-center justify-between mb-2">
+  1057→                  <h3 className="font-semibold text-sm" style={{ color: TT.text }}>
+  1058→                    Votre panier ({itemCount} article{itemCount !== 1 ? 's' : ''})
+  1059→                  </h3>
+  1060→                  <Button
+  1061→                    variant="ghost"
+  1062→                    size="sm"
+  1063→                    className="text-red-400 h-7 text-xs"
+  1064→                    onClick={onClear}
+  1065→                  >
+  1066→                    <Trash2 className="size-3 mr-1" />
+  1067→                    Tout supprimer
+  1068→                  </Button>
+  1069→                </div>
+  1070→                {cart.map((item) => (
+  1071→                  <div key={item.id} className="flex items-center gap-3">
+  1072→                    <div
+  1073→                      className="w-12 h-12 rounded-lg shrink-0 overflow-hidden"
+  1074→                      style={{ background: '#111' }}
+  1075→                    >
+  1076→                      {item.image ? (
+  1077→                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+  1078→                      ) : (
+  1079→                        <div className="w-full h-full flex items-center justify-center">
+  1080→                          <Package className="size-5" style={{ color: '#333' }} />
+  1081→                        </div>
+  1082→                      )}
+  1083→                    </div>
+  1084→                    <div className="flex-1 min-w-0">
+  1085→                      <p className="text-sm font-medium line-clamp-1" style={{ color: TT.text }}>
+  1086→                        {item.name}
+  1087→                      </p>
+  1088→                      <p className="text-xs font-bold" style={{ color: TT.redOrange }}>
+  1089→                        {formatPrice(item.price)}
+  1090→                      </p>
+  1091→                    </div>
+  1092→                    <div
+  1093→                      className="flex items-center rounded-lg"
+  1094→                      style={{ background: TT.darkBg }}
+  1095→                    >
+  1096→                      <Button
+  1097→                        variant="ghost"
+  1098→                        size="icon"
+  1099→                        className="h-7 w-7"
+  1100→                        style={{ color: TT.textMuted }}
+  1101→                        onClick={() => updateCartQuantity(item.productId, item.quantity - 1)}
+  1102→                      >
+  1103→                        {item.quantity === 1 ? (
+  1104→                          <Trash2 className="size-3 text-red-400" />
+  1105→                        ) : (
+  1106→                          <Minus className="size-3" />
+  1107→                        )}
+  1108→                      </Button>
+  1109→                      <span className="text-sm font-semibold min-w-[24px] text-center" style={{ color: TT.text }}>
+  1110→                        {item.quantity}
+  1111→                      </span>
+  1112→                      <Button
+  1113→                        variant="ghost"
+  1114→                        size="icon"
+  1115→                        className="h-7 w-7"
+  1116→                        style={{ color: TT.textMuted }}
+  1117→                        onClick={() => updateCartQuantity(item.productId, item.quantity + 1)}
+  1118→                      >
+  1119→                        <Plus className="size-3" />
+  1120→                      </Button>
+  1121→                    </div>
+  1122→                    <span className="text-sm font-bold w-24 text-right" style={{ color: TT.redOrange }}>
+  1123→                      {formatPrice(item.price * item.quantity)}
+  1124→                    </span>
+  1125→                  </div>
+  1126→                ))}
+  1127→                <Separator className="bg-white/10" />
+  1128→                <div className="flex items-center justify-between font-bold" style={{ color: TT.text }}>
+  1129→                  <span>Total</span>
+  1130→                  <span style={{ color: TT.redOrange }}>{formatPrice(total)}</span>
+  1131→                </div>
+  1132→              </div>
+  1133→            </ScrollArea>
+  1134→          </motion.div>
+  1135→        )}
+  1136→      </AnimatePresence>
+  1137→
+  1138→      {/* Cart bar */}
+  1139→      <div
+  1140→        className="border-t px-4 py-3"
+  1141→        style={{ background: TT.cardBg, borderColor: TT.border }}
+  1142→      >
+  1143→        <div className="max-w-[1400px] mx-auto flex items-center gap-3">
+  1144→          <Button
+  1145→            variant="outline"
+  1146→            size="sm"
+  1147→            className="h-10 gap-1.5 shrink-0 rounded-lg"
+  1148→            style={{ borderColor: TT.border, color: TT.text, background: TT.darkBg }}
+  1149→            onClick={onToggle}
+  1150→          >
+  1151→            {expanded ? <ChevronDown className="size-4" /> : <ChevronUp className="size-4" />}
+  1152→            <Badge
+  1153→              className="px-1.5 h-5 text-xs text-white rounded-md"
+  1154→              style={{ background: TT.redOrange }}
+  1155→            >
+  1156→              {itemCount}
+  1157→            </Badge>
+  1158→            <span className="hidden sm:inline text-sm">panier</span>
+  1159→          </Button>
+  1160→
+  1161→          <div className="flex-1">
+  1162→            <p className="text-xs" style={{ color: TT.textMuted }}>Total</p>
+  1163→            <p className="font-bold text-sm" style={{ color: TT.redOrange }}>{formatPrice(total)}</p>
+  1164→          </div>
+  1165→
+  1166→          <Button
+  1167→            className="h-10 gap-2 font-semibold text-sm rounded-lg px-6 text-white"
+  1168→            style={{
+  1169→              background: `linear-gradient(135deg, ${TT.whatsapp}, ${TT.whatsappDark})`,
+  1170→            }}
+  1171→            onClick={onCheckout}
+  1172→          >
+  1173→            <MessageCircle className="size-4" />
+  1174→            <span className="hidden sm:inline">Commander via WhatsApp</span>
+  1175→            <span className="sm:hidden">Commander</span>
+  1176→          </Button>
+  1177→        </div>
+  1178→      </div>
+  1179→    </motion.div>
+  1180→  )
+  1181→}
+  1182→
+  1183→// ═══════════════════════════════════════════════════════════════
+  1184→// SECTION 10 : SEARCH BAR (dark input, red accent)
+  1185→// ═══════════════════════════════════════════════════════════════
+  1186→
+  1187→function TikTokSearchBar({
+  1188→  searchQuery,
+  1189→  onSearchChange,
+  1190→  sortBy,
+  1191→  onSortChange,
+  1192→  resultCount,
+  1193→  isSearching,
+  1194→}: {
+  1195→  searchQuery: string
+  1196→  onSearchChange: (q: string) => void
+  1197→  sortBy: SortOption
+  1198→  onSortChange: (s: SortOption) => void
+  1199→  resultCount: number
+  1200→  isSearching: boolean
+  1201→}) {
+  1202→  const [localSearch, setLocalSearch] = useState(searchQuery)
+  1203→  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  1204→
+  1205→  useEffect(() => {
+  1206→    setLocalSearch(searchQuery)
+  1207→  }, [searchQuery])
+  1208→
+  1209→  const handleChange = useCallback(
+  1210→    (value: string) => {
+  1211→      setLocalSearch(value)
+  1212→      if (timerRef.current) clearTimeout(timerRef.current)
+  1213→      timerRef.current = setTimeout(() => onSearchChange(value), 300)
+  1214→    },
+  1215→    [onSearchChange]
+  1216→  )
+  1217→
+  1218→  return (
+  1219→    <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+  1220→      <div className="relative flex-1">
+  1221→        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4" style={{ color: TT.textMuted }} />
+  1222→        <Input
+  1223→          type="text"
+  1224→          placeholder="Rechercher un produit..."
+  1225→          value={localSearch}
+  1226→          onChange={(e) => handleChange(e.target.value)}
+  1227→          className="pl-10 pr-10 h-11 rounded-xl text-sm"
+  1228→          style={{
+  1229→            background: TT.cardBg,
+  1230→            borderColor: TT.border,
+  1231→            color: TT.text,
+  1232→          }}
+  1233→        />
+  1234→        {localSearch && (
+  1235→          <button
+  1236→            onClick={() => handleChange('')}
+  1237→            className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
+  1238→            style={{ color: TT.textMuted }}
+  1239→            aria-label="Effacer"
+  1240→          >
+  1241→            <X className="size-4" />
+  1242→          </button>
+  1243→        )}
+  1244→      </div>
+  1245→
+  1246→      {/* Sort */}
+  1247→      <div className="relative">
+  1248→        <select
+  1249→          value={sortBy}
+  1250→          onChange={(e) => onSortChange(e.target.value as SortOption)}
+  1251→          className="appearance-none h-11 px-4 pr-10 rounded-xl text-sm font-medium cursor-pointer"
+  1252→          style={{
+  1253→            background: TT.cardBg,
+  1254→            color: TT.text,
+  1255→            border: `1px solid ${TT.border}`,
+  1256→          }}
+  1257→        >
+  1258→          <option value="recent">Plus récents</option>
+  1259→          <option value="price-asc">Prix croissant</option>
+  1260→          <option value="price-desc">Prix décroissant</option>
+  1261→        </select>
+  1262→        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 size-4" style={{ color: TT.textMuted }} />
+  1263→      </div>
+  1264→
+  1265→      {/* Results count */}
+  1266→      {isSearching && (
+  1267→        <div className="flex items-center gap-1.5 text-sm" style={{ color: TT.textMuted }}>
+  1268→          <ShoppingBag className="size-4" />
+  1269→          {resultCount} résultat{resultCount !== 1 ? 's' : ''}
+  1270→        </div>
+  1271→      )}
+  1272→    </div>
+  1273→  )
+  1274→}
+  1275→
+  1276→// ═══════════════════════════════════════════════════════════════
+  1277→// SECTION 11 : FOOTER (dark with TikTok gradient)
+  1278→// ═══════════════════════════════════════════════════════════════
+  1279→
+  1280→function TikTokFooter({
+  1281→  shopName,
+  1282→  whatsapp,
+  1283→  phone,
+  1284→  address,
+  1285→}: {
+  1286→  shopName: string
+  1287→  whatsapp?: string
+  1288→  phone?: string
+  1289→  address?: string
+  1290→}) {
+  1291→  return (
+  1292→    <footer className="w-full mt-8" style={{ background: TT.darkBg }}>
+  1293→      {/* TikTok-style gradient line at top */}
+  1294→      <div
+  1295→        className="h-1 w-full"
+  1296→        style={{
+  1297→          background: `linear-gradient(90deg, ${TT.redOrange}, ${TT.cyan}, ${TT.redOrange})`,
+  1298→        }}
+  1299→      />
+  1300→
+  1301→      <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-8">
+  1302→        {/* Trust badges */}
+  1303→        <TikTokTrustBadges />
+  1304→
+  1305→        <Separator className="bg-white/10 my-6" />
+  1306→
+  1307→        {/* Contact info + copyright */}
+  1308→        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+  1309→          <div className="flex flex-col items-center md:items-start gap-1">
+  1310→            <p className="font-bold" style={{ color: TT.text }}>{shopName}</p>
+  1311→            <div className="flex items-center gap-4 text-xs" style={{ color: TT.textMuted }}>
+  1312→              {whatsapp && (
+  1313→                <span className="flex items-center gap-1">
+  1314→                  <Phone className="size-3" />
+  1315→                  {whatsapp}
+  1316→                </span>
+  1317→              )}
+  1318→              {address && (
+  1319→                <span className="flex items-center gap-1">
+  1320→                  <MapPin className="size-3" />
+  1321→                  {address}
+  1322→                </span>
+  1323→              )}
+  1324→            </div>
+  1325→          </div>
+  1326→          <p className="text-xs" style={{ color: '#555' }}>
+  1327→            © {new Date().getFullYear()} {shopName}. Tous droits réservés. Propulsé par{' '}
+  1328→            <span className="font-medium" style={{ color: TT.textMuted }}>Boutiko</span>
+  1329→          </p>
+  1330→        </div>
+  1331→      </div>
+  1332→    </footer>
+  1333→  )
+  1334→}
+  1335→
+  1336→// ═══════════════════════════════════════════════════════════════
+  1337→// LOADING SKELETON
+  1338→// ═══════════════════════════════════════════════════════════════
+  1339→
+  1340→function TikTokLoadingSkeleton() {
+  1341→  return (
+  1342→    <div className="min-h-screen flex items-center justify-center bg-background">
+  1343→      <div className="flex flex-col items-center gap-4">
+  1344→        <div className="relative size-10">
+  1345→          <div className="absolute inset-0 rounded-full border-2 border-muted-foreground/20" />
+  1346→          <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-primary animate-spin" />
+  1347→        </div>
+  1348→        <p className="text-sm text-muted-foreground">Chargement...</p>
+  1349→      </div>
+  1350→    </div>
+  1351→  )
+  1352→}
+  1353→
+  1354→// ═══════════════════════════════════════════════════════════════
+  1355→// CSS ANIMATIONS (injected once via style tag)
+  1356→// ═══════════════════════════════════════════════════════════════
+  1357→
+  1358→function TikTokAnimations() {
+  1359→  return (
+  1360→    <style
+  1361→      dangerouslySetInnerHTML={{
+  1362→        __html: `
+  1363→          @keyframes ttPulse {
+  1364→            0%, 100% { transform: scale(1); opacity: 1; }
+  1365→            50% { transform: scale(1.3); opacity: 0.8; }
+  1366→          }
+  1367→          @keyframes ttShimmer {
+  1368→            0% { background-position: -200% 0; }
+  1369→            100% { background-position: 200% 0; }
+  1370→          }
+  1371→          @keyframes ttBounce {
+  1372→            0%, 100% { transform: translateY(0); }
+  1373→            50% { transform: translateY(-4px); }
+  1374→          }
+  1375→          @keyframes ttTextPulse {
+  1376→            0%, 100% { opacity: 1; }
+  1377→            50% { opacity: 0.6; }
+  1378→          }
+  1379→          @keyframes ttFirePulse {
+  1380→            0%, 100% { transform: scale(1); }
+  1381→            50% { transform: scale(1.15); }
+  1382→          }
+  1383→          /* Custom scrollbar for dark theme */
+  1384→          * {
+  1385→            scrollbar-color: #333 #111;
+  1386→          }
+  1387→        `,
+  1388→      }}
+  1389→    />
+  1390→  )
+  1391→}
+  1392→
+  1393→// ═══════════════════════════════════════════════════════════════
+  1394→// MAIN: TikTokLiveShopPage — Full standalone shop page
+  1395→// ═══════════════════════════════════════════════════════════════
+  1396→
+  1397→export function TikTokLiveShopPage() {
+  1398→  const {
+  1399→    shopSlug,
+  1400→    setView,
+  1401→    publicShop,
+  1402→    setPublicShop,
+  1403→    publicProducts,
+  1404→    setPublicProducts,
+  1405→    publicCategories,
+  1406→    setPublicCategories,
+  1407→    cart,
+  1408→    addToCart,
+  1409→    updateCartQuantity,
+  1410→    clearCart,
+  1411→    getCartTotal,
+  1412→  } = useAppStore()
+  1413→
+  1414→  const [loading, setLoading] = useState(true)
+  1415→  const [searchQuery, setSearchQuery] = useState('')
+  1416→  const [activeCategory, setActiveCategory] = useState<string | null>(null)
+  1417→  const [sortBy, setSortBy] = useState<SortOption>('recent')
+  1418→  const [cartExpanded, setCartExpanded] = useState(false)
+  1419→  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  1420→  const scrollRef = useRef<HTMLDivElement>(null)
+  1421→
+  1422→  // Scroll to top when a product is selected
+  1423→  useEffect(() => {
+  1424→    if (selectedProduct) {
+  1425→      window.scrollTo({ top: 0, behavior: 'smooth' })
+  1426→    }
+  1427→  }, [selectedProduct])
+  1428→
+  1429→  // ── Fetch shop data ──
+  1430→  const fetchShop = useCallback(async () => {
+  1431→    if (!shopSlug) return
+  1432→    setLoading(true)
+  1433→    try {
+  1434→      const shopRes = await fetch(`/api/shops/${shopSlug}`)
+  1435→      if (!shopRes.ok) return
+  1436→      const shopData = await shopRes.json()
+  1437→      setPublicShop(shopData)
+  1438→      fetch(`/api/shops/${shopSlug}/visit`, { method: 'POST' }).catch(() => {})
+  1439→      const [prodRes, catRes] = await Promise.all([
+  1440→        fetch(`/api/shops/${shopSlug}/products`),
+  1441→        fetch(`/api/shops/${shopSlug}/categories`),
+  1442→      ])
+  1443→      if (prodRes.ok) setPublicProducts(await prodRes.json())
+  1444→      if (catRes.ok) setPublicCategories(await catRes.json())
+  1445→    } catch {
+  1446→      // Error loading
+  1447→    } finally {
+  1448→      setLoading(false)
+  1449→    }
+  1450→  }, [shopSlug, setPublicShop, setPublicProducts, setPublicCategories])
+  1451→
+  1452→  useEffect(() => {
+  1453→    fetchShop()
+  1454→  }, [fetchShop])
+  1455→
+  1456→  // ── Filter & sort products ──
+  1457→  const filteredProducts = useMemo(() => {
+  1458→    let products = publicProducts.filter((p) => p.isAvailable)
+  1459→    if (activeCategory) products = products.filter((p) => p.categoryId === activeCategory)
+  1460→    if (searchQuery.trim()) {
+  1461→      const q = searchQuery.toLowerCase().trim()
+  1462→      products = products.filter(
+  1463→        (p) =>
+  1464→          p.name.toLowerCase().includes(q) ||
+  1465→          (p.description && p.description.toLowerCase().includes(q)) ||
+  1466→          (p.categoryName && p.categoryName.toLowerCase().includes(q))
+  1467→      )
+  1468→    }
+  1469→    switch (sortBy) {
+  1470→      case 'price-asc':
+  1471→        products = [...products].sort((a, b) => a.price - b.price)
+  1472→        break
+  1473→      case 'price-desc':
+  1474→        products = [...products].sort((a, b) => b.price - a.price)
+  1475→        break
+  1476→    }
+  1477→    return products
+  1478→  }, [publicProducts, activeCategory, searchQuery, sortBy])
+  1479→
+  1480→  const total = getCartTotal()
+  1481→  const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0)
+  1482→  const totalProductCount = publicProducts.filter((p) => p.isAvailable).length
+  1483→  const isSearching = searchQuery.trim().length > 0
+  1484→
+  1485→  // ── Handlers ──
+  1486→  function handleAddToCart(product: Product, qty: number = 1) {
+  1487→    const cartImage = (product.images && product.images[0]) || product.image || undefined
+  1488→    addToCart({ productId: product.id, name: product.name, price: product.price, image: cartImage, quantity: qty })
+  1489→  }
+  1490→
+  1491→  function getCartQuantity(productId: string): number {
+  1492→    return cart.find((c) => c.productId === productId)?.quantity || 0
+  1493→  }
+  1494→
+  1495→  function handleNavAccueil() {
+  1496→    setSelectedProduct(null)
+  1497→    setActiveCategory(null)
+  1498→    setSearchQuery('')
+  1499→    window.scrollTo({ top: 0, behavior: 'smooth' })
+  1500→  }
+  1501→
+  1502→  function handleNavProduits() {
+  1503→    setSelectedProduct(null)
+  1504→    setActiveCategory(null)
+  1505→    setSearchQuery('')
+  1506→    scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
+  1507→  }
+  1508→
+  1509→  function handleWhatsAppCheckout() {
+  1510→    if (!publicShop) return
+  1511→    const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
+  1512→    const itemsText = cart
+  1513→      .map((c) => {
+  1514→        const productUrl = shopSlug ? `${baseUrl}/${shopSlug}?product=${c.productId}` : ''
+  1515→        const linkLine = productUrl ? `\n   🔗 ${productUrl}` : ''
+  1516→        return `🛍 ${c.name} x${c.quantity} — ${(c.price * c.quantity).toLocaleString('fr-FR')} FCFA${linkLine}`
+  1517→      })
+  1518→      .join('\n')
+  1519→    const msg = `🔴 COMMANDE LIVE - ${publicShop.name}\n\n${itemsText}\n\n━━━━━━━━━━━━━━\n💰 Total : ${total.toLocaleString('fr-FR')} FCFA\n\n📝 Mes informations :\nNom :\nAdresse :\nTéléphone :\n\n⚡ Livraison 24h ! 🙏`
+  1520→    const encoded = encodeURIComponent(msg)
+  1521→    const phone = publicShop.whatsapp?.replace(/\D/g, '') || ''
+  1522→    window.open(`https://wa.me/${phone}?text=${encoded}`, '_blank')
+  1523→  }
+  1524→
+  1525→  // ── Loading ──
+  1526→  if (loading) return <TikTokLoadingSkeleton />
+  1527→
+  1528→  // ── Shop not found ──
+  1529→  if (!publicShop) {
+  1530→    return (
+  1531→      <div
+  1532→        className="min-h-screen flex items-center justify-center p-4"
+  1533→        style={{ background: TT.darkBg }}
+  1534→      >
+  1535→        <div className="text-center">
+  1536→          <div
+  1537→            className="flex items-center justify-center w-20 h-20 rounded-full mx-auto mb-4"
+  1538→            style={{ background: 'rgba(254,44,85,0.15)' }}
+  1539→          >
+  1540→            <Package className="size-10" style={{ color: TT.redOrange }} />
+  1541→          </div>
+  1542→          <h2 className="text-xl font-bold mb-2" style={{ color: TT.text }}>
+  1543→            Boutique introuvable
+  1544→          </h2>
+  1545→          <p className="text-sm mb-4" style={{ color: TT.textMuted }}>
+  1546→            Cette boutique n&apos;existe pas ou a été désactivée.
+  1547→          </p>
+  1548→          <Button
+  1549→            onClick={() => setView('landing')}
+  1550→            className="text-white font-semibold rounded-xl"
+  1551→            style={{ background: TT.redOrange }}
+  1552→          >
+  1553→            Retour à l&apos;accueil
+  1554→          </Button>
+  1555→        </div>
+  1556→      </div>
+  1557→    )
+  1558→  }
+  1559→
+  1560→  return (
+  1561→    <motion.div
+  1562→      className="min-h-screen flex flex-col"
+  1563→      style={{
+  1564→        background: TT.darkBg,
+  1565→        color: TT.text,
+  1566→      }}
+  1567→    >
+  1568→      {/* CSS Animations */}
+  1569→      <TikTokAnimations />
+  1570→
+  1571→      {/* ═══ LIVE BANNER ═══ */}
+  1572→      <TikTokLiveBanner />
+  1573→
+  1574→      {/* ═══ HEADER ═══ */}
+  1575→      <TikTokHeader
+  1576→        shopName={publicShop.name}
+  1577→        logo={publicShop.logo}
+  1578→        whatsapp={publicShop.whatsapp}
+  1579→        cartCount={itemCount}
+  1580→        onNavAccueil={handleNavAccueil}
+  1581→        onNavProduits={handleNavProduits}
+  1582→        onCartClick={() => cart.length > 0 && setCartExpanded(!cartExpanded)}
+  1583→      />
+  1584→
+  1585→      <main className="flex-1">
+  1586→        <AnimatePresence mode="wait">
+  1587→          {selectedProduct ? (
+  1588→            /* ═══ PRODUCT DETAIL ═══ */
+  1589→            <TikTokProductDetail
+  1590→              key={selectedProduct.id}
+  1591→              product={selectedProduct}
+  1592→              whatsapp={publicShop.whatsapp}
+  1593→              onClose={() => setSelectedProduct(null)}
+  1594→              onAddToCart={(product, qty) => {
+  1595→                for (let i = 0; i < qty; i++) handleAddToCart(product, 1)
+  1596→              }}
+  1597→              cartQty={getCartQuantity(selectedProduct.id)}
+  1598→              updateCartQuantity={updateCartQuantity}
+  1599→            />
+  1600→          ) : (
+  1601→            /* ═══ MAIN LAYOUT ═══ */
+  1602→            <motion.div
+  1603→              key="main"
+  1604→              initial={{ opacity: 0 }}
+  1605→              animate={{ opacity: 1 }}
+  1606→              exit={{ opacity: 0 }}
+  1607→              transition={{ duration: 0.15 }}
+  1608→            >
+  1609→              {/* ═══ CATEGORIES ═══ */}
+  1610→              <TikTokCategories
+  1611→                categories={publicCategories}
+  1612→                products={publicProducts}
+  1613→                activeCategory={activeCategory}
+  1614→                onCategoryClick={(id) => {
+  1615→                  setActiveCategory(id)
+  1616→                  setSelectedProduct(null)
+  1617→                  scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
+  1618→                }}
+  1619→              />
+  1620→
+  1621→              {/* ═══ SOCIAL PROOF ═══ */}
+  1622→              <TikTokSocialProof />
+  1623→
+  1624→              {/* ═══ PRODUCTS SECTION ═══ */}
+  1625→              <section className="w-full" style={{ background: TT.darkBg }}>
+  1626→                <div
+  1627→                  className="max-w-[1400px] mx-auto px-4 lg:px-6 py-6 space-y-6"
+  1628→                  ref={scrollRef}
+  1629→                >
+  1630→                  {/* Section title */}
+  1631→                  <div className="flex items-center gap-3">
+  1632→                    <div className="w-1 h-6 rounded-full" style={{ background: TT.redOrange }} />
+  1633→                    <h2 className="text-lg font-bold" style={{ color: TT.text }}>
+  1634→                      Nos Produits
+  1635→                    </h2>
+  1636→                    <span className="text-sm" style={{ color: TT.textMuted }}>
+  1637→                      ({totalProductCount} produit{totalProductCount !== 1 ? 's' : ''})
+  1638→                    </span>
+  1639→                  </div>
+  1640→
+  1641→                  {/* Search + Sort */}
+  1642→                  <TikTokSearchBar
+  1643→                    searchQuery={searchQuery}
+  1644→                    onSearchChange={setSearchQuery}
+  1645→                    sortBy={sortBy}
+  1646→                    onSortChange={setSortBy}
+  1647→                    resultCount={filteredProducts.length}
+  1648→                    isSearching={isSearching}
+  1649→                  />
+  1650→
+  1651→                  {/* Loading skeletons for search */}
+  1652→                  {isSearching && filteredProducts.length === 0 && publicProducts.length > 0 && (
+  1653→                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+  1654→                      {Array.from({ length: 8 }).map((_, i) => (
+  1655→                        <div
+  1656→                          key={i}
+  1657→                          className="flex flex-col gap-2 rounded-xl overflow-hidden"
+  1658→                          style={{ background: TT.cardBg, border: `1px solid ${TT.border}` }}
+  1659→                        >
+  1660→                          <Skeleton className="w-full" style={{ aspectRatio: '1 / 1' }} />
+  1661→                          <div className="p-3 space-y-2">
+  1662→                            <Skeleton className="h-4 w-full" />
+  1663→                            <Skeleton className="h-3 w-24" />
+  1664→                            <Skeleton className="h-9 w-full rounded-lg" />
+  1665→                          </div>
+  1666→                        </div>
+  1667→                      ))}
+  1668→                    </div>
+  1669→                  )}
+  1670→
+  1671→                  {/* Empty state */}
+  1672→                  {!isSearching && publicProducts.length === 0 && (
+  1673→                    <div className="flex flex-col items-center justify-center py-20 text-center">
+  1674→                      <div
+  1675→                        className="flex items-center justify-center w-20 h-20 rounded-full mb-4"
+  1676→                        style={{ background: 'rgba(254,44,85,0.15)' }}
+  1677→                      >
+  1678→                        <Package className="size-10" style={{ color: TT.redOrange }} />
+  1679→                      </div>
+  1680→                      <h3 className="text-lg font-bold" style={{ color: TT.text }}>
+  1681→                        Aucun produit disponible
+  1682→                      </h3>
+  1683→                      <p className="mt-1 text-sm max-w-md" style={{ color: TT.textMuted }}>
+  1684→                        Cette boutique n&apos;a pas encore de produits. Revenez bientôt !
+  1685→                      </p>
+  1686→                    </div>
+  1687→                  )}
+  1688→
+  1689→                  {/* Empty search */}
+  1690→                  {filteredProducts.length === 0 && publicProducts.length > 0 && (
+  1691→                    <motion.div
+  1692→                      initial={{ opacity: 0, scale: 0.95 }}
+  1693→                      animate={{ opacity: 1, scale: 1 }}
+  1694→                      className="flex flex-col items-center justify-center py-16 text-center"
+  1695→                    >
+  1696→                      <div
+  1697→                        className="flex items-center justify-center w-16 h-16 rounded-full mb-4"
+  1698→                        style={{ background: 'rgba(255,215,0,0.15)' }}
+  1699→                      >
+  1700→                        <Search className="size-7" style={{ color: TT.yellow }} />
+  1701→                      </div>
+  1702→                      <h3 className="text-lg font-bold" style={{ color: TT.text }}>
+  1703→                        Aucun résultat trouvé
+  1704→                      </h3>
+  1705→                      <p className="mt-1 text-sm max-w-md" style={{ color: TT.textMuted }}>
+  1706→                        {searchQuery
+  1707→                          ? `Aucun produit ne correspond à "${searchQuery}".`
+  1708→                          : 'Aucun produit dans cette catégorie.'}
+  1709→                      </p>
+  1710→                      <Button
+  1711→                        variant="outline"
+  1712→                        size="sm"
+  1713→                        className="mt-4 rounded-xl"
+  1714→                        style={{ borderColor: TT.redOrange, color: TT.redOrange }}
+  1715→                        onClick={() => {
+  1716→                          setSearchQuery('')
+  1717→                          setActiveCategory(null)
+  1718→                        }}
+  1719→                      >
+  1720→                        Réinitialiser les filtres
+  1721→                      </Button>
+  1722→                    </motion.div>
+  1723→                  )}
+  1724→
+  1725→                  {/* Product Grid */}
+  1726→                  <AnimatePresence mode="wait">
+  1727→                    <motion.div
+  1728→                      key={activeCategory + searchQuery + sortBy}
+  1729→                      initial={{ opacity: 0 }}
+  1730→                      animate={{ opacity: 1 }}
+  1731→                      exit={{ opacity: 0 }}
+  1732→                      transition={{ duration: 0.3 }}
+  1733→                      className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+  1734→                    >
+  1735→                      {filteredProducts.map((product, index) => (
+  1736→                        <TikTokProductCard
+  1737→                          key={product.id}
+  1738→                          product={product}
+  1739→                          index={index}
+  1740→                          onProductClick={setSelectedProduct}
+  1741→                          onAddToCart={(p) => handleAddToCart(p, 1)}
+  1742→                          getCartQuantity={getCartQuantity}
+  1743→                          updateCartQuantity={updateCartQuantity}
+  1744→                          whatsapp={publicShop.whatsapp}
+  1745→                        />
+  1746→                      ))}
+  1747→                    </motion.div>
+  1748→                  </AnimatePresence>
+  1749→                </div>
+  1750→              </section>
+  1751→
+  1752→              {/* ═══ MASSIVE WHATSAPP CTA ═══ */}
+  1753→              <TikTokWhatsAppCTA whatsapp={publicShop.whatsapp} shopName={publicShop.name} />
+  1754→            </motion.div>
+  1755→          )}
+  1756→        </AnimatePresence>
+  1757→      </main>
+  1758→
+  1759→      {/* ═══ FOOTER ═══ */}
+  1760→      <TikTokFooter
+  1761→        shopName={publicShop.name}
+  1762→        whatsapp={publicShop.whatsapp}
+  1763→        phone={publicShop.phone}
+  1764→        address={publicShop.address}
+  1765→      />
+  1766→
+  1767→      {/* ═══ CART DRAWER ═══ */}
+  1768→      <AnimatePresence>
+  1769→        {cart.length > 0 && (
+  1770→          <TikTokCartDrawer
+  1771→            expanded={cartExpanded}
+  1772→            onToggle={() => setCartExpanded(!cartExpanded)}
+  1773→            onClear={clearCart}
+  1774→            onCheckout={handleWhatsAppCheckout}
+  1775→            total={total}
+  1776→            itemCount={itemCount}
+  1777→            cart={cart}
+  1778→            updateCartQuantity={updateCartQuantity}
+  1779→          />
+  1780→        )}
+  1781→      </AnimatePresence>
+  1782→
+  1783→      {/* ═══ FLOATING WHATSAPP BUTTON ═══ */}
+  1784→      {publicShop.whatsapp && (
+  1785→        <a
+  1786→          href={`https://wa.me/${publicShop.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(
+  1787→            `Bonjour ${publicShop.name} ! 👋\nJe suis intéressé(e) par vos produits en LIVE.`
+  1788→          )}`}
+  1789→          target="_blank"
+  1790→          rel="noopener noreferrer"
+  1791→          className="fixed bottom-[80px] right-5 z-50 flex items-center justify-center w-14 h-14 rounded-full shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl group"
+  1792→          style={{
+  1793→            background: TT.whatsapp,
+  1794→            boxShadow: `0 4px 16px ${TT.whatsapp}44`,
+  1795→          }}
+  1796→          title={`Contacter ${publicShop.name} sur WhatsApp`}
+  1797→        >
+  1798→          <MessageCircle className="size-7 text-white" />
+  1799→          {/* Tooltip */}
+  1800→          <span
+  1801→            className="absolute right-full mr-3 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"
+  1802→            style={{ background: '#1a1a1a', color: 'white' }}
+  1803→          >
+  1804→            Contacter sur WhatsApp
+  1805→          </span>
+  1806→        </a>
+  1807→      )}
+  1808→    </motion.div>
+  1809→  )
+  1810→}

@@ -1732,7 +1732,7 @@ export function BeautyPremiumShopPage() {
       />
 
       <main className="flex-1 relative z-10">
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait" initial={false}>
           {selectedProduct ? (
             /* ═══ PRODUCT DETAIL ═══ */
             <BeautyProductDetail
@@ -1883,7 +1883,7 @@ export function BeautyPremiumShopPage() {
                   )}
 
                   {/* Product Grid */}
-                  <AnimatePresence mode="wait">
+                  <AnimatePresence mode="wait" initial={false}>
                     <motion.div
                       key={activeCategory + searchQuery + sortBy}
                       initial={{ opacity: 0 }}

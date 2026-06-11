@@ -1,0 +1,1178 @@
+     1→'use client'
+     2→
+     3→import useEmblaCarousel from 'embla-carousel-react'
+     4→import Autoplay from 'embla-carousel-autoplay'
+     5→import { motion } from 'framer-motion'
+     6→import { toast } from 'sonner'
+     7→import { useState, useCallback, useEffect, useRef } from 'react'
+     8→import {
+     9→  Search,
+    10→  X,
+    11→  Plus,
+    12→  Minus,
+    13→  Trash2,
+    14→  Package,
+    15→  ShoppingBag,
+    16→  Truck,
+    17→  Shield,
+    18→  RotateCcw,
+    19→  Award,
+    20→  ChevronLeft,
+    21→  ChevronRight,
+    22→  Phone,
+    23→  Mail,
+    24→  MapPin,
+    25→  ArrowRight,
+    26→  Star,
+    27→  Eye,
+    28→  Clock,
+    29→  Send,
+    30→} from 'lucide-react'
+    31→import { Button } from '@/components/ui/button'
+    32→import { Input } from '@/components/ui/input'
+    33→import { Product as ProductType, formatPrice } from '@/lib/shared'
+    34→
+    35→// ─── Types ───────────────────────────────────────────────────────────────────
+    36→
+    37→interface Category {
+    38→  id: string
+    39→  name: string
+    40→}
+    41→
+    42→interface ElectroDepotGridProps {
+    43→  filteredProducts: ProductType[]
+    44→  publicCategories: Category[]
+    45→  publicProducts: ProductType[]
+    46→  activeCategory: string | null
+    47→  searchQuery: string
+    48→  sortBy: string
+    49→  isSearching: boolean
+    50→  totalProductCount: number
+    51→  onCategoryClick: (id: string | null) => void
+    52→  onProductClick: (product: ProductType) => void
+    53→  onAddToCart: (product: ProductType) => void
+    54→  getCartQuantity: (productId: string) => number
+    55→  updateCartQuantity: (productId: string, qty: number) => void
+    56→  onSortChange: (sort: string) => void
+    57→  onSearchChange: (query: string) => void
+    58→  shopName?: string
+    59→  whatsapp?: string
+    60→}
+    61→
+    62→// ─── Colors ──────────────────────────────────────────────────────────────────
+    63→
+    64→const COLORS = {
+    65→  primary: '#E31837',
+    66→  secondary: '#1a1a2e',
+    67→  accent: '#ff6b00',
+    68→  bg: '#ffffff',
+    69→  text: '#1a1a1a',
+    70→  muted: '#666666',
+    71→  border: '#e0e0e0',
+    72→}
+    73→
+    74→// ─── Constants ───────────────────────────────────────────────────────────────
+    75→
+    76→const PROMO_MESSAGES = [
+    77→  '🚚 Livraison gratuite dès 50 000 FCFA',
+    78→  '🔥 Méga Promo : jusqu\'à -40% sur les TV',
+    79→  '📞 Contactez-nous au +225 00 00 00 00',
+    80→  '✅ Retour gratuit sous 30 jours',
+    81→  '⚡ Paiement sécurisé & garanti',
+    82→  '🎁 Offre spéciale : Écouteurs offerts dès 100 000 FCFA',
+    83→]
+    84→
+    85→const HERO_SLIDES = [
+    86→  {
+    87→    id: 'slide-1',
+    88→    title: 'MÉGA PROMO TV & SON',
+    89→    subtitle: 'Jusqu\'à -40% sur une sélection exceptionnelle de téléviseurs et systèmes audio. Ne manquez pas ces offres !',
+    90→    cta: 'Découvrir les offres',
+    91→    gradient: 'linear-gradient(135deg, #E31837 0%, #ff6b00 50%, #1a1a2e 100%)',
+    92→  },
+    93→  {
+    94→    id: 'slide-2',
+    95→    title: 'NOUVEAUTÉS SMARTPHONE',
+    96→    subtitle: 'Les derniers modèles de smartphones aux meilleurs prix. Livraison offerte et garantie 2 ans incluse.',
+    97→    cta: 'Voir les nouveautés',
+    98→    gradient: 'linear-gradient(135deg, #1a1a2e 0%, #E31837 50%, #ff6b00 100%)',
+    99→  },
+   100→  {
+   101→    id: 'slide-3',
+   102→    title: 'CLIMATISATION : SOLDES',
+   103→    subtitle: 'Préparez l\'été avec nos climatiseurs et ventilateurs. Économisez jusqu\'à -35% ce mois-ci.',
+   104→    cta: 'Profiter des soldes',
+   105→    gradient: 'linear-gradient(135deg, #ff6b00 0%, #E31837 50%, #1a1a2e 100%)',
+   106→  },
+   107→]
+   108→
+   109→const QUICK_CATEGORIES = [
+   110→  { id: 'qc-tel', name: 'Téléphone', emoji: '📱' },
+   111→  { id: 'qc-tv', name: 'TV', emoji: '📺' },
+   112→  { id: 'qc-pc', name: 'PC', emoji: '💻' },
+   113→  { id: 'qc-cuisine', name: 'Cuisine', emoji: '🍳' },
+   114→  { id: 'qc-frigo', name: 'Frigo', emoji: '🧊' },
+   115→  { id: 'qc-clim', name: 'Climatisation', emoji: '❄️' },
+   116→  { id: 'qc-audio', name: 'Audio', emoji: '🔊' },
+   117→  { id: 'qc-photo', name: 'Photo', emoji: '📷' },
+   118→  { id: 'qc-gaming', name: 'Gaming', emoji: '🎮' },
+   119→  { id: 'qc-access', name: 'Accessoires', emoji: '⚡' },
+   120→]
+   121→
+   122→const TRUST_BADGES = [
+   123→  { icon: Truck, label: 'Livraison gratuite', desc: 'Dès 50 000 FCFA' },
+   124→  { icon: RotateCcw, label: 'Retour gratuit', desc: 'Sous 30 jours' },
+   125→  { icon: Shield, label: 'Paiement sécurisé', desc: 'SSL 256 bits' },
+   126→  { icon: Award, label: 'Garantie 2 ans', desc: 'Sur tous les produits' },
+   127→]
+   128→
+   129→const BRANDS = [
+   130→  'Samsung', 'LG', 'Sony', 'Apple', 'Philips', 'Bosch',
+   131→  'Whirlpool', 'Canon', 'Nikon', 'JBL', 'Huawei', 'Xiaomi',
+   132→  'Dell', 'HP', 'Lenovo', 'Asus', 'Hisense', 'TCL',
+   133→]
+   134→
+   135→// ─── Helpers ──────────────────────────────────────────────────────────────────
+   136→
+   137→// ─── CSS Keyframes (injected via <style>) ─────────────────────────────────────
+   138→
+   139→function MarqueeStyles() {
+   140→  return (
+   141→    <style>{`
+   142→      @keyframes marquee-scroll {
+   143→        0% { transform: translateX(0); }
+   144→        100% { transform: translateX(-50%); }
+   145→      }
+   146→      @keyframes marquee-reverse {
+   147→        0% { transform: translateX(-50%); }
+   148→        100% { transform: translateX(0); }
+   149→      }
+   150→      .marquee-track {
+   151→        animation: marquee-scroll 30s linear infinite;
+   152→      }
+   153→      .marquee-track:hover {
+   154→        animation-play-state: paused;
+   155→      }
+   156→      .marquee-brand-track {
+   157→        animation: marquee-scroll 20s linear infinite;
+   158→      }
+   159→      .marquee-brand-track:hover {
+   160→        animation-play-state: paused;
+   161→      }
+   162→    `}</style>
+   163→  )
+   164→}
+   165→
+   166→// ─── Section Wrapper (fade-in on scroll) ──────────────────────────────────────
+   167→
+   168→function Section({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+   169→  return (
+   170→    <motion.section
+   171→      initial={{ opacity: 0, y: 24 }}
+   172→      whileInView={{ opacity: 1, y: 0 }}
+   173→      viewport={{ once: true, margin: '-40px' }}
+   174→      transition={{ duration: 0.5 }}
+   175→      className={className}
+   176→    >
+   177→      {children}
+   178→    </motion.section>
+   179→  )
+   180→}
+   181→
+   182→// ─── 1. Top Promo Bar ─────────────────────────────────────────────────────────
+   183→
+   184→function PromoBar() {
+   185→  const doubledMessages = [...PROMO_MESSAGES, ...PROMO_MESSAGES]
+   186→
+   187→  return (
+   188→    <div
+   189→      className="relative overflow-hidden w-full"
+   190→      style={{ backgroundColor: COLORS.primary }}
+   191→    >
+   192→      <div className="marquee-track flex items-center whitespace-nowrap py-2.5">
+   193→        {doubledMessages.map((msg, i) => (
+   194→          <span
+   195→            key={i}
+   196→            className="inline-flex items-center gap-4 text-white text-xs sm:text-sm font-medium px-6"
+   197→          >
+   198→            {msg}
+   199→            <span className="text-white/40">|</span>
+   200→          </span>
+   201→        ))}
+   202→      </div>
+   203→    </div>
+   204→  )
+   205→}
+   206→
+   207→// ─── 2. Hero Slider ──────────────────────────────────────────────────────────
+   208→
+   209→function HeroSlider({ shopName, onCategoryClick }: { shopName?: string; onCategoryClick: (id: string | null) => void }) {
+   210→  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, [
+   211→    Autoplay({ delay: 5000, stopOnInteraction: false }),
+   212→  ])
+   213→  const [currentIndex, setCurrentIndex] = useState(0)
+   214→
+   215→  const scrollTo = useCallback((index: number) => emblaApi?.scrollTo(index), [emblaApi])
+   216→  const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi])
+   217→  const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi])
+   218→
+   219→  const onSelect = useCallback(() => {
+   220→    if (!emblaApi) return
+   221→    setCurrentIndex(emblaApi.selectedScrollSnap())
+   222→  }, [emblaApi])
+   223→
+   224→  useEffect(() => {
+   225→    if (!emblaApi) return
+   226→    onSelect()
+   227→    emblaApi.on('select', onSelect)
+   228→    emblaApi.on('reInit', onSelect)
+   229→    return () => { emblaApi.off('select', onSelect) }
+   230→  }, [emblaApi, onSelect])
+   231→
+   232→  return (
+   233→    <div className="relative w-full overflow-hidden rounded-none">
+   234→      <div ref={emblaRef} className="w-full" style={{ aspectRatio: '16 / 5' }}>
+   235→        <div className="flex h-full">
+   236→          {HERO_SLIDES.map((slide) => (
+   237→            <div
+   238→              key={slide.id}
+   239→              className="min-w-0 flex-[0_0_100%] h-full relative"
+   240→              style={{ background: slide.gradient }}
+   241→            >
+   242→              {/* Decorative shapes */}
+   243→              <div className="absolute top-0 right-0 w-1/2 h-full opacity-10">
+   244→                <div className="absolute top-1/4 right-[10%] w-64 h-64 rounded-full bg-white/20" />
+   245→                <div className="absolute bottom-1/4 right-[25%] w-40 h-40 rounded-full bg-white/15" />
+   246→                <div className="absolute top-1/3 right-[5%] w-24 h-24 rounded-full bg-white/10" />
+   247→              </div>
+   248→
+   249→              {/* Content */}
+   250→              <div className="absolute inset-0 flex items-center">
+   251→                <div className="max-w-5xl mx-auto px-4 sm:px-8 w-full">
+   252→                  <div className="max-w-lg">
+   253→                    <span
+   254→                      className="inline-block text-white/80 text-[10px] sm:text-xs font-semibold uppercase tracking-widest mb-2"
+   255→                    >
+   256→                      {shopName || 'ElectroDépôt'}
+   257→                    </span>
+   258→                    <h2 className="text-xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-white leading-tight drop-shadow-lg">
+   259→                      {slide.title}
+   260→                    </h2>
+   261→                    <p className="mt-2 text-white/80 text-xs sm:text-sm md:text-base line-clamp-2 drop-shadow-md max-w-md">
+   262→                      {slide.subtitle}
+   263→                    </p>
+   264→                    <button
+   265→                      onClick={() => onCategoryClick(null)}
+   266→                      className="mt-4 sm:mt-6 inline-flex items-center gap-2 bg-white px-5 sm:px-6 py-2.5 sm:py-3 text-sm font-bold transition-all hover:bg-white/90 hover:scale-[1.03] active:scale-[0.98]"
+   267→                      style={{ color: COLORS.primary }}
+   268→                    >
+   269→                      {slide.cta}
+   270→                      <ArrowRight className="size-4" />
+   271→                    </button>
+   272→                  </div>
+   273→                </div>
+   274→              </div>
+   275→            </div>
+   276→          ))}
+   277→        </div>
+   278→      </div>
+   279→
+   280→      {/* Mobile: square aspect ratio overlay fix */}
+   281→      <style>{`
+   282→        @media (max-width: 640px) {
+   283→          [data-hero-root] > div:first-child { aspect-ratio: 1 / 1 !important; }
+   284→        }
+   285→      `}</style>
+   286→
+   287→      {/* Nav arrows */}
+   288→      <button
+   289→        onClick={scrollPrev}
+   290→        className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-10 h-9 w-9 sm:h-10 sm:w-10 rounded-sm bg-white/20 backdrop-blur-sm text-white border border-white/30 flex items-center justify-center hover:bg-white/30 transition-all"
+   291→        aria-label="Slide précédent"
+   292→      >
+   293→        <ChevronLeft className="h-5 w-5" />
+   294→      </button>
+   295→      <button
+   296→        onClick={scrollNext}
+   297→        className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-10 h-9 w-9 sm:h-10 sm:w-10 rounded-sm bg-white/20 backdrop-blur-sm text-white border border-white/30 flex items-center justify-center hover:bg-white/30 transition-all"
+   298→        aria-label="Slide suivant"
+   299→      >
+   300→        <ChevronRight className="h-5 w-5" />
+   301→      </button>
+   302→
+   303→      {/* Dots */}
+   304→      <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5">
+   305→        {HERO_SLIDES.map((_, idx) => (
+   306→          <button
+   307→            key={idx}
+   308→            onClick={() => scrollTo(idx)}
+   309→            className="rounded-none transition-all duration-300"
+   310→            style={{
+   311→              width: currentIndex === idx ? 24 : 8,
+   312→              height: 8,
+   313→              background: currentIndex === idx ? COLORS.primary : 'rgba(255,255,255,0.5)',
+   314→            }}
+   315→            aria-label={`Aller au slide ${idx + 1}`}
+   316→          />
+   317→        ))}
+   318→      </div>
+   319→    </div>
+   320→  )
+   321→}
+   322→
+   323→// ─── 3. Quick Category Circles ────────────────────────────────────────────────
+   324→
+   325→function QuickCategoryCircles({
+   326→  publicCategories,
+   327→  activeCategory,
+   328→  onCategoryClick,
+   329→}: {
+   330→  publicCategories: Category[]
+   331→  activeCategory: string | null
+   332→  onCategoryClick: (id: string | null) => void
+   333→}) {
+   334→  // Merge predefined categories with real ones when possible
+   335→  const allCats = [...QUICK_CATEGORIES]
+   336→  for (const cat of publicCategories) {
+   337→    const exists = allCats.some(
+   338→      (qc) => qc.name.toLowerCase() === cat.name.toLowerCase()
+   339→    )
+   340→    if (!exists) {
+   341→      allCats.push({ id: cat.id, name: cat.name, emoji: '🏷️' })
+   342→    }
+   343→  }
+   344→
+   345→  return (
+   346→    <div className="w-full overflow-x-auto pb-2 scrollbar-none">
+   347→      <div className="flex items-center gap-4 sm:gap-6 px-2 sm:px-4 min-w-max">
+   348→        {allCats.map((cat) => {
+   349→          const isActive = activeCategory === cat.id
+   350→          return (
+   351→            <motion.button
+   352→              key={cat.id}
+   353→              whileHover={{ scale: 1.08 }}
+   354→              whileTap={{ scale: 0.95 }}
+   355→              onClick={() => onCategoryClick(isActive ? null : cat.id)}
+   356→              className="flex flex-col items-center gap-2 flex-shrink-0 cursor-pointer"
+   357→            >
+   358→              <div
+   359→                className="flex items-center justify-center rounded-full transition-all duration-200"
+   360→                style={{
+   361→                  width: 60,
+   362→                  height: 60,
+   363→                  backgroundColor: isActive ? COLORS.primary : '#f5f5f5',
+   364→                  boxShadow: isActive ? `0 4px 12px ${COLORS.primary}40` : 'none',
+   365→                  border: isActive ? `2px solid ${COLORS.primary}` : '2px solid transparent',
+   366→                }}
+   367→              >
+   368→                <span className="text-2xl">{cat.emoji}</span>
+   369→              </div>
+   370→              <span
+   371→                className="text-[11px] font-medium text-center leading-tight max-w-[64px] truncate transition-colors"
+   372→                style={{ color: isActive ? COLORS.primary : COLORS.muted }}
+   373→              >
+   374→                {cat.name}
+   375→              </span>
+   376→            </motion.button>
+   377→          )
+   378→        })}
+   379→      </div>
+   380→    </div>
+   381→  )
+   382→}
+   383→
+   384→// ─── Product Card ─────────────────────────────────────────────────────────────
+   385→
+   386→function ElectroDepotProductCard({
+   387→  product,
+   388→  onAddToCart,
+   389→  onProductClick,
+   390→  getCartQuantity,
+   391→  updateCartQuantity,
+   392→  index,
+   393→}: {
+   394→  product: ProductType
+   395→  onAddToCart: (product: ProductType) => void
+   396→  onProductClick: (product: ProductType) => void
+   397→  getCartQuantity: (productId: string) => number
+   398→  updateCartQuantity: (productId: string, qty: number) => void
+   399→  index: number
+   400→}) {
+   401→  const cartQty = getCartQuantity(product.id)
+   402→  const inStock = (product.stock ?? 0) > 0
+   403→  const priceFormatted = formatPrice(product.price)
+   404→
+   405→  return (
+   406→    <motion.div
+   407→      className="group flex flex-col bg-white overflow-hidden cursor-pointer transition-shadow duration-200 hover:shadow-lg"
+   408→      style={{ border: `1px solid ${COLORS.border}`, borderRadius: '2px' }}
+   409→      onClick={() => onProductClick(product)}
+   410→    >
+   411→      {/* Image */}
+   412→      <div className="relative aspect-square w-full bg-gray-50 overflow-hidden">
+   413→        {product.image || product.images?.[0] ? (
+   414→          <img
+   415→            src={product.image || product.images?.[0]}
+   416→            alt={product.name}
+   417→            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+   418→            loading="lazy"
+   419→            onLoad={(e) => { (e.target as HTMLImageElement).style.opacity = '1' }}
+   420→            style={{ opacity: 0, transition: 'opacity 0.3s ease' }}
+   421→          />
+   422→        ) : (
+   423→          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+   424→            <Package className="size-12 text-gray-300" />
+   425→          </div>
+   426→        )}
+   427→
+   428→        {/* Hover overlay */}
+   429→        <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-all duration-300">
+   430→          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-white/0 group-hover:bg-white/90 transition-all duration-300 opacity-0 group-hover:opacity-100">
+   431→            <Eye className="size-5 transition-colors text-white group-hover:text-[#1a1a1a]" />
+   432→          </div>
+   433→        </div>
+   434→
+   435→        {/* Stock badge */}
+   436→        {inStock && (
+   437→          <div className="absolute top-2 left-2">
+   438→            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-none text-white bg-green-600">
+   439→              ✓ En stock
+   440→            </span>
+   441→          </div>
+   442→        )}
+   443→
+   444→        {/* Out of stock */}
+   445→        {!inStock && product.isAvailable && (
+   446→          <div className="absolute top-2 left-2">
+   447→            <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-none text-white bg-gray-500">
+   448→              Rupture
+   449→            </span>
+   450→          </div>
+   451→        )}
+   452→      </div>
+   453→
+   454→      {/* Info */}
+   455→      <div className="flex flex-col gap-1.5 p-3 flex-1">
+   456→        {/* Name */}
+   457→        <h3
+   458→          className="text-sm font-medium leading-snug line-clamp-2"
+   459→          style={{ color: COLORS.text }}
+   460→        >
+   461→          {product.name}
+   462→        </h3>
+   463→
+   464→        {/* Category tag */}
+   465→        {product.category && (
+   466→          <span className="text-[11px]" style={{ color: COLORS.muted }}>
+   467→            {product.category.name}
+   468→          </span>
+   469→        )}
+   470→
+   471→        {/* Spacer */}
+   472→        <div className="flex-1" />
+   473→
+   474→        {/* Price */}
+   475→        <span className="text-base font-bold" style={{ color: COLORS.primary }}>
+   476→          {priceFormatted}
+   477→        </span>
+   478→
+   479→        {/* CTA / Cart controls */}
+   480→        <div onClick={(e) => e.stopPropagation()}>
+   481→          {cartQty === 0 ? (
+   482→            <Button
+   483→              onClick={() => onAddToCart(product)}
+   484→              disabled={!product.isAvailable || !inStock}
+   485→              className="w-full h-9 gap-1.5 rounded-none text-xs font-bold uppercase tracking-wide transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+   486→              style={{
+   487→                backgroundColor: product.isAvailable && inStock ? COLORS.primary : '#999',
+   488→                color: '#fff',
+   489→              }}
+   490→            >
+   491→              <Plus className="size-3.5" />
+   492→              Ajouter au panier
+   493→            </Button>
+   494→          ) : (
+   495→            <div className="flex items-center" style={{ border: `1px solid ${COLORS.primary}30` }}>
+   496→              <button
+   497→                onClick={() => updateCartQuantity(product.id, cartQty - 1)}
+   498→                className="flex items-center justify-center w-9 h-9 transition-colors hover:bg-gray-50"
+   499→                style={{ borderRight: `1px solid ${COLORS.border}` }}
+   500→              >
+   501→                {cartQty === 1 ? (
+   502→                  <Trash2 className="size-3.5 text-red-500" />
+   503→                ) : (
+   504→                  <Minus className="size-3.5" style={{ color: COLORS.primary }} />
+   505→                )}
+   506→              </button>
+   507→              <span
+   508→                className="flex-1 flex items-center justify-center h-9 text-sm font-bold tabular-nums"
+   509→                style={{ color: COLORS.primary }}
+   510→              >
+   511→                {cartQty}
+   512→              </span>
+   513→              <button
+   514→                onClick={() => updateCartQuantity(product.id, cartQty + 1)}
+   515→                className="flex items-center justify-center w-9 h-9 transition-colors hover:bg-gray-50"
+   516→                style={{ borderLeft: `1px solid ${COLORS.border}` }}
+   517→              >
+   518→                <Plus className="size-3.5" style={{ color: COLORS.primary }} />
+   519→              </button>
+   520→            </div>
+   521→          )}
+   522→        </div>
+   523→      </div>
+   524→    </motion.div>
+   525→  )
+   526→}
+   527→
+   528→// ─── 6. Promotional Banner ───────────────────────────────────────────────────
+   529→
+   530→function PromoBanner({ onCategoryClick }: { onCategoryClick: (id: string | null) => void }) {
+   531→  return (
+   532→    <div
+   533→      className="relative overflow-hidden rounded-none p-6 sm:p-8 md:p-10 cursor-pointer"
+   534→      style={{ background: `linear-gradient(135deg, ${COLORS.secondary} 0%, ${COLORS.primary} 100%)` }}
+   535→      onClick={() => onCategoryClick(null)}
+   536→    >
+   537→      {/* Decorative */}
+   538→      <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4" />
+   539→      <div className="absolute bottom-0 left-0 w-40 h-40 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/4" />
+   540→
+   541→      <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+   542→        <div>
+   543→          <span className="inline-block text-xs font-bold uppercase tracking-widest text-white/60 mb-2">
+   544→            Offre exclusive
+   545→          </span>
+   546→          <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-white">
+   547→            🔥 VENTE FLASH : ÉLECTROMÉNAGER
+   548→          </h3>
+   549→          <p className="mt-1 text-white/70 text-sm sm:text-base max-w-lg">
+   550→            Jusqu&apos;à -50% sur une sélection de réfrigérateurs, machines à laver et climatiseurs. Offre limitée !
+   551→          </p>
+   552→        </div>
+   553→        <button
+   554→          className="flex-shrink-0 inline-flex items-center gap-2 bg-white px-5 py-3 text-sm font-bold rounded-none transition-all hover:bg-gray-100 hover:scale-[1.03] active:scale-[0.98]"
+   555→          style={{ color: COLORS.primary }}
+   556→          onClick={(e) => {
+   557→            e.stopPropagation()
+   558→            onCategoryClick(null)
+   559→          }}
+   560→        >
+   561→          Voir les offres
+   562→          <ArrowRight className="size-4" />
+   563→        </button>
+   564→      </div>
+   565→    </div>
+   566→  )
+   567→}
+   568→
+   569→// ─── 8. Double Promo Banners ──────────────────────────────────────────────────
+   570→
+   571→function DoublePromoBanners({ onCategoryClick }: { onCategoryClick: (id: string | null) => void }) {
+   572→  return (
+   573→    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   574→      {/* Left promo */}
+   575→      <div
+   576→        className="relative overflow-hidden rounded-none p-5 sm:p-6 cursor-pointer transition-all hover:opacity-95"
+   577→        style={{ background: `linear-gradient(135deg, ${COLORS.accent} 0%, #ff9500 100%)` }}
+   578→        onClick={() => onCategoryClick(null)}
+   579→      >
+   580→        <div className="absolute top-2 right-3 text-4xl opacity-80">📱💻</div>
+   581→        <span className="inline-block text-[10px] font-bold uppercase tracking-widest text-white/60 mb-1">
+   582→          High-tech
+   583→        </span>
+   584→        <h3 className="text-lg sm:text-xl font-black text-white">
+   585→          PC & ÉCRANS
+   586→        </h3>
+   587→        <p className="mt-1 text-white/80 text-xs sm:text-sm">
+   588→          Ordinateurs portables et écrans 4K à prix cassés
+   589→        </p>
+   590→        <button
+   591→          className="mt-3 inline-flex items-center gap-1.5 bg-white px-4 py-2 text-xs font-bold rounded-none transition-all hover:scale-[1.03]"
+   592→          style={{ color: COLORS.accent }}
+   593→          onClick={(e) => { e.stopPropagation(); onCategoryClick(null) }}
+   594→        >
+   595→          Acheter <ArrowRight className="size-3.5" />
+   596→        </button>
+   597→      </div>
+   598→
+   599→      {/* Right promo */}
+   600→      <div
+   601→        className="relative overflow-hidden rounded-none p-5 sm:p-6 cursor-pointer transition-all hover:opacity-95"
+   602→        style={{ background: `linear-gradient(135deg, ${COLORS.primary} 0%, #c41230 100%)` }}
+   603→        onClick={() => onCategoryClick(null)}
+   604→      >
+   605→        <div className="absolute top-2 right-3 text-4xl opacity-80">🎮⚡</div>
+   606→        <span className="inline-block text-[10px] font-bold uppercase tracking-widest text-white/60 mb-1">
+   607→          Gaming
+   608→        </span>
+   609→        <h3 className="text-lg sm:text-xl font-black text-white">
+   610→          UNIVER GAMING
+   611→        </h3>
+   612→        <p className="mt-1 text-white/80 text-xs sm:text-sm">
+   613→          Consoles, manettes et accessoires pour gamers
+   614→        </p>
+   615→        <button
+   616→          className="mt-3 inline-flex items-center gap-1.5 bg-white px-4 py-2 text-xs font-bold rounded-none transition-all hover:scale-[1.03]"
+   617→          style={{ color: COLORS.primary }}
+   618→          onClick={(e) => { e.stopPropagation(); onCategoryClick(null) }}
+   619→        >
+   620→          Explorer <ArrowRight className="size-3.5" />
+   621→        </button>
+   622→      </div>
+   623→    </div>
+   624→  )
+   625→}
+   626→
+   627→// ─── 9. Brands Marquee ────────────────────────────────────────────────────────
+   628→
+   629→function BrandsMarquee() {
+   630→  const doubledBrands = [...BRANDS, ...BRANDS]
+   631→
+   632→  return (
+   633→    <div className="w-full overflow-hidden py-6" style={{ borderTop: `1px solid ${COLORS.border}`, borderBottom: `1px solid ${COLORS.border}` }}>
+   634→      <div className="marquee-brand-track flex items-center whitespace-nowrap">
+   635→        {doubledBrands.map((brand, i) => (
+   636→          <span
+   637→            key={i}
+   638→            className="inline-flex items-center px-8 sm:px-10 text-base sm:text-lg font-bold uppercase tracking-wide"
+   639→            style={{ color: COLORS.muted }}
+   640→          >
+   641→            {brand}
+   642→          </span>
+   643→        ))}
+   644→      </div>
+   645→    </div>
+   646→  )
+   647→}
+   648→
+   649→// ─── 10. Newsletter Section ───────────────────────────────────────────────────
+   650→
+   651→function NewsletterSection() {
+   652→  const [email, setEmail] = useState('')
+   653→
+   654→  const handleSubmit = (e: React.FormEvent) => {
+   655→    e.preventDefault()
+   656→    if (email.trim()) {
+   657→      toast.info('Service bientôt disponible !')
+   658→      setEmail('')
+   659→    }
+   660→  }
+   661→
+   662→  return (
+   663→    <div
+   664→      className="rounded-none p-6 sm:p-8 text-center"
+   665→      style={{ backgroundColor: '#f8f9fa', border: `1px solid ${COLORS.border}` }}
+   666→    >
+   667→      <Send className="size-8 mx-auto mb-3" style={{ color: COLORS.primary }} />
+   668→      <h3 className="text-lg sm:text-xl font-bold" style={{ color: COLORS.secondary }}>
+   669→        Newsletter ElectroDépôt
+   670→      </h3>
+   671→      <p className="mt-1 text-sm max-w-md mx-auto" style={{ color: COLORS.muted }}>
+   672→        Inscrivez-vous pour recevoir nos offres exclusives, promotions et nouveautés directement dans votre boîte mail.
+   673→      </p>
+   674→        <form onSubmit={handleSubmit} className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 max-w-md mx-auto">
+   675→          <Input
+   676→            type="email"
+   677→            placeholder="Votre adresse email"
+   678→            value={email}
+   679→            onChange={(e) => setEmail(e.target.value)}
+   680→            required
+   681→            className="flex-1 h-10 rounded-none text-sm"
+   682→            style={{ borderColor: COLORS.border }}
+   683→          />
+   684→          <Button
+   685→            type="submit"
+   686→            className="h-10 px-6 rounded-none text-sm font-bold uppercase tracking-wide hover:opacity-90"
+   687→            style={{ backgroundColor: COLORS.primary, color: '#fff' }}
+   688→          >
+   689→            S&apos;inscrire
+   690→          </Button>
+   691→        </form>
+   692→    </div>
+   693→  )
+   694→}
+   695→
+   696→// ─── 11. Footer ──────────────────────────────────────────────────────────────
+   697→
+   698→function Footer({ shopName, whatsapp }: { shopName?: string; whatsapp?: string }) {
+   699→  return (
+   700→    <footer style={{ backgroundColor: COLORS.secondary }} className="mt-0">
+   701→      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+   702→        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+   703→          {/* Col 1 - About */}
+   704→          <div>
+   705→            <h4 className="text-white font-bold text-base mb-3">
+   706→              {shopName || 'ElectroDépôt'}
+   707→            </h4>
+   708→            <p className="text-white/60 text-sm leading-relaxed">
+   709→              Votre destination numéro 1 pour l&apos;électronique et l&apos;électroménager.
+   710→              Qualité, prix et service depuis plus de 10 ans.
+   711→            </p>
+   712→            <div className="flex items-center gap-3 mt-4">
+   713→              <div className="flex items-center justify-center w-8 h-8 bg-white/10 text-white">
+   714→                <Phone className="size-4" />
+   715→              </div>
+   716→              <span className="text-white/60 text-sm">+225 00 00 00 00</span>
+   717→            </div>
+   718→            {whatsapp && (
+   719→              <a
+   720→                href={`https://wa.me/${whatsapp.replace(/\D/g, '')}`}
+   721→                target="_blank"
+   722→                rel="noopener noreferrer"
+   723→                className="mt-2 inline-flex items-center gap-2 text-xs font-medium text-white/70 hover:text-white transition-colors"
+   724→              >
+   725→                💬 Commander via WhatsApp
+   726→              </a>
+   727→            )}
+   728→          </div>
+   729→
+   730→          {/* Col 2 - Categories */}
+   731→          <div>
+   732→            <h4 className="text-white font-bold text-base mb-3">Nos Catégories</h4>
+   733→            <ul className="space-y-2">
+   734→              {['Téléphones', 'TV & Son', 'Informatique', 'Électroménager', 'Climatisation', 'Gaming'].map((item) => (
+   735→                <li key={item}>
+   736→                  <span className="text-white/50 text-sm hover:text-white/80 transition-colors cursor-pointer">
+   737→                    {item}
+   738→                  </span>
+   739→                </li>
+   740→              ))}
+   741→            </ul>
+   742→          </div>
+   743→
+   744→          {/* Col 3 - Services */}
+   745→          <div>
+   746→            <h4 className="text-white font-bold text-base mb-3">Services</h4>
+   747→            <ul className="space-y-2">
+   748→              {[
+   749→                'Livraison gratuite',
+   750→                'Retour sous 30 jours',
+   751→                'Garantie 2 ans',
+   752→                'Paiement sécurisé',
+   753→                'Installation à domicile',
+   754→                'Service après-vente',
+   755→              ].map((item) => (
+   756→                <li key={item}>
+   757→                  <span className="text-white/50 text-sm hover:text-white/80 transition-colors cursor-pointer">
+   758→                    {item}
+   759→                  </span>
+   760→                </li>
+   761→              ))}
+   762→            </ul>
+   763→          </div>
+   764→
+   765→          {/* Col 4 - Contact */}
+   766→          <div>
+   767→            <h4 className="text-white font-bold text-base mb-3">Contact</h4>
+   768→            <div className="space-y-3">
+   769→              <div className="flex items-start gap-2">
+   770→                <MapPin className="size-4 text-white/40 flex-shrink-0 mt-0.5" />
+   771→                <span className="text-white/50 text-sm">Abidjan, Cocody Riviera Palmeraie</span>
+   772→              </div>
+   773→              <div className="flex items-start gap-2">
+   774→                <Phone className="size-4 text-white/40 flex-shrink-0 mt-0.5" />
+   775→                <span className="text-white/50 text-sm">+225 00 00 00 00</span>
+   776→              </div>
+   777→              <div className="flex items-start gap-2">
+   778→                <Mail className="size-4 text-white/40 flex-shrink-0 mt-0.5" />
+   779→                <span className="text-white/50 text-sm">contact@electrodepot.ci</span>
+   780→              </div>
+   781→              <div className="flex items-start gap-2">
+   782→                <Clock className="size-4 text-white/40 flex-shrink-0 mt-0.5" />
+   783→                <span className="text-white/50 text-sm">Lun - Sam : 8h - 20h</span>
+   784→              </div>
+   785→            </div>
+   786→          </div>
+   787→        </div>
+   788→
+   789→        {/* Bottom bar */}
+   790→        <div className="mt-8 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3" style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+   791→          <span className="text-white/40 text-xs">
+   792→            © {new Date().getFullYear()} {shopName || 'ElectroDépôt'}. Tous droits réservés.
+   793→          </span>
+   794→          <div className="flex items-center gap-4">
+   795→            <span className="text-white/40 text-xs hover:text-white/60 cursor-pointer transition-colors">Conditions générales</span>
+   796→            <span className="text-white/40 text-xs hover:text-white/60 cursor-pointer transition-colors">Politique de confidentialité</span>
+   797→          </div>
+   798→        </div>
+   799→      </div>
+   800→    </footer>
+   801→  )
+   802→}
+   803→
+   804→// ─── Empty State ──────────────────────────────────────────────────────────────
+   805→
+   806→function EmptyState({
+   807→  searchQuery,
+   808→  onReset,
+   809→}: {
+   810→  searchQuery: string
+   811→  onReset: () => void
+   812→}) {
+   813→  return (
+   814→    <motion.div
+   815→      initial={{ opacity: 0, scale: 0.95 }}
+   816→      animate={{ opacity: 1, scale: 1 }}
+   817→      className="flex flex-col items-center justify-center py-20 text-center px-4"
+   818→    >
+   819→      <div className="flex items-center justify-center w-20 h-20 rounded-full mb-4" style={{ backgroundColor: '#fef2f2' }}>
+   820→        <Search className="size-8" style={{ color: COLORS.primary }} />
+   821→      </div>
+   822→      <h3 className="text-lg font-bold" style={{ color: COLORS.text }}>
+   823→        Aucun résultat trouvé
+   824→      </h3>
+   825→      <p className="mt-2 text-sm max-w-sm" style={{ color: COLORS.muted }}>
+   826→        {searchQuery
+   827→          ? `Aucun produit ne correspond à "${searchQuery}". Essayez un autre terme de recherche.`
+   828→          : 'Aucun produit dans cette catégorie pour le moment.'}
+   829→      </p>
+   830→      <Button
+   831→        onClick={onReset}
+   832→        className="mt-4 rounded-none px-5 font-bold text-sm uppercase tracking-wide hover:opacity-90"
+   833→        style={{ backgroundColor: COLORS.primary, color: '#fff' }}
+   834→      >
+   835→        Réinitialiser les filtres
+   836→      </Button>
+   837→    </motion.div>
+   838→  )
+   839→}
+   840→
+   841→// ─── Main Component ──────────────────────────────────────────────────────────
+   842→
+   843→export function ElectroDepotGrid({
+   844→  filteredProducts,
+   845→  publicCategories,
+   846→  publicProducts,
+   847→  activeCategory,
+   848→  searchQuery,
+   849→  sortBy,
+   850→  isSearching,
+   851→  totalProductCount,
+   852→  onCategoryClick,
+   853→  onProductClick,
+   854→  onAddToCart,
+   855→  getCartQuantity,
+   856→  updateCartQuantity,
+   857→  onSortChange,
+   858→  onSearchChange,
+   859→  shopName,
+   860→  whatsapp,
+   861→}: ElectroDepotGridProps) {
+   862→  const [localSearch, setLocalSearch] = useState(searchQuery)
+   863→  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+   864→
+   865→  // Debounced search
+   866→  const handleSearchChange = useCallback(
+   867→    (value: string) => {
+   868→      setLocalSearch(value)
+   869→      if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
+   870→      searchTimerRef.current = setTimeout(() => {
+   871→        onSearchChange(value)
+   872→      }, 300)
+   873→    },
+   874→    [onSearchChange]
+   875→  )
+   876→
+   877→  // Whether we're in a "home" view vs filtered/search view
+   878→  const isFiltering = isSearching || searchQuery.trim() !== '' || activeCategory !== null
+   879→
+   880→  // Determine "recommended" products (first 10 available)
+   881→  const recommendedProducts = publicProducts
+   882→    .filter((p) => p.isAvailable && (p.stock ?? 0) > 0)
+   883→    .slice(0, 10)
+   884→
+   885→  // Determine "featured" products (next batch after recommended)
+   886→  const featuredProducts = publicProducts
+   887→    .filter((p) => p.isAvailable && (p.stock ?? 0) > 0)
+   888→    .slice(10, 18)
+   889→
+   890→  // Empty state: no products at all
+   891→  if (!isSearching && publicProducts.length === 0) {
+   892→    return (
+   893→      <div className="w-full">
+   894→        <PromoBar />
+   895→        <div className="flex flex-col items-center justify-center py-20 px-4">
+   896→          <div className="flex items-center justify-center w-20 h-20 rounded-full mb-4" style={{ backgroundColor: '#fef2f2' }}>
+   897→            <Package className="size-10" style={{ color: COLORS.primary, opacity: 0.5 }} />
+   898→          </div>
+   899→          <h3 className="text-lg font-bold" style={{ color: COLORS.text }}>
+   900→            Aucun produit disponible
+   901→          </h3>
+   902→          <p className="mt-2 text-sm text-center max-w-md" style={{ color: COLORS.muted }}>
+   903→            Cette boutique n&apos;a pas encore de produits. Revenez bientôt pour découvrir notre sélection !
+   904→          </p>
+   905→        </div>
+   906→        <Footer shopName={shopName} whatsapp={whatsapp} />
+   907→      </div>
+   908→    )
+   909→  }
+   910→
+   911→  return (
+   912→    <div className="w-full min-h-screen flex flex-col" style={{ backgroundColor: COLORS.bg }}>
+   913→      <MarqueeStyles />
+   914→
+   915→      {/* ─── 1. Promo Bar ─── */}
+   916→      <PromoBar />
+   917→
+   918→      {/* ─── 2. Hero Slider ─── */}
+   919→      {!isFiltering && (
+   920→        <div className="px-0">
+   921→          <HeroSlider shopName={shopName} onCategoryClick={onCategoryClick} />
+   922→        </div>
+   923→      )}
+   924→
+   925→      {/* ─── Main Content ─── */}
+   926→      <div className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6">
+   927→        {/* ─── 3. Quick Category Circles ─── */}
+   928→        <Section className="mt-6 sm:mt-8">
+   929→          <QuickCategoryCircles
+   930→            publicCategories={publicCategories}
+   931→            activeCategory={activeCategory}
+   932→            onCategoryClick={onCategoryClick}
+   933→          />
+   934→        </Section>
+   935→
+   936→        {/* ─── Search + Sort ─── */}
+   937→        <Section className="mt-5">
+   938→          <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+   939→            <div className="relative flex-1">
+   940→              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4" style={{ color: COLORS.muted }} />
+   941→              <Input
+   942→                type="text"
+   943→                placeholder="Rechercher un produit..."
+   944→                value={localSearch}
+   945→                onChange={(e) => handleSearchChange(e.target.value)}
+   946→                className="pl-10 pr-10 h-10 rounded-none text-sm"
+   947→                style={{ borderColor: COLORS.border }}
+   948→              />
+   949→              {localSearch && (
+   950→                <button
+   951→                  onClick={() => handleSearchChange('')}
+   952→                  className="absolute right-3 top-1/2 -translate-y-1/2 hover:opacity-70 transition-opacity"
+   953→                  aria-label="Effacer la recherche"
+   954→                >
+   955→                  <X className="size-4" style={{ color: COLORS.muted }} />
+   956→                </button>
+   957→              )}
+   958→            </div>
+   959→            <div className="flex gap-2">
+   960→              <select
+   961→                value={sortBy}
+   962→                onChange={(e) => onSortChange(e.target.value)}
+   963→                className="h-10 px-3 rounded-none text-sm border cursor-pointer focus:outline-none focus:ring-1"
+   964→                style={{ borderColor: COLORS.border, color: COLORS.text }}
+   965→              >
+   966→                <option value="recent">Plus récent</option>
+   967→                <option value="price-asc">Prix croissant</option>
+   968→                <option value="price-desc">Prix décroissant</option>
+   969→              </select>
+   970→              {isFiltering && (
+   971→                <Button
+   972→                  onClick={() => {
+   973→                    onSearchChange('')
+   974→                    setLocalSearch('')
+   975→                    onCategoryClick(null)
+   976→                  }}
+   977→                  className="h-10 px-3 rounded-none text-xs font-semibold hover:opacity-90"
+   978→                  style={{ backgroundColor: COLORS.secondary, color: '#fff' }}
+   979→                >
+   980→                  <X className="size-3.5 mr-1" />
+   981→                  Effacer
+   982→                </Button>
+   983→              )}
+   984→            </div>
+   985→          </div>
+   986→        </Section>
+   987→
+   988→        {/* ─── Results Info ─── */}
+   989→        {isFiltering && filteredProducts.length > 0 && (
+   990→          <div className="flex items-center gap-2 mt-4 text-sm" style={{ color: COLORS.muted }}>
+   991→            <ShoppingBag className="size-4" />
+   992→            <span>
+   993→              {filteredProducts.length} produit{filteredProducts.length > 1 ? 's' : ''} trouvé{filteredProducts.length > 1 ? 's' : ''}
+   994→              {searchQuery && <> pour &laquo;{searchQuery}&raquo;</>}
+   995→            </span>
+   996→          </div>
+   997→        )}
+   998→
+   999→        {/* ═══════════════ HOME VIEW (no filters) ═══════════════ */}
+  1000→        {!isFiltering && (
+  1001→          <>
+  1002→            {/* ─── 4. Recommended Products ─── */}
+  1003→            {recommendedProducts.length > 0 && (
+  1004→              <Section className="mt-8 sm:mt-10">
+  1005→                <div className="flex items-center gap-3 mb-5">
+  1006→                  <div className="w-1 h-7 rounded-none" style={{ backgroundColor: COLORS.primary }} />
+  1007→                  <h2 className="text-lg sm:text-xl font-bold" style={{ color: COLORS.secondary }}>
+  1008→                    NOS PRODUITS RECOMMANDÉS
+  1009→                  </h2>
+  1010→                  <Star className="size-4" style={{ color: COLORS.accent }} />
+  1011→                </div>
+  1012→                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+  1013→                  {recommendedProducts.map((product, index) => (
+  1014→                    <ElectroDepotProductCard
+  1015→                      key={product.id}
+  1016→                      product={product}
+  1017→                      onAddToCart={onAddToCart}
+  1018→                      onProductClick={onProductClick}
+  1019→                      getCartQuantity={getCartQuantity}
+  1020→                      updateCartQuantity={updateCartQuantity}
+  1021→                      index={index}
+  1022→                    />
+  1023→                  ))}
+  1024→                </div>
+  1025→              </Section>
+  1026→            )}
+  1027→
+  1028→            {/* ─── 5. Trust Badges ─── */}
+  1029→            <Section className="mt-8 sm:mt-10">
+  1030→              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+  1031→                {TRUST_BADGES.map((badge, index) => (
+  1032→                  <motion.div
+  1033→                    key={badge.label}
+  1034→                    whileHover={{ y: -3 }}
+  1035→                    className="flex flex-col items-center gap-2.5 p-4 sm:p-5 text-center"
+  1036→                    style={{ border: `1px solid ${COLORS.border}`, borderRadius: '2px', backgroundColor: '#fafafa' }}
+  1037→                  >
+  1038→                    <div
+  1039→                      className="flex items-center justify-center w-12 h-12 rounded-full"
+  1040→                      style={{ backgroundColor: '#fef2f2' }}
+  1041→                    >
+  1042→                      <badge.icon className="size-5" style={{ color: COLORS.primary }} />
+  1043→                    </div>
+  1044→                    <span className="text-sm font-bold" style={{ color: COLORS.secondary }}>
+  1045→                      {badge.label}
+  1046→                    </span>
+  1047→                    <span className="text-[11px]" style={{ color: COLORS.muted }}>
+  1048→                      {badge.desc}
+  1049→                    </span>
+  1050→                  </motion.div>
+  1051→                ))}
+  1052→              </div>
+  1053→            </Section>
+  1054→
+  1055→            {/* ─── 6. Promotional Banner ─── */}
+  1056→            <Section className="mt-8 sm:mt-10">
+  1057→              <PromoBanner onCategoryClick={onCategoryClick} />
+  1058→            </Section>
+  1059→
+  1060→            {/* ─── 7. Featured Products ─── */}
+  1061→            {featuredProducts.length > 0 && (
+  1062→              <Section className="mt-8 sm:mt-10">
+  1063→                <div className="flex items-center gap-3 mb-5">
+  1064→                  <div className="w-1 h-7 rounded-none" style={{ backgroundColor: COLORS.accent }} />
+  1065→                  <h2 className="text-lg sm:text-xl font-bold" style={{ color: COLORS.secondary }}>
+  1066→                    PRODUITS EN VEDETTE
+  1067→                  </h2>
+  1068→                  <ShoppingBag className="size-4" style={{ color: COLORS.accent }} />
+  1069→                </div>
+  1070→                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
+  1071→                  {featuredProducts.map((product, index) => (
+  1072→                    <ElectroDepotProductCard
+  1073→                      key={product.id}
+  1074→                      product={product}
+  1075→                      onAddToCart={onAddToCart}
+  1076→                      onProductClick={onProductClick}
+  1077→                      getCartQuantity={getCartQuantity}
+  1078→                      updateCartQuantity={updateCartQuantity}
+  1079→                      index={index}
+  1080→                    />
+  1081→                  ))}
+  1082→                </div>
+  1083→              </Section>
+  1084→            )}
+  1085→
+  1086→            {/* ─── 8. Double Promo Banners ─── */}
+  1087→            <Section className="mt-8 sm:mt-10">
+  1088→              <DoublePromoBanners onCategoryClick={onCategoryClick} />
+  1089→            </Section>
+  1090→
+  1091→            {/* ─── 9. Brands Marquee ─── */}
+  1092→            <Section className="mt-8 sm:mt-10">
+  1093→              <BrandsMarquee />
+  1094→            </Section>
+  1095→
+  1096→            {/* ─── 10. Newsletter ─── */}
+  1097→            <Section className="mt-8 sm:mt-10">
+  1098→              <NewsletterSection />
+  1099→            </Section>
+  1100→
+  1101→            {/* ─── 11. Footer ─── */}
+  1102→            <Footer shopName={shopName} whatsapp={whatsapp} />
+  1103→          </>
+  1104→        )}
+  1105→
+  1106→        {/* ═══════════════ FILTERED / SEARCH VIEW ═══════════════ */}
+  1107→        {isFiltering && (
+  1108→          <>
+  1109→            {filteredProducts.length === 0 ? (
+  1110→              <div className="mt-8">
+  1111→                <EmptyState
+  1112→                  searchQuery={searchQuery}
+  1113→                  onReset={() => {
+  1114→                    onSearchChange('')
+  1115→                    setLocalSearch('')
+  1116→                    onCategoryClick(null)
+  1117→                  }}
+  1118→                />
+  1119→              </div>
+  1120→            ) : (
+  1121→              <>
+  1122→                {/* Loading skeletons */}
+  1123→                {isSearching && filteredProducts.length === 0 && publicProducts.length > 0 && (
+  1124→                  <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+  1125→                    {Array.from({ length: 10 }).map((_, i) => (
+  1126→                      <div key={i} className="flex flex-col gap-2 overflow-hidden" style={{ border: `1px solid ${COLORS.border}` }}>
+  1127→                        <div className="aspect-square bg-gray-100 animate-pulse" />
+  1128→                        <div className="p-3 space-y-2">
+  1129→                          <div className="h-3 w-3/4 bg-gray-100 rounded-none animate-pulse" />
+  1130→                          <div className="h-4 w-1/2 bg-gray-100 rounded-none animate-pulse" />
+  1131→                          <div className="h-8 w-full bg-gray-100 rounded-none animate-pulse" />
+  1132→                        </div>
+  1133→                      </div>
+  1134→                    ))}
+  1135→                  </div>
+  1136→                )}
+  1137→
+  1138→                {/* Product Grid (filtered) */}
+  1139→                <motion.div
+  1140→                  key={activeCategory + searchQuery + sortBy}
+  1141→                  initial={{ opacity: 0 }}
+  1142→                  animate={{ opacity: 1 }}
+  1143→                  transition={{ duration: 0.3 }}
+  1144→                  className="mt-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4"
+  1145→                >
+  1146→                  {filteredProducts.map((product, index) => (
+  1147→                    <ElectroDepotProductCard
+  1148→                      key={product.id}
+  1149→                      product={product}
+  1150→                      onAddToCart={onAddToCart}
+  1151→                      onProductClick={onProductClick}
+  1152→                      getCartQuantity={getCartQuantity}
+  1153→                      updateCartQuantity={updateCartQuantity}
+  1154→                      index={index}
+  1155→                    />
+  1156→                  ))}
+  1157→                </motion.div>
+  1158→
+  1159→                {/* Product count */}
+  1160→                <motion.p
+  1161→                  initial={{ opacity: 0 }}
+  1162→                  animate={{ opacity: 1 }}
+  1163→                  className="text-center text-sm mt-6 pb-6"
+  1164→                  style={{ color: COLORS.muted }}
+  1165→                >
+  1166→                  {filteredProducts.length} produit{filteredProducts.length > 1 ? 's' : ''} affiché{filteredProducts.length > 1 ? 's' : ''}
+  1167→                </motion.p>
+  1168→
+  1169→                <Footer shopName={shopName} whatsapp={whatsapp} />
+  1170→              </>
+  1171→            )}
+  1172→          </>
+  1173→        )}
+  1174→      </div>
+  1175→    </div>
+  1176→  )
+  1177→}
+  1178→

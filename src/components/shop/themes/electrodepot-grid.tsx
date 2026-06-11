@@ -2,7 +2,7 @@
 
 import useEmblaCarousel from 'embla-carousel-react'
 import Autoplay from 'embla-carousel-autoplay'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
 import { useState, useCallback, useEffect, useRef } from 'react'
 import {
@@ -1136,6 +1136,7 @@ export function ElectroDepotGrid({
                 )}
 
                 {/* Product Grid (filtered) */}
+                <AnimatePresence initial={false}>
                 <motion.div
                   key={activeCategory + searchQuery + sortBy}
                   initial={{ opacity: 0 }}
@@ -1155,6 +1156,7 @@ export function ElectroDepotGrid({
                     />
                   ))}
                 </motion.div>
+                </AnimatePresence>
 
                 {/* Product count */}
                 <motion.p

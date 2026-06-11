@@ -457,7 +457,7 @@ export function GroceryGrid({
         />
       ) : (
         <>
-          <AnimatePresence mode="wait">
+          <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={`${activeCategory}-${searchQuery}-${sortBy}`}
               initial={{ opacity: 0 }}

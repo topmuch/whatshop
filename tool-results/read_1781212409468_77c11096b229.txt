@@ -1,0 +1,1765 @@
+     1→'use client'
+     2→
+     3→/**
+     4→ * ElectroShopPage — Template xstore-electro
+     5→ * Reconstruit de zéro avec l'ordre exact demandé :
+     6→ *   1. Menu (Logo 255×82 + Accueil / Nos Produits / Contactez Nous)
+     7→ *   2. Slide Hero (1180×600)
+     8→ *   3. Catégories
+     9→ *   4. Produits (grille 400×400)
+    10→ *   5. Footer
+    11→ *
+    12→ * Couleur principale : Bleu #0066FF
+    13→ */
+    14→
+    15→import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
+    16→import { motion, AnimatePresence } from 'framer-motion'
+    17→import { toast } from 'sonner'
+    18→import { Button } from '@/components/ui/button'
+    19→import { Input } from '@/components/ui/input'
+    20→import { Badge } from '@/components/ui/badge'
+    21→import { Skeleton } from '@/components/ui/skeleton'
+    22→import { ScrollArea } from '@/components/ui/scroll-area'
+    23→import { Separator } from '@/components/ui/separator'
+    24→import {
+    25→  Search,
+    26→  X,
+    27→  Plus,
+    28→  Minus,
+    29→  Trash2,
+    30→  Package,
+    31→  ShoppingBag,
+    32→  ChevronRight,
+    33→  MessageCircle,
+    34→  ShoppingCart,
+    35→  ArrowLeft,
+    36→  Truck,
+    37→  Shield,
+    38→  Phone,
+    39→  MapPin,
+    40→  ChevronUp,
+    41→  ChevronDown,
+    42→  Zap,
+    43→  Star,
+    44→  ArrowRight,
+    45→  Eye,
+    46→  LayoutGrid,
+    47→} from 'lucide-react'
+    48→import { useAppStore, type Product, type Category } from '@/lib/store'
+    49→import { formatPrice, openWhatsApp } from '@/lib/shared'
+    50→
+    51→// ─── Couleurs du template ELECTRO BLEU ───
+    52→const BLUE = {
+    53→  primary: '#0066FF',
+    54→  primaryDark: '#0052CC',
+    55→  primaryLight: '#E6F0FF',
+    56→  primaryHover: '#0052CC',
+    57→  primaryFg: '#FFFFFF',
+    58→  text: '#1e293b',
+    59→  textMuted: '#64748b',
+    60→  textLight: '#94a3b8',
+    61→  bg: '#FFFFFF',
+    62→  bgGray: '#f8fafc',
+    63→  border: '#e2e8f0',
+    64→  borderLight: '#f1f5f9',
+    65→  whatsapp: '#000000',
+    66→  whatsappFg: '#FFFFFF',
+    67→  price: '#0066FF',
+    68→} as const
+    69→
+    70→type SortOption = 'recent' | 'price-asc' | 'price-desc'
+    71→
+    72→// ═══════════════════════════════════════════════════════════════
+    73→// SECTION 1 : MENU (Logo + Navigation)
+    74→// ═══════════════════════════════════════════════════════════════
+    75→
+    76→function ElectroMenu({
+    77→  shopName,
+    78→  logo,
+    79→  whatsapp,
+    80→  cartCount,
+    81→  onNavAccueil,
+    82→  onNavProduits,
+    83→  onCartClick,
+    84→}: {
+    85→  shopName: string
+    86→  logo?: string
+    87→  whatsapp?: string
+    88→  cartCount: number
+    89→  onNavAccueil: () => void
+    90→  onNavProduits: () => void
+    91→  onCartClick: () => void
+    92→}) {
+    93→  const [mobileOpen, setMobileOpen] = useState(false)
+    94→
+    95→  return (
+    96→    <header className="sticky top-0 z-50 bg-white shadow-sm border-b" style={{ borderColor: BLUE.border }}>
+    97→      <div className="max-w-[1400px] mx-auto px-4 lg:px-6">
+    98→        <div className="flex items-center justify-between h-[70px]">
+    99→          {/* Logo — 255×82 */}
+   100→          <button onClick={onNavAccueil} className="flex items-center gap-2 shrink-0">
+   101→            {logo && logo.length > 0 ? (
+   102→              <img
+   103→                src={logo}
+   104→                alt={shopName}
+   105→                className="h-[82px] w-[255px] object-contain"
+   106→              />
+   107→            ) : (
+   108→              <div
+   109→                className="flex items-center gap-2 h-[82px] w-[255px] rounded-lg"
+   110→              >
+   111→                <div
+   112→                  className="flex items-center justify-center w-12 h-12 rounded-xl"
+   113→                  style={{ background: BLUE.primary, color: BLUE.primaryFg }}
+   114→                >
+   115→                  <Zap className="size-6" />
+   116→                </div>
+   117→                <div className="text-left">
+   118→                  <span className="text-lg font-bold" style={{ color: BLUE.text }}>
+   119→                    {shopName}
+   120→                  </span>
+   121→                  <span className="block text-[10px] uppercase tracking-widest" style={{ color: BLUE.textMuted }}>
+   122→                    Boutique en ligne
+   123→                  </span>
+   124→                </div>
+   125→              </div>
+   126→            )}
+   127→          </button>
+   128→
+   129→          {/* Desktop Navigation */}
+   130→          <nav className="hidden md:flex items-center gap-1">
+   131→            <button
+   132→              onClick={onNavAccueil}
+   133→              className="px-5 py-2 text-sm font-semibold rounded-lg transition-all duration-200 hover:bg-blue-50"
+   134→              style={{ color: BLUE.text }}
+   135→            >
+   136→              Accueil
+   137→            </button>
+   138→            <button
+   139→              onClick={onNavProduits}
+   140→              className="px-5 py-2 text-sm font-semibold rounded-lg transition-all duration-200 hover:bg-blue-50"
+   141→              style={{ color: BLUE.text }}
+   142→            >
+   143→              Nos Produits
+   144→            </button>
+   145→            {whatsapp && (
+   146→              <a
+   147→                href={`https://wa.me/${whatsapp.replace(/\D/g, '')}`}
+   148→                target="_blank"
+   149→                rel="noopener noreferrer"
+   150→                className="px-5 py-2 text-sm font-semibold rounded-lg transition-all duration-200 hover:bg-blue-50 flex items-center gap-1.5"
+   151→                style={{ color: BLUE.text }}
+   152→              >
+   153→                Contactez Nous
+   154→              </a>
+   155→            )}
+   156→          </nav>
+   157→
+   158→          {/* Cart + Mobile menu */}
+   159→          <div className="flex items-center gap-2">
+   160→            <Button
+   161→              variant="ghost"
+   162→              size="icon"
+   163→              className="relative h-10 w-10 rounded-lg hover:bg-blue-50"
+   164→              onClick={onCartClick}
+   165→            >
+   166→              <ShoppingCart className="size-5" style={{ color: BLUE.text }} />
+   167→              {cartCount > 0 && (
+   168→                <span
+   169→                  className="absolute -top-1 -right-1 text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center text-white"
+   170→                  style={{ background: BLUE.primary }}
+   171→                >
+   172→                  {cartCount > 9 ? '9+' : cartCount}
+   173→                </span>
+   174→              )}
+   175→            </Button>
+   176→
+   177→            {/* Mobile hamburger */}
+   178→            <button
+   179→              onClick={() => setMobileOpen(!mobileOpen)}
+   180→              className="md:hidden flex flex-col gap-1 p-2"
+   181→              aria-label="Menu"
+   182→            >
+   183→              <span
+   184→                className="block w-5 h-0.5 rounded transition-all"
+   185→                style={{ background: mobileOpen ? 'transparent' : BLUE.text }}
+   186→              />
+   187→              <span
+   188→                className="block w-5 h-0.5 rounded transition-all"
+   189→                style={{
+   190→                  background: BLUE.text,
+   191→                  transform: mobileOpen ? 'rotate(45deg) translate(3px, 3px)' : 'none',
+   192→                }}
+   193→              />
+   194→              <span
+   195→                className="block w-5 h-0.5 rounded transition-all"
+   196→                style={{
+   197→                  background: BLUE.text,
+   198→                  transform: mobileOpen ? 'rotate(-45deg) translate(3px, -3px)' : 'none',
+   199→                }}
+   200→              />
+   201→            </button>
+   202→          </div>
+   203→        </div>
+   204→      </div>
+   205→
+   206→      {/* Mobile Menu Dropdown */}
+   207→      <AnimatePresence>
+   208→        {mobileOpen && (
+   209→          <motion.div
+   210→            initial={{ height: 0, opacity: 0 }}
+   211→            animate={{ height: 'auto', opacity: 1 }}
+   212→            exit={{ height: 0, opacity: 0 }}
+   213→            transition={{ duration: 0.2 }}
+   214→            className="md:hidden overflow-hidden border-t"
+   215→            style={{ borderColor: BLUE.border, background: BLUE.bg }}
+   216→          >
+   217→            <div className="px-4 py-3 space-y-1">
+   218→              <button
+   219→                onClick={() => { onNavAccueil(); setMobileOpen(false) }}
+   220→                className="block w-full text-left px-4 py-3 text-sm font-semibold rounded-lg hover:bg-blue-50 transition-colors"
+   221→                style={{ color: BLUE.text }}
+   222→              >
+   223→                Accueil
+   224→              </button>
+   225→              <button
+   226→                onClick={() => { onNavProduits(); setMobileOpen(false) }}
+   227→                className="block w-full text-left px-4 py-3 text-sm font-semibold rounded-lg hover:bg-blue-50 transition-colors"
+   228→                style={{ color: BLUE.text }}
+   229→              >
+   230→                Nos Produits
+   231→              </button>
+   232→              {whatsapp && (
+   233→                <a
+   234→                  href={`https://wa.me/${whatsapp.replace(/\D/g, '')}`}
+   235→                  target="_blank"
+   236→                  rel="noopener noreferrer"
+   237→                  onClick={() => setMobileOpen(false)}
+   238→                  className="block w-full text-left px-4 py-3 text-sm font-semibold rounded-lg hover:bg-blue-50 transition-colors"
+   239→                  style={{ color: BLUE.text }}
+   240→                >
+   241→                  Contactez Nous
+   242→                </a>
+   243→              )}
+   244→            </div>
+   245→          </motion.div>
+   246→        )}
+   247→      </AnimatePresence>
+   248→    </header>
+   249→  )
+   250→}
+   251→
+   252→// ═══════════════════════════════════════════════════════════════
+   253→// SECTION 2 : SLIDE HERO (1180×600)
+   254→// ═══════════════════════════════════════════════════════════════
+   255→
+   256→function ElectroHeroSlide({
+   257→  shopName,
+   258→  heroImages,
+   259→  whatsapp,
+   260→  onShopNow,
+   261→}: {
+   262→  shopName: string
+   263→  heroImages?: string
+   264→  whatsapp?: string
+   265→  onShopNow: () => void
+   266→}) {
+   267→  const [currentSlide, setCurrentSlide] = useState(0)
+   268→  const images: string[] = useMemo(() => {
+   269→    if (!heroImages) return []
+   270→    try {
+   271→      const parsed = JSON.parse(heroImages)
+   272→      return Array.isArray(parsed) ? parsed.filter((img: string) => img && img.length > 0) : []
+   273→    } catch {
+   274→      return heroImages ? [heroImages] : []
+   275→    }
+   276→  }, [heroImages])
+   277→
+   278→  // Auto-slide
+   279→  useEffect(() => {
+   280→    if (images.length <= 1) return
+   281→    const timer = setInterval(() => {
+   282→      setCurrentSlide((prev) => (prev + 1) % images.length)
+   283→    }, 5000)
+   284→    return () => clearInterval(timer)
+   285→  }, [images.length])
+   286→
+   287→  return (
+   288→    <section className="w-full" style={{ background: '#0f172a' }}>
+   289→        <div
+   290→          className="relative w-full overflow-hidden"
+   291→          style={{ aspectRatio: '1180 / 600', maxHeight: '600px' }}
+   292→        >
+   293→          {images.length > 0 ? (
+   294→            <AnimatePresence initial={false}>
+   295→              <motion.div
+   296→                key={currentSlide}
+   297→                initial={{ opacity: 0 }}
+   298→                animate={{ opacity: 1 }}
+   299→                exit={{ opacity: 0 }}
+   300→                transition={{ duration: 0.6, ease: 'easeInOut' }}
+   301→                className="absolute inset-0"
+   302→              >
+   303→                <img
+   304→                  src={images[currentSlide]}
+   305→                  alt={`${shopName} - Bannière ${currentSlide + 1}`}
+   306→                  className="w-full h-full object-cover"
+   307→                />
+   308→                {/* Overlay gradient */}
+   309→                <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-black/20 to-transparent" />
+   310→              </motion.div>
+   311→            </AnimatePresence>
+   312→          ) : (
+   313→            /* Default blue gradient hero when no images */
+   314→            <div
+   315→              className="absolute inset-0 flex items-center"
+   316→              style={{
+   317→                background: `linear-gradient(135deg, ${BLUE.primary} 0%, ${BLUE.primaryDark} 50%, #003d99 100%)`,
+   318→              }}
+   319→            >
+   320→              {/* Decorative circles */}
+   321→              <div className="absolute top-10 right-20 w-64 h-64 rounded-full opacity-10 bg-white" />
+   322→              <div className="absolute bottom-20 right-40 w-40 h-40 rounded-full opacity-5 bg-white" />
+   323→              <div className="absolute top-1/2 right-1/4 w-96 h-96 rounded-full opacity-5 bg-white" />
+   324→
+   325→              <div className="relative z-10 px-8 sm:px-16 max-w-2xl">
+   326→                <motion.div
+   327→                  initial={{ opacity: 0, y: 20 }}
+   328→                  animate={{ opacity: 1, y: 0 }}
+   329→                  transition={{ duration: 0.5 }}
+   330→                >
+   331→                  <div className="flex items-center gap-2 mb-4">
+   332→                    <Star className="size-5 text-yellow-400 fill-yellow-400" />
+   333→                    <span className="text-white/90 text-sm font-medium uppercase tracking-wider">
+   334→                      Bienvenue chez {shopName}
+   335→                    </span>
+   336→                  </div>
+   337→                  <h2 className="text-3xl sm:text-5xl font-extrabold text-white leading-tight mb-4">
+   338→                    Découvrez nos <br />
+   339→                    <span className="text-yellow-300">meilleures offres</span>
+   340→                  </h2>
+   341→                  <p className="text-white/80 text-base sm:text-lg mb-8 max-w-lg">
+   342→                    Des produits de qualité à des prix imbattables. Livraison rapide et service client exceptionnel.
+   343→                  </p>
+   344→                  <div className="flex flex-wrap gap-3">
+   345→                    <button
+   346→                      onClick={onShopNow}
+   347→                      className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl text-white font-bold text-sm transition-all duration-200 hover:scale-105 hover:shadow-lg"
+   348→                      style={{ background: '#FFC107', color: '#1e293b' }}
+   349→                    >
+   350→                      Acheter Maintenant
+   351→                      <ArrowRight className="size-4" />
+   352→                    </button>
+   353→                    {whatsapp && (
+   354→                      <a
+   355→                        href={`https://wa.me/${whatsapp.replace(/\D/g, '')}`}
+   356→                        target="_blank"
+   357→                        rel="noopener noreferrer"
+   358→                        className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl text-white font-bold text-sm border-2 border-white/30 transition-all duration-200 hover:bg-white/10"
+   359→                      >
+   360→                        <MessageCircle className="size-4" />
+   361→                        WhatsApp
+   362→                      </a>
+   363→                    )}
+   364→                  </div>
+   365→                </motion.div>
+   366→              </div>
+   367→            </div>
+   368→          )}
+   369→
+   370→          {/* Slide indicators */}
+   371→          {images.length > 1 && (
+   372→            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 z-20">
+   373→              {images.map((_, idx) => (
+   374→                <button
+   375→                  key={idx}
+   376→                  onClick={() => setCurrentSlide(idx)}
+   377→                  className="h-2 rounded-full transition-all duration-300"
+   378→                  style={{
+   379→                    width: idx === currentSlide ? '24px' : '8px',
+   380→                    background: idx === currentSlide ? BLUE.primaryFg : 'rgba(255,255,255,0.5)',
+   381→                  }}
+   382→                  aria-label={`Slide ${idx + 1}`}
+   383→                />
+   384→              ))}
+   385→            </div>
+   386→          )}
+   387→        </div>
+   388→    </section>
+   389→  )
+   390→}
+   391→
+   392→// ═══════════════════════════════════════════════════════════════
+   393→// SECTION 3 : CATÉGORIES
+   394→// ═══════════════════════════════════════════════════════════════
+   395→
+   396→function ElectroCategories({
+   397→  categories,
+   398→  products,
+   399→  activeCategory,
+   400→  onCategoryClick,
+   401→}: {
+   402→  categories: Category[]
+   403→  products: Product[]
+   404→  activeCategory: string | null
+   405→  onCategoryClick: (id: string | null) => void
+   406→}) {
+   407→  const getCategoryCount = (catId?: string) =>
+   408→    products.filter((p) => p.categoryId === catId && p.isAvailable).length
+   409→
+   410→  const totalAvailable = products.filter((p) => p.isAvailable).length
+   411→
+   412→  if (categories.length === 0) return null
+   413→
+   414→  return (
+   415→    <section className="w-full bg-white">
+   416→      <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-6">
+   417→        <div className="flex items-center gap-3 mb-4">
+   418→          <div className="w-1 h-6 rounded-full" style={{ background: BLUE.primary }} />
+   419→          <h2 className="text-lg font-bold" style={{ color: BLUE.text }}>
+   420→            Nos Catégories
+   421→          </h2>
+   422→        </div>
+   423→
+   424→        <div className="flex gap-5 overflow-x-auto pb-3" style={{ scrollbarWidth: 'none' }}>
+   425→          {/* Tous */}
+   426→          <button
+   427→            onClick={() => onCategoryClick(null)}
+   428→            className="shrink-0 flex flex-col items-center gap-2.5 w-24 sm:w-28"
+   429→          >
+   430→            <div
+   431→              className="flex items-center justify-center size-20 sm:size-24 rounded-full border-2 transition-all duration-200"
+   432→              style={
+   433→                activeCategory === null
+   434→                  ? { background: BLUE.primary, borderColor: BLUE.primary, color: BLUE.primaryFg, boxShadow: `0 4px 16px ${BLUE.primary}33` }
+   435→                  : { background: '#fff', borderColor: BLUE.border, color: BLUE.text }
+   436→              }
+   437→            >
+   438→              <LayoutGrid className="size-7 sm:size-8" />
+   439→            </div>
+   440→            <span className="text-xs sm:text-sm font-medium text-center leading-tight" style={{ color: activeCategory === null ? BLUE.primary : BLUE.textMuted }}>
+   441→              Tous
+   442→            </span>
+   443→            <span className="text-[10px] sm:text-xs" style={{ color: BLUE.textMuted }}>
+   444→              {totalAvailable}
+   445→            </span>
+   446→          </button>
+   447→
+   448→          {categories.map((cat) => {
+   449→            const count = getCategoryCount(cat.id)
+   450→            const isActive = activeCategory === cat.id
+   451→            // Use category image if available, fallback to first product image
+   452→            const catImage = cat.image || products.find((p) => p.categoryId === cat.id && p.image)?.image
+   453→            return (
+   454→              <button
+   455→                key={cat.id}
+   456→                onClick={() => onCategoryClick(isActive ? null : cat.id)}
+   457→                className="shrink-0 flex flex-col items-center gap-2.5 w-24 sm:w-28"
+   458→              >
+   459→                <div
+   460→                  className="flex items-center justify-center size-20 sm:size-24 rounded-full border-2 overflow-hidden transition-all duration-200"
+   461→                  style={
+   462→                    isActive
+   463→                      ? { background: BLUE.primary, borderColor: BLUE.primary, boxShadow: `0 4px 16px ${BLUE.primary}33` }
+   464→                      : { background: '#fff', borderColor: BLUE.border }
+   465→                  }
+   466→                >
+   467→                  {catImage ? (
+   468→                    <img
+   469→                      src={catImage}
+   470→                      alt={cat.name}
+   471→                      className="size-full object-cover"
+   472→                      style={isActive ? { opacity: 0.85 } : {}}
+   473→                    />
+   474→                  ) : (
+   475→                    <ShoppingBag className="size-7 sm:size-8" style={{ color: isActive ? BLUE.primaryFg : BLUE.textMuted }} />
+   476→                  )}
+   477→                </div>
+   478→                <span className="text-xs sm:text-sm font-medium text-center leading-tight max-w-24 sm:max-w-28 truncate" style={{ color: isActive ? BLUE.primary : BLUE.textMuted }}>
+   479→                  {cat.name}
+   480→                </span>
+   481→                <span className="text-[10px] sm:text-xs" style={{ color: BLUE.textMuted }}>
+   482→                  {count}
+   483→                </span>
+   484→              </button>
+   485→            )
+   486→          })}
+   487→        </div>
+   488→      </div>
+   489→    </section>
+   490→  )
+   491→}
+   492→
+   493→// ═══════════════════════════════════════════════════════════════
+   494→// SECTION 4 : CARTE PRODUIT (400×400)
+   495→// ═══════════════════════════════════════════════════════════════
+   496→
+   497→function ElectroProductCard({
+   498→  product,
+   499→  index,
+   500→  onProductClick,
+   501→  onAddToCart,
+   502→  getCartQuantity,
+   503→  updateCartQuantity,
+   504→  whatsapp,
+   505→}: {
+   506→  product: Product
+   507→  index: number
+   508→  onProductClick: (product: Product) => void
+   509→  onAddToCart: (product: Product) => void
+   510→  getCartQuantity: (id: string) => number
+   511→  updateCartQuantity: (id: string, qty: number) => void
+   512→  whatsapp?: string
+   513→}) {
+   514→  const cartQty = getCartQuantity(product.id)
+   515→  const inStock = (product.stock ?? 0) > 0
+   516→
+   517→  return (
+   518→    <motion.div
+   519→      className="group flex flex-col overflow-hidden rounded-xl bg-white transition-all duration-300 cursor-pointer hover:shadow-xl"
+   520→      style={{ border: `1px solid ${BLUE.border}` }}
+   521→      onClick={() => onProductClick(product)}
+   522→      whileTap={{ scale: 0.98 }}
+   523→    >
+   524→      {/* Image 336×280 */}
+   525→      <div className="relative w-full overflow-hidden bg-gray-100" style={{ aspectRatio: '336 / 280' }}>
+   526→        {product.image ? (
+   527→          <img
+   528→            src={product.image}
+   529→            alt={product.name}
+   530→            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+   531→            loading="lazy"
+   532→            onLoad={(e) => { (e.target as HTMLImageElement).style.opacity = '1' }}
+   533→            style={{ opacity: 0, transition: 'opacity 0.3s ease' }}
+   534→          />
+   535→        ) : (
+   536→          <div className="flex h-full w-full items-center justify-center" style={{ background: BLUE.bgGray }}>
+   537→            <Package className="size-16" style={{ color: BLUE.border }} />
+   538→          </div>
+   539→        )}
+   540→
+   541→        {/* Hover overlay */}
+   542→        <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-all duration-300">
+   543→          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center gap-2">
+   544→            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-white shadow-lg">
+   545→              <Eye className="size-5" style={{ color: BLUE.primary }} />
+   546→            </div>
+   547→          </div>
+   548→        </div>
+   549→
+   550→        {/* Rupture badge */}
+   551→        {!inStock && (
+   552→          <div className="absolute top-2 left-2">
+   553→            <Badge className="bg-red-500 text-white border-none text-[10px] font-bold">
+   554→              Rupture
+   555→            </Badge>
+   556→          </div>
+   557→        )}
+   558→
+   559→        {/* Category badge */}
+   560→        {product.categoryName && (
+   561→          <div className="absolute top-2 right-2">
+   562→            <Badge className="text-white border-none text-[10px] font-bold" style={{ background: BLUE.primary }}>
+   563→              {product.categoryName}
+   564→            </Badge>
+   565→          </div>
+   566→        )}
+   567→      </div>
+   568→
+   569→      {/* Product info */}
+   570→      <div className="flex flex-col gap-1.5 p-3">
+   571→        <h3
+   572→          className="font-semibold text-sm line-clamp-2 leading-snug"
+   573→          style={{ color: BLUE.text }}
+   574→        >
+   575→          {product.name}
+   576→        </h3>
+   577→
+   578→        {/* Stock */}
+   579→        <div className="flex items-center gap-1">
+   580→          {inStock ? (
+   581→            <span className="text-[11px] font-medium" style={{ color: '#22c55e' }}>
+   582→              ✓ En stock
+   583→            </span>
+   584→          ) : (
+   585→            <span className="text-[11px] font-medium text-red-500">
+   586→              Rupture de stock
+   587→            </span>
+   588→          )}
+   589→        </div>
+   590→
+   591→        {/* Price */}
+   592→        <div className="mt-1">
+   593→          <span
+   594→            className="inline-block px-2.5 py-1 rounded-lg text-sm font-bold"
+   595→            style={{ background: BLUE.primaryLight, color: BLUE.primary, border: `1px solid ${BLUE.primary}22` }}
+   596→          >
+   597→            {formatPrice(product.price)}
+   598→          </span>
+   599→        </div>
+   600→
+   601→        {/* Spacer */}
+   602→        <div className="flex-1" />
+   603→
+   604→        {/* Actions */}
+   605→        <div className="mt-1">
+   606→          {cartQty === 0 ? (
+   607→            <div className="flex gap-1.5">
+   608→              <Button
+   609→                onClick={(e) => {
+   610→                  e.nativeEvent.stopImmediatePropagation()
+   611→                  onAddToCart(product)
+   612→                  toast.success(`${product.name} ajouté au panier !`)
+   613→                }}
+   614→                className="flex-1 gap-1.5 text-white font-semibold rounded-lg text-sm h-9"
+   615→                style={{ background: BLUE.primary }}
+   616→                disabled={!product.isAvailable || !inStock}
+   617→              >
+   618→                <Plus className="size-3.5" />
+   619→                Ajouter
+   620→              </Button>
+   621→              {whatsapp && (
+   622→                <Button
+   623→                  onClick={(e) => {
+   624→                    e.nativeEvent.stopImmediatePropagation()
+   625→                    openWhatsApp(product, whatsapp)
+   626→                  }}
+   627→                  className="gap-1.5 font-semibold rounded-lg text-sm h-9 px-3"
+   628→                  style={{ background: BLUE.whatsapp, color: BLUE.whatsappFg }}
+   629→                  disabled={!product.isAvailable || !inStock}
+   630→                >
+   631→                  <MessageCircle className="size-3.5" />
+   632→                </Button>
+   633→              )}
+   634→            </div>
+   635→          ) : (
+   636→            <div
+   637→              className="flex items-center justify-between rounded-lg p-1"
+   638→              style={{ background: BLUE.primaryLight, border: `1px solid ${BLUE.primary}33` }}
+   639→            >
+   640→              <Button
+   641→                variant="ghost"
+   642→                size="icon"
+   643→                className="size-8"
+   644→                style={{ color: BLUE.primary }}
+   645→                onClick={(e) => { e.nativeEvent.stopImmediatePropagation(); updateCartQuantity(product.id, cartQty - 1) }}
+   646→              >
+   647→                {cartQty === 1 ? (
+   648→                  <Trash2 className="size-3.5 text-red-500" />
+   649→                ) : (
+   650→                  <Minus className="size-3.5" />
+   651→                )}
+   652→              </Button>
+   653→              <span className="min-w-[2rem] text-center font-bold text-sm" style={{ color: BLUE.text }}>
+   654→                {cartQty}
+   655→              </span>
+   656→              <Button
+   657→                variant="ghost"
+   658→                size="icon"
+   659→                className="size-8"
+   660→                style={{ color: BLUE.primary }}
+   661→                onClick={(e) => { e.nativeEvent.stopImmediatePropagation(); updateCartQuantity(product.id, cartQty + 1) }}
+   662→              >
+   663→                <Plus className="size-3.5" />
+   664→              </Button>
+   665→              {whatsapp && (
+   666→                <Button
+   667→                  variant="ghost"
+   668→                  size="icon"
+   669→                  className="size-8"
+   670→                  style={{ color: BLUE.whatsapp }}
+   671→                  onClick={(e) => { e.nativeEvent.stopImmediatePropagation(); openWhatsApp(product, whatsapp, cartQty) }}
+   672→                >
+   673→                  <MessageCircle className="size-3.5" />
+   674→                </Button>
+   675→              )}
+   676→            </div>
+   677→          )}
+   678→        </div>
+   679→      </div>
+   680→    </motion.div>
+   681→  )
+   682→}
+   683→
+   684→// ═══════════════════════════════════════════════════════════════
+   685→// SECTION 5 : PROMO BANNERS (2 advertising spaces)
+   686→// ═══════════════════════════════════════════════════════════════
+   687→
+   688→function ElectroPromoBanners({
+   689→  promoBannersRaw,
+   690→}: {
+   691→  promoBannersRaw?: string
+   692→}) {
+   693→  const banners = useMemo(() => {
+   694→    if (!promoBannersRaw) return []
+   695→    try {
+   696→      const parsed = JSON.parse(promoBannersRaw)
+   697→      return Array.isArray(parsed) ? parsed : []
+   698→    } catch {
+   699→      return []
+   700→    }
+   701→  }, [promoBannersRaw])
+   702→
+   703→  if (banners.length === 0) return null
+   704→
+   705→  // Display up to 2 banners in a grid, or 1 full width
+   706→  const displayBanners = banners.slice(0, 2)
+   707→
+   708→  return (
+   709→    <section className="w-full py-4" style={{ background: BLUE.bgGray }}>
+   710→      <div className="max-w-[1400px] mx-auto px-4 lg:px-6">
+   711→        <div className={'grid gap-4 ' + (displayBanners.length === 2 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1}')}>
+   712→          {displayBanners.map((banner: { id?: string; image: string; title?: string; link?: string }, idx: number) => (
+   713→            <a
+   714→              key={banner.id || idx}
+   715→              href={banner.link || '#'}
+   716→              target={banner.link ? '_blank' : undefined}
+   717→              rel={banner.link ? 'noopener noreferrer' : undefined}
+   718→              className="block relative rounded-xl overflow-hidden group cursor-pointer"
+   719→              style={{
+   720→                aspectRatio: displayBanners.length === 2 ? '16 / 7' : '16 / 5',
+   721→                border: '1px solid ' + BLUE.border,
+   722→              }}
+   723→              onClick={(e) => {
+   724→                if (!banner.link) e.preventDefault()
+   725→              }}
+   726→            >
+   727→              <img
+   728→                src={banner.image}
+   729→                alt={banner.title || 'Promo ' + (idx + 1)}
+   730→                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+   731→                loading="lazy"
+   732→              />
+   733→              {/* Title overlay */}
+   734→              {banner.title && (
+   735→                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end">
+   736→                  <div className="px-4 pb-3">
+   737→                    <span className="inline-block px-3 py-1 rounded-lg text-white text-xs font-bold uppercase tracking-wider" style={{ background: BLUE.primary }}>
+   738→                      {banner.title}
+   739→                    </span>
+   740→                  </div>
+   741→                </div>
+   742→              )}
+   743→              {/* Hover link indicator */}
+   744→              {banner.link && (
+   745→                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+   746→                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/90 shadow-md">
+   747→                    <ArrowRight className="size-4" style={{ color: BLUE.primary }} />
+   748→                  </div>
+   749→                </div>
+   750→              )}
+   751→            </a>
+   752→          ))}
+   753→        </div>
+   754→      </div>
+   755→    </section>
+   756→  )
+   757→}
+   758→
+   759→// ═══════════════════════════════════════════════════════════════
+   760→// SECTION 6 : BRAND CAROUSEL
+   761→// ═══════════════════════════════════════════════════════════════
+   762→
+   763→function ElectroBrandCarousel({
+   764→  brandsRaw,
+   765→}: {
+   766→  brandsRaw?: string
+   767→}) {
+   768→  const carouselRef = useRef<HTMLDivElement>(null)
+   769→  const [canScrollLeft, setCanScrollLeft] = useState(false)
+   770→  const [canScrollRight, setCanScrollRight] = useState(false)
+   771→
+   772→  const brands = useMemo(() => {
+   773→    if (!brandsRaw) return []
+   774→    try {
+   775→      const parsed = JSON.parse(brandsRaw)
+   776→      return Array.isArray(parsed) ? parsed : []
+   777→    } catch {
+   778→      return []
+   779→    }
+   780→  }, [brandsRaw])
+   781→
+   782→  // Auto-scroll (infinite loop)
+   783→  const scrollOffsetRef = useRef(0)
+   784→
+   785→  useEffect(() => {
+   786→    if (brands.length === 0) return
+   787→    const itemWidth = 160 // px per item
+   788→    const totalWidth = brands.length * itemWidth
+   789→    if (totalWidth === 0) return
+   790→
+   791→    const interval = setInterval(() => {
+   792→      scrollOffsetRef.current += 1
+   793→      if (scrollOffsetRef.current >= totalWidth) {
+   794→        scrollOffsetRef.current = 0
+   795→        carouselRef.current?.scrollTo({ left: 0, behavior: 'instant' as ScrollBehavior })
+   796→      } else if (carouselRef.current) {
+   797→        carouselRef.current.scrollLeft = scrollOffsetRef.current
+   798→      }
+   799→    }, 30) // Speed of auto-scroll
+   800→    return () => clearInterval(interval)
+   801→  }, [brands.length])
+   802→
+   803→  function handleScrollCheck() {
+   804→    if (!carouselRef.current) return
+   805→    const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current
+   806→    setCanScrollLeft(scrollLeft > 0)
+   807→    setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 10)
+   808→  }
+   809→
+   810→  if (brands.length === 0) return null
+   811→
+   812→  // Duplicate brands for infinite scroll effect
+   813→  const displayBrands = [...brands, ...brands]
+   814→
+   815→  return (
+   816→    <section className="w-full bg-white border-y" style={{ borderColor: BLUE.border }}>
+   817→      <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-5">
+   818→        <div className="flex items-center gap-3 mb-4">
+   819→          <div className="w-1 h-6 rounded-full" style={{ background: BLUE.primary }} />
+   820→          <h2 className="text-lg font-bold" style={{ color: BLUE.text }}>
+   821→            Nos Marques
+   822→          </h2>
+   823→        </div>
+   824→      </div>
+   825→
+   826→      <div className="relative max-w-[1400px] mx-auto px-4 lg:px-6">
+   827→        {/* Left scroll button */}
+   828→        {canScrollLeft && (
+   829→          <button
+   830→            onClick={() => carouselRef.current?.scrollBy({ left: -200, behavior: 'smooth' })}
+   831→            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-8 h-8 rounded-full bg-white shadow-md border hover:bg-gray-50 transition-colors"
+   832→            style={{ borderColor: BLUE.border }}
+   833→          >
+   834→            <ChevronRight className="size-4 rotate-180" style={{ color: BLUE.text }} />
+   835→          </button>
+   836→        )}
+   837→
+   838→        {/* Scrollable brand logos */}
+   839→        <div
+   840→          ref={carouselRef}
+   841→          className="flex gap-6 overflow-x-auto pb-2"
+   842→          style={{ scrollbarWidth: 'none' }}
+   843→          onScroll={handleScrollCheck}
+   844→        >
+   845→          {displayBrands.map((brand: { id?: string; name: string; image: string; link?: string }, idx: number) => {
+   846→            const realIdx = idx % brands.length
+   847→            return (
+   848→              <a
+   849→                key={(brand.id || realIdx) + '-' + idx}
+   850→                href={brand.link || '#'}
+   851→                target={brand.link ? '_blank' : undefined}
+   852→                rel={brand.link ? 'noopener noreferrer' : undefined}
+   853→                className="shrink-0 flex flex-col items-center gap-2 group cursor-pointer"
+   854→                onClick={(e) => {
+   855→                  if (!brand.link) e.preventDefault()
+   856→                }}
+   857→              >
+   858→                <div
+   859→                  className="flex items-center justify-center w-[140px] h-[70px] rounded-xl bg-white transition-all duration-200 group-hover:shadow-md group-hover:scale-105 p-3"
+   860→                  style={{ border: '1px solid ' + BLUE.border }}
+   861→                >
+   862→                  <img
+   863→                    src={brand.image}
+   864→                    alt={brand.name}
+   865→                    className="max-w-full max-h-full object-contain grayscale group-hover:grayscale-0 transition-all duration-300"
+   866→                    loading="lazy"
+   867→                  />
+   868→                </div>
+   869→                <span className="text-xs font-medium truncate max-w-[140px]" style={{ color: BLUE.textMuted }}>
+   870→                  {brand.name}
+   871→                </span>
+   872→              </a>
+   873→            )
+   874→          })}
+   875→        </div>
+   876→
+   877→        {/* Right scroll button */}
+   878→        {canScrollRight && (
+   879→          <button
+   880→            onClick={() => carouselRef.current?.scrollBy({ left: 200, behavior: 'smooth' })}
+   881→            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-8 h-8 rounded-full bg-white shadow-md border hover:bg-gray-50 transition-colors"
+   882→            style={{ borderColor: BLUE.border }}
+   883→          >
+   884→            <ChevronRight className="size-4" style={{ color: BLUE.text }} />
+   885→          </button>
+   886→        )}
+   887→      </div>
+   888→    </section>
+   889→  )
+   890→}
+   891→
+   892→// ═══════════════════════════════════════════════════════════════
+   893→// SECTION 7 : FOOTER
+   894→// ═══════════════════════════════════════════════════════════════
+   895→
+   896→function ElectroFooter({
+   897→  shopName,
+   898→  whatsapp,
+   899→  phone,
+   900→  address,
+   901→}: {
+   902→  shopName: string
+   903→  whatsapp?: string
+   904→  phone?: string
+   905→  address?: string
+   906→}) {
+   907→  return (
+   908→    <footer className="w-full mt-12" style={{ background: '#1e293b' }}>
+   909→      {/* Trust badges */}
+   910→      <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-8">
+   911→        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+   912→          <div className="flex items-center gap-3">
+   913→            <div className="flex items-center justify-center w-12 h-12 rounded-xl" style={{ background: BLUE.primary }}>
+   914→              <Truck className="size-6 text-white" />
+   915→            </div>
+   916→            <div>
+   917→              <p className="text-white text-sm font-semibold">Livraison Rapide</p>
+   918→              <p className="text-white/50 text-xs">Partout au Sénégal</p>
+   919→            </div>
+   920→          </div>
+   921→          <div className="flex items-center gap-3">
+   922→            <div className="flex items-center justify-center w-12 h-12 rounded-xl" style={{ background: BLUE.primary }}>
+   923→              <Shield className="size-6 text-white" />
+   924→            </div>
+   925→            <div>
+   926→              <p className="text-white text-sm font-semibold">Paiement Sécurisé</p>
+   927→              <p className="text-white/50 text-xs">100% sécurisé</p>
+   928→            </div>
+   929→          </div>
+   930→          <div className="flex items-center gap-3">
+   931→            <div className="flex items-center justify-center w-12 h-12 rounded-xl" style={{ background: BLUE.primary }}>
+   932→              <Package className="size-6 text-white" />
+   933→            </div>
+   934→            <div>
+   935→              <p className="text-white text-sm font-semibold">Produits Authentiques</p>
+   936→              <p className="text-white/50 text-xs">Qualité garantie</p>
+   937→            </div>
+   938→          </div>
+   939→          <div className="flex items-center gap-3">
+   940→            <div className="flex items-center justify-center w-12 h-12 rounded-xl" style={{ background: BLUE.whatsapp }}>
+   941→              <MessageCircle className="size-6" style={{ color: BLUE.whatsappFg }} />
+   942→            </div>
+   943→            <div>
+   944→              <p className="text-white text-sm font-semibold">Support WhatsApp</p>
+   945→              <p className="text-white/50 text-xs">Réponse rapide</p>
+   946→            </div>
+   947→          </div>
+   948→        </div>
+   949→
+   950→        <Separator className="bg-white/10 mb-6" />
+   951→
+   952→        {/* Contact info + copyright */}
+   953→        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+   954→          <div className="flex flex-col items-center md:items-start gap-1">
+   955→            <p className="text-white font-bold">{shopName}</p>
+   956→            <div className="flex items-center gap-4 text-white/50 text-xs">
+   957→              {whatsapp && (
+   958→                <span className="flex items-center gap-1">
+   959→                  <Phone className="size-3" />
+   960→                  {whatsapp}
+   961→                </span>
+   962→              )}
+   963→              {address && (
+   964→                <span className="flex items-center gap-1">
+   965→                  <MapPin className="size-3" />
+   966→                  {address}
+   967→                </span>
+   968→              )}
+   969→            </div>
+   970→          </div>
+   971→          <p className="text-white/30 text-xs">
+   972→            © {new Date().getFullYear()} {shopName}. Tous droits réservés. Propulsé par{' '}
+   973→            <span className="text-white/50 font-medium">Boutiko</span>
+   974→          </p>
+   975→        </div>
+   976→      </div>
+   977→    </footer>
+   978→  )
+   979→}
+   980→
+   981→// ═══════════════════════════════════════════════════════════════
+   982→// PRODUCT DETAIL VIEW
+   983→// ═══════════════════════════════════════════════════════════════
+   984→
+   985→function ElectroProductDetail({
+   986→  product,
+   987→  whatsapp,
+   988→  onClose,
+   989→  onAddToCart,
+   990→  cartQty,
+   991→  updateCartQuantity,
+   992→}: {
+   993→  product: Product
+   994→  whatsapp?: string
+   995→  onClose: () => void
+   996→  onAddToCart: (product: Product, qty: number) => void
+   997→  cartQty: number
+   998→  updateCartQuantity: (id: string, qty: number) => void
+   999→}) {
+  1000→  const [qty, setQty] = useState(1)
+  1001→  const [imgIndex, setImgIndex] = useState(0)
+  1002→
+  1003→  const productImages = product.images?.length ? product.images : product.image ? [product.image] : []
+  1004→  const inStock = (product.stock ?? 0) > 0
+  1005→
+  1006→  function handleAdd(qty: number) {
+  1007→    for (let i = 0; i < qty; i++) {
+  1008→      onAddToCart(product, 1)
+  1009→    }
+  1010→    toast.success(`${product.name} (x${qty}) ajouté au panier !`)
+  1011→  }
+  1012→
+  1013→  return (
+  1014→    <motion.div
+  1015→      initial={{ opacity: 0, y: 20 }}
+  1016→      animate={{ opacity: 1, y: 0 }}
+  1017→      exit={{ opacity: 0, y: -20 }}
+  1018→      transition={{ duration: 0.25 }}
+  1019→      className="max-w-[1400px] mx-auto px-4 lg:px-6 py-6"
+  1020→    >
+  1021→      {/* Back button */}
+  1022→      <button
+  1023→        onClick={onClose}
+  1024→        className="flex items-center gap-2 text-sm font-semibold mb-6 transition-colors hover:opacity-70"
+  1025→        style={{ color: BLUE.primary }}
+  1026→      >
+  1027→        <ArrowLeft className="size-4" />
+  1028→        Retour à la boutique
+  1029→      </button>
+  1030→
+  1031→      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+  1032→        {/* Image */}
+  1033→        <div>
+  1034→          <div className="aspect-square rounded-2xl overflow-hidden" style={{ background: BLUE.bgGray }}>
+  1035→            {productImages[imgIndex] ? (
+  1036→              <img
+  1037→                src={productImages[imgIndex]}
+  1038→                alt={product.name}
+  1039→                className="w-full h-full object-cover"
+  1040→              />
+  1041→            ) : (
+  1042→              <div className="w-full h-full flex items-center justify-center">
+  1043→                <Package className="size-20" style={{ color: BLUE.border }} />
+  1044→              </div>
+  1045→            )}
+  1046→          </div>
+  1047→          {/* Thumbnails */}
+  1048→          {productImages.length > 1 && (
+  1049→            <div className="flex gap-2 mt-3 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+  1050→              {productImages.map((img, idx) => (
+  1051→                <button
+  1052→                  key={idx}
+  1053→                  onClick={() => setImgIndex(idx)}
+  1054→                  className="shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all"
+  1055→                  style={{
+  1056→                    borderColor: idx === imgIndex ? BLUE.primary : BLUE.border,
+  1057→                    opacity: idx === imgIndex ? 1 : 0.5,
+  1058→                  }}
+  1059→                >
+  1060→                  <img src={img} alt="" className="w-full h-full object-cover" />
+  1061→                </button>
+  1062→              ))}
+  1063→            </div>
+  1064→          )}
+  1065→        </div>
+  1066→
+  1067→        {/* Info */}
+  1068→        <div className="flex flex-col gap-4">
+  1069→          {/* Badges */}
+  1070→          <div className="flex items-center gap-2 flex-wrap">
+  1071→            {product.categoryName && (
+  1072→              <Badge className="text-xs text-white" style={{ background: BLUE.primary }}>
+  1073→                {product.categoryName}
+  1074→              </Badge>
+  1075→            )}
+  1076→            {!inStock && (
+  1077→              <Badge className="bg-red-500 text-white text-xs border-none">
+  1078→                Rupture de stock
+  1079→              </Badge>
+  1080→            )}
+  1081→          </div>
+  1082→
+  1083→          <h1 className="text-2xl font-bold" style={{ color: BLUE.text }}>
+  1084→            {product.name}
+  1085→          </h1>
+  1086→
+  1087→          <p className="text-2xl font-extrabold" style={{ color: BLUE.primary }}>
+  1088→            {formatPrice(product.price)}
+  1089→          </p>
+  1090→
+  1091→          {product.description && (
+  1092→            <p className="text-sm leading-relaxed" style={{ color: BLUE.textMuted }}>
+  1093→              {product.description}
+  1094→            </p>
+  1095→          )}
+  1096→
+  1097→          {inStock && product.stock !== undefined && (
+  1098→            <p className="text-sm" style={{ color: BLUE.textMuted }}>
+  1099→              En stock ({product.stock} disponibles)
+  1100→            </p>
+  1101→          )}
+  1102→
+  1103→          {/* Quantity */}
+  1104→          <div className="p-4 rounded-xl" style={{ background: BLUE.bgGray, border: `1px solid ${BLUE.border}` }}>
+  1105→            <p className="text-sm font-semibold mb-3" style={{ color: BLUE.text }}>Quantité</p>
+  1106→            <div className="flex items-center gap-4 mb-4">
+  1107→              <div className="flex items-center rounded-lg" style={{ border: `1px solid ${BLUE.border}` }}>
+  1108→                <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setQty(Math.max(1, qty - 1))}>
+  1109→                  <Minus className="size-4" />
+  1110→                </Button>
+  1111→                <span className="min-w-[36px] text-center font-bold text-base" style={{ color: BLUE.text }}>{qty}</span>
+  1112→                <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setQty(qty + 1)}>
+  1113→                  <Plus className="size-4" />
+  1114→                </Button>
+  1115→              </div>
+  1116→              <span className="text-lg font-bold" style={{ color: BLUE.primary }}>
+  1117→                {formatPrice(product.price * qty)}
+  1118→              </span>
+  1119→            </div>
+  1120→
+  1121→            <Button
+  1122→              className="w-full h-12 gap-2 text-sm font-bold text-white rounded-xl"
+  1123→              style={{ background: BLUE.primary }}
+  1124→              disabled={!inStock}
+  1125→              onClick={() => handleAdd(qty)}
+  1126→            >
+  1127→              <ShoppingCart className="size-5" />
+  1128→              Ajouter au panier
+  1129→            </Button>
+  1130→          </div>
+  1131→
+  1132→          {/* WhatsApp */}
+  1133→          {whatsapp && (
+  1134→            <Button
+  1135→              className="w-full h-12 gap-2 text-sm font-bold rounded-xl"
+  1136→              style={{ background: BLUE.whatsapp, color: BLUE.whatsappFg }}
+  1137→              disabled={!inStock}
+  1138→              onClick={() => openWhatsApp(product, whatsapp, qty)}
+  1139→            >
+  1140→              <MessageCircle className="size-5" />
+  1141→              Commander sur WhatsApp
+  1142→            </Button>
+  1143→          )}
+  1144→        </div>
+  1145→      </div>
+  1146→    </motion.div>
+  1147→  )
+  1148→}
+  1149→
+  1150→// ═══════════════════════════════════════════════════════════════
+  1151→// CART BAR (bottom fixed)
+  1152→// ═══════════════════════════════════════════════════════════════
+  1153→
+  1154→function ElectroCartBar({
+  1155→  expanded,
+  1156→  onToggle,
+  1157→  onClear,
+  1158→  onCheckout,
+  1159→  total,
+  1160→  itemCount,
+  1161→  cart,
+  1162→  updateCartQuantity,
+  1163→}: {
+  1164→  expanded: boolean
+  1165→  onToggle: () => void
+  1166→  onClear: () => void
+  1167→  onCheckout: () => void
+  1168→  total: number
+  1169→  itemCount: number
+  1170→  cart: { id: string; productId: string; name: string; price: number; image?: string; quantity: number }[]
+  1171→  updateCartQuantity: (id: string, qty: number) => void
+  1172→}) {
+  1173→  return (
+  1174→    <motion.div
+  1175→      initial={{ y: 100 }}
+  1176→      animate={{ y: 0 }}
+  1177→      exit={{ y: 100 }}
+  1178→      transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+  1179→      className="fixed bottom-0 left-0 right-0 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.1)]"
+  1180→    >
+  1181→      {/* Expanded cart */}
+  1182→      <AnimatePresence>
+  1183→        {expanded && (
+  1184→          <motion.div
+  1185→            initial={{ height: 0 }}
+  1186→            animate={{ height: 'auto' }}
+  1187→            exit={{ height: 0 }}
+  1188→            transition={{ duration: 0.25 }}
+  1189→            className="overflow-hidden bg-white border-t"
+  1190→            style={{ borderColor: BLUE.border }}
+  1191→          >
+  1192→            <ScrollArea className="max-h-64">
+  1193→              <div className="max-w-[1400px] mx-auto p-4 space-y-3">
+  1194→                <div className="flex items-center justify-between mb-2">
+  1195→                  <h3 className="font-semibold text-sm" style={{ color: BLUE.text }}>
+  1196→                    Votre panier ({itemCount} article{itemCount !== 1 ? 's' : ''})
+  1197→                  </h3>
+  1198→                  <Button variant="ghost" size="sm" className="text-red-500 h-7 text-xs" onClick={onClear}>
+  1199→                    <Trash2 className="size-3 mr-1" />
+  1200→                    Tout supprimer
+  1201→                  </Button>
+  1202→                </div>
+  1203→                {cart.map((item) => (
+  1204→                  <div key={item.id} className="flex items-center gap-3">
+  1205→                    <div className="w-12 h-12 rounded-lg shrink-0 overflow-hidden" style={{ background: BLUE.bgGray }}>
+  1206→                      {item.image ? (
+  1207→                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+  1208→                      ) : (
+  1209→                        <div className="w-full h-full flex items-center justify-center">
+  1210→                          <Package className="size-5" style={{ color: BLUE.border }} />
+  1211→                        </div>
+  1212→                      )}
+  1213→                    </div>
+  1214→                    <div className="flex-1 min-w-0">
+  1215→                      <p className="text-sm font-medium line-clamp-1" style={{ color: BLUE.text }}>{item.name}</p>
+  1216→                      <p className="text-xs font-bold" style={{ color: BLUE.primary }}>{formatPrice(item.price)}</p>
+  1217→                    </div>
+  1218→                    <div className="flex items-center rounded-lg" style={{ background: BLUE.bgGray }}>
+  1219→                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => updateCartQuantity(item.productId, item.quantity - 1)}>
+  1220→                        {item.quantity === 1 ? <Trash2 className="size-3 text-red-500" /> : <Minus className="size-3" />}
+  1221→                      </Button>
+  1222→                      <span className="text-sm font-semibold min-w-[24px] text-center">{item.quantity}</span>
+  1223→                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => updateCartQuantity(item.productId, item.quantity + 1)}>
+  1224→                        <Plus className="size-3" />
+  1225→                      </Button>
+  1226→                    </div>
+  1227→                    <span className="text-sm font-bold w-24 text-right" style={{ color: BLUE.primary }}>
+  1228→                      {formatPrice(item.price * item.quantity)}
+  1229→                    </span>
+  1230→                  </div>
+  1231→                ))}
+  1232→                <Separator />
+  1233→                <div className="flex items-center justify-between font-bold" style={{ color: BLUE.text }}>
+  1234→                  <span>Total</span>
+  1235→                  <span style={{ color: BLUE.primary }}>{formatPrice(total)}</span>
+  1236→                </div>
+  1237→              </div>
+  1238→            </ScrollArea>
+  1239→          </motion.div>
+  1240→        )}
+  1241→      </AnimatePresence>
+  1242→
+  1243→      {/* Cart bar */}
+  1244→      <div className="bg-white border-t px-4 py-3" style={{ borderColor: BLUE.border }}>
+  1245→        <div className="max-w-[1400px] mx-auto flex items-center gap-3">
+  1246→          <Button
+  1247→            variant="outline"
+  1248→            size="sm"
+  1249→            className="h-10 gap-1.5 shrink-0 rounded-lg"
+  1250→            style={{ borderColor: BLUE.border, color: BLUE.text }}
+  1251→            onClick={onToggle}
+  1252→          >
+  1253→            {expanded ? <ChevronDown className="size-4" /> : <ChevronUp className="size-4" />}
+  1254→            <Badge className="px-1.5 h-5 text-xs text-white rounded-md" style={{ background: BLUE.primary }}>
+  1255→              {itemCount}
+  1256→            </Badge>
+  1257→            <span className="hidden sm:inline text-sm">panier</span>
+  1258→          </Button>
+  1259→
+  1260→          <div className="flex-1">
+  1261→            <p className="text-xs" style={{ color: BLUE.textMuted }}>Total</p>
+  1262→            <p className="font-bold text-sm" style={{ color: BLUE.primary }}>{formatPrice(total)}</p>
+  1263→          </div>
+  1264→
+  1265→          <Button
+  1266→            className="h-10 gap-2 font-semibold text-sm rounded-lg px-6"
+  1267→            style={{ background: BLUE.whatsapp, color: BLUE.whatsappFg }}
+  1268→            onClick={onCheckout}
+  1269→          >
+  1270→            <MessageCircle className="size-4" />
+  1271→            <span className="hidden sm:inline">Commander via WhatsApp</span>
+  1272→            <span className="sm:hidden">Commander</span>
+  1273→          </Button>
+  1274→        </div>
+  1275→      </div>
+  1276→    </motion.div>
+  1277→  )
+  1278→}
+  1279→
+  1280→// ═══════════════════════════════════════════════════════════════
+  1281→// SEARCH BAR
+  1282→// ═══════════════════════════════════════════════════════════════
+  1283→
+  1284→function ElectroSearchBar({
+  1285→  searchQuery,
+  1286→  onSearchChange,
+  1287→  sortBy,
+  1288→  onSortChange,
+  1289→  resultCount,
+  1290→  isSearching,
+  1291→}: {
+  1292→  searchQuery: string
+  1293→  onSearchChange: (q: string) => void
+  1294→  sortBy: SortOption
+  1295→  onSortChange: (s: SortOption) => void
+  1296→  resultCount: number
+  1297→  isSearching: boolean
+  1298→}) {
+  1299→  const [localSearch, setLocalSearch] = useState(searchQuery)
+  1300→  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  1301→
+  1302→  useEffect(() => {
+  1303→    setLocalSearch(searchQuery)
+  1304→  }, [searchQuery])
+  1305→
+  1306→  const handleChange = useCallback(
+  1307→    (value: string) => {
+  1308→      setLocalSearch(value)
+  1309→      if (timerRef.current) clearTimeout(timerRef.current)
+  1310→      timerRef.current = setTimeout(() => onSearchChange(value), 300)
+  1311→    },
+  1312→    [onSearchChange]
+  1313→  )
+  1314→
+  1315→  return (
+  1316→    <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+  1317→      <div className="relative flex-1">
+  1318→        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4" style={{ color: BLUE.textMuted }} />
+  1319→        <Input
+  1320→          type="text"
+  1321→          placeholder="Rechercher un produit..."
+  1322→          value={localSearch}
+  1323→          onChange={(e) => handleChange(e.target.value)}
+  1324→          className="pl-10 pr-10 h-11 rounded-xl text-sm"
+  1325→          style={{ borderColor: BLUE.border }}
+  1326→        />
+  1327→        {localSearch && (
+  1328→          <button
+  1329→            onClick={() => handleChange('')}
+  1330→            className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
+  1331→            style={{ color: BLUE.textMuted }}
+  1332→            aria-label="Effacer"
+  1333→          >
+  1334→            <X className="size-4" />
+  1335→          </button>
+  1336→        )}
+  1337→      </div>
+  1338→
+  1339→      {/* Sort */}
+  1340→      <div className="relative">
+  1341→        <select
+  1342→          value={sortBy}
+  1343→          onChange={(e) => onSortChange(e.target.value as SortOption)}
+  1344→          className="appearance-none h-11 px-4 pr-10 rounded-xl text-sm font-medium cursor-pointer"
+  1345→          style={{
+  1346→            background: BLUE.bg,
+  1347→            color: BLUE.text,
+  1348→            border: `1px solid ${BLUE.border}`,
+  1349→          }}
+  1350→        >
+  1351→          <option value="recent">Plus récents</option>
+  1352→          <option value="price-asc">Prix croissant</option>
+  1353→          <option value="price-desc">Prix décroissant</option>
+  1354→        </select>
+  1355→        <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 size-4 rotate-90" style={{ color: BLUE.textMuted }} />
+  1356→      </div>
+  1357→
+  1358→      {/* Results count */}
+  1359→      {isSearching && (
+  1360→        <div className="flex items-center gap-1.5 text-sm" style={{ color: BLUE.textMuted }}>
+  1361→          <ShoppingBag className="size-4" />
+  1362→          {resultCount} résultat{resultCount !== 1 ? 's' : ''}
+  1363→        </div>
+  1364→      )}
+  1365→    </div>
+  1366→  )
+  1367→}
+  1368→
+  1369→// ═══════════════════════════════════════════════════════════════
+  1370→// LOADING SKELETON
+  1371→// ═══════════════════════════════════════════════════════════════
+  1372→
+  1373→function ElectroLoadingSkeleton() {
+  1374→  return (
+  1375→    <div className="min-h-screen flex items-center justify-center bg-background">
+  1376→      <div className="flex flex-col items-center gap-4">
+  1377→        <div className="relative size-10">
+  1378→          <div className="absolute inset-0 rounded-full border-2 border-muted-foreground/20" />
+  1379→          <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-primary animate-spin" />
+  1380→        </div>
+  1381→        <p className="text-sm text-muted-foreground">Chargement...</p>
+  1382→      </div>
+  1383→    </div>
+  1384→  )
+  1385→}
+  1386→
+  1387→// ═══════════════════════════════════════════════════════════════
+  1388→// MAIN: ElectroShopPage — Page complète du template electro
+  1389→// ═══════════════════════════════════════════════════════════════
+  1390→
+  1391→export function ElectroShopPage() {
+  1392→  const {
+  1393→    shopSlug,
+  1394→    setView,
+  1395→    publicShop,
+  1396→    setPublicShop,
+  1397→    publicProducts,
+  1398→    setPublicProducts,
+  1399→    publicCategories,
+  1400→    setPublicCategories,
+  1401→    cart,
+  1402→    addToCart,
+  1403→    updateCartQuantity,
+  1404→    clearCart,
+  1405→    getCartTotal,
+  1406→  } = useAppStore()
+  1407→
+  1408→  const [loading, setLoading] = useState(true)
+  1409→  const [searchQuery, setSearchQuery] = useState('')
+  1410→  const [activeCategory, setActiveCategory] = useState<string | null>(null)
+  1411→  const [sortBy, setSortBy] = useState<SortOption>('recent')
+  1412→  const [cartExpanded, setCartExpanded] = useState(false)
+  1413→  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  1414→  const scrollRef = useRef<HTMLDivElement>(null)
+  1415→
+  1416→  // Scroll to top when a product is selected
+  1417→  useEffect(() => {
+  1418→    if (selectedProduct) {
+  1419→      window.scrollTo({ top: 0, behavior: 'smooth' })
+  1420→    }
+  1421→  }, [selectedProduct])
+  1422→
+  1423→  // ── Fetch shop data ──
+  1424→  const fetchShop = useCallback(async () => {
+  1425→    if (!shopSlug) return
+  1426→    setLoading(true)
+  1427→    try {
+  1428→      const shopRes = await fetch(`/api/shops/${shopSlug}`)
+  1429→      if (!shopRes.ok) return
+  1430→      const shopData = await shopRes.json()
+  1431→      setPublicShop(shopData)
+  1432→      fetch(`/api/shops/${shopSlug}/visit`, { method: 'POST' }).catch(() => {})
+  1433→      const [prodRes, catRes] = await Promise.all([
+  1434→        fetch(`/api/shops/${shopSlug}/products`),
+  1435→        fetch(`/api/shops/${shopSlug}/categories`),
+  1436→      ])
+  1437→      if (prodRes.ok) setPublicProducts(await prodRes.json())
+  1438→      if (catRes.ok) setPublicCategories(await catRes.json())
+  1439→    } catch {
+  1440→      // Error loading
+  1441→    } finally {
+  1442→      setLoading(false)
+  1443→    }
+  1444→  }, [shopSlug, setPublicShop, setPublicProducts, setPublicCategories])
+  1445→
+  1446→  useEffect(() => {
+  1447→    fetchShop()
+  1448→  }, [fetchShop])
+  1449→
+  1450→  // ── Filter & sort products ──
+  1451→  const filteredProducts = useMemo(() => {
+  1452→    let products = publicProducts.filter((p) => p.isAvailable)
+  1453→    if (activeCategory) products = products.filter((p) => p.categoryId === activeCategory)
+  1454→    if (searchQuery.trim()) {
+  1455→      const q = searchQuery.toLowerCase().trim()
+  1456→      products = products.filter(
+  1457→        (p) =>
+  1458→          p.name.toLowerCase().includes(q) ||
+  1459→          (p.description && p.description.toLowerCase().includes(q)) ||
+  1460→          (p.categoryName && p.categoryName.toLowerCase().includes(q))
+  1461→      )
+  1462→    }
+  1463→    switch (sortBy) {
+  1464→      case 'price-asc':
+  1465→        products = [...products].sort((a, b) => a.price - b.price)
+  1466→        break
+  1467→      case 'price-desc':
+  1468→        products = [...products].sort((a, b) => b.price - a.price)
+  1469→        break
+  1470→    }
+  1471→    return products
+  1472→  }, [publicProducts, activeCategory, searchQuery, sortBy])
+  1473→
+  1474→  const total = getCartTotal()
+  1475→  const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0)
+  1476→  const totalProductCount = publicProducts.filter((p) => p.isAvailable).length
+  1477→  const isSearching = searchQuery.trim().length > 0
+  1478→
+  1479→  // ── Handlers ──
+  1480→  function handleAddToCart(product: Product, qty: number = 1) {
+  1481→    const cartImage = (product.images && product.images[0]) || product.image || undefined
+  1482→    addToCart({ productId: product.id, name: product.name, price: product.price, image: cartImage, quantity: qty })
+  1483→  }
+  1484→
+  1485→  function getCartQuantity(productId: string): number {
+  1486→    return cart.find((c) => c.productId === productId)?.quantity || 0
+  1487→  }
+  1488→
+  1489→  function handleNavAccueil() {
+  1490→    setSelectedProduct(null)
+  1491→    setActiveCategory(null)
+  1492→    setSearchQuery('')
+  1493→    window.scrollTo({ top: 0, behavior: 'smooth' })
+  1494→  }
+  1495→
+  1496→  function handleNavProduits() {
+  1497→    setSelectedProduct(null)
+  1498→    setActiveCategory(null)
+  1499→    setSearchQuery('')
+  1500→    scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
+  1501→  }
+  1502→
+  1503→  function handleWhatsAppCheckout() {
+  1504→    if (!publicShop) return
+  1505→    const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
+  1506→    const itemsText = cart
+  1507→      .map((c) => {
+  1508→        const productUrl = shopSlug ? `${baseUrl}/${shopSlug}?product=${c.productId}` : ''
+  1509→        const linkLine = productUrl ? `\n   🔗 ${productUrl}` : ''
+  1510→        return `🛍 ${c.name} x${c.quantity} — ${(c.price * c.quantity).toLocaleString('fr-FR')} FCFA${linkLine}`
+  1511→      })
+  1512→      .join('\n')
+  1513→    const msg = `Bonjour ${publicShop.name} ! 👋\n\nJe souhaite commander :\n\n${itemsText}\n\n━━━━━━━━━━━━━━\n💰 Total : ${total.toLocaleString('fr-FR')} FCFA\n\n📝 Mes informations :\nNom :\nAdresse :\nTéléphone :\n\nMerci ! 🙏`
+  1514→    const encoded = encodeURIComponent(msg)
+  1515→    const phone = publicShop.whatsapp?.replace(/\D/g, '') || ''
+  1516→    window.open(`https://wa.me/${phone}?text=${encoded}`, '_blank')
+  1517→  }
+  1518→
+  1519→  // ── Loading ──
+  1520→  if (loading) return <ElectroLoadingSkeleton />
+  1521→
+  1522→  // ── Shop not found ──
+  1523→  if (!publicShop) {
+  1524→    return (
+  1525→      <div className="min-h-screen flex items-center justify-center bg-white p-4">
+  1526→        <div className="text-center">
+  1527→          <div className="flex items-center justify-center w-20 h-20 rounded-full mx-auto mb-4" style={{ background: BLUE.primaryLight }}>
+  1528→            <Package className="size-10" style={{ color: BLUE.primary }} />
+  1529→          </div>
+  1530→          <h2 className="text-xl font-bold mb-2" style={{ color: BLUE.text }}>Boutique introuvable</h2>
+  1531→          <p className="text-sm mb-4" style={{ color: BLUE.textMuted }}>Cette boutique n&apos;existe pas ou a été désactivée.</p>
+  1532→          <Button onClick={() => setView('landing')} style={{ background: BLUE.primary }} className="text-white font-semibold rounded-xl">
+  1533→            Retour à l&apos;accueil
+  1534→          </Button>
+  1535→        </div>
+  1536→      </div>
+  1537→    )
+  1538→  }
+  1539→
+  1540→  return (
+  1541→    <motion.div className="min-h-screen flex flex-col" style={{ background: BLUE.bg, color: BLUE.text }}>
+  1542→      {/* ═══ SECTION 1 : MENU ═══ */}
+  1543→      <ElectroMenu
+  1544→        shopName={publicShop.name}
+  1545→        logo={publicShop.logo}
+  1546→        whatsapp={publicShop.whatsapp}
+  1547→        cartCount={itemCount}
+  1548→        onNavAccueil={handleNavAccueil}
+  1549→        onNavProduits={handleNavProduits}
+  1550→        onCartClick={() => cart.length > 0 && setCartExpanded(!cartExpanded)}
+  1551→      />
+  1552→
+  1553→      <main className="flex-1">
+  1554→        <AnimatePresence mode="wait">
+  1555→          {selectedProduct ? (
+  1556→            /* ═══ PRODUCT DETAIL ═══ */
+  1557→            <ElectroProductDetail
+  1558→              key={selectedProduct.id}
+  1559→              product={selectedProduct}
+  1560→              whatsapp={publicShop.whatsapp}
+  1561→              onClose={() => setSelectedProduct(null)}
+  1562→              onAddToCart={(product, qty) => {
+  1563→                for (let i = 0; i < qty; i++) handleAddToCart(product, 1)
+  1564→              }}
+  1565→              cartQty={getCartQuantity(selectedProduct.id)}
+  1566→              updateCartQuantity={updateCartQuantity}
+  1567→            />
+  1568→          ) : (
+  1569→            /* ═══ MAIN LAYOUT: Slide → Categories → Products ═══ */
+  1570→            <motion.div
+  1571→              key="main"
+  1572→              initial={{ opacity: 0 }}
+  1573→              animate={{ opacity: 1 }}
+  1574→              exit={{ opacity: 0 }}
+  1575→              transition={{ duration: 0.15 }}
+  1576→            >
+  1577→              {/* ═══ SECTION 2 : SLIDE HERO ═══ */}
+  1578→              <ElectroHeroSlide
+  1579→                shopName={publicShop.name}
+  1580→                heroImages={publicShop.heroImages}
+  1581→                whatsapp={publicShop.whatsapp}
+  1582→                onShopNow={handleNavProduits}
+  1583→              />
+  1584→
+  1585→              {/* ═══ SECTION 3 : CATÉGORIES ═══ */}
+  1586→              <ElectroCategories
+  1587→                categories={publicCategories}
+  1588→                products={publicProducts}
+  1589→                activeCategory={activeCategory}
+  1590→                onCategoryClick={(id) => {
+  1591→                  setActiveCategory(id)
+  1592→                  setSelectedProduct(null)
+  1593→                  scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
+  1594→                }}
+  1595→              />
+  1596→
+  1597→              {/* ═══ SECTION 4 : PRODUITS ═══ */}
+  1598→              <section className="w-full bg-white">
+  1599→                <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-6 space-y-6" ref={scrollRef}>
+  1600→                  {/* Section title */}
+  1601→                  <div className="flex items-center gap-3">
+  1602→                    <div className="w-1 h-6 rounded-full" style={{ background: BLUE.primary }} />
+  1603→                    <h2 className="text-lg font-bold" style={{ color: BLUE.text }}>
+  1604→                      Nos Produits
+  1605→                    </h2>
+  1606→                    <span className="text-sm" style={{ color: BLUE.textMuted }}>
+  1607→                      ({totalProductCount} produit{totalProductCount !== 1 ? 's' : ''})
+  1608→                    </span>
+  1609→                  </div>
+  1610→
+  1611→                  {/* Search + Sort */}
+  1612→                  <ElectroSearchBar
+  1613→                    searchQuery={searchQuery}
+  1614→                    onSearchChange={setSearchQuery}
+  1615→                    sortBy={sortBy}
+  1616→                    onSortChange={setSortBy}
+  1617→                    resultCount={filteredProducts.length}
+  1618→                    isSearching={isSearching}
+  1619→                  />
+  1620→
+  1621→                  {/* Loading skeletons for search */}
+  1622→                  {isSearching && filteredProducts.length === 0 && publicProducts.length > 0 && (
+  1623→                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+  1624→                      {Array.from({ length: 8 }).map((_, i) => (
+  1625→                        <div key={i} className="flex flex-col gap-2 rounded-xl overflow-hidden" style={{ border: `1px solid ${BLUE.border}` }}>
+  1626→                          <Skeleton className="w-full" style={{ aspectRatio: '336 / 280' }} />
+  1627→                          <div className="p-3 space-y-2">
+  1628→                            <Skeleton className="h-4 w-full" />
+  1629→                            <Skeleton className="h-3 w-24" />
+  1630→                            <Skeleton className="h-9 w-full rounded-lg" />
+  1631→                          </div>
+  1632→                        </div>
+  1633→                      ))}
+  1634→                    </div>
+  1635→                  )}
+  1636→
+  1637→                  {/* Empty state */}
+  1638→                  {!isSearching && publicProducts.length === 0 && (
+  1639→                    <div className="flex flex-col items-center justify-center py-20 text-center">
+  1640→                      <div className="flex items-center justify-center w-20 h-20 rounded-full mb-4" style={{ background: BLUE.primaryLight }}>
+  1641→                        <Package className="size-10" style={{ color: BLUE.primary }} />
+  1642→                      </div>
+  1643→                      <h3 className="text-lg font-bold" style={{ color: BLUE.text }}>Aucun produit disponible</h3>
+  1644→                      <p className="mt-1 text-sm max-w-md" style={{ color: BLUE.textMuted }}>
+  1645→                        Cette boutique n&apos;a pas encore de produits. Revenez bientôt !
+  1646→                      </p>
+  1647→                    </div>
+  1648→                  )}
+  1649→
+  1650→                  {/* Empty search */}
+  1651→                  {filteredProducts.length === 0 && publicProducts.length > 0 && (
+  1652→                    <motion.div
+  1653→                      initial={{ opacity: 0, scale: 0.95 }}
+  1654→                      animate={{ opacity: 1, scale: 1 }}
+  1655→                      className="flex flex-col items-center justify-center py-16 text-center"
+  1656→                    >
+  1657→                      <div className="flex items-center justify-center w-16 h-16 rounded-full mb-4" style={{ background: '#fef3c7' }}>
+  1658→                        <Search className="size-7 text-amber-500" />
+  1659→                      </div>
+  1660→                      <h3 className="text-lg font-bold" style={{ color: BLUE.text }}>Aucun résultat trouvé</h3>
+  1661→                      <p className="mt-1 text-sm max-w-md" style={{ color: BLUE.textMuted }}>
+  1662→                        {searchQuery
+  1663→                          ? `Aucun produit ne correspond à "${searchQuery}".`
+  1664→                          : 'Aucun produit dans cette catégorie.'}
+  1665→                      </p>
+  1666→                      <Button
+  1667→                        variant="outline"
+  1668→                        size="sm"
+  1669→                        className="mt-4 rounded-xl"
+  1670→                        style={{ borderColor: BLUE.primary, color: BLUE.primary }}
+  1671→                        onClick={() => { setSearchQuery(''); setActiveCategory(null) }}
+  1672→                      >
+  1673→                        Réinitialiser les filtres
+  1674→                      </Button>
+  1675→                    </motion.div>
+  1676→                  )}
+  1677→
+  1678→                  {/* Product Grid — 400×400 */}
+  1679→                  <AnimatePresence mode="wait">
+  1680→                    <motion.div
+  1681→                      key={activeCategory + searchQuery + sortBy}
+  1682→                      initial={{ opacity: 0 }}
+  1683→                      animate={{ opacity: 1 }}
+  1684→                      exit={{ opacity: 0 }}
+  1685→                      transition={{ duration: 0.3 }}
+  1686→                      className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+  1687→                    >
+  1688→                      {filteredProducts.map((product, index) => (
+  1689→                        <ElectroProductCard
+  1690→                          key={product.id}
+  1691→                          product={product}
+  1692→                          index={index}
+  1693→                          onProductClick={setSelectedProduct}
+  1694→                          onAddToCart={(p) => handleAddToCart(p, 1)}
+  1695→                          getCartQuantity={getCartQuantity}
+  1696→                          updateCartQuantity={updateCartQuantity}
+  1697→                          whatsapp={publicShop.whatsapp}
+  1698→                        />
+  1699→                      ))}
+  1700→                    </motion.div>
+  1701→                  </AnimatePresence>
+  1702→                </div>
+  1703→              </section>
+  1704→
+  1705→              {/* ═══ PROMO BANNERS ═══ */}
+  1706→              <ElectroPromoBanners promoBannersRaw={publicShop.promoBanners} />
+  1707→            </motion.div>
+  1708→          )}
+  1709→        </AnimatePresence>
+  1710→      </main>
+  1711→
+  1712→      {/* ═══ BRAND CAROUSEL (before footer) ═══ */}
+  1713→      <ElectroBrandCarousel brandsRaw={publicShop.brands} />
+  1714→
+  1715→      {/* ═══ SECTION 5 : FOOTER ═══ */}
+  1716→      <ElectroFooter
+  1717→        shopName={publicShop.name}
+  1718→        whatsapp={publicShop.whatsapp}
+  1719→        phone={publicShop.phone}
+  1720→        address={publicShop.address}
+  1721→      />
+  1722→
+  1723→      {/* ═══ CART BAR ═══ */}
+  1724→      <AnimatePresence>
+  1725→        {cart.length > 0 && (
+  1726→          <ElectroCartBar
+  1727→            expanded={cartExpanded}
+  1728→            onToggle={() => setCartExpanded(!cartExpanded)}
+  1729→            onClear={clearCart}
+  1730→            onCheckout={handleWhatsAppCheckout}
+  1731→            total={total}
+  1732→            itemCount={itemCount}
+  1733→            cart={cart}
+  1734→            updateCartQuantity={updateCartQuantity}
+  1735→          />
+  1736→        )}
+  1737→      </AnimatePresence>
+  1738→
+  1739→      {/* ═══ FLOATING WHATSAPP BUTTON ═══ */}
+  1740→      {publicShop.whatsapp && (
+  1741→        <a
+  1742→          href={`https://wa.me/${publicShop.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Bonjour ${publicShop.name} ! 👋\nJe suis intéressé(e) par vos produits.`)}`}
+  1743→          target="_blank"
+  1744→          rel="noopener noreferrer"
+  1745→          className="fixed bottom-[80px] right-5 z-50 flex items-center justify-center w-14 h-14 rounded-full shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl group"
+  1746→          style={{ background: BLUE.whatsapp }}
+  1747→          title={`Contacter ${publicShop.name} sur WhatsApp`}
+  1748→        >
+  1749→          <MessageCircle className="size-7" style={{ color: BLUE.whatsappFg }} />
+  1750→          {/* Tooltip */}
+  1751→          <span
+  1752→            className="absolute right-full mr-3 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"
+  1753→            style={{ background: '#1e293b', color: 'white' }}
+  1754→          >
+  1755→            {publicShop.whatsapp}
+  1756→          </span>
+  1757→        </a>
+  1758→      )}
+  1759→
+  1760→      {/* Bottom padding when cart is visible */}
+  1761→      {cart.length > 0 && <div className="h-[60px]" />}
+  1762→    </motion.div>
+  1763→  )
+  1764→}
+  1765→

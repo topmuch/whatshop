@@ -557,7 +557,7 @@ export function FashionGrid({
       {/* ════════════════════════════════════════════════
           FEATURED SECTION (hidden when filtering/searching)
           ════════════════════════════════════════════════ */}
-      <AnimatePresence>
+      <AnimatePresence initial={false}>
         {showSpecialSections && featuredProducts.length >= 3 && (
           <motion.section
             ref={featuredRef}
@@ -682,7 +682,7 @@ export function FashionGrid({
       {/* ════════════════════════════════════════════════
           BLOG / NEWS SECTION (hidden when filtering/searching)
           ════════════════════════════════════════════════ */}
-      <AnimatePresence>
+      <AnimatePresence initial={false}>
         {showSpecialSections && (
           <motion.section
             initial={{ opacity: 0 }}

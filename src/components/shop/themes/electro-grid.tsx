@@ -1551,7 +1551,7 @@ export function ElectroShopPage() {
       />
 
       <main className="flex-1">
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait" initial={false}>
           {selectedProduct ? (
             /* ═══ PRODUCT DETAIL ═══ */
             <ElectroProductDetail
@@ -1676,7 +1676,7 @@ export function ElectroShopPage() {
                   )}
 
                   {/* Product Grid — 400×400 */}
-                  <AnimatePresence mode="wait">
+                  <AnimatePresence mode="wait" initial={false}>
                     <motion.div
                       key={activeCategory + searchQuery + sortBy}
                       initial={{ opacity: 0 }}

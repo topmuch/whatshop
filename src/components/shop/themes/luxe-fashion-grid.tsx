@@ -1469,7 +1469,7 @@ export function LuxeFashionShopPage() {
       />
 
       <main className="flex-1">
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait" initial={false}>
           {selectedProduct ? (
             /* ═══ PRODUCT DETAIL ═══ */
             <LuxeProductDetail
@@ -1606,7 +1606,7 @@ export function LuxeFashionShopPage() {
                   )}
 
                   {/* Product Grid */}
-                  <AnimatePresence mode="wait">
+                  <AnimatePresence mode="wait" initial={false}>
                     <motion.div
                       key={activeCategory + searchQuery + sortBy + activeStory}
                       initial={{ opacity: 0 }}

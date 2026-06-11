@@ -1583,7 +1583,7 @@ export function TikTokLiveShopPage() {
       />
 
       <main className="flex-1">
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait" initial={false}>
           {selectedProduct ? (
             /* ═══ PRODUCT DETAIL ═══ */
             <TikTokProductDetail
@@ -1723,7 +1723,7 @@ export function TikTokLiveShopPage() {
                   )}
 
                   {/* Product Grid */}
-                  <AnimatePresence mode="wait">
+                  <AnimatePresence mode="wait" initial={false}>
                     <motion.div
                       key={activeCategory + searchQuery + sortBy}
                       initial={{ opacity: 0 }}
