@@ -150,6 +150,7 @@ function SortableZoneItem({
 export function ShippingZonesManager() {
   const shop = useAppStore((s) => s.shop)
   const shopId = shop?.id ?? ''
+  const shopSlug = shop?.slug ?? ''
 
   const [zones, setZones] = useState<ShippingZoneData[]>([])
   const [loading, setLoading] = useState(true)
@@ -176,7 +177,7 @@ export function ShippingZonesManager() {
   const fetchZones = useCallback(async () => {
     if (!shopId) return
     try {
-      const res = await fetch(`/api/shops/${shopId}/shipping-zones`)
+      const res = await fetch(`/api/shops/${shopSlug}/shipping-zones`)
       if (!res.ok) {
         const data = await res.json()
         throw new Error(data.error || 'Erreur de chargement')
@@ -273,7 +274,7 @@ export function ShippingZonesManager() {
         toast.success('Zone de livraison modifiée')
       } else {
         // Create
-        const res = await fetch(`/api/shops/${shopId}/shipping-zones`, {
+        const res = await fetch(`/api/shops/${shopSlug}/shipping-zones`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

@@ -22,7 +22,7 @@ interface CreateZoneBody {
 // Helper: resolve slug → shopId via DB
 async function resolveShopId(slug: string): Promise<string | null> {
   const shop = await db.shop.findUnique({
-    where: { slug, isActive: true },
+    where: { slug },
     select: { id: true },
   })
   return shop?.id ?? null
