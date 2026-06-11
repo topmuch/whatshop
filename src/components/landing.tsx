@@ -238,8 +238,23 @@ function StoryCircles() {
 }
 
 /* ── HERO ── */
+const heroSlides = [
+  { image: '/landing/hero-influencer-1.png', alt: 'Influenceuse avec smartphone' },
+  { image: '/landing/hero-influencer-2.png', alt: 'Influenceur avec smartphone' },
+  { image: '/landing/hero-influencer-3.png', alt: 'Influenceuse trendy' },
+]
+
 function Hero() {
   const { setView } = useAppStore()
+  const [slide, setSlide] = useState(0)
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setSlide((prev) => (prev + 1) % heroSlides.length)
+    }, 4000)
+    return () => clearInterval(timer)
+  }, [])
+
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden pt-18">
       {/* Background */}
@@ -309,7 +324,7 @@ function Hero() {
             </motion.div>
           </motion.div>
 
-          {/* Image side */}
+          {/* Image side — slideshow */}
           <motion.div
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
@@ -319,15 +334,44 @@ function Hero() {
             <div className="relative">
               <div className="absolute -inset-4 bg-gradient-to-br from-pink-200/30 to-rose-200/30 rounded-3xl blur-2xl" />
               <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-pink-900/10">
-                <Image
-                  src="/landing/hero-main.png"
-                  alt="Influenceuse regardant son smartphone"
-                  width={768}
-                  height={1344}
-                  className="w-full h-auto max-w-[340px] sm:max-w-[400px] lg:max-w-[420px] object-cover"
-                  priority
-                />
+                <div className="relative w-[340px] sm:w-[400px] lg:w-[420px] aspect-[768/1344]">
+                  {heroSlides.map((s, i) => (
+                    <motion.div
+                      key={s.image}
+                      className="absolute inset-0"
+                      initial={{ opacity: 0, scale: 1.05 }}
+                      animate={i === slide ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 1.05 }}
+                      transition={{ duration: 0.8, ease: 'easeInOut' }}
+                      style={{ pointerEvents: i === slide ? 'auto' : 'none' }}
+                    >
+                      <Image
+                        src={s.image}
+                        alt={s.alt}
+                        fill
+                        className="object-cover"
+                        priority={i === 0}
+                        sizes="(max-width: 640px) 340px, (max-width: 1024px) 400px, 420px"
+                      />
+                    </motion.div>
+                  ))}
+                </div>
               </div>
+            </div>
+
+            {/* Slide dots */}
+            <div className="flex items-center gap-2">
+              {heroSlides.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setSlide(i)}
+                  className={`rounded-full transition-all duration-300 ${
+                    i === slide
+                      ? 'w-8 h-2.5 bg-gradient-to-r from-pink-500 to-rose-500'
+                      : 'w-2.5 h-2.5 bg-gray-300 hover:bg-gray-400'
+                  }`}
+                  aria-label={`Slide ${i + 1}`}
+                />
+              ))}
             </div>
 
             {/* Social icons row */}
