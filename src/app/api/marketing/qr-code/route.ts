@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireAuth } from '@/lib/auth'
 import { generateQRCodeDataURL, generateQRSVG } from '@/lib/qr-generator'
 
 interface QRCodeRequestBody {
@@ -12,20 +13,10 @@ interface QRCodeRequestBody {
 
 export async function POST(request: NextRequest) {
   try {
-    const sessionCookie = request.cookies.get('boutiko-user')?.value
-    if (!sessionCookie) {
+    const { user, response: errorResponse } = await requireAuth(request)
+    if (errorResponse) return errorResponse
+    if (!user) {
       return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
-    }
-
-    let user: { id: string; role: string } | null = null
-    try {
-      user = JSON.parse(sessionCookie)
-    } catch {
-      return NextResponse.json({ error: 'Session invalide' }, { status: 401 })
-    }
-
-    if (!user?.id) {
-      return NextResponse.json({ error: 'Session invalide' }, { status: 401 })
     }
 
     const body: QRCodeRequestBody = await request.json()

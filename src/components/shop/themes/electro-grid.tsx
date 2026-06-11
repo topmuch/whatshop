@@ -43,6 +43,7 @@ import {
   Star,
   ArrowRight,
   Eye,
+  LayoutGrid,
 } from 'lucide-react'
 import { useAppStore, type Product, type Category } from '@/lib/store'
 import { formatPrice, openWhatsApp } from '@/lib/shared'
@@ -420,36 +421,63 @@ function ElectroCategories({
           </h2>
         </div>
 
-        <div className="flex gap-2 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+        <div className="flex gap-4 overflow-x-auto pb-3" style={{ scrollbarWidth: 'none' }}>
           {/* Tous */}
           <button
             onClick={() => onCategoryClick(null)}
-            className="shrink-0 flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
-            style={
-              activeCategory === null
-                ? { background: BLUE.primary, color: BLUE.primaryFg, boxShadow: `0 4px 12px ${BLUE.primary}33` }
-                : { background: BLUE.bgGray, color: BLUE.text, border: `1px solid ${BLUE.border}` }
-            }
+            className="shrink-0 flex flex-col items-center gap-2 w-20"
           >
-            Tous
-            <span className="text-xs opacity-70">({totalAvailable})</span>
+            <div
+              className="flex items-center justify-center size-16 rounded-full border-2 transition-all duration-200"
+              style={
+                activeCategory === null
+                  ? { background: BLUE.primary, borderColor: BLUE.primary, color: BLUE.primaryFg, boxShadow: `0 4px 12px ${BLUE.primary}33` }
+                  : { background: '#fff', borderColor: BLUE.border, color: BLUE.text }
+              }
+            >
+              <LayoutGrid className="size-6" />
+            </div>
+            <span className="text-xs font-medium text-center leading-tight" style={{ color: activeCategory === null ? BLUE.primary : BLUE.textMuted }}>
+              Tous
+            </span>
           </button>
 
           {categories.map((cat) => {
             const count = getCategoryCount(cat.id)
+            const isActive = activeCategory === cat.id
+            // Get the first product image in this category as the category image
+            const catImage = products.find((p) => p.categoryId === cat.id && p.image)?.image
             return (
               <button
                 key={cat.id}
-                onClick={() => onCategoryClick(activeCategory === cat.id ? null : cat.id)}
-                className="shrink-0 flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
-                style={
-                  activeCategory === cat.id
-                    ? { background: BLUE.primary, color: BLUE.primaryFg, boxShadow: `0 4px 12px ${BLUE.primary}33` }
-                    : { background: BLUE.bgGray, color: BLUE.text, border: `1px solid ${BLUE.border}` }
-                }
+                onClick={() => onCategoryClick(isActive ? null : cat.id)}
+                className="shrink-0 flex flex-col items-center gap-2 w-20"
               >
-                {cat.name}
-                <span className="text-xs opacity-70">({count})</span>
+                <div
+                  className="flex items-center justify-center size-16 rounded-full border-2 overflow-hidden transition-all duration-200"
+                  style={
+                    isActive
+                      ? { background: BLUE.primary, borderColor: BLUE.primary, boxShadow: `0 4px 12px ${BLUE.primary}33` }
+                      : { background: '#fff', borderColor: BLUE.border }
+                  }
+                >
+                  {catImage ? (
+                    <img
+                      src={catImage}
+                      alt={cat.name}
+                      className="size-full object-cover"
+                      style={isActive ? { opacity: 0.9 } : {}}
+                    />
+                  ) : (
+                    <ShoppingBag className="size-6" style={{ color: isActive ? BLUE.primaryFg : BLUE.textMuted }} />
+                  )}
+                </div>
+                <span className="text-xs font-medium text-center leading-tight" style={{ color: isActive ? BLUE.primary : BLUE.textMuted }}>
+                  {cat.name}
+                </span>
+                <span className="text-[10px]" style={{ color: BLUE.textMuted }}>
+                  {count}
+                </span>
               </button>
             )
           })}
@@ -1563,9 +1591,6 @@ export function ElectroShopPage() {
                 }}
               />
 
-              {/* ═══ BRAND CAROUSEL ═══ */}
-              <ElectroBrandCarousel brandsRaw={publicShop.brands} />
-
               {/* ═══ SECTION 4 : PRODUITS ═══ */}
               <section className="w-full bg-white">
                 <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-6 space-y-6" ref={scrollRef}>
@@ -1680,6 +1705,9 @@ export function ElectroShopPage() {
           )}
         </AnimatePresence>
       </main>
+
+      {/* ═══ BRAND CAROUSEL (before footer) ═══ */}
+      <ElectroBrandCarousel brandsRaw={publicShop.brands} />
 
       {/* ═══ SECTION 5 : FOOTER ═══ */}
       <ElectroFooter

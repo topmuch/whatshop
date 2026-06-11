@@ -1013,7 +1013,7 @@ function BusinessCardTab() {
   const [generating, setGenerating] = useState(false)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
-  function generateBusinessCard() {
+  async function generateBusinessCard() {
     if (!shop?.id) {
       toast.error('Veuillez sélectionner une boutique')
       return
@@ -1022,12 +1022,38 @@ function BusinessCardTab() {
     setGenerating(true)
     setPreviewUrl(null)
 
-    requestAnimationFrame(() => {
-      const canvas = canvasRef.current
-      if (!canvas) return
+    // Fetch real QR code from API
+    let qrImageUrl: string | null = null
+    try {
+      const res = await fetch('/api/marketing/qr-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ shopId: shop.id, size: 400, format: 'png' }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        qrImageUrl = data.qrData
+      } else {
+        toast.error('Erreur lors de la génération du QR code')
+        setGenerating(false)
+        return
+      }
+    } catch {
+      toast.error('Erreur de connexion')
+      setGenerating(false)
+      return
+    }
 
-      const ctx = canvas.getContext('2d')
-      if (!ctx) return
+    // Load QR code as image
+    const qrImg = new Image()
+    qrImg.crossOrigin = 'anonymous'
+    qrImg.onload = () => {
+      requestAnimationFrame(() => {
+        const canvas = canvasRef.current
+        if (!canvas) return
+
+        const ctx = canvas.getContext('2d')
+        if (!ctx) return
 
       const W = 1200
       const H = 675
@@ -1074,24 +1100,25 @@ function BusinessCardTab() {
           ctx.stroke()
           ctx.restore()
 
-          drawCardText(ctx, leftCenterX, 280, W, H)
+          drawCardText(ctx, leftCenterX, 280, W, H, qrImg)
         }
         logoImg.onerror = () => {
-          drawCardText(ctx, leftCenterX, 160, W, H)
+          drawCardText(ctx, leftCenterX, 160, W, H, qrImg)
         }
         logoImg.src = shopLogo
       } else {
-        drawCardText(ctx, leftCenterX, 160, W, H)
+        drawCardText(ctx, leftCenterX, 160, W, H, qrImg)
       }
-    })
-  }
+      })
+    }
 
   function drawCardText(
     ctx: CanvasRenderingContext2D,
     leftCenterX: number,
     nameY: number,
     W: number,
-    H: number
+    H: number,
+    _qrImg?: HTMLImageElement | null
   ) {
     // Shop name
     ctx.fillStyle = '#FFFFFF'
@@ -1123,7 +1150,7 @@ function BusinessCardTab() {
     // Right side: QR code text + "Scannez pour commander"
     const rightCenterX = W * 0.75
 
-    // QR code placeholder circle
+    // Real QR code
     const qrSize = 200
     const qrX = rightCenterX - qrSize / 2
     const qrY = (H - qrSize) / 2 - 30
@@ -1132,27 +1159,14 @@ function BusinessCardTab() {
     drawRoundedRect(ctx, qrX, qrY, qrSize, qrSize, 16)
     ctx.fill()
 
-    // QR code icon (simple square pattern)
-    ctx.fillStyle = '#111111'
-    const innerPad = 30
-    const innerSize = qrSize - innerPad * 2
-    ctx.fillRect(qrX + innerPad, qrY + innerPad, innerSize, innerSize)
-    ctx.fillStyle = '#FFFFFF'
-    // Create a simple QR-like pattern
-    const cellSize = innerSize / 7
-    for (let r = 0; r < 7; r++) {
-      for (let c = 0; c < 7; c++) {
-        if ((r + c) % 2 === 0 || r === 0 || r === 6 || c === 0 || c === 6) {
-          if (!(r >= 2 && r <= 4 && c >= 2 && c <= 4)) {
-            ctx.fillRect(
-              qrX + innerPad + c * cellSize + 2,
-              qrY + innerPad + r * cellSize + 2,
-              cellSize - 4,
-              cellSize - 4
-            )
-          }
-        }
-      }
+    // Draw the real QR code image
+    if (qrImg) {
+      const pad = 10
+      ctx.save()
+      drawRoundedRect(ctx, qrX + pad, qrY + pad, qrSize - pad * 2, qrSize - pad * 2, 8)
+      ctx.clip()
+      ctx.drawImage(qrImg, qrX + pad, qrY + pad, qrSize - pad * 2, qrSize - pad * 2)
+      ctx.restore()
     }
 
     // "Scannez pour commander" text
@@ -1174,6 +1188,12 @@ function BusinessCardTab() {
     ctx.textAlign = 'start'
 
     finishCard(ctx)
+    }
+    qrImg.onerror = () => {
+      toast.error('Erreur lors du chargement du QR code')
+      setGenerating(false)
+    }
+    qrImg.src = qrImageUrl
   }
 
   function finishCard(_ctx: CanvasRenderingContext2D) {
