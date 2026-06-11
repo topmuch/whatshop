@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { promises as fs } from 'fs'
 import path from 'path'
+import { UPLOADS_DIR } from '@/lib/storage'
 
 export async function GET(
   request: NextRequest,
@@ -10,12 +11,12 @@ export async function GET(
     const { path: pathSegments } = await params
 
     // Construire le chemin complet vers l'image
-    const imagePath = path.join('/app/uploads', ...pathSegments)
+    const imagePath = path.join(UPLOADS_DIR, ...pathSegments)
 
     // Sécurité : s'assurer qu'on ne sort pas du dossier uploads
     const resolvedPath = path.resolve(imagePath)
-    const uploadsDir = path.resolve('/app/uploads')
-    if (!resolvedPath.startsWith(uploadsDir)) {
+    const resolvedUploadsDir = path.resolve(UPLOADS_DIR)
+    if (!resolvedPath.startsWith(resolvedUploadsDir)) {
       return NextResponse.json(
         { error: 'Accès non autorisé' },
         { status: 403 }

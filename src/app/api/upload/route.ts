@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { writeFile, mkdir } from 'fs/promises'
 import path from 'path'
-import { rateLimit } from '@/lib/rate-limit'
+import { rateLimit, getClientIp, RATE_LIMITS } from '@/lib/rate-limit'
+import { UPLOADS_DIR } from '@/lib/storage'
 
 // Taille max : 5 MB
 const MAX_FILE_SIZE = 5 * 1024 * 1024
@@ -12,8 +13,11 @@ const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg', '.
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting
-    const rateLimitResult = await rateLimit('upload', request)
-    if (rateLimitResult) return rateLimitResult
+    const ip = getClientIp(request)
+    const rl = rateLimit(ip, RATE_LIMITS.upload)
+    if (!rl.success) {
+      return NextResponse.json({ error: 'Trop de tentatives. Réessayez dans une minute.' }, { status: 429 })
+    }
 
     const formData = await request.formData()
     const file = formData.get('file') as File
@@ -48,14 +52,13 @@ export async function POST(request: NextRequest) {
     const fileName = `${timestamp}-${randomString}${ext}`
 
     // Créer le dossier uploads s'il n'existe pas
-    const uploadsDir = '/app/uploads'
     try {
-      await mkdir(uploadsDir, { recursive: true })
+      await mkdir(UPLOADS_DIR, { recursive: true })
     } catch {
       // Le dossier existe déjà
     }
 
-    const filePath = path.join(uploadsDir, fileName)
+    const filePath = path.join(UPLOADS_DIR, fileName)
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
 
