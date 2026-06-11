@@ -48,6 +48,7 @@ import {
   ArrowUpRight,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { ShippingZonesManager } from './shipping-zones-manager'
 
 const templateOptions = [
   { id: 'minimal', name: 'Classique', description: 'Épuré et professionnel', color: '#18181b', gradient: 'linear-gradient(135deg, #18181b, #52525b)' },
@@ -1112,6 +1113,9 @@ export function DashboardSettings() {
           </Button>
         </CardContent>
       </Card>
+
+      {/* Shipping Zones */}
+      <ShippingZonesManager />
 
       {/* Hero Slider Images */}
       <Card>

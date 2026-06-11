@@ -139,6 +139,10 @@ model Shop {
   // Referral
   referredById          String?
 
+  // Marketing & Branding colors
+  primaryColor          String   @default("#EC4899")
+  secondaryColor        String?
+
   // Moderation
   isFlagged              Boolean   @default(false)
   flaggedReason          String?
@@ -156,6 +160,8 @@ model Shop {
   liveSession  LiveSession?
   domainRequest DomainRequest?
   supportTickets SupportTicket[]
+  shippingZones ShippingZone[]
+  marketingAssets MarketingAsset[]
 }
 
 // ─── CATEGORY ──────────────────────────────────────────────────────────────────
@@ -354,6 +360,37 @@ model UpgradeRequest {
 
   user    User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   reviewer User? @relation("UpgradeReviews", fields: [reviewedBy], references: [id])
+}
+
+// ─── SHIPPING ZONE ──────────────────────────────────────────────────────────
+
+model ShippingZone {
+  id        String   @id @default(cuid())
+  shopId    String
+  name      String
+  price     Int
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@index([shopId])
+}
+
+// ─── MARKETING ASSET ─────────────────────────────────────────────────────────
+
+model MarketingAsset {
+  id        String   @id @default(cuid())
+  shopId    String
+  type      String   // "QR_CODE", "STORY", "BUSINESS_CARD"
+  template  String?
+  config    String   @default("{}") // JSON config
+  createdAt DateTime @default(now())
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@index([shopId])
 }
 
 // ─── BROADCAST MESSAGES ───────────────────────────────────────────────────────

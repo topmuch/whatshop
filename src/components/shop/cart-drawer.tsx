@@ -14,6 +14,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { ShoppingCart, Trash2, Minus, Plus, ShoppingBag, MessageCircle } from 'lucide-react'
 import { Image } from 'next/image'
+import { ShippingZoneSelector } from '@/components/shop/shipping-zone-selector'
 
 interface CartDrawerProps {
   open: boolean
@@ -29,9 +30,12 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
     updateCartQuantity,
     clearCart,
     getCartTotal,
+    selectedShippingZone,
   } = useAppStore()
 
   const total = getCartTotal()
+  const deliveryFee = selectedShippingZone?.price ?? 0
+  const grandTotal = total + deliveryFee
   const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0)
 
   const generateWhatsAppMessage = () => {
@@ -45,7 +49,26 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
       return `- ${item.name} x${item.quantity} : ${lineTotal.toLocaleString('fr-FR')} FCFA${linkLine}`
     })
 
-    const message = `Bonjour,
+    const hasShipping = !!selectedShippingZone
+
+    let message: string
+
+    if (hasShipping) {
+      message = `Bonjour,
+
+Je souhaite commander :
+
+${lines.join('\n')}
+
+📍 Zone de livraison : ${selectedShippingZone!.name}
+🚚 Frais de livraison : ${deliveryFee.toLocaleString('fr-FR')} FCFA
+💵 Total : ${grandTotal.toLocaleString('fr-FR')} FCFA
+
+Nom :
+Adresse :
+Téléphone :`
+    } else {
+      message = `Bonjour,
 
 Je souhaite commander :
 
@@ -56,6 +79,7 @@ Total : ${total.toLocaleString('fr-FR')} FCFA
 Nom :
 Adresse :
 Téléphone :`
+    }
 
     return message
   }
@@ -178,12 +202,41 @@ Téléphone :`
             <SheetFooter className="flex-col gap-3 border-t pt-4">
               <Separator />
 
-              {/* Total */}
-              <div className="flex w-full items-center justify-between px-1">
-                <span className="text-sm text-muted-foreground">Total</span>
-                <span className="text-xl font-bold text-primary">
-                  {total.toLocaleString('fr-FR')} FCFA
-                </span>
+              {/* Shipping Zone Selector */}
+              <div className="w-full px-1">
+                <ShippingZoneSelector />
+              </div>
+
+              {/* Price Breakdown */}
+              <div className="flex w-full flex-col gap-2 px-1">
+                {/* Subtotal */}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Sous-total</span>
+                  <span className="text-sm">
+                    {total.toLocaleString('fr-FR')} FCFA
+                  </span>
+                </div>
+
+                {/* Delivery fee (only if zone selected) */}
+                {selectedShippingZone && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">
+                      Livraison ({selectedShippingZone.name})
+                    </span>
+                    <span className="text-sm">
+                      {deliveryFee.toLocaleString('fr-FR')} FCFA
+                    </span>
+                  </div>
+                )}
+
+                {/* Grand total */}
+                <Separator />
+                <div className="flex items-center justify-between">
+                  <span className="text-base font-bold">Total</span>
+                  <span className="text-xl font-bold text-primary">
+                    {grandTotal.toLocaleString('fr-FR')} FCFA
+                  </span>
+                </div>
               </div>
 
               {/* Order Button */}

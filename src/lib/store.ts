@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
 export type AppView = 'landing' | 'login' | 'register' | 'onboarding' | 'dashboard' | 'reseller' | 'shop' | 'admin' | 'about' | 'pricing' | 'contact' | 'privacy' | 'terms' | 'faq'
-export type DashboardTab = 'overview' | 'products' | 'categories' | 'orders' | 'live' | 'settings' | 'ai-tools'
+export type DashboardTab = 'overview' | 'products' | 'categories' | 'orders' | 'live' | 'settings' | 'ai-tools' | 'marketing-kit'
 export type AdminTab = 'admin-overview' | 'admin-subscriptions' | 'admin-domains' | 'admin-upgrades' | 'admin-config' | 'admin-support' | 'admin-moderation' | 'admin-marketing' | 'admin-users' | 'admin-shops' | 'admin-orders' | 'admin-admins' | 'admin-resellers'
 
 export interface CartItem {
@@ -46,6 +46,8 @@ export interface Shop {
   heroImages?: string
   promoBanners?: string
   brands?: string
+  primaryColor?: string
+  secondaryColor?: string
 }
 
 export interface Product {
@@ -67,6 +69,14 @@ export interface Category {
   name: string
   description?: string
   productCount?: number
+}
+
+export interface ShippingZone {
+  id: string
+  shopId: string
+  name: string
+  price: number
+  sortOrder: number
 }
 
 interface AppState {
@@ -96,6 +106,10 @@ interface AppState {
   updateCartQuantity: (productId: string, quantity: number) => void
   clearCart: () => void
   getCartTotal: () => number
+
+  // Shipping zone selection (for public shop cart)
+  selectedShippingZone: ShippingZone | null
+  setSelectedShippingZone: (zone: ShippingZone | null) => void
 
   // Public shop data
   publicShop: Shop | null
@@ -165,6 +179,10 @@ export const useAppStore = create<AppState>()(
       getCartTotal: () => {
         return get().cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
       },
+
+      // Shipping zone selection
+      selectedShippingZone: null,
+      setSelectedShippingZone: (zone) => set({ selectedShippingZone: zone }),
 
       // Public shop data
       publicShop: null,

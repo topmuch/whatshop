@@ -31,6 +31,8 @@ export interface AuthShop {
   heroImages?: string
   promoBanners?: string
   brands?: string
+  primaryColor?: string
+  secondaryColor?: string
 }
 
 /** User type returned from auth functions — includes `shops` array + `shop` (first/primary). */
@@ -253,5 +255,7 @@ export function mapShopToAuthShop(shop: Record<string, unknown>): AuthShop {
     heroImages: (shop.heroImages as string) ?? '[]',
     promoBanners: (shop.promoBanners as string) ?? '[]',
     brands: (shop.brands as string) ?? '[]',
+    primaryColor: (shop.primaryColor as string) ?? '#EC4899',
+    secondaryColor: (shop.secondaryColor as string) ?? null,
   }
 }

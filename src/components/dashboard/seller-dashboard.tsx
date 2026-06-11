@@ -42,6 +42,7 @@ import {
   Moon,
   Radio,
   Plus,
+  Megaphone,
 } from 'lucide-react'
 import { useThemeMode } from '@/lib/use-theme'
 import { DashboardOverview } from './dashboard-overview'
@@ -51,6 +52,7 @@ import { DashboardOrders } from './dashboard-orders'
 import { DashboardSettings } from './dashboard-settings'
 import { DashboardAiTools } from './dashboard-ai-tools'
 import { DashboardLive } from './dashboard-live'
+import { MarketingKit } from './marketing-kit'
 import { toast } from 'sonner'
 
 /* ------------------------------------------------------------------ */
@@ -70,6 +72,8 @@ interface MyShop {
   isActive: boolean
   sector?: string
   createdAt: string
+  primaryColor?: string
+  secondaryColor?: string
   _count: { products: number; orders: number; visits: number }
 }
 
@@ -100,6 +104,7 @@ const navItems: { id: DashboardTab; label: string; icon: React.ReactNode }[] = [
   { id: 'orders', label: 'Commandes', icon: <ShoppingCart className="h-5 w-5" /> },
   { id: 'live', label: 'Live TikTok', icon: <Radio className="h-5 w-5" /> },
   { id: 'ai-tools', label: 'Outils IA', icon: <Sparkles className="h-5 w-5" /> },
+  { id: 'marketing-kit', label: 'Kit Marketing', icon: <Megaphone className="h-5 w-5" /> },
   { id: 'settings', label: 'Paramètres', icon: <Settings className="h-5 w-5" /> },
 ]
 
@@ -341,6 +346,8 @@ function SidebarContent({
         template: selected.template,
         isActive: selected.isActive,
         sector: selected.sector,
+        primaryColor: selected.primaryColor,
+        secondaryColor: selected.secondaryColor,
       })
     }
   }
@@ -505,6 +512,8 @@ function DashboardContent({ consolidatedStats }: { consolidatedStats: Consolidat
       return <DashboardSettings />
     case 'ai-tools':
       return <DashboardAiTools />
+    case 'marketing-kit':
+      return <MarketingKit />
     default:
       return (
         <>
@@ -619,6 +628,8 @@ export function SellerDashboard() {
       template: newShop.template,
       isActive: newShop.isActive,
       sector: newShop.sector,
+      primaryColor: newShop.primaryColor,
+      secondaryColor: newShop.secondaryColor,
     })
   }
 
@@ -682,6 +693,8 @@ export function SellerDashboard() {
                       template: selected.template,
                       isActive: selected.isActive,
                       sector: selected.sector,
+                      primaryColor: selected.primaryColor,
+                      secondaryColor: selected.secondaryColor,
                     })
                   }
                 }}
