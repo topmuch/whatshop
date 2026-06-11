@@ -727,6 +727,157 @@ function DashboardPreview() {
   )
 }
 
+/* ── ENCART 1 : Partagez votre boutique ── */
+function ShareYourShop() {
+  const { setView } = useAppStore()
+  return (
+    <section className="py-20 md:py-28 bg-white overflow-hidden">
+      <div className="mx-auto max-w-7xl px-5 sm:px-8">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+          {/* Left — platform collage image */}
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={vp}
+            variants={fadeUp}
+            custom={0}
+            className="order-2 lg:order-1"
+          >
+            <div className="relative">
+              <div className="absolute -inset-4 bg-gradient-to-br from-pink-100/40 to-orange-100/40 rounded-3xl blur-2xl" />
+              <div className="relative rounded-2xl overflow-hidden shadow-xl shadow-pink-900/5">
+                <Image
+                  src="/landing/share-platforms.png"
+                  alt="Partagez votre boutique sur toutes les plateformes"
+                  width={1024}
+                  height={1024}
+                  className="w-full h-auto"
+                />
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Right — text + CTA */}
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={vp}
+            variants={stagger}
+            className="order-1 lg:order-2"
+          >
+            <motion.h2
+              variants={fadeUp}
+              custom={0}
+              className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 leading-tight"
+            >
+              Partagez votre boutique{' '}
+              <span className="bg-gradient-to-r from-pink-500 to-orange-400 bg-clip-text text-transparent">
+                où vous le souhaitez
+              </span>{' '}
+              !
+            </motion.h2>
+            <motion.p
+              variants={fadeUp}
+              custom={0.1}
+              className="mt-6 text-gray-600 text-lg sm:text-xl leading-relaxed"
+            >
+              Ajoutez votre URL Boutiko unique à toutes les plateformes —
+              WhatsApp, Facebook, TikTok, Instagram — et tous les endroits où
+              vous trouvez votre public. Utilisez ensuite votre code QR pour
+              rediriger votre trafic hors ligne vers votre lien dans la bio.
+            </motion.p>
+            <motion.div variants={fadeUp} custom={0.2} className="mt-10">
+              <Button
+                size="lg"
+                onClick={() => setView('register')}
+                className="text-lg px-10 py-6 h-auto font-semibold rounded-full bg-gradient-to-r from-pink-500 to-orange-400 hover:from-pink-600 hover:to-orange-500 text-white shadow-lg shadow-pink-500/25"
+              >
+                Commencer gratuitement{' '}
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            </motion.div>
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/* ── ENCART 2 : Créez et personnalisez ── */
+function CustomizeYourShop() {
+  const { setView } = useAppStore()
+  return (
+    <section className="py-20 md:py-28 bg-gray-50/80 overflow-hidden">
+      <div className="mx-auto max-w-7xl px-5 sm:px-8">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+          {/* Left — phone mockup image */}
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={vp}
+            variants={fadeUp}
+            custom={0}
+            className="order-2 lg:order-1"
+          >
+            <div className="relative">
+              <div className="absolute -inset-4 bg-gradient-to-br from-pink-100/40 to-rose-100/40 rounded-3xl blur-2xl" />
+              <div className="relative rounded-2xl overflow-hidden shadow-xl shadow-pink-900/5">
+                <Image
+                  src="/landing/customize-shop.png"
+                  alt="Créez et personnalisez votre boutique Boutiko"
+                  width={1024}
+                  height={1024}
+                  className="w-full h-auto"
+                />
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Right — text + CTA */}
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={vp}
+            variants={stagger}
+            className="order-1 lg:order-2"
+          >
+            <motion.h2
+              variants={fadeUp}
+              custom={0}
+              className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 leading-tight"
+            >
+              Créez et personnalisez votre boutique{' '}
+              <span className="bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent">
+                en quelques minutes
+              </span>
+            </motion.h2>
+            <motion.p
+              variants={fadeUp}
+              custom={0.1}
+              className="mt-6 text-gray-600 text-lg sm:text-xl leading-relaxed"
+            >
+              Regroupez tous vos contenus — réseaux sociaux, sites web,
+              boutiques en ligne, etc. — dans un seul lien en bio. Personnalisez
+              chaque détail ou laissez Boutiko l&apos;optimiser automatiquement
+              pour qu&apos;il corresponde à votre marque et génère plus de clics.
+            </motion.p>
+            <motion.div variants={fadeUp} custom={0.2} className="mt-10">
+              <Button
+                size="lg"
+                onClick={() => setView('register')}
+                className="text-lg px-10 py-6 h-auto font-semibold rounded-full bg-gradient-to-r from-pink-500 to-orange-400 hover:from-pink-600 hover:to-orange-500 text-white shadow-lg shadow-pink-500/25"
+              >
+                Commencer gratuitement{' '}
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            </motion.div>
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 /* ── PRICING ── */
 const plans = [
   {
@@ -1193,6 +1344,8 @@ export function LandingPage() {
         <SocialSelling />
         <Features />
         <DashboardPreview />
+        <ShareYourShop />
+        <CustomizeYourShop />
         <Pricing />
         <SocialProof />
         <FAQ />
