@@ -654,7 +654,7 @@ function Features() {
           {features.map((f, i) => (
             <motion.div key={i} variants={fadeUp} custom={i * 0.08}>
               <Card className="h-full rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-pink-200 transition-all duration-300 bg-white group overflow-hidden">
-                <div className="relative aspect-[16/10] overflow-hidden">
+                <div className="relative aspect-[3/2] overflow-hidden">
                   <Image
                     src={f.image}
                     alt={f.title}
@@ -662,13 +662,12 @@ function Features() {
                     className="object-cover group-hover:scale-105 transition-transform duration-500"
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
                 </div>
-                <CardContent className="p-6 flex flex-col gap-2">
+                <CardContent className="p-5 flex flex-col gap-2">
                   <h3 className="font-bold text-gray-900 text-lg">
                     {f.title}
                   </h3>
-                  <p className="text-base text-gray-500 leading-relaxed">
+                  <p className="text-sm text-gray-500 leading-relaxed">
                     {f.desc}
                   </p>
                 </CardContent>
