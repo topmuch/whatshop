@@ -635,11 +635,12 @@ function Features() {
           whileInView="visible"
           viewport={vp}
           variants={stagger}
-          className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8"
+          className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2"
         >
           {features.map((f, i) => (
-            <motion.div key={i} variants={fadeUp} custom={i * 0.08}>
-              <Card className="h-full rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-pink-200 transition-all duration-300 bg-white group overflow-hidden">
+            <motion.div key={i} variants={fadeUp} custom={i * 0.06}>
+              <div className="h-full rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 bg-white group">
+                {/* Image — 3:2 landscape, full width */}
                 <div className="relative aspect-[3/2] overflow-hidden">
                   <Image
                     src={f.image}
@@ -649,15 +650,21 @@ function Features() {
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   />
                 </div>
-                <CardContent className="p-5 flex flex-col gap-2">
-                  <h3 className="font-bold text-gray-900 text-lg">
-                    {f.title}
-                  </h3>
-                  <p className="text-sm text-gray-500 leading-relaxed">
-                    {f.desc}
-                  </p>
-                </CardContent>
-              </Card>
+                {/* Text block + button */}
+                <div className="flex items-center gap-3 px-4 py-3">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-gray-900 text-sm sm:text-base truncate">
+                      {f.title}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-gray-500 leading-snug mt-0.5 line-clamp-2">
+                      {f.desc}
+                    </p>
+                  </div>
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 shrink-0 rounded-full bg-gradient-to-br from-pink-500 to-orange-400 flex items-center justify-center shadow-sm group-hover:shadow-md group-hover:scale-110 transition-all duration-300">
+                    <span className="text-white font-bold text-base sm:text-lg leading-none">+</span>
+                  </div>
+                </div>
+              </div>
             </motion.div>
           ))}
         </motion.div>
