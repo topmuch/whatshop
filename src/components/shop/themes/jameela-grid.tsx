@@ -154,9 +154,6 @@ function JameelaProductCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: index * 0.06 }}
       whileHover={{ y: -5, transition: { duration: 0.25 } }}
       className="group cursor-pointer flex flex-col"
       onClick={() => onProductClick(product)}
@@ -169,6 +166,8 @@ function JameelaProductCard({
             alt={product.name}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
             loading="lazy"
+            onLoad={(e) => { (e.target as HTMLImageElement).style.opacity = '1' }}
+            style={{ opacity: 0, transition: 'opacity 0.3s ease' }}
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center">

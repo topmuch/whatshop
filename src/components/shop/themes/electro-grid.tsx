@@ -485,22 +485,21 @@ function ElectroProductCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: Math.min(index * 0.05, 0.5) }}
       className="group flex flex-col overflow-hidden rounded-xl bg-white transition-all duration-300 cursor-pointer hover:shadow-xl"
       style={{ border: `1px solid ${BLUE.border}` }}
       onClick={() => onProductClick(product)}
       whileTap={{ scale: 0.98 }}
     >
       {/* Image 336×280 */}
-      <div className="relative w-full overflow-hidden" style={{ aspectRatio: '336 / 280' }}>
+      <div className="relative w-full overflow-hidden bg-gray-100" style={{ aspectRatio: '336 / 280' }}>
         {product.image ? (
           <img
             src={product.image}
             alt={product.name}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
             loading="lazy"
+            onLoad={(e) => { (e.target as HTMLImageElement).style.opacity = '1' }}
+            style={{ opacity: 0, transition: 'opacity 0.3s ease' }}
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center" style={{ background: BLUE.bgGray }}>
@@ -1508,7 +1507,7 @@ export function ElectroShopPage() {
   }
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { duration: 0.3 } }} className="min-h-screen flex flex-col" style={{ background: BLUE.bg, color: BLUE.text }}>
+    <motion.div className="min-h-screen flex flex-col" style={{ background: BLUE.bg, color: BLUE.text }}>
       {/* ═══ SECTION 1 : MENU ═══ */}
       <ElectroMenu
         shopName={publicShop.name}

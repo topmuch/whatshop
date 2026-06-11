@@ -568,9 +568,6 @@ function LuxeProductCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: Math.min(index * 0.06, 0.6) }}
       className="group flex flex-col overflow-hidden rounded-2xl backdrop-blur-xl cursor-pointer transition-all duration-500 hover:-translate-y-[5px] hover:scale-[1.03] hover:shadow-2xl"
       style={{
         background: THEME.glassBg,
@@ -579,13 +576,15 @@ function LuxeProductCard({
       onClick={() => onProductClick(product)}
     >
       {/* Image */}
-      <div className="relative w-full overflow-hidden" style={{ aspectRatio: '336 / 320' }}>
+      <div className="relative w-full overflow-hidden bg-gray-100" style={{ aspectRatio: '336 / 320' }}>
         {product.image ? (
           <img
             src={product.image}
             alt={product.name}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
             loading="lazy"
+            onLoad={(e) => { (e.target as HTMLImageElement).style.opacity = '1' }}
+            style={{ opacity: 0, transition: 'opacity 0.3s ease' }}
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center" style={{ background: `${THEME.goldLight}60` }}>
@@ -1451,7 +1450,7 @@ export function LuxeFashionShopPage() {
   }
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { duration: 0.3 } }}
+    <motion.div
       className="min-h-screen flex flex-col"
       style={{
         background: 'linear-gradient(135deg, #FFE5E5 0%, #FFFDD0 50%, #FFE5E5 100%)',

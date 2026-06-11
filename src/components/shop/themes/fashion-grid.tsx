@@ -172,9 +172,6 @@ function FashionProductCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, ease: 'easeOut' }}
       whileHover={{ y: -6, transition: { duration: 0.2 } }}
       className={`
         group relative flex flex-col cursor-pointer
@@ -205,6 +202,8 @@ function FashionProductCard({
             src={productImage}
             alt={product.name}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            onLoad={(e) => { (e.target as HTMLImageElement).style.opacity = '1' }}
+            style={{ opacity: 0, transition: 'opacity 0.3s ease' }}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-50">
@@ -623,10 +622,8 @@ export function FashionGrid({
                   <motion.div
                     key={product.id}
                     layout
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 0.25, delay: Math.min(index * 0.03, 0.15) }}
+                    transition={{ duration: 0.25 }}
                   >
                     <FashionProductCard
                       product={product}

@@ -40,7 +40,7 @@ import {
   Globe,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { AnimatePresence, motion, type Variants } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { ShopHeroCarousel } from './shop-hero-carousel'
 import { TemplateProvider } from './template-provider'
 import { LiveShopFeatures } from './live-shop-features'
@@ -558,19 +558,10 @@ function ShopContent() {
   const totalProductCount = publicProducts.filter((p) => p.isAvailable).length
   const isSearching = searchQuery.trim().length > 0
 
-  // Fade-in wrapper for smooth content appearance
-  const contentVariants: Variants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { duration: 0.3, ease: 'easeOut' } },
-  }
-
   return (
     <motion.div
       className="min-h-screen pb-20 relative"
       style={{ background: 'var(--tpl-bg)', color: 'var(--tpl-text)' }}
-      variants={contentVariants}
-      initial="hidden"
-      animate="visible"
     >
       {/* Decorative background pattern */}
       <DecorativeBackground pattern={decorative.pattern} gradientBg={decorative.gradientBg} />

@@ -501,9 +501,6 @@ function TikTokProductCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: Math.min(index * 0.05, 0.5) }}
       className="group flex flex-col overflow-hidden rounded-xl transition-all duration-300 cursor-pointer"
       style={{
         background: TT.cardBg,
@@ -521,13 +518,15 @@ function TikTokProductCard({
       }}
     >
       {/* Image */}
-      <div className="relative w-full overflow-hidden" style={{ aspectRatio: '1 / 1' }}>
+      <div className="relative w-full overflow-hidden bg-gray-800" style={{ aspectRatio: '1 / 1' }}>
         {product.image ? (
           <img
             src={product.image}
             alt={product.name}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
             loading="lazy"
+            onLoad={(e) => { (e.target as HTMLImageElement).style.opacity = '1' }}
+            style={{ opacity: 0, transition: 'opacity 0.3s ease' }}
           />
         ) : (
           <div
@@ -1559,7 +1558,7 @@ export function TikTokLiveShopPage() {
   }
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { duration: 0.3 } }}
+    <motion.div
       className="min-h-screen flex flex-col"
       style={{
         background: TT.darkBg,

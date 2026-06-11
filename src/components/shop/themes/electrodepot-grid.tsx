@@ -404,9 +404,6 @@ function ElectroDepotProductCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, delay: Math.min(index * 0.04, 0.4) }}
       className="group flex flex-col bg-white overflow-hidden cursor-pointer transition-shadow duration-200 hover:shadow-lg"
       style={{ border: `1px solid ${COLORS.border}`, borderRadius: '2px' }}
       onClick={() => onProductClick(product)}
@@ -419,6 +416,8 @@ function ElectroDepotProductCard({
             alt={product.name}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             loading="lazy"
+            onLoad={(e) => { (e.target as HTMLImageElement).style.opacity = '1' }}
+            style={{ opacity: 0, transition: 'opacity 0.3s ease' }}
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">

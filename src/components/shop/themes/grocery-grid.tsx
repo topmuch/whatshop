@@ -218,9 +218,7 @@ export function GroceryGrid({
   return (
     <div className="w-full max-w-6xl mx-auto">
       {/* ── 1. Delivery Info Bar ────────────────────────────────────────── */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
+      <div
         className="mb-6 rounded-xl px-4 py-3.5 flex items-center justify-center gap-3 text-white font-semibold text-sm sm:text-base"
         style={{ backgroundColor: GROCERY_COLORS.green }}
       >
@@ -237,14 +235,11 @@ export function GroceryGrid({
             <ArrowRight className="size-3" />
           </a>
         )}
-      </motion.div>
+      </div>
 
       {/* ── 2. Circular Categories ──────────────────────────────────────── */}
       {publicCategories.length > 0 && (
-        <motion.section
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
+        <section
           className="mb-6"
         >
           <div className="flex gap-4 overflow-x-auto pb-3 scrollbar-none">
@@ -340,14 +335,11 @@ export function GroceryGrid({
               )
             })}
           </div>
-        </motion.section>
+        </section>
       )}
 
       {/* ── 3. Search Bar + Sort ────────────────────────────────────────── */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.15 }}
+      <div
         className="mb-6 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center"
       >
         <div className="relative flex-1">
@@ -385,14 +377,11 @@ export function GroceryGrid({
             <SelectItem value="price-desc">Prix décroissant</SelectItem>
           </SelectContent>
         </Select>
-      </motion.div>
+      </div>
 
       {/* ── 4. Deal of the Day ───────────────────────────────────────────── */}
       {!isFiltering && publicProducts.length > 0 && (
-        <motion.section
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
+        <section
           className="mb-8"
         >
           <div
@@ -453,7 +442,7 @@ export function GroceryGrid({
               </div>
             </div>
           </div>
-        </motion.section>
+        </section>
       )}
 
       {/* ── 5. Product Grid ─────────────────────────────────────────────── */}
@@ -493,22 +482,17 @@ export function GroceryGrid({
           </AnimatePresence>
 
           {/* Product count */}
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+          <p
             className="text-center text-sm text-gray-400 mt-6"
           >
             {sortedProducts.length} produit{sortedProducts.length > 1 ? 's' : ''} affiché{sortedProducts.length > 1 ? 's' : ''}
-          </motion.p>
+          </p>
         </>
       )}
 
       {/* ── 6. Promotional Grid ─────────────────────────────────────────── */}
       {!isFiltering && publicProducts.length > 0 && (
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
+        <section
           className="mt-10 mb-10"
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -586,23 +570,17 @@ export function GroceryGrid({
               </Button>
             </motion.div>
           </div>
-        </motion.section>
+        </section>
       )}
 
       {/* ── 7. Trust Badges ─────────────────────────────────────────────── */}
-      <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
+      <section
         className="mb-10"
       >
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {TRUST_BADGES.map((badge, index) => (
             <motion.div
               key={badge.label}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.45 + index * 0.05 }}
               whileHover={{ y: -2 }}
               className="flex flex-col items-center gap-2.5 p-4 rounded-xl bg-gray-50 border border-gray-100"
             >
@@ -624,7 +602,7 @@ export function GroceryGrid({
             </motion.div>
           ))}
         </div>
-      </motion.section>
+      </section>
     </div>
   )
 }
@@ -650,9 +628,6 @@ function GroceryProductCard({
 }: GroceryProductCardProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: Math.min(index * 0.04, 0.3), duration: 0.3 }}
       whileHover={{ y: -4 }}
       className="group flex flex-col rounded-xl border border-gray-100 bg-white overflow-hidden shadow-sm hover:shadow-md transition-shadow"
     >
@@ -667,6 +642,8 @@ function GroceryProductCard({
             alt={product.name}
             className="size-full object-cover group-hover:scale-105 transition-transform duration-300"
             loading="lazy"
+            onLoad={(e) => { (e.target as HTMLImageElement).style.opacity = '1' }}
+            style={{ opacity: 0, transition: 'opacity 0.3s ease' }}
           />
         ) : (
           <div className="flex items-center justify-center size-full">
@@ -782,9 +759,7 @@ function EmptyState({
   onReset: () => void
 }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+    <div
       className="flex flex-col items-center justify-center py-20 text-center"
     >
       <div className="flex items-center justify-center size-20 rounded-full bg-gray-50 mb-5">
@@ -813,6 +788,6 @@ function EmptyState({
           Réinitialiser les filtres
         </Button>
       )}
-    </motion.div>
+    </div>
   )
 }

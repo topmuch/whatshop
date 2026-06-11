@@ -1,0 +1,827 @@
+     1→'use client'
+     2→
+     3→import { useState, useMemo, useCallback } from 'react'
+     4→import { motion, AnimatePresence } from 'framer-motion'
+     5→import { toast } from 'sonner'
+     6→import { Button } from '@/components/ui/button'
+     7→import { Input } from '@/components/ui/input'
+     8→import { Badge } from '@/components/ui/badge'
+     9→import {
+    10→  Select,
+    11→  SelectContent,
+    12→  SelectItem,
+    13→  SelectTrigger,
+    14→  SelectValue,
+    15→} from '@/components/ui/select'
+    16→import {
+    17→  Search,
+    18→  X,
+    19→  Plus,
+    20→  Minus,
+    21→  Trash2,
+    22→  Package,
+    23→  ShoppingBag,
+    24→  Sparkles,
+    25→  Flame,
+    26→  ArrowRight,
+    27→  Gem,
+    28→  MessageCircle,
+    29→  Truck,
+    30→  Star,
+    31→} from 'lucide-react'
+    32→import { Product as ProductType, formatPrice } from '@/lib/shared'
+    33→
+    34→/* ------------------------------------------------------------------ */
+    35→/*  Types                                                              */
+    36→/* ------------------------------------------------------------------ */
+    37→
+    38→interface JameelaGridProps {
+    39→  filteredProducts: ProductType[]
+    40→  publicCategories: any[]
+    41→  publicProducts: ProductType[]
+    42→  activeCategory: string | null
+    43→  searchQuery: string
+    44→  sortBy: 'recent' | 'price-asc' | 'price-desc'
+    45→  isSearching: boolean
+    46→  totalProductCount: number
+    47→  onCategoryClick: (id: string | null) => void
+    48→  onProductClick: (product: ProductType) => void
+    49→  onAddToCart: (product: ProductType) => void
+    50→  getCartQuantity: (productId: string) => number
+    51→  updateCartQuantity: (productId: string, qty: number) => void
+    52→  onSortChange: (sort: string) => void
+    53→  onSearchChange: (query: string) => void
+    54→  shopName: string
+    55→  whatsapp?: string
+    56→}
+    57→
+    58→/* ------------------------------------------------------------------ */
+    59→/*  Colour tokens (Jameela Beauty)                                     */
+    60→/* ------------------------------------------------------------------ */
+    61→
+    62→const JAMEELA = {
+    63→  headerDark: '#1a1a1a',
+    64→  beigeGold: '#C8A882',
+    65→  roseCta: '#C9788F',
+    66→  white: '#ffffff',
+    67→  saleRed: '#ff4757',
+    68→  newOrange: '#ffa502',
+    69→  mutedText: '#6b6b6b',
+    70→  lightBg: '#f9f6f2',
+    71→} as const
+    72→
+    73→/* ------------------------------------------------------------------ */
+    74→/*  Helpers                                                            */
+    75→/* ------------------------------------------------------------------ */
+    76→
+    77→function isNew(product: ProductType): boolean {
+    78→  if (!product.createdAt) return false
+    79→  const created = new Date(product.createdAt)
+    80→  const now = new Date()
+    81→  const diffDays = (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24)
+    82→  return diffDays <= 14
+    83→}
+    84→
+    85→function isSale(product: ProductType): boolean {
+    86→  // If stock is very low consider it on sale as a heuristic
+    87→  return (product.stock !== undefined && product.stock > 0 && product.stock <= 3) || false
+    88→}
+    89→
+    90→/* ------------------------------------------------------------------ */
+    91→/*  Sub-components                                                     */
+    92→/* ------------------------------------------------------------------ */
+    93→
+    94→/* ---------- Product Card ---------- */
+    95→
+    96→function JameelaProductCard({
+    97→  product,
+    98→  index,
+    99→  onProductClick,
+   100→  onAddToCart,
+   101→  getCartQuantity,
+   102→  updateCartQuantity,
+   103→}: {
+   104→  product: ProductType
+   105→  index: number
+   106→  onProductClick: (p: ProductType) => void
+   107→  onAddToCart: (p: ProductType) => void
+   108→  getCartQuantity: (id: string) => number
+   109→  updateCartQuantity: (id: string, qty: number) => void
+   110→}) {
+   111→  const qty = getCartQuantity(product.id)
+   112→  const productImage = product.image || product.images?.[0]
+   113→
+   114→  const handleAdd = useCallback(
+   115→    (e: React.MouseEvent) => {
+   116→      e.stopPropagation()
+   117→      onAddToCart(product)
+   118→      toast.success(`${product.name} ajouté au panier`, {
+   119→        style: {
+   120→          background: JAMEELA.headerDark,
+   121→          color: JAMEELA.white,
+   122→          border: `1px solid ${JAMEELA.beigeGold}`,
+   123→        },
+   124→      })
+   125→    },
+   126→    [onAddToCart, product],
+   127→  )
+   128→
+   129→  const handleIncrease = useCallback(
+   130→    (e: React.MouseEvent) => {
+   131→      e.stopPropagation()
+   132→      updateCartQuantity(product.id, qty + 1)
+   133→    },
+   134→    [product.id, qty, updateCartQuantity],
+   135→  )
+   136→
+   137→  const handleDecrease = useCallback(
+   138→    (e: React.MouseEvent) => {
+   139→      e.stopPropagation()
+   140→      if (qty <= 1) {
+   141→        updateCartQuantity(product.id, 0)
+   142→        toast.info(`${product.name} retiré du panier`, {
+   143→          style: {
+   144→            background: JAMEELA.headerDark,
+   145→            color: JAMEELA.white,
+   146→          },
+   147→        })
+   148→      } else {
+   149→        updateCartQuantity(product.id, qty - 1)
+   150→      }
+   151→    },
+   152→    [product.id, qty, product.name, updateCartQuantity],
+   153→  )
+   154→
+   155→  return (
+   156→    <motion.div
+   157→      initial={{ opacity: 0, y: 24 }}
+   158→      animate={{ opacity: 1, y: 0 }}
+   159→      transition={{ duration: 0.4, delay: index * 0.06 }}
+   160→      whileHover={{ y: -5, transition: { duration: 0.25 } }}
+   161→      className="group cursor-pointer flex flex-col"
+   162→      onClick={() => onProductClick(product)}
+   163→    >
+   164→      {/* Image wrapper */}
+   165→      <div className="relative overflow-hidden rounded-lg bg-[#f3f0ec] mb-3" style={{ aspectRatio: '336 / 280' }}>
+   166→        {productImage ? (
+   167→          <img
+   168→            src={productImage}
+   169→            alt={product.name}
+   170→            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+   171→            loading="lazy"
+   172→          />
+   173→        ) : (
+   174→          <div className="flex h-full w-full items-center justify-center">
+   175→            <Package className="size-10 text-[#c8c8c8]" />
+   176→          </div>
+   177→        )}
+   178→
+   179→        {/* Badges */}
+   180→        <div className="absolute top-2.5 left-2.5 flex flex-col gap-1.5">
+   181→          {isSale(product) && (
+   182→            <Badge
+   183→              className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm border-0"
+   184→              style={{
+   185→                backgroundColor: JAMEELA.saleRed,
+   186→                color: JAMEELA.white,
+   187→              }}
+   188→            >
+   189→              Promo
+   190→            </Badge>
+   191→          )}
+   192→          {isNew(product) && (
+   193→            <Badge
+   194→              className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm border-0"
+   195→              style={{
+   196→                backgroundColor: JAMEELA.newOrange,
+   197→                color: JAMEELA.white,
+   198→              }}
+   199→            >
+   200→              Nouveau
+   201→            </Badge>
+   202→          )}
+   203→        </div>
+   204→
+   205→        {/* Stock indicator */}
+   206→        {product.stock === 0 && (
+   207→          <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+   208→            <span className="text-xs font-semibold text-white bg-black/60 px-3 py-1 rounded-full">
+   209→              Rupture
+   210→            </span>
+   211→          </div>
+   212→        )}
+   213→      </div>
+   214→
+   215→      {/* Info */}
+   216→      <div className="flex flex-col gap-1.5 px-0.5">
+   217→        <h3 className="text-sm font-medium leading-tight text-[#333] line-clamp-2 group-hover:text-[#1a1a1a] transition-colors">
+   218→          {product.name}
+   219→        </h3>
+   220→
+   221→        <span
+   222→          className="text-sm font-semibold tracking-wide"
+   223→          style={{ color: JAMEELA.beigeGold }}
+   224→        >
+   225→          {formatPrice(product.price)}
+   226→        </span>
+   227→
+   228→        {/* Add to cart / quantity controls */}
+   229→        {product.isAvailable && product.stock !== 0 ? (
+   230→          qty === 0 ? (
+   231→            <motion.button
+   232→              whileTap={{ scale: 0.96 }}
+   233→              onClick={handleAdd}
+   234→              className="mt-1 flex h-8 w-full items-center justify-center gap-1.5 rounded-md text-xs font-semibold transition-all hover:shadow-md active:scale-95"
+   235→              style={{
+   236→                backgroundColor: JAMEELA.roseCta,
+   237→                color: JAMEELA.headerDark,
+   238→              }}
+   239→            >
+   240→              <Plus className="size-3.5" strokeWidth={2.5} />
+   241→              Ajouter
+   242→            </motion.button>
+   243→          ) : (
+   244→            <motion.div
+   245→              initial={{ opacity: 0, scale: 0.9 }}
+   246→              animate={{ opacity: 1, scale: 1 }}
+   247→              className="mt-1 flex h-8 w-full items-center justify-between rounded-md border"
+   248→              style={{ borderColor: JAMEELA.beigeGold }}
+   249→            >
+   250→              <button
+   251→                onClick={handleDecrease}
+   252→                className="flex h-full w-8 items-center justify-center text-[#333] hover:text-[#1a1a1a] transition-colors"
+   253→              >
+   254→                {qty === 1 ? (
+   255→                  <Trash2 className="size-3.5" style={{ color: JAMEELA.saleRed }} />
+   256→                ) : (
+   257→                  <Minus className="size-3.5" />
+   258→                )}
+   259→              </button>
+   260→              <span className="text-sm font-semibold" style={{ color: JAMEELA.headerDark }}>
+   261→                {qty}
+   262→              </span>
+   263→              <button
+   264→                onClick={handleIncrease}
+   265→                className="flex h-full w-8 items-center justify-center text-[#333] hover:text-[#1a1a1a] transition-colors"
+   266→              >
+   267→                <Plus className="size-3.5" />
+   268→              </button>
+   269→            </motion.div>
+   270→          )
+   271→        ) : (
+   272→          <div
+   273→            className="mt-1 flex h-8 w-full items-center justify-center rounded-md text-xs font-medium border"
+   274→            style={{
+   275→              borderColor: '#ddd',
+   276→              color: JAMEELA.mutedText,
+   277→            }}
+   278→          >
+   279→            Indisponible
+   280→          </div>
+   281→        )}
+   282→      </div>
+   283→    </motion.div>
+   284→  )
+   285→}
+   286→
+   287→/* ---------- Section Header ---------- */
+   288→
+   289→function SectionHeader({
+   290→  icon: Icon,
+   291→  title,
+   292→  subtitle,
+   293→}: {
+   294→  icon: React.ElementType
+   295→  title: string
+   296→  subtitle?: string
+   297→}) {
+   298→  return (
+   299→    <motion.div
+   300→      initial={{ opacity: 0, x: -20 }}
+   301→      whileInView={{ opacity: 1, x: 0 }}
+   302→      viewport={{ once: true, margin: '-50px' }}
+   303→      transition={{ duration: 0.5 }}
+   304→      className="mb-8 flex items-center gap-3"
+   305→    >
+   306→      <div
+   307→        className="flex size-10 items-center justify-center rounded-full"
+   308→        style={{ backgroundColor: JAMEELA.lightBg }}
+   309→      >
+   310→        <Icon className="size-5" style={{ color: JAMEELA.beigeGold }} />
+   311→      </div>
+   312→      <div>
+   313→        <h2
+   314→          className="text-2xl font-bold tracking-tight"
+   315→          style={{ color: JAMEELA.headerDark }}
+   316→        >
+   317→          {title}
+   318→        </h2>
+   319→        {subtitle && (
+   320→          <p className="text-xs tracking-widest uppercase" style={{ color: JAMEELA.mutedText }}>
+   321→            {subtitle}
+   322→          </p>
+   323→        )}
+   324→      </div>
+   325→      <div
+   326→        className="ml-3 h-px flex-1"
+   327→        style={{ backgroundColor: `${JAMEELA.beigeGold}33` }}
+   328→      />
+   329→    </motion.div>
+   330→  )
+   331→}
+   332→
+   333→/* ---------- Promotional Banner ---------- */
+   334→
+   335→function PromoBanner({ shopName }: { shopName: string }) {
+   336→  return (
+   337→    <motion.section
+   338→      initial={{ opacity: 0, y: 30 }}
+   339→      whileInView={{ opacity: 1, y: 0 }}
+   340→      viewport={{ once: true, margin: '-80px' }}
+   341→      transition={{ duration: 0.6 }}
+   342→      className="my-12 rounded-2xl overflow-hidden"
+   343→    >
+   344→      <div className="grid md:grid-cols-2 min-h-[260px]">
+   345→        {/* Left: gradient visual */}
+   346→        <div
+   347→          className="relative flex items-center justify-center p-8 md:p-12"
+   348→          style={{
+   349→            background: `linear-gradient(135deg, ${JAMEELA.headerDark} 0%, #2d2520 50%, ${JAMEELA.beigeGold}66 100%)`,
+   350→          }}
+   351→        >
+   352→          <div className="relative flex flex-col items-center gap-4">
+   353→            {/* Decorative circles */}
+   354→            <div
+   355→              className="absolute -top-8 -left-8 size-40 rounded-full opacity-20 blur-2xl"
+   356→              style={{ backgroundColor: JAMEELA.beigeGold }}
+   357→            />
+   358→            <div
+   359→              className="absolute -bottom-6 -right-6 size-32 rounded-full opacity-15 blur-2xl"
+   360→              style={{ backgroundColor: JAMEELA.roseCta }}
+   361→            />
+   362→            <Gem className="size-16 relative z-10" style={{ color: JAMEELA.beigeGold }} />
+   363→            <p
+   364→              className="text-sm font-medium tracking-widest uppercase relative z-10"
+   365→              style={{ color: JAMEELA.beigeGold }}
+   366→            >
+   367→              {shopName || 'Jameela'}
+   368→            </p>
+   369→          </div>
+   370→        </div>
+   371→
+   372→        {/* Right: text + CTA */}
+   373→        <div
+   374→          className="flex flex-col justify-center p-8 md:p-12"
+   375→          style={{ backgroundColor: JAMEELA.white }}
+   376→        >
+   377→          <p
+   378→            className="text-xs font-semibold tracking-[0.2em] uppercase mb-3"
+   379→            style={{ color: JAMEELA.beigeGold }}
+   380→          >
+   381→            Offre exclusive
+   382→          </p>
+   383→          <h3
+   384→            className="text-2xl md:text-3xl font-bold leading-snug mb-3"
+   385→            style={{ color: JAMEELA.headerDark }}
+   386→          >
+   387→            Découvrez notre nouvelle collection de soins
+   388→          </h3>
+   389→          <p className="text-sm leading-relaxed mb-6" style={{ color: JAMEELA.mutedText }}>
+   390→            Des produits formulés avec les meilleurs ingrédients naturels pour sublimer votre
+   391→            beauté au quotidien. Livraison gratuite sur Dakar.
+   392→          </p>
+   393→          <div className="flex items-center gap-4">
+   394→            <motion.button
+   395→              whileHover={{ scale: 1.03 }}
+   396→              whileTap={{ scale: 0.97 }}
+   397→              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-md text-sm font-semibold transition-shadow hover:shadow-lg"
+   398→              style={{
+   399→                backgroundColor: JAMEELA.beigeGold,
+   400→                color: JAMEELA.headerDark,
+   401→              }}
+   402→            >
+   403→              Découvrir
+   404→              <ArrowRight className="size-4" />
+   405→            </motion.button>
+   406→            <div className="flex items-center gap-1.5 text-xs" style={{ color: JAMEELA.mutedText }}>
+   407→              <Truck className="size-4" style={{ color: JAMEELA.beigeGold }} />
+   408→              <span>Livraison rapide</span>
+   409→            </div>
+   410→          </div>
+   411→        </div>
+   412→      </div>
+   413→    </motion.section>
+   414→  )
+   415→}
+   416→
+   417→/* ---------- Empty State ---------- */
+   418→
+   419→function EmptyState({
+   420→  searchQuery,
+   421→  onClear,
+   422→}: {
+   423→  searchQuery: string
+   424→  onClear: () => void
+   425→}) {
+   426→  return (
+   427→    <motion.div
+   428→      initial={{ opacity: 0, scale: 0.95 }}
+   429→      animate={{ opacity: 1, scale: 1 }}
+   430→      className="flex flex-col items-center justify-center py-20 text-center px-4"
+   431→    >
+   432→      <div
+   433→        className="flex size-20 items-center justify-center rounded-full mb-6"
+   434→        style={{ backgroundColor: JAMEELA.lightBg }}
+   435→      >
+   436→        <ShoppingBag className="size-10" style={{ color: JAMEELA.beigeGold }} />
+   437→      </div>
+   438→      <h3
+   439→        className="text-xl font-bold mb-2"
+   440→        style={{ color: JAMEELA.headerDark }}
+   441→      >
+   442→        Aucun produit trouvé
+   443→      </h3>
+   444→      <p className="text-sm max-w-sm" style={{ color: JAMEELA.mutedText }}>
+   445→        {searchQuery
+   446→          ? `Aucun résultat pour "${searchQuery}". Essayez un autre terme.`
+   447→          : "Cette boutique n'a pas encore de produits dans cette catégorie."}
+   448→      </p>
+   449→      {searchQuery && (
+   450→        <Button
+   451→          variant="outline"
+   452→          size="sm"
+   453→          className="mt-6 rounded-full"
+   454→          onClick={onClear}
+   455→          style={{ borderColor: JAMEELA.beigeGold, color: JAMEELA.beigeGold }}
+   456→        >
+   457→          <X className="size-4 mr-1.5" />
+   458→          Réinitialiser
+   459→        </Button>
+   460→      )}
+   461→    </motion.div>
+   462→  )
+   463→}
+   464→
+   465→/* ---------- Product Grid ---------- */
+   466→
+   467→function ProductGridSection({
+   468→  products,
+   469→  startIndex,
+   470→  onProductClick,
+   471→  onAddToCart,
+   472→  getCartQuantity,
+   473→  updateCartQuantity,
+   474→}: {
+   475→  products: ProductType[]
+   476→  startIndex: number
+   477→  onProductClick: (p: ProductType) => void
+   478→  onAddToCart: (p: ProductType) => void
+   479→  getCartQuantity: (id: string) => number
+   480→  updateCartQuantity: (id: string, qty: number) => void
+   481→}) {
+   482→  return (
+   483→    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-5 gap-y-8">
+   484→      {products.map((product, i) => (
+   485→        <JameelaProductCard
+   486→          key={product.id}
+   487→          product={product}
+   488→          index={startIndex + i}
+   489→          onProductClick={onProductClick}
+   490→          onAddToCart={onAddToCart}
+   491→          getCartQuantity={getCartQuantity}
+   492→          updateCartQuantity={updateCartQuantity}
+   493→        />
+   494→      ))}
+   495→    </div>
+   496→  )
+   497→}
+   498→
+   499→/* ------------------------------------------------------------------ */
+   500→/*  Main Component                                                     */
+   501→/* ------------------------------------------------------------------ */
+   502→
+   503→export function JameelaGrid({
+   504→  filteredProducts,
+   505→  publicCategories,
+   506→  publicProducts,
+   507→  activeCategory,
+   508→  searchQuery,
+   509→  sortBy,
+   510→  isSearching,
+   511→  totalProductCount,
+   512→  onCategoryClick,
+   513→  onProductClick,
+   514→  onAddToCart,
+   515→  getCartQuantity,
+   516→  updateCartQuantity,
+   517→  onSortChange,
+   518→  onSearchChange,
+   519→  shopName,
+   520→  whatsapp,
+   521→}: JameelaGridProps) {
+   522→  /* ----- sort products for sections ----- */
+   523→  const sortedByDate = useMemo(() => {
+   524→    return [...publicProducts]
+   525→      .filter((p) => p.isAvailable)
+   526→      .sort((a, b) => {
+   527→        const da = a.createdAt ? new Date(a.createdAt).getTime() : 0
+   528→        const db = b.createdAt ? new Date(b.createdAt).getTime() : 0
+   529→        return db - da // newest first
+   530→      })
+   531→  }, [publicProducts])
+   532→
+   533→  const midIndex = Math.ceil(sortedByDate.length / 2)
+   534→  const nouveauProducts = sortedByDate.slice(0, midIndex)
+   535→  const bestSellers = sortedByDate.slice(midIndex)
+   536→
+   537→  /* ----- filtered & sorted list (for search / category mode) ----- */
+   538→  const displayProducts = useMemo(() => {
+   539→    const products = [...filteredProducts]
+   540→    if (sortBy === 'price-asc') {
+   541→      products.sort((a, b) => a.price - b.price)
+   542→    } else if (sortBy === 'price-desc') {
+   543→      products.sort((a, b) => b.price - a.price)
+   544→    } else {
+   545→      products.sort((a, b) => {
+   546→        const da = a.createdAt ? new Date(a.createdAt).getTime() : 0
+   547→        const db = b.createdAt ? new Date(b.createdAt).getTime() : 0
+   548→        return db - da
+   549→      })
+   550→    }
+   551→    return products
+   552→  }, [filteredProducts, sortBy])
+   553→
+   554→  const showSections = !isSearching && !activeCategory
+   555→
+   556→  const handleClearFilters = useCallback(() => {
+   557→    onSearchChange('')
+   558→    onCategoryClick(null)
+   559→  }, [onSearchChange, onCategoryClick])
+   560→
+   561→  return (
+   562→    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+   563→      {/* ============================================================ */}
+   564→      {/*  TOP BAR: Search + Sort                                       */}
+   565→      {/* ============================================================ */}
+   566→      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-6">
+   567→        {/* Search */}
+   568→        <div className="relative flex-1 max-w-md">
+   569→          <Search
+   570→            className="absolute left-3 top-1/2 -translate-y-1/2 size-4 pointer-events-none"
+   571→            style={{ color: JAMEELA.mutedText }}
+   572→          />
+   573→          <Input
+   574→            type="text"
+   575→            placeholder="Rechercher un produit..."
+   576→            value={searchQuery}
+   577→            onChange={(e) => onSearchChange(e.target.value)}
+   578→            className="pl-9 pr-9 h-10 rounded-lg text-sm border-[#e0dcd6] bg-white focus-visible:border-[#C8A882] focus-visible:ring-[#C8A882]/20"
+   579→          />
+   580→          {searchQuery && (
+   581→            <button
+   582→              onClick={() => onSearchChange('')}
+   583→              className="absolute right-3 top-1/2 -translate-y-1/2"
+   584→            >
+   585→              <X className="size-4 hover:text-[#ff4757] transition-colors" />
+   586→            </button>
+   587→          )}
+   588→        </div>
+   589→
+   590→        {/* Sort */}
+   591→        <Select value={sortBy} onValueChange={onSortChange}>
+   592→          <SelectTrigger
+   593→            className="h-10 w-full sm:w-[180px] rounded-lg text-sm border-[#e0dcd6] bg-white"
+   594→          >
+   595→            <SelectValue placeholder="Trier par" />
+   596→          </SelectTrigger>
+   597→          <SelectContent className="rounded-lg">
+   598→            <SelectItem value="recent">Plus récents</SelectItem>
+   599→            <SelectItem value="price-asc">Prix croissant</SelectItem>
+   600→            <SelectItem value="price-desc">Prix décroissant</SelectItem>
+   601→          </SelectContent>
+   602→        </Select>
+   603→
+   604→        {/* Product count */}
+   605→        <div className="hidden sm:flex items-center gap-1.5 text-xs ml-auto" style={{ color: JAMEELA.mutedText }}>
+   606→          <Package className="size-3.5" />
+   607→          <span>{totalProductCount} produit{totalProductCount !== 1 ? 's' : ''}</span>
+   608→        </div>
+   609→      </div>
+   610→
+   611→      {/* ============================================================ */}
+   612→      {/*  CATEGORY NAVIGATION (underline style)                        */}
+   613→      {/* ============================================================ */}
+   614→      {publicCategories.length > 0 && (
+   615→        <nav className="mb-8 border-b overflow-x-auto scrollbar-none" style={{ borderColor: `${JAMEELA.beigeGold}22` }}>
+   616→          <div className="flex gap-1 min-w-max">
+   617→            <button
+   618→              onClick={() => onCategoryClick(null)}
+   619→              className="relative px-4 py-3 text-sm font-medium transition-colors whitespace-nowrap"
+   620→              style={{
+   621→                color: activeCategory === null ? JAMEELA.headerDark : JAMEELA.mutedText,
+   622→              }}
+   623→            >
+   624→              Tous
+   625→              {activeCategory === null && (
+   626→                <motion.span
+   627→                  layoutId="cat-underline"
+   628→                  className="absolute bottom-0 left-2 right-2 h-[2.5px] rounded-full"
+   629→                  style={{ backgroundColor: JAMEELA.beigeGold }}
+   630→                />
+   631→              )}
+   632→            </button>
+   633→            {publicCategories.map((cat) => (
+   634→              <button
+   635→                key={cat.id}
+   636→                onClick={() => onCategoryClick(activeCategory === cat.id ? null : cat.id)}
+   637→                className="relative px-4 py-3 text-sm font-medium transition-colors whitespace-nowrap"
+   638→                style={{
+   639→                  color: activeCategory === cat.id ? JAMEELA.headerDark : JAMEELA.mutedText,
+   640→                }}
+   641→              >
+   642→                {cat.name}
+   643→                {activeCategory === cat.id && (
+   644→                  <motion.span
+   645→                    layoutId="cat-underline"
+   646→                    className="absolute bottom-0 left-2 right-2 h-[2.5px] rounded-full"
+   647→                    style={{ backgroundColor: JAMEELA.beigeGold }}
+   648→                  />
+   649→                )}
+   650→              </button>
+   651→            ))}
+   652→          </div>
+   653→        </nav>
+   654→      )}
+   655→
+   656→      {/* ============================================================ */}
+   657→      {/*  MAIN CONTENT                                                 */}
+   658→      {/* ============================================================ */}
+   659→      <AnimatePresence mode="wait">
+   660→        {/* No products found */}
+   661→        {filteredProducts.length === 0 ? (
+   662→          <motion.div
+   663→            key="empty"
+   664→            initial={{ opacity: 0 }}
+   665→            animate={{ opacity: 1 }}
+   666→            exit={{ opacity: 0 }}
+   667→          >
+   668→            <EmptyState searchQuery={searchQuery} onClear={handleClearFilters} />
+   669→          </motion.div>
+   670→        ) : showSections ? (
+   671→          /* ============================================================ */
+   672→          /*  SECTIONS MODE: Nouveautés + Promo + Meilleures Ventes       */
+   673→          /* ============================================================ */
+   674→          <motion.div
+   675→            key="sections"
+   676→            initial={{ opacity: 0 }}
+   677→            animate={{ opacity: 1 }}
+   678→            exit={{ opacity: 0 }}
+   679→          >
+   680→            {/* --- Nouveautés --- */}
+   681→            {nouveauProducts.length > 0 && (
+   682→              <section className="mb-4">
+   683→                <SectionHeader
+   684→                  icon={Sparkles}
+   685→                  title="Nouveautés"
+   686→                  subtitle="Nos derniers ajouts"
+   687→                />
+   688→                <ProductGridSection
+   689→                  products={nouveauProducts}
+   690→                  startIndex={0}
+   691→                  onProductClick={onProductClick}
+   692→                  onAddToCart={onAddToCart}
+   693→                  getCartQuantity={getCartQuantity}
+   694→                  updateCartQuantity={updateCartQuantity}
+   695→                />
+   696→              </section>
+   697→            )}
+   698→
+   699→            {/* --- Promotional Banner --- */}
+   700→            <PromoBanner shopName={shopName} />
+   701→
+   702→            {/* --- Meilleures Ventes --- */}
+   703→            {bestSellers.length > 0 && (
+   704→              <section className="mt-4">
+   705→                <SectionHeader
+   706→                  icon={Flame}
+   707→                  title="Meilleures Ventes"
+   708→                  subtitle="Les plus populaires"
+   709→                />
+   710→                <ProductGridSection
+   711→                  products={bestSellers}
+   712→                  startIndex={nouveauProducts.length}
+   713→                  onProductClick={onProductClick}
+   714→                  onAddToCart={onAddToCart}
+   715→                  getCartQuantity={getCartQuantity}
+   716→                  updateCartQuantity={updateCartQuantity}
+   717→                />
+   718→              </section>
+   719→            )}
+   720→          </motion.div>
+   721→        ) : (
+   722→          /* ============================================================ */
+   723→          /*  FILTERED / SEARCH MODE: single flat grid                     */
+   724→          /* ============================================================ */
+   725→          <motion.div
+   726→            key="filtered"
+   727→            initial={{ opacity: 0 }}
+   728→            animate={{ opacity: 1 }}
+   729→            exit={{ opacity: 0 }}
+   730→          >
+   731→            {/* Section label for context */}
+   732→            <div className="mb-6 flex items-center gap-2">
+   733→              <Search className="size-4" style={{ color: JAMEELA.beigeGold }} />
+   734→              <span className="text-sm font-medium" style={{ color: JAMEELA.headerDark }}>
+   735→                {searchQuery
+   736→                  ? `Résultats pour "${searchQuery}" (${displayProducts.length})`
+   737→                  : activeCategory
+   738→                    ? `${publicCategories.find((c) => c.id === activeCategory)?.name || 'Catégorie'} (${displayProducts.length})`
+   739→                    : `Tous les produits (${displayProducts.length})`}
+   740→              </span>
+   741→            </div>
+   742→            <ProductGridSection
+   743→              products={displayProducts}
+   744→              startIndex={0}
+   745→              onProductClick={onProductClick}
+   746→              onAddToCart={onAddToCart}
+   747→              getCartQuantity={getCartQuantity}
+   748→              updateCartQuantity={updateCartQuantity}
+   749→            />
+   750→          </motion.div>
+   751→        )}
+   752→      </AnimatePresence>
+   753→
+   754→      {/* ============================================================ */}
+   755→      {/*  TRUST BADGES (bottom strip)                                  */}
+   756→      {/* ============================================================ */}
+   757→      <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4">
+   758→        {[
+   759→          { icon: Truck, label: 'Livraison rapide', desc: 'Sur Dakar & environs' },
+   760→          { icon: Star, label: 'Qualité garantie', desc: 'Produits authentiques' },
+   761→          { icon: Gem, label: 'Beauté naturelle', desc: 'Ingrédients premium' },
+   762→          { icon: MessageCircle, label: 'Support client', desc: 'Disponible 7j/7' },
+   763→        ].map(({ icon: Icon, label, desc }) => (
+   764→          <div
+   765→            key={label}
+   766→            className="flex flex-col items-center text-center p-5 rounded-xl"
+   767→            style={{ backgroundColor: JAMEELA.lightBg }}
+   768→          >
+   769→            <Icon className="size-6 mb-2" style={{ color: JAMEELA.beigeGold }} />
+   770→            <p className="text-xs font-semibold" style={{ color: JAMEELA.headerDark }}>
+   771→              {label}
+   772→            </p>
+   773→            <p className="text-[11px] mt-0.5" style={{ color: JAMEELA.mutedText }}>
+   774→              {desc}
+   775→            </p>
+   776→          </div>
+   777→        ))}
+   778→      </div>
+   779→
+   780→      {/* ============================================================ */}
+   781→      {/*  WHATSAPP CTA (if configured)                                */}
+   782→      {/* ============================================================ */}
+   783→      {whatsapp && (
+   784→        <motion.div
+   785→          initial={{ opacity: 0, y: 20 }}
+   786→          whileInView={{ opacity: 1, y: 0 }}
+   787→          viewport={{ once: true }}
+   788→          className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 p-6 rounded-2xl"
+   789→          style={{ backgroundColor: JAMEELA.lightBg }}
+   790→        >
+   791→          <div className="flex items-center gap-2.5">
+   792→            <div
+   793→              className="flex size-10 items-center justify-center rounded-full"
+   794→              style={{ backgroundColor: '#25D366' }}
+   795→            >
+   796→              <MessageCircle className="size-5 text-white" />
+   797→            </div>
+   798→            <div>
+   799→              <p className="text-sm font-semibold" style={{ color: JAMEELA.headerDark }}>
+   800→                Besoin d&apos;aide ?
+   801→              </p>
+   802→              <p className="text-xs" style={{ color: JAMEELA.mutedText }}>
+   803→                Contactez-nous sur WhatsApp
+   804→              </p>
+   805→            </div>
+   806→          </div>
+   807→          <a
+   808→            href={`https://wa.me/${whatsapp.replace(/[^0-9]/g, '')}`}
+   809→            target="_blank"
+   810→            rel="noopener noreferrer"
+   811→          >
+   812→            <motion.button
+   813→              whileHover={{ scale: 1.04 }}
+   814→              whileTap={{ scale: 0.97 }}
+   815→              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-md text-sm font-semibold transition-shadow hover:shadow-lg"
+   816→              style={{ backgroundColor: '#25D366', color: JAMEELA.white }}
+   817→            >
+   818→              <MessageCircle className="size-4" />
+   819→              Écrire sur WhatsApp
+   820→            </motion.button>
+   821→          </a>
+   822→        </motion.div>
+   823→      )}
+   824→    </div>
+   825→  )
+   826→}
+   827→

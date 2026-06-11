@@ -560,9 +560,6 @@ function BeautyProductCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: Math.min(index * 0.06, 0.5) }}
       className="group flex flex-col overflow-hidden rounded-2xl transition-all duration-300 cursor-pointer"
       style={{
         background: ROSE.white,
@@ -580,6 +577,8 @@ function BeautyProductCard({
             alt={product.name}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             loading="lazy"
+            onLoad={(e) => { (e.target as HTMLImageElement).style.opacity = '1' }}
+            style={{ opacity: 0, transition: 'opacity 0.3s ease' }}
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center">
@@ -1717,7 +1716,7 @@ export function BeautyPremiumShopPage() {
   }
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { duration: 0.3 } }} className="min-h-screen flex flex-col relative" style={{ background: ROSE.cream, color: ROSE.text }}>
+    <motion.div className="min-h-screen flex flex-col relative" style={{ background: ROSE.cream, color: ROSE.text }}>
       {/* Dot pattern background */}
       <DotPattern />
 
