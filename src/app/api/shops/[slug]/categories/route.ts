@@ -31,6 +31,7 @@ export async function GET(
       id: c.id,
       name: c.name,
       description: c.description,
+      image: c.image,
       productCount: c._count.products,
     }))
 

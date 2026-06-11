@@ -421,43 +421,46 @@ function ElectroCategories({
           </h2>
         </div>
 
-        <div className="flex gap-4 overflow-x-auto pb-3" style={{ scrollbarWidth: 'none' }}>
+        <div className="flex gap-5 overflow-x-auto pb-3" style={{ scrollbarWidth: 'none' }}>
           {/* Tous */}
           <button
             onClick={() => onCategoryClick(null)}
-            className="shrink-0 flex flex-col items-center gap-2 w-20"
+            className="shrink-0 flex flex-col items-center gap-2.5 w-24 sm:w-28"
           >
             <div
-              className="flex items-center justify-center size-16 rounded-full border-2 transition-all duration-200"
+              className="flex items-center justify-center size-20 sm:size-24 rounded-full border-2 transition-all duration-200"
               style={
                 activeCategory === null
-                  ? { background: BLUE.primary, borderColor: BLUE.primary, color: BLUE.primaryFg, boxShadow: `0 4px 12px ${BLUE.primary}33` }
+                  ? { background: BLUE.primary, borderColor: BLUE.primary, color: BLUE.primaryFg, boxShadow: `0 4px 16px ${BLUE.primary}33` }
                   : { background: '#fff', borderColor: BLUE.border, color: BLUE.text }
               }
             >
-              <LayoutGrid className="size-6" />
+              <LayoutGrid className="size-7 sm:size-8" />
             </div>
-            <span className="text-xs font-medium text-center leading-tight" style={{ color: activeCategory === null ? BLUE.primary : BLUE.textMuted }}>
+            <span className="text-xs sm:text-sm font-medium text-center leading-tight" style={{ color: activeCategory === null ? BLUE.primary : BLUE.textMuted }}>
               Tous
+            </span>
+            <span className="text-[10px] sm:text-xs" style={{ color: BLUE.textMuted }}>
+              {totalAvailable}
             </span>
           </button>
 
           {categories.map((cat) => {
             const count = getCategoryCount(cat.id)
             const isActive = activeCategory === cat.id
-            // Get the first product image in this category as the category image
-            const catImage = products.find((p) => p.categoryId === cat.id && p.image)?.image
+            // Use category image if available, fallback to first product image
+            const catImage = cat.image || products.find((p) => p.categoryId === cat.id && p.image)?.image
             return (
               <button
                 key={cat.id}
                 onClick={() => onCategoryClick(isActive ? null : cat.id)}
-                className="shrink-0 flex flex-col items-center gap-2 w-20"
+                className="shrink-0 flex flex-col items-center gap-2.5 w-24 sm:w-28"
               >
                 <div
-                  className="flex items-center justify-center size-16 rounded-full border-2 overflow-hidden transition-all duration-200"
+                  className="flex items-center justify-center size-20 sm:size-24 rounded-full border-2 overflow-hidden transition-all duration-200"
                   style={
                     isActive
-                      ? { background: BLUE.primary, borderColor: BLUE.primary, boxShadow: `0 4px 12px ${BLUE.primary}33` }
+                      ? { background: BLUE.primary, borderColor: BLUE.primary, boxShadow: `0 4px 16px ${BLUE.primary}33` }
                       : { background: '#fff', borderColor: BLUE.border }
                   }
                 >
@@ -466,16 +469,16 @@ function ElectroCategories({
                       src={catImage}
                       alt={cat.name}
                       className="size-full object-cover"
-                      style={isActive ? { opacity: 0.9 } : {}}
+                      style={isActive ? { opacity: 0.85 } : {}}
                     />
                   ) : (
-                    <ShoppingBag className="size-6" style={{ color: isActive ? BLUE.primaryFg : BLUE.textMuted }} />
+                    <ShoppingBag className="size-7 sm:size-8" style={{ color: isActive ? BLUE.primaryFg : BLUE.textMuted }} />
                   )}
                 </div>
-                <span className="text-xs font-medium text-center leading-tight" style={{ color: isActive ? BLUE.primary : BLUE.textMuted }}>
+                <span className="text-xs sm:text-sm font-medium text-center leading-tight max-w-24 sm:max-w-28 truncate" style={{ color: isActive ? BLUE.primary : BLUE.textMuted }}>
                   {cat.name}
                 </span>
-                <span className="text-[10px]" style={{ color: BLUE.textMuted }}>
+                <span className="text-[10px] sm:text-xs" style={{ color: BLUE.textMuted }}>
                   {count}
                 </span>
               </button>

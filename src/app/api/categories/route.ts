@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
         id: c.id,
         name: c.name,
         description: c.description,
+        image: c.image,
         productCount: c._count.products,
         createdAt: c.createdAt,
       }))
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
     if (!user || !user.shop) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
 
     const body = await request.json()
-    const { name, description } = body
+    const { name, description, image } = body
 
     if (!name) {
       return NextResponse.json({ error: 'Nom requis' }, { status: 400 })
@@ -54,6 +55,7 @@ export async function POST(request: NextRequest) {
         shopId: user.shop.id,
         name,
         description: description || null,
+        image: image || null,
       },
     })
 
@@ -72,7 +74,7 @@ export async function PUT(request: NextRequest) {
     if (!user || !user.shop) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
 
     const body = await request.json()
-    const { id, name, description } = body
+    const { id, name, description, image } = body
 
     if (!id) {
       return NextResponse.json({ error: 'ID requis' }, { status: 400 })
@@ -91,6 +93,7 @@ export async function PUT(request: NextRequest) {
       data: {
         name: name || undefined,
         description: description !== undefined ? description || null : undefined,
+        image: image !== undefined ? image || null : undefined,
       },
     })
 

@@ -1,13 +1,12 @@
 'use client'
 
 import { useAppStore } from '@/lib/store'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
 import {
   Dialog,
   DialogContent,
@@ -26,24 +25,27 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Tags, Plus, Edit2, Trash2, Package, Loader2 } from 'lucide-react'
+import { Tags, Plus, Edit2, Trash2, Package, Loader2, ImageIcon, X, Upload } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface Category {
   id: string
   name: string
   description?: string | null
+  image?: string | null
   productCount: number
 }
 
 interface CategoryFormData {
   name: string
   description: string
+  image: string
 }
 
 const emptyForm: CategoryFormData = {
   name: '',
   description: '',
+  image: '',
 }
 
 export function DashboardCategories() {
@@ -56,6 +58,8 @@ export function DashboardCategories() {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
   const [form, setForm] = useState<CategoryFormData>(emptyForm)
   const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Delete dialog
   const [deleteOpen, setDeleteOpen] = useState(false)
@@ -91,6 +95,7 @@ export function DashboardCategories() {
     setForm({
       name: category.name,
       description: category.description || '',
+      image: category.image || '',
     })
     setDialogOpen(true)
   }
@@ -98,6 +103,42 @@ export function DashboardCategories() {
   function openDeleteDialog(category: Category) {
     setDeletingCategory(category)
     setDeleteOpen(true)
+  }
+
+  async function handleImageUpload(file: File) {
+    if (!file.type.startsWith('image/')) {
+      toast.error('Veuillez sélectionner un fichier image')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('L\'image ne doit pas dépasser 5 Mo')
+      return
+    }
+
+    setUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Erreur lors du téléchargement')
+      }
+      const data = await res.json()
+      setForm((prev) => ({ ...prev, image: data.url }))
+      toast.success('Image téléchargée avec succès')
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur lors du téléchargement')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  function handleRemoveImage() {
+    setForm((prev) => ({ ...prev, image: '' }))
   }
 
   async function handleSave(e: React.FormEvent) {
@@ -113,6 +154,7 @@ export function DashboardCategories() {
         shopId: shop!.id,
         name: form.name,
         description: form.description,
+        image: form.image || null,
       }
 
       let res: Response
@@ -172,7 +214,7 @@ export function DashboardCategories() {
         <Skeleton className="h-10 w-64" />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-32 rounded-lg" />
+            <Skeleton key={i} className="h-44 rounded-lg" />
           ))}
         </div>
       </div>
@@ -208,29 +250,44 @@ export function DashboardCategories() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {categories.map((category) => (
-            <Card key={category.id} className="group hover:shadow-md transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10 text-primary">
-                      <Tags className="h-5 w-5" />
+            <Card key={category.id} className="group hover:shadow-md transition-shadow overflow-hidden">
+              {/* Category image preview */}
+              <div className="h-28 bg-muted/30 relative">
+                {category.image ? (
+                  <img
+                    src={category.image}
+                    alt={category.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <ImageIcon className="h-10 w-10 text-muted-foreground/20" />
+                  </div>
+                )}
+                {/* Product count badge */}
+                <div className="absolute bottom-2 right-2">
+                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-black/60 text-white text-xs font-medium backdrop-blur-sm">
+                    <Package className="h-3 w-3" />
+                    {category.productCount} produit{category.productCount !== 1 ? 's' : ''}
+                  </span>
+                </div>
+              </div>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10 text-primary shrink-0">
+                      <Tags className="h-4 w-4" />
                     </div>
-                    <div>
-                      <h3 className="font-semibold">{category.name}</h3>
+                    <div className="min-w-0">
+                      <h3 className="font-semibold truncate">{category.name}</h3>
                       {category.description && (
-                        <p className="text-sm text-muted-foreground line-clamp-2 mt-0.5">
+                        <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
                           {category.description}
                         </p>
                       )}
                     </div>
                   </div>
-                </div>
-                <div className="flex items-center justify-between mt-4">
-                  <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                    <Package className="h-3.5 w-3.5" />
-                    <span>{category.productCount} produit{category.productCount !== 1 ? 's' : ''}</span>
-                  </div>
-                  <div className="flex gap-1">
+                  <div className="flex gap-1 shrink-0">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -264,6 +321,58 @@ export function DashboardCategories() {
             </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSave} className="space-y-4">
+            {/* Image upload */}
+            <div className="space-y-2">
+              <Label>Image de la catégorie</Label>
+              {form.image ? (
+                <div className="relative rounded-lg overflow-hidden border h-36 bg-muted/30">
+                  <img
+                    src={form.image}
+                    alt="Image catégorie"
+                    className="w-full h-full object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleRemoveImage}
+                    className="absolute top-2 right-2 flex items-center justify-center w-7 h-7 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="w-full h-36 rounded-lg border-2 border-dashed border-muted-foreground/25 hover:border-muted-foreground/40 flex flex-col items-center justify-center gap-2 text-muted-foreground transition-colors"
+                >
+                  {uploading ? (
+                    <>
+                      <Loader2 className="h-8 w-8 animate-spin" />
+                      <span className="text-sm">Téléchargement...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-8 w-8" />
+                      <span className="text-sm font-medium">Cliquez pour ajouter une image</span>
+                      <span className="text-xs text-muted-foreground/70">PNG, JPG, WebP (max 5 Mo)</span>
+                    </>
+                  )}
+                </button>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (file) handleImageUpload(file)
+                  e.target.value = ''
+                }}
+              />
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="cat-name">Nom de la catégorie *</Label>
               <Input
@@ -288,7 +397,7 @@ export function DashboardCategories() {
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                 Annuler
               </Button>
-              <Button type="submit" disabled={saving}>
+              <Button type="submit" disabled={saving || uploading}>
                 {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {editingCategory ? 'Enregistrer' : 'Ajouter'}
               </Button>
