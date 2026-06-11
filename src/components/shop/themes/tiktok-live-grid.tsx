@@ -1426,6 +1426,40 @@ export function TikTokLiveShopPage() {
     }
   }, [selectedProduct])
 
+  // ── URL-based product navigation ──
+  const handleProductClick = useCallback((product: Product) => {
+    setSelectedProduct(product)
+    const slug = useAppStore.getState().shopSlug
+    if (product?.slug && slug) {
+      window.history.pushState(null, '', `/${slug}/p/${product.slug || product.id}`)
+    }
+  }, [])
+
+  const handleBackFromProduct = useCallback(() => {
+    setSelectedProduct(null)
+    const slug = useAppStore.getState().shopSlug
+    if (slug) {
+      window.history.pushState(null, '', `/${slug}`)
+    }
+  }, [])
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const pathname = window.location.pathname
+      const match = pathname.match(/^\/([a-z0-9][a-z0-9-]*)\/p\/([a-z0-9][a-z0-9-]*)$/i)
+      if (match) {
+        const productSlug = match[2]
+        const found = publicProducts.find((p: Product) => (p.slug || p.id) === productSlug)
+        if (found) setSelectedProduct(found)
+        else setSelectedProduct(null)
+      } else {
+        setSelectedProduct(null)
+      }
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [publicProducts])
+
   // ── Fetch shop data ──
   const fetchShop = useCallback(async () => {
     if (!shopSlug) return
@@ -1493,14 +1527,14 @@ export function TikTokLiveShopPage() {
   }
 
   function handleNavAccueil() {
-    setSelectedProduct(null)
+    handleBackFromProduct()
     setActiveCategory(null)
     setSearchQuery('')
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   function handleNavProduits() {
-    setSelectedProduct(null)
+    handleBackFromProduct()
     setActiveCategory(null)
     setSearchQuery('')
     scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -1590,7 +1624,7 @@ export function TikTokLiveShopPage() {
               key={selectedProduct.id}
               product={selectedProduct}
               whatsapp={publicShop.whatsapp}
-              onClose={() => setSelectedProduct(null)}
+              onClose={handleBackFromProduct}
               onAddToCart={(product, qty) => {
                 for (let i = 0; i < qty; i++) handleAddToCart(product, 1)
               }}
@@ -1613,7 +1647,7 @@ export function TikTokLiveShopPage() {
                 activeCategory={activeCategory}
                 onCategoryClick={(id) => {
                   setActiveCategory(id)
-                  setSelectedProduct(null)
+                  handleBackFromProduct()
                   scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
                 }}
               />
@@ -1737,7 +1771,7 @@ export function TikTokLiveShopPage() {
                           key={product.id}
                           product={product}
                           index={index}
-                          onProductClick={setSelectedProduct}
+                          onProductClick={handleProductClick}
                           onAddToCart={(p) => handleAddToCart(p, 1)}
                           getCartQuantity={getCartQuantity}
                           updateCartQuantity={updateCartQuantity}

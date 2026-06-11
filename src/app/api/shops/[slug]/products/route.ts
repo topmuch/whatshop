@@ -51,6 +51,7 @@ export async function GET(
     const formatted = products.map((p) => ({
       id: p.id,
       name: p.name,
+      slug: p.slug,
       description: p.description,
       price: p.price,
       image: p.image,

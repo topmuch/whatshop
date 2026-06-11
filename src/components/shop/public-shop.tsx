@@ -352,7 +352,7 @@ function TemplateCtaButton({
 }
 
 /* ─── Inner Shop Content (has access to template context) ─── */
-function ShopContent() {
+function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
   const {
     shopSlug,
     setView,
@@ -382,6 +382,52 @@ function ShopContent() {
   const [detailQty, setDetailQty] = useState(1)
   const [detailImageIndex, setDetailImageIndex] = useState(0)
   const scrollRef = useRef<HTMLDivElement>(null)
+
+  // ─── URL-based product navigation ───
+  const selectProductWithUrl = useCallback((product: Product | null) => {
+    setSelectedProduct(product)
+    if (product && shopSlug) {
+      const slug = product.slug || product.id
+      window.history.pushState(null, '', `/${shopSlug}/p/${slug}`)
+    }
+  }, [shopSlug])
+
+  const deselectProductWithUrl = useCallback(() => {
+    setSelectedProduct(null)
+    if (shopSlug) {
+      window.history.pushState(null, '', `/${shopSlug}`)
+    }
+  }, [shopSlug])
+
+  // Open product from URL (deep link / shared link)
+  useEffect(() => {
+    if (!initialProductSlug || !publicProducts.length) return
+    const product = publicProducts.find((p) => (p.slug || p.id) === initialProductSlug)
+    if (product) {
+      setSelectedProduct(product)
+    }
+  }, [initialProductSlug, publicProducts.length])
+
+  // Handle browser back/forward
+  useEffect(() => {
+    const handlePopState = () => {
+      const pathname = window.location.pathname
+      const match = pathname.match(/^\/([a-z0-9][a-z0-9-]*)\/p\/([a-z0-9][a-z0-9-]*)$/i)
+      if (match) {
+        const productSlug = match[2]
+        const product = publicProducts.find((p) => (p.slug || p.id) === productSlug)
+        if (product) {
+          setSelectedProduct(product)
+        } else {
+          setSelectedProduct(null)
+        }
+      } else {
+        setSelectedProduct(null)
+      }
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [publicProducts])
 
   const fetchShop = useCallback(async () => {
     if (!shopSlug) return
@@ -578,7 +624,7 @@ function ShopContent() {
         }}
       >
         <div className="max-w-5xl mx-auto px-4 py-2.5 flex items-center gap-3">
-          <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => selectedProduct ? setSelectedProduct(null) : setView('landing')}>
+          <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => selectedProduct ? deselectProductWithUrl() : setView('landing')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
 
@@ -1032,7 +1078,7 @@ function ShopContent() {
           >
             {/* Back button */}
             <button
-              onClick={() => setSelectedProduct(null)}
+              onClick={() => deselectProductWithUrl()}
               className="flex items-center gap-2 text-sm font-medium mb-4 transition-colors hover:opacity-80"
               style={{ color: 'var(--tpl-primary)' }}
             >
@@ -1210,7 +1256,7 @@ function ShopContent() {
                 isSearching={isSearching}
                 totalProductCount={totalProductCount}
                 onCategoryClick={handleCategoryClick}
-                onProductClick={setSelectedProduct}
+                onProductClick={selectProductWithUrl}
                 onAddToCart={handleAddToCart}
                 getCartQuantity={getCartQuantity}
                 updateCartQuantity={updateCartQuantity}
@@ -1231,7 +1277,7 @@ function ShopContent() {
                 isSearching={isSearching}
                 totalProductCount={totalProductCount}
                 onCategoryClick={handleCategoryClick}
-                onProductClick={setSelectedProduct}
+                onProductClick={selectProductWithUrl}
                 onAddToCart={handleAddToCart}
                 getCartQuantity={getCartQuantity}
                 updateCartQuantity={updateCartQuantity}
@@ -1252,7 +1298,7 @@ function ShopContent() {
                 isSearching={isSearching}
                 totalProductCount={totalProductCount}
                 onCategoryClick={handleCategoryClick}
-                onProductClick={setSelectedProduct}
+                onProductClick={selectProductWithUrl}
                 onAddToCart={handleAddToCart}
                 getCartQuantity={getCartQuantity}
                 updateCartQuantity={updateCartQuantity}
@@ -1273,7 +1319,7 @@ function ShopContent() {
                 isSearching={isSearching}
                 totalProductCount={totalProductCount}
                 onCategoryClick={handleCategoryClick}
-                onProductClick={setSelectedProduct}
+                onProductClick={selectProductWithUrl}
                 onAddToCart={handleAddToCart}
                 getCartQuantity={getCartQuantity}
                 updateCartQuantity={updateCartQuantity}
@@ -1355,7 +1401,7 @@ function ShopContent() {
                 >
                   <Card
                     className="group h-full flex flex-col transition-all duration-300 cursor-pointer"
-                    onClick={() => setSelectedProduct(product)}
+                    onClick={() => selectProductWithUrl(product)}
                     style={{
                       background: 'var(--tpl-card)',
                       borderRadius: cardStyle.rounded,
@@ -1616,7 +1662,7 @@ function ShopContent() {
 }
 
 /* ─── Exported PublicShop (wraps with TemplateProvider) ─── */
-export function PublicShop() {
+export function PublicShop({ initialProductSlug }: { initialProductSlug?: string }) {
   const { publicShop, shopSlug } = useAppStore()
 
   // We need shop data to know the template - use default 'classic' until loaded
@@ -1624,7 +1670,7 @@ export function PublicShop() {
 
   return (
     <TemplateProvider templateId={templateId}>
-      <ShopContent />
+      <ShopContent initialProductSlug={initialProductSlug} />
     </TemplateProvider>
   )
 }

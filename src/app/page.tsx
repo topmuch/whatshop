@@ -56,63 +56,70 @@ function useClientPathname() {
  * Resolve the correct view from the URL pathname.
  * Safe to call with server-provided '/' path.
  */
-function resolveViewFromPath(pathname: string): { view: AppView; shopSlug: string } {
+function resolveViewFromPath(pathname: string): { view: AppView; shopSlug: string; productSlug: string } {
   // Guard: during SSR, pathname is '/' — never use window here
   if (typeof window === 'undefined') {
-    return { view: 'landing', shopSlug: '' }
+    return { view: 'landing', shopSlug: '', productSlug: '' }
   }
 
   const slug = pathname.slice(1).toLowerCase()
 
   // Dashboard routes
   if (slug.startsWith('dashboard')) {
-    return { view: 'dashboard', shopSlug: '' }
+    return { view: 'dashboard', shopSlug: '', productSlug: '' }
   }
 
   // Admin routes
   if (slug.startsWith('admin')) {
-    return { view: 'admin', shopSlug: '' }
+    return { view: 'admin', shopSlug: '', productSlug: '' }
   }
 
   // Reseller routes
   if (slug.startsWith('reseller') || slug.startsWith('revendeur')) {
-    return { view: 'reseller', shopSlug: '' }
+    return { view: 'reseller', shopSlug: '', productSlug: '' }
   }
 
   // Auth routes
   if (slug === 'login' || slug === 'connexion') {
-    return { view: 'login', shopSlug: '' }
+    return { view: 'login', shopSlug: '', productSlug: '' }
   }
   if (slug === 'register' || slug === 'inscription') {
-    return { view: 'register', shopSlug: '' }
+    return { view: 'register', shopSlug: '', productSlug: '' }
   }
   if (slug === 'onboarding') {
-    return { view: 'onboarding', shopSlug: '' }
+    return { view: 'onboarding', shopSlug: '', productSlug: '' }
   }
 
   // Known public pages
   if (PAGE_VIEW_MAP[slug]) {
-    return { view: PAGE_VIEW_MAP[slug], shopSlug: '' }
+    return { view: PAGE_VIEW_MAP[slug], shopSlug: '', productSlug: '' }
   }
 
   // Check query params (middleware rewrites)
   const params = new URLSearchParams(window.location.search)
   const pageParam = params.get('page')
   if (pageParam && PAGE_VIEW_MAP[pageParam]) {
-    return { view: PAGE_VIEW_MAP[pageParam], shopSlug: '' }
+    return { view: PAGE_VIEW_MAP[pageParam], shopSlug: '', productSlug: '' }
   }
 
   const shopParam = params.get('shop')
+  const productParam = params.get('product')
   if (shopParam) {
-    return { view: 'shop', shopSlug: shopParam }
+    return { view: 'shop', shopSlug: shopParam, productSlug: productParam || '' }
+  }
+
+  // Product URL pattern: /shop-slug/p/product-slug
+  const productMatch = slug.match(/^([a-z0-9][a-z0-9-]*)\/p\/([a-z0-9][a-z0-9-]*)$/)
+  if (productMatch) {
+    return { view: 'shop', shopSlug: productMatch[1], productSlug: productMatch[2] }
   }
 
   // Shop slug (single segment, alphanumeric with hyphens)
   if (slug && /^[a-zA-Z0-9][a-zA-Z0-9-]*$/.test(slug)) {
-    return { view: 'shop', shopSlug: slug }
+    return { view: 'shop', shopSlug: slug, productSlug: '' }
   }
 
-  return { view: 'landing', shopSlug: '' }
+  return { view: 'landing', shopSlug: '', productSlug: '' }
 }
 
 /** Minimal loading shell shown during SSR and before hydration */
@@ -214,7 +221,7 @@ export default function Home() {
       {effectiveView === 'dashboard' && <SellerDashboard />}
       {effectiveView === 'reseller' && <ResellerDashboard />}
       {effectiveView === 'admin' && <AdminDashboard />}
-      {effectiveView === 'shop' && <PublicShop />}
+      {effectiveView === 'shop' && <PublicShop initialProductSlug={urlView.productSlug} />}
 
       {/* Public pages with shared layout */}
       {effectiveView === 'about' && (

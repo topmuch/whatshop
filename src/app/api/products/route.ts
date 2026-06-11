@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { requireShopOwner } from '@/lib/auth'
+import { slugify } from '@/lib/slugify'
 
 // Helper: parse JSON images field into string[]
 function parseImages(imagesRaw: unknown): string[] {
@@ -107,10 +108,22 @@ export async function POST(request: NextRequest) {
 
     const parsedImages = Array.isArray(images) ? images : []
 
+    // Generate slug
+    let slug = slugify(name) || 'produit'
+    const existingSlug = await db.product.findFirst({ where: { shopId: user.shop.id, slug } })
+    if (existingSlug) {
+      let suffix = 2
+      while (await db.product.findFirst({ where: { shopId: user.shop.id, slug: `${slug}-${suffix}` } })) {
+        suffix++
+      }
+      slug = `${slug}-${suffix}`
+    }
+
     const product = await db.product.create({
       data: {
         shopId: user.shop.id,
         name,
+        slug,
         description: description || null,
         price: parseFloat(price),
         image: image || null,
@@ -157,7 +170,24 @@ export async function PUT(request: NextRequest) {
     }
 
     const data: Record<string, unknown> = {}
-    if (name !== undefined) data.name = name
+    if (name !== undefined) {
+      data.name = name
+      // Update slug when name changes
+      let newSlug = slugify(name) || 'produit'
+      const existingSlug = await db.product.findFirst({
+        where: { shopId: user.shop.id, slug: newSlug, NOT: { id } },
+      })
+      if (existingSlug) {
+        let suffix = 2
+        while (await db.product.findFirst({
+          where: { shopId: user.shop.id, slug: `${newSlug}-${suffix}`, NOT: { id } },
+        })) {
+          suffix++
+        }
+        newSlug = `${newSlug}-${suffix}`
+      }
+      data.slug = newSlug
+    }
     if (description !== undefined) data.description = description || null
     if (price !== undefined) data.price = parseFloat(price)
     if (image !== undefined) data.image = image || null

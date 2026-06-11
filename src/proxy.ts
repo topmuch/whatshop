@@ -14,6 +14,8 @@ const APP_ROUTES = new Set([
   'faq', 'aide',
   'privacy', 'confidentialite',
   'terms', 'conditions',
+  // Reserved for product URL pattern
+  'p',
 ])
 
 export function proxy(request: NextRequest) {
@@ -35,6 +37,18 @@ export function proxy(request: NextRequest) {
   // Let Next.js handle known app routes (they have their own page.tsx)
   if (APP_ROUTES.has(slug)) {
     return NextResponse.next()
+  }
+
+  // Product URL pattern: /shop-slug/p/product-slug
+  // e.g., /ma-boutique/p/écouteur-bluetooth-pro
+  const productMatch = slug.match(/^([a-z0-9][a-z0-9-]*)\/p\/([a-z0-9][a-z0-9-]*)$/)
+  if (productMatch) {
+    const [, shopSlug, productSlug] = productMatch
+    const url = request.nextUrl.clone()
+    url.pathname = '/'
+    url.searchParams.set('shop', shopSlug)
+    url.searchParams.set('product', productSlug)
+    return NextResponse.rewrite(url)
   }
 
   // If the path looks like a shop slug (single segment, no slashes, alphanumeric with hyphens)
