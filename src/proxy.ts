@@ -6,7 +6,7 @@ const PUBLIC_PAGES = [
   'privacy', 'confidentialite', 'terms', 'conditions', 'faq', 'aide',
 ]
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Skip API routes, static files, and Next.js internals
