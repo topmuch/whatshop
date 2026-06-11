@@ -19,13 +19,27 @@ interface CreateZoneBody {
   price: number
 }
 
-// GET /api/shops/[shopId]/shipping-zones
+// Helper: resolve slug → shopId via DB
+async function resolveShopId(slug: string): Promise<string | null> {
+  const shop = await db.shop.findUnique({
+    where: { slug, isActive: true },
+    select: { id: true },
+  })
+  return shop?.id ?? null
+}
+
+// GET /api/shops/[slug]/shipping-zones
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ shopId: string }> }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const { shopId } = await params
+    const { slug } = await params
+    const shopId = await resolveShopId(slug)
+    if (!shopId) {
+      return NextResponse.json({ error: 'Boutique introuvable' }, { status: 404 })
+    }
+
     const { user, response: errorResponse } = await requireShopOwner(request, shopId)
     if (errorResponse) return errorResponse
     if (!user) return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
@@ -52,13 +66,18 @@ export async function GET(
   }
 }
 
-// POST /api/shops/[shopId]/shipping-zones
+// POST /api/shops/[slug]/shipping-zones
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ shopId: string }> }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const { shopId } = await params
+    const { slug } = await params
+    const shopId = await resolveShopId(slug)
+    if (!shopId) {
+      return NextResponse.json({ error: 'Boutique introuvable' }, { status: 404 })
+    }
+
     const { user, response: errorResponse } = await requireShopOwner(request, shopId)
     if (errorResponse) return errorResponse
     if (!user) return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
