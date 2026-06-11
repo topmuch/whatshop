@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { hashPassword, setSessionCookie } from '@/lib/auth'
 import { rateLimit, getClientIp, RATE_LIMITS } from '@/lib/rate-limit'
+import { createNotification } from '@/lib/notifications'
 
 // Basic email format validation
 function isValidEmail(email: string): boolean {
@@ -50,6 +51,18 @@ export async function POST(request: NextRequest) {
     const user = await db.user.create({
       data: { email, password: hashedPassword, name },
     })
+
+    // Fire-and-forget notification (don't block the response)
+    try {
+      await createNotification(
+        'NEW_SELLER',
+        'Nouveau vendeur inscrit',
+        `${user.name} (${user.email}) s'est inscrit sur la plateforme.`,
+        { userId: user.id, userName: user.name, userEmail: user.email }
+      )
+    } catch (_notifyError) {
+      // Notification failure must not break registration
+    }
 
     const response = NextResponse.json({
       user: { id: user.id, email: user.email, name: user.name, role: user.role },

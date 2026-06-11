@@ -32,10 +32,10 @@ export async function POST(request: NextRequest) {
     // Create admin
     const adminPassword = await hashPassword('admin123')
     const admin = await db.user.upsert({
-      where: { email: 'admin@whatsshop.com' },
+      where: { email: 'admin@boutiko.pro' },
       update: {},
       create: {
-        email: 'admin@whatsshop.com',
+        email: 'admin@boutiko.pro',
         password: adminPassword,
         name: 'Super Administrateur',
         role: 'ADMIN',
@@ -46,10 +46,10 @@ export async function POST(request: NextRequest) {
     // Create demo seller + shop
     const demoPassword = await hashPassword('demo123')
     const demo = await db.user.upsert({
-      where: { email: 'demo@whatsshop.com' },
+      where: { email: 'demo@boutiko.pro' },
       update: {},
       create: {
-        email: 'demo@whatsshop.com',
+        email: 'demo@boutiko.pro',
         password: demoPassword,
         name: 'Aminata Diallo',
         role: 'SELLER',

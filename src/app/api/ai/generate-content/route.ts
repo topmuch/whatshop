@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
         },
         {
           role: 'user',
-          content: `Produit: ${String(productName).slice(0, 200)}, Prix: ${String(price).slice(0, 20)} FCFA${description ? ', Description: ' + String(description).slice(0, 500) : ''}${shopName ? ', Boutique: ' + String(shopName).slice(0, 100) : ''}${shopSlug ? ', URL: boutiko.com/' + String(shopSlug).slice(0, 50) : ''}. Génère le contenu marketing.`
+          content: `Produit: ${String(productName).slice(0, 200)}, Prix: ${String(price).slice(0, 20)} FCFA${description ? ', Description: ' + String(description).slice(0, 500) : ''}${shopName ? ', Boutique: ' + String(shopName).slice(0, 100) : ''}${shopSlug ? ', URL: boutiko.pro/' + String(shopSlug).slice(0, 50) : ''}. Génère le contenu marketing.`
         }
       ],
       thinking: { type: 'disabled' }

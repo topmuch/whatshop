@@ -93,8 +93,14 @@ import {
   X,
   RefreshCw,
   AlertCircle,
+  AlertTriangle,
+  ArrowUpCircle,
+  ShieldAlert,
+  CheckCheck,
 } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
+import { formatDistanceToNow } from 'date-fns'
+import { fr } from 'date-fns/locale'
 import { toast } from 'sonner'
 import { useThemeMode } from '@/lib/use-theme'
 import { Bar, BarChart, XAxis, YAxis, CartesianGrid } from 'recharts'
@@ -309,6 +315,44 @@ const domainStatusBadge = (status: string) => {
   }
 }
 
+// ─── Notification Types ─────────────────────────────────────────────────────
+
+interface AdminNotification {
+  id: string
+  type: string
+  title: string
+  message: string
+  isRead: boolean
+  metadata: string
+  createdAt: string
+}
+
+const notificationIconMap: Record<string, React.ReactNode> = {
+  NEW_SHOP: <Store className="h-4 w-4" />,
+  NEW_ORDER: <ShoppingCart className="h-4 w-4" />,
+  NEW_SELLER: <UserPlus className="h-4 w-4" />,
+  DOMAIN_REQUEST: <Globe className="h-4 w-4" />,
+  SUPPORT_TICKET: <MessageSquare className="h-4 w-4" />,
+  LOW_STOCK: <AlertTriangle className="h-4 w-4" />,
+  UPGRADE_REQUEST: <ArrowUpCircle className="h-4 w-4" />,
+  SUSPENDED_USER: <ShieldAlert className="h-4 w-4" />,
+}
+
+function getNotificationIcon(type: string) {
+  return notificationIconMap[type] || <Bell className="h-4 w-4" />
+}
+
+const notificationTypeColors: Record<string, string> = {
+  NEW_SHOP: 'text-emerald-600 bg-emerald-100',
+  NEW_ORDER: 'text-purple-600 bg-purple-100',
+  NEW_SELLER: 'text-blue-600 bg-blue-100',
+  DOMAIN_REQUEST: 'text-orange-600 bg-orange-100',
+  SUPPORT_TICKET: 'text-pink-600 bg-pink-100',
+  LOW_STOCK: 'text-amber-600 bg-amber-100',
+  UPGRADE_REQUEST: 'text-sky-600 bg-sky-100',
+  SUSPENDED_USER: 'text-red-600 bg-red-100',
+}
+
 // ─── Navigation Items ───────────────────────────────────────────────────────
 
 const navGroups = [
@@ -316,6 +360,7 @@ const navGroups = [
     label: 'Principal',
     items: [
       { id: 'admin-overview' as AdminTab, label: "Vue d'ensemble", icon: <BarChart3 className="h-5 w-5" /> },
+      { id: 'admin-notifications' as AdminTab, label: 'Notifications', icon: <Bell className="h-5 w-5" /> },
       { id: 'admin-subscriptions' as AdminTab, label: 'Abonnements', icon: <CreditCard className="h-5 w-5" /> },
       { id: 'admin-domains' as AdminTab, label: 'Domaines', icon: <Globe className="h-5 w-5" /> },
     ],
@@ -348,11 +393,16 @@ function AdminSidebarContent() {
   const { adminTab, setAdminTab, user, setUser, setShop, setView } = useAppStore()
   const { isDark, toggleTheme } = useThemeMode()
   const [pendingUpgrades, setPendingUpgrades] = useState(0)
+  const [unreadCount, setUnreadCount] = useState(0)
 
   useEffect(() => {
     fetch('/api/admin/upgrade-requests?status=PENDING')
       .then(res => res.ok ? res.json() : null)
       .then(data => { if (data) setPendingUpgrades(data.pendingCount) })
+      .catch(() => {})
+    fetch('/api/admin/notifications?limit=1')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => { if (data) setUnreadCount(data.unreadCount || 0) })
       .catch(() => {})
   }, [adminTab])
 
@@ -361,7 +411,7 @@ function AdminSidebarContent() {
       const res = await fetch('/api/auth/session', { method: 'DELETE' })
       if (res.ok) {
         // Clear non-httpOnly cookies client-side as well
-        document.cookie = 'whatsshop-god-mode-user=; path=/; max-age=0'
+        document.cookie = 'boutiko-god-mode-user=; path=/; max-age=0'
         // Reset Zustand state
         setUser(null)
         setShop(null)
@@ -372,9 +422,9 @@ function AdminSidebarContent() {
       }
     } catch { /* ignore */ }
     // Fallback: clear cookies client-side and redirect anyway
-    document.cookie = 'whatsshop-user=; path=/; max-age=0'
-    document.cookie = 'whatsshop-god-mode=; path=/; max-age=0'
-    document.cookie = 'whatsshop-god-mode-user=; path=/; max-age=0'
+    document.cookie = 'boutiko-user=; path=/; max-age=0'
+    document.cookie = 'boutiko-god-mode=; path=/; max-age=0'
+    document.cookie = 'boutiko-god-mode-user=; path=/; max-age=0'
     setUser(null)
     setShop(null)
     setView('landing')
@@ -426,6 +476,11 @@ function AdminSidebarContent() {
                   {item.id === 'admin-upgrades' && pendingUpgrades > 0 && (
                     <span className="flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-red-500 text-white text-[10px] font-bold">
                       {pendingUpgrades}
+                    </span>
+                  )}
+                  {item.id === 'admin-notifications' && unreadCount > 0 && (
+                    <span className="flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-red-500 text-white text-[10px] font-bold">
+                      {unreadCount > 99 ? '99+' : unreadCount}
                     </span>
                   )}
                 </Button>
@@ -785,10 +840,54 @@ export function AdminDashboard() {
   const [godModeUser, setGodModeUser] = useState<string | null>(null)
   const { isDark, toggleTheme } = useThemeMode()
   const sessionChecked = useRef(false)
+  const [notifDropdownOpen, setNotifDropdownOpen] = useState(false)
+  const [notifDropdown, setNotifDropdown] = useState<AdminNotification[]>([])
+  const [notifUnread, setNotifUnread] = useState(0)
+  const [notifLoading, setNotifLoading] = useState(false)
+  const notifRef = useRef<HTMLDivElement>(null)
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setNotifDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  // Fetch notifications when dropdown opens
+  useEffect(() => {
+    if (notifDropdownOpen && notifDropdown.length === 0) {
+      setNotifLoading(true)
+      fetch('/api/admin/notifications?limit=20')
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data) {
+            setNotifDropdown(data.notifications || [])
+            setNotifUnread(data.unreadCount || 0)
+          }
+        })
+        .catch(() => {})
+        .finally(() => setNotifLoading(false))
+    }
+  }, [notifDropdownOpen, notifDropdown.length])
+
+  // Poll unread count every 30s
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetch('/api/admin/notifications?limit=1')
+        .then(res => res.ok ? res.json() : null)
+        .then(data => { if (data) setNotifUnread(data.unreadCount || 0) })
+        .catch(() => {})
+    }, 30000)
+    return () => clearInterval(interval)
+  }, [])
 
   useEffect(() => {
-    if (typeof document !== 'undefined' && document.cookie.includes('whatsshop-god-mode')) {
-      const match = document.cookie.match(/whatsshop-god-mode-user=([^;]+)/)
+    if (typeof document !== 'undefined' && document.cookie.includes('boutiko-god-mode')) {
+      const match = document.cookie.match(/boutiko-god-mode-user=([^;]+)/)
       setGodModeUser(match ? decodeURIComponent(match[1]) : 'Utilisateur')
     }
   }, [])
@@ -871,11 +970,12 @@ export function AdminDashboard() {
 
       {/* Mobile + Main area */}
       <div className="flex-1 flex flex-col min-h-screen">
-        {/* Mobile header */}
-        <header className="lg:hidden h-14 bg-card border-b flex items-center gap-3 px-4 sticky top-0 z-40">
+        {/* Top header bar (desktop + mobile) */}
+        <header className="h-14 bg-card border-b flex items-center gap-3 px-4 sticky top-0 z-40">
+          {/* Mobile menu */}
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-9 w-9">
+              <Button variant="ghost" size="icon" className="lg:hidden h-9 w-9">
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
@@ -883,22 +983,184 @@ export function AdminDashboard() {
               <AdminSidebarContent />
             </SheetContent>
           </Sheet>
-          <div className="flex items-center gap-2">
+
+          {/* Logo (mobile only) */}
+          <div className="lg:hidden flex items-center gap-2">
             <div className="flex items-center justify-center w-7 h-7 rounded-md bg-blue-600 text-white">
               <Shield className="h-4 w-4" />
             </div>
             <span className="font-semibold text-sm">Administration</span>
-            <div className="ml-auto">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-muted-foreground hover:text-purple-600"
-                onClick={toggleTheme}
-              >
-                {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-              </Button>
-            </div>
           </div>
+
+          {/* Admin name (desktop) */}
+          <div className="hidden lg:flex items-center gap-2">
+            <span className="text-sm font-medium text-muted-foreground">
+              Tableau de bord
+            </span>
+          </div>
+
+          {/* Spacer */}
+          <div className="flex-1" />
+
+          {/* Notification Bell */}
+          <div className="relative" ref={notifRef}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative h-9 w-9 text-muted-foreground hover:text-blue-600"
+              onClick={() => {
+                if (!notifDropdownOpen) setNotifDropdown([])
+                setNotifDropdownOpen(!notifDropdownOpen)
+              }}
+            >
+              <Bell className="h-5 w-5" />
+              {notifUnread > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center h-5 min-w-5 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold leading-none">
+                  {notifUnread > 99 ? '99+' : notifUnread}
+                </span>
+              )}
+            </Button>
+
+            {/* Dropdown */}
+            <AnimatePresence>
+              {notifDropdownOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-card rounded-xl border shadow-lg z-50 overflow-hidden"
+                >
+                  {/* Dropdown header */}
+                  <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30">
+                    <div className="flex items-center gap-2">
+                      <Bell className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-semibold">Notifications</span>
+                      {notifUnread > 0 && (
+                        <Badge variant="destructive" className="text-[10px] h-5 px-1.5">
+                          {notifUnread}
+                        </Badge>
+                      )}
+                    </div>
+                    {notifUnread > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                        onClick={async () => {
+                          await fetch('/api/admin/notifications', {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ markAllRead: true }),
+                          })
+                          setNotifDropdown(prev => prev.map(n => ({ ...n, isRead: true })))
+                          setNotifUnread(0)
+                          toast.success('Toutes les notifications marquées comme lues')
+                        }}
+                      >
+                        <CheckCheck className="h-3 w-3 mr-1" />
+                        Tout marquer comme lu
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Notification list */}
+                  <ScrollArea className="max-h-96">
+                    {notifLoading ? (
+                      <div className="p-4 space-y-3">
+                        {Array.from({ length: 4 }).map((_, i) => (
+                          <div key={i} className="flex gap-3">
+                            <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+                            <div className="flex-1 space-y-1">
+                              <Skeleton className="h-3.5 w-3/4" />
+                              <Skeleton className="h-3 w-1/2" />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : notifDropdown.length === 0 ? (
+                      <div className="p-8 text-center">
+                        <Bell className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
+                        <p className="text-sm text-muted-foreground">Aucune notification</p>
+                      </div>
+                    ) : (
+                      <div className="divide-y">
+                        {notifDropdown.map((notif) => (
+                          <button
+                            key={notif.id}
+                            className={`w-full text-left px-4 py-3 flex gap-3 hover:bg-muted/50 transition-colors ${
+                              !notif.isRead ? 'border-l-[3px] border-l-blue-500 bg-blue-50/30' : ''
+                            }`}
+                            onClick={async () => {
+                              if (!notif.isRead) {
+                                await fetch('/api/admin/notifications', {
+                                  method: 'PATCH',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ id: notif.id }),
+                                })
+                                setNotifDropdown(prev =>
+                                  prev.map(n => n.id === notif.id ? { ...n, isRead: true } : n)
+                                )
+                                setNotifUnread(prev => Math.max(0, prev - 1))
+                              }
+                            }}
+                          >
+                            <div className={`flex items-center justify-center h-8 w-8 rounded-full shrink-0 ${
+                              notificationTypeColors[notif.type] || 'text-gray-600 bg-gray-100'
+                            }`}>
+                              {getNotificationIcon(notif.type)}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <p className={`text-sm truncate ${!notif.isRead ? 'font-semibold' : 'font-medium'}`}>
+                                  {notif.title}
+                                </p>
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{notif.message}</p>
+                              <p className="text-[11px] text-muted-foreground/60 mt-1">
+                                {formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true, locale: fr })}
+                              </p>
+                            </div>
+                            {!notif.isRead && (
+                              <div className="w-2 h-2 rounded-full bg-blue-500 shrink-0 mt-1.5" />
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </ScrollArea>
+
+                  {/* Footer */}
+                  {notifDropdown.length > 0 && (
+                    <div className="border-t px-4 py-2.5 bg-muted/30">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full h-8 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                        onClick={() => {
+                          setNotifDropdownOpen(false)
+                          const { setAdminTab } = useAppStore.getState()
+                          setAdminTab('admin-notifications')
+                        }}
+                      >
+                        Voir toutes les notifications
+                      </Button>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Theme toggle */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 text-muted-foreground hover:text-purple-600"
+            onClick={toggleTheme}
+          >
+            {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </Button>
         </header>
 
         {/* Main content */}
@@ -942,6 +1204,8 @@ function AdminContent() {
       return <AdminResellers />
     case 'admin-upgrades':
       return <AdminUpgradeRequests />
+    case 'admin-notifications':
+      return <AdminNotifications />
     default:
       return <AdminOverview />
   }
@@ -1658,6 +1922,292 @@ function AdminDomains() {
   )
 }
 
+// ─── NOTIFICATIONS TAB ──────────────────────────────────────────────────────────
+
+function AdminNotifications() {
+  const [notifications, setNotifications] = useState<AdminNotification[]>([])
+  const [loading, setLoading] = useState(true)
+  const [typeFilter, setTypeFilter] = useState('all')
+  const [total, setTotal] = useState(0)
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [hasMore, setHasMore] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
+
+  const typeFilters = [
+    { value: 'all', label: 'Tous' },
+    { value: 'NEW_SHOP', label: 'Boutiques' },
+    { value: 'NEW_ORDER', label: 'Commandes' },
+    { value: 'NEW_SELLER', label: 'Vendeurs' },
+    { value: 'DOMAIN_REQUEST', label: 'Domaines' },
+    { value: 'SUPPORT_TICKET', label: 'Support' },
+  ]
+
+  const loadNotifications = useCallback(async (offset = 0) => {
+    if (offset === 0) {
+      setLoading(true)
+    } else {
+      setLoadingMore(true)
+    }
+    try {
+      const params = new URLSearchParams()
+      params.set('limit', '20')
+      params.set('offset', String(offset))
+      if (typeFilter !== 'all') params.set('type', typeFilter)
+      const res = await fetch(`/api/admin/notifications?${params.toString()}`)
+      if (res.ok) {
+        const data = await res.json()
+        if (offset === 0) {
+          setNotifications(data.notifications || [])
+        } else {
+          setNotifications(prev => [...prev, ...(data.notifications || [])])
+        }
+        setTotal(data.total || 0)
+        setUnreadCount(data.unreadCount || 0)
+        setHasMore((offset + 20) < (data.total || 0))
+      }
+    } catch {
+      toast.error('Erreur lors du chargement des notifications')
+    } finally {
+      setLoading(false)
+      setLoadingMore(false)
+    }
+  }, [typeFilter])
+
+  useEffect(() => {
+    loadNotifications()
+  }, [loadNotifications])
+
+  async function markAsRead(id: string) {
+    try {
+      await fetch('/api/admin/notifications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      })
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n))
+      setUnreadCount(prev => Math.max(0, prev - 1))
+    } catch {
+      toast.error('Erreur lors de la mise à jour')
+    }
+  }
+
+  async function markAllRead() {
+    try {
+      await fetch('/api/admin/notifications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ markAllRead: true }),
+      })
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })))
+      setUnreadCount(0)
+      toast.success('Toutes les notifications marquées comme lues')
+    } catch {
+      toast.error('Erreur lors de la mise à jour')
+    }
+  }
+
+  async function deleteNotification(id: string) {
+    try {
+      const res = await fetch(`/api/admin/notifications?id=${id}`, { method: 'DELETE' })
+      if (res.ok) {
+        const notif = notifications.find(n => n.id === id)
+        setNotifications(prev => prev.filter(n => n.id !== id))
+        setTotal(prev => prev - 1)
+        if (notif && !notif.isRead) setUnreadCount(prev => Math.max(0, prev - 1))
+        toast.success('Notification supprimée')
+      }
+    } catch {
+      toast.error('Erreur lors de la suppression')
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold flex items-center gap-2">
+            <Bell className="h-6 w-6" />
+            Centre de Notifications
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Consultez et gérez toutes les notifications de la plateforme
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          {unreadCount > 0 && (
+            <Badge variant="destructive" className="text-sm px-3 py-1">
+              <Bell className="h-3.5 w-3.5 mr-1.5" />
+              {unreadCount} non lue{unreadCount > 1 ? 's' : ''}
+            </Badge>
+          )}
+          {unreadCount > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={markAllRead}
+            >
+              <CheckCheck className="h-4 w-4" />
+              Tout marquer comme lu
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={() => loadNotifications()}
+            disabled={loading}
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            Actualiser
+          </Button>
+        </div>
+      </div>
+
+      {/* Filter buttons */}
+      <div className="flex flex-wrap gap-2">
+        {typeFilters.map((filter) => (
+          <Button
+            key={filter.value}
+            variant={typeFilter === filter.value ? 'default' : 'outline'}
+            size="sm"
+            className={
+              typeFilter === filter.value
+                ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                : ''
+            }
+            onClick={() => setTypeFilter(filter.value)}
+          >
+            {filter.label}
+          </Button>
+        ))}
+      </div>
+
+      {/* Notifications list */}
+      {loading ? (
+        <Card>
+          <CardContent className="p-4 space-y-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="flex gap-3">
+                <Skeleton className="h-10 w-10 rounded-full shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-3 w-full" />
+                  <Skeleton className="h-3 w-1/4" />
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      ) : notifications.length === 0 ? (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <Bell className="h-14 w-14 mx-auto text-muted-foreground/40 mb-4" />
+            <p className="text-lg font-medium text-muted-foreground">Aucune notification</p>
+            <p className="text-sm text-muted-foreground/70 mt-1">
+              {typeFilter !== 'all'
+                ? 'Aucune notification ne correspond à ce filtre.'
+                : 'Les notifications de la plateforme apparaîtront ici.'}
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          <Card>
+            <CardContent className="p-0">
+              <div className="divide-y">
+                {notifications.map((notif, index) => (
+                  <motion.div
+                    key={notif.id}
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: Math.min(index * 0.03, 0.3) }}
+                    className={`flex items-start gap-4 px-4 py-3.5 hover:bg-muted/30 transition-colors ${
+                      !notif.isRead ? 'border-l-[3px] border-l-blue-500 bg-blue-50/20' : ''
+                    }`}
+                  >
+                    {/* Icon */}
+                    <div className={`flex items-center justify-center h-10 w-10 rounded-full shrink-0 mt-0.5 ${
+                      notificationTypeColors[notif.type] || 'text-gray-600 bg-gray-100'
+                    }`}>
+                      {getNotificationIcon(notif.type)}
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0 cursor-pointer" onClick={() => !notif.isRead && markAsRead(notif.id)}>
+                      <div className="flex items-center gap-2">
+                        <p className={`text-sm ${!notif.isRead ? 'font-semibold' : 'font-medium'}`}>
+                          {notif.title}
+                        </p>
+                        {!notif.isRead && (
+                          <span className="flex items-center justify-center w-2 h-2 rounded-full bg-blue-500" />
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-0.5">{notif.message}</p>
+                      <p className="text-xs text-muted-foreground/60 mt-1">
+                        {formatDate(notif.createdAt)} · {formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true, locale: fr })}
+                      </p>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-1 shrink-0">
+                      {!notif.isRead && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          onClick={() => markAsRead(notif.id)}
+                          title="Marquer comme lu"
+                        >
+                          <CheckCheck className="h-4 w-4" />
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive hover:text-destructive hover:bg-red-50"
+                        onClick={() => deleteNotification(notif.id)}
+                        title="Supprimer"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Load more */}
+          {hasMore && (
+            <div className="flex justify-center">
+              <Button
+                variant="outline"
+                className="gap-2"
+                onClick={() => loadNotifications(notifications.length)}
+                disabled={loadingMore}
+              >
+                {loadingMore ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-4 w-4" />
+                )}
+                Charger plus de notifications
+              </Button>
+            </div>
+          )}
+
+          {/* Summary */}
+          <p className="text-xs text-muted-foreground text-center">
+            {total} notification{total > 1 ? 's' : ''} au total · {unreadCount} non lue{unreadCount > 1 ? 's' : ''}
+          </p>
+        </>
+      )}
+    </div>
+  )
+}
+
 // ─── CONFIG TAB ───────────────────────────────────────────────────────────────
 
 function AdminConfig() {
@@ -1678,7 +2228,7 @@ function AdminConfig() {
     proPrice: 0,
     starterPrice: 0,
     businessPrice: 0,
-    supportEmail: 'contact@boutiko.com',
+    supportEmail: 'contact@boutiko.pro',
     senderName: 'Boutiko',
     autoWelcomeEmail: true,
     notifyNewSeller: true,
@@ -2068,7 +2618,7 @@ function AdminConfig() {
                       <Input
                         id="support-email"
                         type="email"
-                        placeholder="contact@boutiko.com"
+                        placeholder="contact@boutiko.pro"
                         value={config.supportEmail}
                         onChange={(e) => setConfig(prev => ({ ...prev, supportEmail: e.target.value }))}
                       />

@@ -46,7 +46,7 @@ export const PLATFORM_CONFIG = {
   /** Default WhatsApp number for the platform (landing, support, etc.) */
   DEFAULT_WHATSAPP: process.env.NEXT_PUBLIC_WHATSAPP || '2217848582226',
   /** Base URL for the platform (used in SEO, QR codes, etc.) */
-  BASE_URL: process.env.NEXT_PUBLIC_BASE_URL || 'boutiko.com',
+  BASE_URL: process.env.NEXT_PUBLIC_BASE_URL || 'boutiko.pro',
   /** Promo threshold — products below this price get a "promo" badge */
   PROMO_PRICE_THRESHOLD: 5000,
   /** "New" badge threshold in days */

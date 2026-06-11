@@ -222,7 +222,7 @@ export function AuthLogin() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="demo@boutiko.com"
+                  placeholder="demo@boutiko.pro"
                   required
                   className="pl-10 h-11"
                 />

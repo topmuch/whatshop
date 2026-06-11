@@ -1164,7 +1164,7 @@ function BusinessCardTab() {
     // URL
     ctx.font = '400 18px sans-serif'
     ctx.fillStyle = 'rgba(255,255,255,0.7)'
-    ctx.fillText(`whatshop.shop/${shop!.slug}`, rightCenterX, qrY + qrSize + 82)
+    ctx.fillText(`boutiko.pro/${shop!.slug}`, rightCenterX, qrY + qrSize + 82)
 
     // Branding
     ctx.fillStyle = 'rgba(255,255,255,0.4)'

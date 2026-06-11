@@ -4,7 +4,7 @@
 //   - SUPER_ADMIN user (configurable via env vars)
 //
 // Environment variables:
-//   SUPER_ADMIN_EMAIL    — default: admin@boutiko.com
+//   SUPER_ADMIN_EMAIL    — default: admin@boutiko.pro
 //   SUPER_ADMIN_PASSWORD — default: Admin123!  (min 6 chars)
 //   SUPER_ADMIN_NAME     — default: Super Admin
 
@@ -34,7 +34,7 @@ async function seedProduction() {
   }
 
   // 2. Create SUPER_ADMIN user (if none exists)
-  const adminEmail = process.env.SUPER_ADMIN_EMAIL || 'admin@boutiko.com'
+  const adminEmail = process.env.SUPER_ADMIN_EMAIL || 'admin@boutiko.pro'
   const adminPassword = process.env.SUPER_ADMIN_PASSWORD || 'Admin123!'
   const adminName = process.env.SUPER_ADMIN_NAME || 'Super Admin'
 

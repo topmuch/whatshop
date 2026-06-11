@@ -683,7 +683,7 @@ function StepInfo({
                   </div>
                   {shopName && (
                     <p className="text-xs text-muted-foreground">
-                      Votre URL : <span className="text-primary font-medium">boutiko.com/{previewSlug}</span>
+                      Votre URL : <span className="text-primary font-medium">boutiko.pro/{previewSlug}</span>
                     </p>
                   )}
                 </div>

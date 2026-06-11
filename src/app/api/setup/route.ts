@@ -9,7 +9,7 @@ import { hashPassword } from '@/lib/auth'
  * Designed for Coolify / fresh deployments where the DB is empty.
  *
  * Configurable via environment variables:
- *   SUPER_ADMIN_EMAIL    (default: admin@boutiko.com)
+ *   SUPER_ADMIN_EMAIL    (default: admin@boutiko.pro)
  *   SUPER_ADMIN_PASSWORD (default: Admin123!)
  *   SUPER_ADMIN_NAME     (default: Super Admin)
  *
@@ -18,7 +18,7 @@ import { hashPassword } from '@/lib/auth'
  */
 export async function GET() {
   try {
-    const email = process.env.SUPER_ADMIN_EMAIL || 'admin@boutiko.com'
+    const email = process.env.SUPER_ADMIN_EMAIL || 'admin@boutiko.pro'
     const password = process.env.SUPER_ADMIN_PASSWORD || 'Admin123!'
     const name = process.env.SUPER_ADMIN_NAME || 'Super Admin'
 

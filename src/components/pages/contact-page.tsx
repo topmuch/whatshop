@@ -271,8 +271,8 @@ const contactCards = [
   {
     icon: Mail,
     label: 'Email',
-    value: 'contact@boutiko.com',
-    href: 'mailto:contact@boutiko.com',
+    value: 'contact@boutiko.pro',
+    href: 'mailto:contact@boutiko.pro',
     color: PRIMARY,
     bgColor: 'rgba(236, 72, 153, 0.1)',
   },

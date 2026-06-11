@@ -778,7 +778,7 @@ function ContentSection() {
                     </div>
                     <div>
                       <p className="font-semibold text-gray-900 text-sm">Email</p>
-                      <p className="text-gray-500 text-sm">contact@boutiko.com</p>
+                      <p className="text-gray-500 text-sm">contact@boutiko.pro</p>
                     </div>
                   </div>
 
@@ -788,7 +788,7 @@ function ContentSection() {
                     </div>
                     <div>
                       <p className="font-semibold text-gray-900 text-sm">DPO (Délégué Protection)</p>
-                      <p className="text-gray-500 text-sm">dpo@boutiko.com</p>
+                      <p className="text-gray-500 text-sm">dpo@boutiko.pro</p>
                     </div>
                   </div>
                 </div>

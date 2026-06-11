@@ -1,4 +1,4 @@
-// WhatsShop SaaS - Multi-tenant e-commerce for African merchants
+// Boutiko SaaS - Multi-tenant e-commerce for African merchants
 // Architecture: Subscription linked to USER (not shop), multi-shop per user, reseller white-label
 
 generator client {
@@ -272,10 +272,10 @@ model Lead {
 
 model SaaSConfig {
   id                     String   @id @default(cuid())
-  saasName               String   @default("WhatsShop")
+  saasName               String   @default("Boutiko")
   primaryColor           String   @default("#EC4899")
   logoUrl                String?
-  defaultWhatsappMessage String   @default("Bonjour, je souhaite commander le produit: {productName} - {productPrice} FCFA depuis votre boutique WhatsShop.")
+  defaultWhatsappMessage String   @default("Bonjour, je souhaite commander le produit: {productName} - {productPrice} FCFA depuis votre boutique Boutiko.")
   // Plans pricing (FCFA)
   starterPrice           Int      @default(5000)
   proPrice               Int      @default(8000)
@@ -400,4 +400,20 @@ model BroadcastMessage {
   message   String
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
+}
+
+// ─── NOTIFICATION LOG ────────────────────────────────────────────────────────
+
+model Notification {
+  id          String   @id @default(cuid())
+  type        String   // "NEW_SHOP" | "NEW_ORDER" | "NEW_SELLER" | "DOMAIN_REQUEST" | "SUPPORT_TICKET" | "LOW_STOCK" | "UPGRADE_REQUEST" | "SUSPENDED_USER"
+  title       String
+  message     String
+  isRead      Boolean  @default(false)
+  metadata    String   @default("{}") // JSON: { shopId?, orderId?, userId?, shopName?, etc. }
+  createdAt   DateTime @default(now())
+
+  @@index([type])
+  @@index([isRead])
+  @@index([createdAt])
 }

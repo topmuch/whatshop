@@ -1,6 +1,56 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { requireShopOwner } from '@/lib/auth'
+import { createNotification } from '@/lib/notifications'
+
+// POST /api/orders (public order creation — no auth required)
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const { shopId, items, total, customerName, customerPhone, customerAddress } = body
+
+    if (!shopId || !items || !total) {
+      return NextResponse.json(
+        { error: 'Champs requis manquants (shopId, items, total)' },
+        { status: 400 }
+      )
+    }
+
+    // Verify the shop exists and is active
+    const shop = await db.shop.findUnique({ where: { id: shopId, isActive: true } })
+    if (!shop) {
+      return NextResponse.json({ error: 'Boutique introuvable' }, { status: 404 })
+    }
+
+    const order = await db.order.create({
+      data: {
+        shopId,
+        items: JSON.stringify(items),
+        total,
+        customerName: customerName || null,
+        customerPhone: customerPhone || null,
+        customerAddress: customerAddress || null,
+      },
+    })
+
+    // Fire-and-forget notification
+    try {
+      await createNotification(
+        'NEW_ORDER',
+        'Nouvelle commande',
+        `Commande de ${total.toLocaleString('fr-FR')} FCFA sur la boutique "${shop.name}".`,
+        { orderId: order.id, shopId: shop.id, shopName: shop.name, total }
+      )
+    } catch (_notifyError) {
+      // Notification failure must not break order creation
+    }
+
+    return NextResponse.json(order, { status: 201 })
+  } catch (error) {
+    console.error('Orders POST error:', error)
+    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
+  }
+}
 
 // GET /api/orders?shopId=xxx&status=xxx (auth required)
 export async function GET(request: NextRequest) {

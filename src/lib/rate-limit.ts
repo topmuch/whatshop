@@ -131,7 +131,7 @@ export function isCsrfSafe(request: Request): boolean {
 }
 
 function getAllowedHosts(): string[] {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'boutiko.com'
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'boutiko.pro'
   const hosts = [baseUrl, 'localhost']
 
   // Also allow any configured custom domains pattern

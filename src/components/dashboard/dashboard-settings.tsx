@@ -112,6 +112,16 @@ export function DashboardSettings() {
   const [brandUploading, setBrandUploading] = useState(false)
 
   // URL input states
+
+  // Notification preferences
+  const [notifPrefs, setNotifPrefs] = useState<Record<string, boolean>>({
+    notifyNewOrder: true,
+    notifyLowStock: false,
+    notifyWeeklyReport: false,
+    notifyNewReview: true,
+  })
+  const [notifEmail, setNotifEmail] = useState('')
+  const [savingNotif, setSavingNotif] = useState(false)
   const [heroUrlInput, setHeroUrlInput] = useState('')
   const [promoUrlInput, setPromoUrlInput] = useState('')
   const [brandUrlInput, setBrandUrlInput] = useState('')
@@ -429,7 +439,7 @@ export function DashboardSettings() {
     if (!shop) return
     setQrLoading(true)
     try {
-      const shopUrl = `https://boutiko.com/${shop.slug}`
+      const shopUrl = `https://boutiko.pro/${shop.slug}`
       const res = await fetch('/api/ai/qr-code', {
         method: 'POST',
         credentials: 'same-origin',
@@ -471,7 +481,7 @@ export function DashboardSettings() {
       ctx.fillText(shop.name, 400, 720)
       ctx.fillStyle = '#6b7280'
       ctx.font = '18px monospace'
-      ctx.fillText(`boutiko.com/${shop.slug}`, 400, 760)
+      ctx.fillText(`boutiko.pro/${shop.slug}`, 400, 760)
       ctx.fillStyle = '#25D366'
       ctx.font = '14px system-ui, -apple-system, sans-serif'
       ctx.fillText('Propulsé par Boutiko', 400, 800)
@@ -559,8 +569,31 @@ export function DashboardSettings() {
 
   function copyShopUrl() {
     if (!shop) return
-    navigator.clipboard.writeText(`boutiko.com/${shop.slug}`)
+    navigator.clipboard.writeText(`boutiko.pro/${shop.slug}`)
     toast.success('URL copiée !')
+  }
+
+  async function saveNotifPrefs() {
+    setSavingNotif(true)
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          notificationPreferences: JSON.stringify(notifPrefs),
+          notificationEmail: notifEmail,
+        }),
+      })
+      if (!res.ok) {
+        toast.error('Erreur lors de la sauvegarde des préférences')
+        return
+      }
+      toast.success('Préférences de notification enregistrées !')
+    } catch {
+      toast.error('Erreur de connexion')
+    } finally {
+      setSavingNotif(false)
+    }
   }
 
   async function handleSeoSave() {
@@ -1110,6 +1143,68 @@ export function DashboardSettings() {
               <Check className="h-4 w-4" />
             )}
             Enregistrer
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* ═══ NOTIFICATIONS & EMAIL ═══ */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Zap className="h-5 w-5 text-primary" />
+            Notifications & Email
+          </CardTitle>
+          <CardDescription>
+            Choisissez les notifications que vous souhaitez recevoir par email
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            {[
+              { key: 'notifyNewOrder', label: 'Nouvelle commande', desc: 'Recevez un email à chaque nouvelle commande' },
+              { key: 'notifyLowStock', label: 'Alerte stock bas', desc: 'Notification quand un produit a moins de 5 en stock' },
+              { key: 'notifyWeeklyReport', label: 'Rapport hebdomadaire', desc: 'Résumé de vos ventes chaque lundi' },
+              { key: 'notifyNewReview', label: 'Avis client', desc: 'Quand un client laisse un avis ou commentaire' },
+            ].map((item) => (
+              <label
+                key={item.key}
+                className="flex items-start gap-3 p-3 rounded-lg border border-muted cursor-pointer hover:bg-muted/50 transition-colors"
+              >
+                <input
+                  type="checkbox"
+                  checked={!!(notifPrefs as Record<string, boolean>)[item.key]}
+                  onChange={(e) =>
+                    setNotifPrefs((prev: Record<string, boolean>) => ({ ...prev, [item.key]: e.target.checked }))
+                  }
+                  className="mt-0.5 h-4 w-4 rounded border-muted-foreground/30 text-primary focus:ring-primary"
+                />
+                <div>
+                  <p className="text-sm font-medium leading-none">{item.label}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{item.desc}</p>
+                </div>
+              </label>
+            ))}
+          </div>
+
+          <div className="pt-2">
+            <Label className="text-sm font-medium">Email de contact</Label>
+            <p className="text-xs text-muted-foreground mb-2">Adresse où recevoir les notifications</p>
+            <Input
+              type="email"
+              value={notifEmail}
+              onChange={(e) => setNotifEmail(e.target.value)}
+              placeholder="votre@email.com"
+              className="max-w-sm"
+            />
+          </div>
+
+          <Button
+            onClick={saveNotifPrefs}
+            disabled={savingNotif}
+            className="gap-2"
+          >
+            {savingNotif ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+            Enregistrer les préférences
           </Button>
         </CardContent>
       </Card>
@@ -1867,7 +1962,7 @@ export function DashboardSettings() {
                       </div>
                       <div className="flex-1 space-y-1">
                         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Valeur</p>
-                        <p className="text-sm font-mono font-semibold">boutiko.com</p>
+                        <p className="text-sm font-mono font-semibold">boutiko.pro</p>
                       </div>
                     </div>
                   </div>
@@ -2042,7 +2137,7 @@ export function DashboardSettings() {
                 <p className="text-sm text-muted-foreground">Boutique</p>
                 <p className="text-lg font-semibold">{shop?.name}</p>
                 <p className="text-sm text-muted-foreground mt-1 font-mono">
-                  boutiko.com/{shop?.slug}
+                  boutiko.pro/{shop?.slug}
                 </p>
               </div>
 
@@ -2106,7 +2201,7 @@ export function DashboardSettings() {
         <CardContent className="space-y-4">
           <div className="flex items-center gap-2">
             <div className="flex-1 rounded-lg border bg-muted/50 px-4 py-2.5 font-mono text-sm">
-              boutiko.com/{shop?.slug}
+              boutiko.pro/{shop?.slug}
             </div>
             <Button variant="outline" size="icon" onClick={copyShopUrl}>
               <Copy className="h-4 w-4" />
@@ -2157,7 +2252,7 @@ export function DashboardSettings() {
                 size="sm"
                 className="gap-2"
                 onClick={() => {
-                  const url = `https://wa.me/?text=${encodeURIComponent('Découvrez ma boutique sur Boutiko ! boutiko.com/' + (shop?.slug || ''))}`
+                  const url = `https://wa.me/?text=${encodeURIComponent('Découvrez ma boutique sur Boutiko ! boutiko.pro/' + (shop?.slug || ''))}`
                   toast.success('Lien WhatsApp généré !')
                 }}
               >

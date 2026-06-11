@@ -909,14 +909,14 @@ function TermsContent() {
                             <Mail className="w-3.5 h-3.5 text-primary" />
                             E-mail
                           </p>
-                          <p className="text-sm text-gray-600">legal@boutiko.com</p>
+                          <p className="text-sm text-gray-600">legal@boutiko.pro</p>
                         </div>
                         <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                           <p className="text-xs font-bold text-gray-900 mb-1 flex items-center gap-1.5">
                             <Mail className="w-3.5 h-3.5 text-primary" />
                             Support client
                           </p>
-                          <p className="text-sm text-gray-600">support@boutiko.com</p>
+                          <p className="text-sm text-gray-600">support@boutiko.pro</p>
                         </div>
                         <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                           <p className="text-xs font-bold text-gray-900 mb-1 flex items-center gap-1.5">

@@ -113,7 +113,7 @@ export async function authenticateUser(
  * Returns the user object (with shops array + primary shop) on success, null on failure.
  */
 export async function getAuthUser(request: NextRequest): Promise<AuthUser | null> {
-  const userEmail = request.cookies.get('whatsshop-user')?.value
+  const userEmail = request.cookies.get('boutiko-user')?.value
   if (!userEmail) return null
 
   const user = await db.user.findUnique({
@@ -187,7 +187,7 @@ export function isValidSlug(slug: string): boolean {
  */
 export function setSessionCookie(response: NextResponse, email: string) {
   const isSecure = process.env.COOKIE_SECURE === 'true'
-  response.cookies.set('whatsshop-user', email, {
+  response.cookies.set('boutiko-user', email, {
     httpOnly: true,
     secure: isSecure,
     sameSite: 'lax',
@@ -201,7 +201,7 @@ export function setSessionCookie(response: NextResponse, email: string) {
  */
 export function clearSessionCookie(response: NextResponse) {
   const isSecure = process.env.COOKIE_SECURE === 'true'
-  response.cookies.set('whatsshop-user', '', {
+  response.cookies.set('boutiko-user', '', {
     httpOnly: true,
     secure: isSecure,
     sameSite: 'lax',

@@ -193,7 +193,7 @@ const categories: CategoryData[] = [
       {
         question: 'Comment contacter le support ?',
         answer:
-          "Vous pouvez contacter notre support par plusieurs moyens : via le chat en direct sur notre site, par email à support@boutiko.com, ou directement par WhatsApp. Notre équipe est disponible pour vous aider avec toutes vos questions.",
+          "Vous pouvez contacter notre support par plusieurs moyens : via le chat en direct sur notre site, par email à support@boutiko.pro, ou directement par WhatsApp. Notre équipe est disponible pour vous aider avec toutes vos questions.",
       },
       {
         question: 'Quel est le délai de réponse ?',

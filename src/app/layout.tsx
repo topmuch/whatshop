@@ -13,13 +13,59 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteDescription =
+  "Boutiko est la plateforme N°1 pour créer votre boutique en ligne en Côte d'Ivoire, Sénégal et Cameroun. Simple, rapide et abordable. Essai gratuit.";
+
 export const metadata: Metadata = {
-  title: "Boutiko - Créez votre boutique en ligne en 3 minutes",
-  description: "Boutiko permet aux vendeurs de créer une mini-boutique professionnelle pour Facebook, Instagram, TikTok et WhatsApp. Sans compétence technique.",
-  keywords: ["boutique en ligne", "WhatsApp", "e-commerce", "Afrique", "vendeur"],
-  icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
+  title: {
+    default: "Boutiko — Créez votre boutique en ligne en Afrique",
+    template: "%s | Boutiko",
   },
+  description: siteDescription,
+  keywords: [
+    "boutique en ligne",
+    "créer boutique afrique",
+    "e-commerce côte d'ivoire",
+    "e-commerce sénégal",
+    "boutiko",
+    "linktree boutique",
+    "vente en ligne afrique",
+  ],
+  authors: [{ name: "Boutiko" }],
+  creator: "Boutiko",
+  metadataBase: new URL("https://boutiko.pro"),
+  openGraph: {
+    type: "website",
+    locale: "fr_CI",
+    url: "https://boutiko.pro",
+    siteName: "Boutiko",
+    title: "Boutiko — Créez votre boutique en ligne en Afrique",
+    description: siteDescription,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Boutiko — Créez votre boutique en ligne en Afrique",
+    description: siteDescription,
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  alternates: {
+    canonical: "https://boutiko.pro",
+  },
+};
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "Boutiko",
+  url: "https://boutiko.pro",
+  logo: "https://boutiko.pro/favicon.ico",
+  description:
+    "Plateforme de création de boutiques en ligne en Afrique",
+  areaServed: ["CI", "SN", "CM"],
+  sameAs: [],
 };
 
 export default function RootLayout({
@@ -37,6 +83,10 @@ export default function RootLayout({
             }
           } catch(e) {}
         `}} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}

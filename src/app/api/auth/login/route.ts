@@ -4,7 +4,7 @@ import { db } from '@/lib/db'
 import { rateLimit, getClientIp, RATE_LIMITS } from '@/lib/rate-limit'
 
 // Default superadmin credentials (used only for first-time setup)
-const DEFAULT_ADMIN_EMAIL = process.env.SUPER_ADMIN_EMAIL || 'admin@boutiko.com'
+const DEFAULT_ADMIN_EMAIL = process.env.SUPER_ADMIN_EMAIL || 'admin@boutiko.pro'
 const DEFAULT_ADMIN_PASSWORD = process.env.SUPER_ADMIN_PASSWORD || 'Admin123!'
 
 export async function POST(request: NextRequest) {

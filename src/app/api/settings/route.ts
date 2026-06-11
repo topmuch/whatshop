@@ -4,7 +4,7 @@ import { db } from '@/lib/db'
 // GET /api/settings — Get seller shop settings (SEO, appearance)
 export async function GET(request: NextRequest) {
   try {
-    const userEmail = request.cookies.get('whatsshop-user')?.value
+    const userEmail = request.cookies.get('boutiko-user')?.value
 
     if (!userEmail) {
       return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     // Read user email from cookie
-    const userEmail = request.cookies.get('whatsshop-user')?.value
+    const userEmail = request.cookies.get('boutiko-user')?.value
 
     if (!userEmail) {
       return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })

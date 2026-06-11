@@ -287,10 +287,10 @@ function PublicFooter() {
               <li className="flex items-center gap-3">
                 <Mail className="w-4 h-4 text-primary shrink-0" />
                 <a
-                  href="mailto:contact@boutiko.com"
+                  href="mailto:contact@boutiko.pro"
                   className="text-sm text-white/50 hover:text-white/80 transition-colors"
                 >
-                  contact@boutiko.com
+                  contact@boutiko.pro
                 </a>
               </li>
               <li className="flex items-center gap-3">

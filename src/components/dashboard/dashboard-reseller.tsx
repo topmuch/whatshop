@@ -190,7 +190,7 @@ function ResellerSidebarContent({
     } catch {
       /* ignore */
     }
-    document.cookie = 'whatsshop-user=; path=/; max-age=0'
+    document.cookie = 'boutiko-user=; path=/; max-age=0'
     setUser(null)
     setShop(null)
     setView('landing')

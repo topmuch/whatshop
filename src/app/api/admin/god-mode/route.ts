@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
 
     // Store the original admin's email in a god-mode cookie
     const isSecure = process.env.COOKIE_SECURE === 'true'
-    response.cookies.set('whatsshop-god-mode', admin.email, {
+    response.cookies.set('boutiko-god-mode', admin.email, {
       httpOnly: true,
       secure: isSecure,
       sameSite: 'lax',
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
 // DELETE /api/admin/god-mode — Exit God Mode (restore admin session)
 export async function DELETE(request: NextRequest) {
   try {
-    const godModeEmail = request.cookies.get('whatsshop-god-mode')?.value
+    const godModeEmail = request.cookies.get('boutiko-god-mode')?.value
 
     if (!godModeEmail) {
       return NextResponse.json(
@@ -138,7 +138,7 @@ export async function DELETE(request: NextRequest) {
 
     // Clear the god-mode cookie
     const isSecure = process.env.COOKIE_SECURE === 'true'
-    response.cookies.set('whatsshop-god-mode', '', {
+    response.cookies.set('boutiko-god-mode', '', {
       httpOnly: true,
       secure: isSecure,
       sameSite: 'lax',

@@ -30,7 +30,7 @@ NODE_ENV=production
 > Optionnel : `Z_AI_API_KEY=your-key` pour les fonctionnalités IA
 
 ### 4. Domaine
-- Dans **Domains** → Ajoutez votre domaine (ex: `boutiko.com`)
+- Dans **Domains** → Ajoutez votre domaine (ex: `boutiko.pro`)
 - Coolify configure automatiquement le SSL avec Let's Encrypt
 
 ### 5. Persistance des données (Important !)

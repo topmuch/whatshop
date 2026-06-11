@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs'
 const db = new PrismaClient()
 
 async function main() {
-  const email = 'superadmin@boutiko.com'
+  const email = 'superadmin@boutiko.pro'
   const password = 'SuperAdmin123!'
   const name = 'Super Admin'
 

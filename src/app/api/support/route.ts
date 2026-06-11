@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { createNotification } from '@/lib/notifications'
 
 // POST /api/support — Create a support ticket
 export async function POST(request: NextRequest) {
   try {
     // Read user email from cookie
-    const userEmail = request.cookies.get('whatsshop-user')?.value
+    const userEmail = request.cookies.get('boutiko-user')?.value
 
     if (!userEmail) {
       return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
@@ -35,6 +36,18 @@ export async function POST(request: NextRequest) {
         status: 'OPEN',
       },
     })
+
+    // Fire-and-forget notification (don't block the response)
+    try {
+      await createNotification(
+        'SUPPORT_TICKET',
+        'Nouveau ticket support',
+        `Nouveau ticket de la boutique "${user.shops[0].name}".`,
+        { ticketId: ticket.id, shopId: user.shops[0].id, shopName: user.shops[0].name }
+      )
+    } catch (_notifyError) {
+      // Notification failure must not break ticket creation
+    }
 
     return NextResponse.json({ success: true, ticket }, { status: 201 })
   } catch (error) {

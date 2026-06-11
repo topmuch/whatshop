@@ -12,7 +12,7 @@ interface QRCodeRequestBody {
 
 export async function POST(request: NextRequest) {
   try {
-    const sessionCookie = request.cookies.get('whatsshop-user')?.value
+    const sessionCookie = request.cookies.get('boutiko-user')?.value
     if (!sessionCookie) {
       return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
     }
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     // Build the QR code target URL
     const origin = request.headers.get('x-forwarded-host')
       ? `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('x-forwarded-host')}`
-      : 'https://whatshop.shop'
+      : 'https://boutiko.pro'
 
     const shopUrl = `${origin}/${shop.slug}`
 

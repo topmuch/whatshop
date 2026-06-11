@@ -4,7 +4,7 @@ import { clearSessionCookie, mapShopToAuthShop } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
   try {
-    const userEmail = request.cookies.get('whatsshop-user')?.value
+    const userEmail = request.cookies.get('boutiko-user')?.value
 
     if (!userEmail) {
       return NextResponse.json({ user: null, shop: null, shops: [] })
@@ -58,14 +58,14 @@ export async function DELETE() {
 
   // Also clear god-mode cookies so a super admin fully logs out
   const isSecure = process.env.COOKIE_SECURE === 'true'
-  response.cookies.set('whatsshop-god-mode', '', {
+  response.cookies.set('boutiko-god-mode', '', {
     httpOnly: true,
     secure: isSecure,
     sameSite: 'lax',
     maxAge: 0,
     path: '/',
   })
-  response.cookies.set('whatsshop-god-mode-user', '', {
+  response.cookies.set('boutiko-god-mode-user', '', {
     httpOnly: false,
     secure: isSecure,
     sameSite: 'lax',

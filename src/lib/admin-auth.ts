@@ -3,12 +3,12 @@ import { db } from '@/lib/db'
 
 /**
  * Verify that the requesting user is an ADMIN or SUPER_ADMIN.
- * Reads the `whatsshop-user` cookie, looks up the user in the DB,
+ * Reads the `boutiko-user` cookie, looks up the user in the DB,
  * and checks that user.role is ADMIN or SUPER_ADMIN.
  * Returns the user object on success, or null on failure.
  */
 export async function verifyAdmin(request: NextRequest) {
-  const userEmail = request.cookies.get('whatsshop-user')?.value
+  const userEmail = request.cookies.get('boutiko-user')?.value
 
   if (!userEmail) {
     return null

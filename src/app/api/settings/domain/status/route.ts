@@ -5,7 +5,7 @@ import { db } from '@/lib/db'
 export async function GET(request: NextRequest) {
   try {
     // Read user email from cookie
-    const userEmail = request.cookies.get('whatsshop-user')?.value
+    const userEmail = request.cookies.get('boutiko-user')?.value
 
     if (!userEmail) {
       return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })

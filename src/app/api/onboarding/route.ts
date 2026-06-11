@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { requireAuth, isValidSlug } from '@/lib/auth'
+import { createNotification } from '@/lib/notifications'
 
 // Sector → Template mapping
 const sectorTemplateMap: Record<string, string> = {
@@ -100,6 +101,18 @@ export async function POST(request: NextRequest) {
         shopId: shop.id,
       })),
     })
+
+    // Fire-and-forget notification (don't block the response)
+    try {
+      await createNotification(
+        'NEW_SHOP',
+        'Nouvelle boutique créée',
+        `La boutique "${shop.name}" a été créée par ${user.name}.`,
+        { shopId: shop.id, shopName: shop.name, ownerId: user.id, ownerName: user.name }
+      )
+    } catch (_notifyError) {
+      // Notification failure must not break onboarding
+    }
 
     return NextResponse.json(shop)
   } catch (error: unknown) {
