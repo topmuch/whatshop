@@ -286,7 +286,7 @@ function CosmikaCategories({
           </p>
         </div>
 
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-6 sm:gap-8">
+        <div className="flex flex-wrap justify-center gap-[35px] sm:gap-[40px]">
           {categories.map((cat) => {
             const isActive = activeCategory === cat.id
             const catImage = cat.image || products.find((p) => p.categoryId === cat.id && p.image)?.image
@@ -295,16 +295,12 @@ function CosmikaCategories({
               <motion.button
                 key={cat.id}
                 onClick={() => onCategoryClick(isActive ? null : cat.id)}
-                className="flex flex-col items-center gap-3 group mx-auto"
+                className="flex flex-col items-center group"
                 whileHover={{ scale: 1.05 }}
                 transition={{ duration: 0.2 }}
               >
                 <div
-                  className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-2 transition-all duration-300 group-hover:scale-110"
-                  style={{
-                    borderColor: isActive ? '#f43f5e' : '#fda4af',
-                    boxShadow: isActive ? '0 0 0 3px rgba(244,63,94,0.2)' : 'none',
-                  }}
+                  className="w-[100px] h-[100px] sm:w-[130px] sm:h-[130px] md:w-[160px] md:h-[160px] rounded-full overflow-hidden transition-all duration-300"
                 >
                   {catImage ? (
                     <img
@@ -314,12 +310,12 @@ function CosmikaCategories({
                     />
                   ) : (
                     <div className="w-full h-full bg-rose-50 flex items-center justify-center">
-                      <Package className="size-6 text-rose-300" />
+                      <Package className="size-8 text-rose-300" />
                     </div>
                   )}
                 </div>
                 <span
-                  className={`text-xs sm:text-sm font-medium text-center leading-tight max-w-[80px] sm:max-w-[100px] line-clamp-2 transition-colors duration-200 ${
+                  className={`mt-4 text-xs sm:text-sm font-medium text-center leading-tight max-w-[100px] sm:max-w-[140px] line-clamp-2 transition-colors duration-200 ${
                     isActive ? 'text-rose-600' : 'text-gray-600 group-hover:text-gray-900'
                   }`}
                 >
@@ -1143,7 +1139,7 @@ export function CosmikaBeautyShopPage() {
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                       transition={{ duration: 0.3 }}
-                      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+                      className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"
                     >
                       {filteredProducts.map((product) => (
                         <CosmikaProductCard
