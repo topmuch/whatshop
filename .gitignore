@@ -76,3 +76,4 @@ download/
 !public/**/*.jpg
 !public/**/*.svg
 !public/**/*.icotool-results/
+tool-results/
