@@ -159,11 +159,14 @@ function QRCodeTab() {
   }, [color])
 
   // Auto-regenerate when color or size changes (if we already have a QR)
+  // Use a ref to avoid stale closure and prevent infinite loops
+  const hasGeneratedRef = useRef(false)
+
   useEffect(() => {
-    if (qrData && shop?.id) {
+    if (hasGeneratedRef.current && shop?.id) {
       generateQR()
     }
-  }, [debouncedColor, size])
+  }, [debouncedColor, size, format])
 
   async function generateQR() {
     if (!shop?.id) {
@@ -192,6 +195,7 @@ function QRCodeTab() {
 
       const data = await res.json()
       setQrData(data.qrData)
+      hasGeneratedRef.current = true
       toast.success('QR code généré avec succès')
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Erreur lors de la génération')
@@ -1118,7 +1122,7 @@ function BusinessCardTab() {
     nameY: number,
     W: number,
     H: number,
-    _qrImg?: HTMLImageElement | null
+    qrImage?: HTMLImageElement | null
   ) {
     // Shop name
     ctx.fillStyle = '#FFFFFF'
@@ -1160,12 +1164,12 @@ function BusinessCardTab() {
     ctx.fill()
 
     // Draw the real QR code image
-    if (qrImg) {
+    if (qrImage) {
       const pad = 10
       ctx.save()
       drawRoundedRect(ctx, qrX + pad, qrY + pad, qrSize - pad * 2, qrSize - pad * 2, 8)
       ctx.clip()
-      ctx.drawImage(qrImg, qrX + pad, qrY + pad, qrSize - pad * 2, qrSize - pad * 2)
+      ctx.drawImage(qrImage, qrX + pad, qrY + pad, qrSize - pad * 2, qrSize - pad * 2)
       ctx.restore()
     }
 

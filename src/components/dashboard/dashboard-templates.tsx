@@ -6,7 +6,7 @@ import { TemplateSelector } from './template-selector'
 import { TemplateCustomization } from './template-customization'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Loader2, Check } from 'lucide-react'
+import { Loader2, Check, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
 import { useState, useEffect } from 'react'
 import { Separator } from '@/components/ui/separator'
@@ -93,14 +93,39 @@ export function DashboardTemplates() {
             currentTemplate={shop.template || 'classic'}
             onSelect={handleTemplateSelect}
           />
-          {saving && (
-            <div className="flex items-center gap-2 mt-4 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Enregistrement...
-            </div>
-          )}
+          <div className="flex items-center gap-3 mt-4">
+            {saving && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Enregistrement...
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
+
+      {/* Preview button */}
+      {shop && (
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col sm:flex-row items-center justify-between gap-4 py-6">
+            <div>
+              <p className="font-medium">Aperçu en direct</p>
+              <p className="text-sm text-muted-foreground">
+                Ouvrez votre boutique dans un nouvel onglet pour voir le thème appliqué
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => {
+                window.open(`/${shop.slug}`, '_blank')
+              }}
+            >
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Voir ma boutique
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Template-specific customization (e.g. Cosmika Beauty) */}
       <TemplateCustomization shopSlug={shop.slug} />

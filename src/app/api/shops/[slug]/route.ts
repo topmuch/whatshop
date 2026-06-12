@@ -23,6 +23,7 @@ export async function GET(
         plan: true,
         sector: true,
         template: true,
+        accentColor: true,
         isActive: true,
         heroImages: true,
         promoBanners: true,

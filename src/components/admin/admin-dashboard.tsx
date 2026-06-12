@@ -171,6 +171,7 @@ interface AdminOrder {
   status: string
   customerName: string | null
   customerPhone: string | null
+  customerAddress?: string | null
   items: string
   createdAt: string
   shop: { id: string; name: string }
@@ -4207,11 +4208,19 @@ function AdminShops() {
 
 // ─── ORDERS TAB ──────────────────────────────────────────────────────────────
 
+const adminStatusOptions = [
+  { value: 'PENDING', label: 'En attente' },
+  { value: 'CONFIRMED', label: 'Confirmée' },
+  { value: 'DELIVERED', label: 'Livrée' },
+  { value: 'CANCELLED', label: 'Annulée' },
+]
+
 function AdminOrders() {
   const [orders, setOrders] = useState<AdminOrder[]>([])
   const [statusFilter, setStatusFilter] = useState('all')
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
+  const [updatingId, setUpdatingId] = useState<string | null>(null)
 
   const loadOrders = useCallback(async (s: string, q: string) => {
     setLoading(true)
@@ -4235,6 +4244,36 @@ function AdminOrders() {
     loadOrders(statusFilter, search)
   }, [statusFilter, search, loadOrders])
 
+  // Auto-refresh every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadOrders(statusFilter, search)
+    }, 30_000)
+    return () => clearInterval(interval)
+  }, [statusFilter, search, loadOrders])
+
+  async function updateOrderStatus(orderId: string, newStatus: string) {
+    setUpdatingId(orderId)
+    try {
+      const res = await fetch('/api/admin/orders', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: orderId, status: newStatus }),
+      })
+      if (res.ok) {
+        const updated = await res.json()
+        setOrders(prev => prev.map(o => o.id === orderId ? updated : o))
+        toast.success(`Statut mis à jour : ${statusConfig[newStatus]?.label || newStatus}`)
+      } else {
+        toast.error('Erreur lors de la mise à jour')
+      }
+    } catch {
+      toast.error('Erreur de connexion')
+    } finally {
+      setUpdatingId(null)
+    }
+  }
+
   function getStatusIcon(status: string) {
     switch (status) {
       case 'PENDING': return <Clock className="h-3.5 w-3.5" />
@@ -4245,9 +4284,19 @@ function AdminOrders() {
     }
   }
 
+  function parseItems(itemsStr: string) {
+    try { return JSON.parse(itemsStr) } catch { return [] }
+  }
+
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Commandes</h2>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <h2 className="text-2xl font-bold">Commandes</h2>
+        <Button variant="outline" size="sm" onClick={() => loadOrders(statusFilter, search)}>
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Actualiser
+        </Button>
+      </div>
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
@@ -4302,6 +4351,7 @@ function AdminOrders() {
                   <TableHead>Total</TableHead>
                   <TableHead>Statut</TableHead>
                   <TableHead>Date</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -4327,6 +4377,28 @@ function AdminOrders() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-muted-foreground">{formatDate(o.createdAt)}</TableCell>
+                      <TableCell className="text-center">
+                        <Select
+                          value={o.status}
+                          onValueChange={(val) => updateOrderStatus(o.id, val)}
+                          disabled={updatingId === o.id}
+                        >
+                          <SelectTrigger className="w-[140px] h-8 text-xs">
+                            {updatingId === o.id ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <SelectValue />
+                            )}
+                          </SelectTrigger>
+                          <SelectContent>
+                            {adminStatusOptions.map((s) => (
+                              <SelectItem key={s.value} value={s.value}>
+                                {s.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
                     </TableRow>
                   )
                 })}

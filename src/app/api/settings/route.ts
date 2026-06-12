@@ -25,6 +25,8 @@ export async function GET(request: NextRequest) {
       seoKeywords: user.shops[0].seoKeywords,
       ogImage: user.shops[0].ogImage,
       coverImageUrl: user.shops[0].coverImageUrl,
+      notificationPreferences: user.shops[0].notificationPreferences,
+      notificationEmail: user.shops[0].notificationEmail,
     })
   } catch (error) {
     console.error('Settings GET error:', error)
@@ -53,7 +55,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { seoTitle, seoDescription, seoKeywords, ogImage, coverImageUrl, logo, banner } = body
+    const { seoTitle, seoDescription, seoKeywords, ogImage, coverImageUrl, logo, banner, notificationPreferences, notificationEmail } = body
 
     // Build update data with only provided fields
     const data: Record<string, unknown> = {}
@@ -64,6 +66,8 @@ export async function PUT(request: NextRequest) {
     if (coverImageUrl !== undefined) data.coverImageUrl = coverImageUrl || null
     if (logo !== undefined) data.logo = logo || null
     if (banner !== undefined) data.banner = banner || null
+    if (notificationPreferences !== undefined) data.notificationPreferences = notificationPreferences || '{}'
+    if (notificationEmail !== undefined) data.notificationEmail = notificationEmail || null
 
     const updatedShop = await db.shop.update({
       where: { id: user.shops[0].id },
@@ -71,6 +75,7 @@ export async function PUT(request: NextRequest) {
       select: {
         id: true, name: true, slug: true, seoTitle: true, seoDescription: true,
         seoKeywords: true, ogImage: true, coverImageUrl: true, logo: true, banner: true,
+        notificationPreferences: true, notificationEmail: true,
       },
     })
 

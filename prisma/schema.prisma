@@ -158,6 +158,10 @@ model Shop {
   trustBadges           String   @default("[]")  // JSON array of {emoji, title, subtitle, order}
   footerLinks           String   @default("[]")  // JSON array of {section, label, url}
 
+  // Notification preferences
+  notificationPreferences String   @default("{}") // JSON: { newOrder: true, lowStock: false, ... }
+  notificationEmail       String?
+
   // Moderation
   isFlagged              Boolean   @default(false)
   flaggedReason          String?

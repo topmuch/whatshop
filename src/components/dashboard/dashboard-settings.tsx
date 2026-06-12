@@ -209,6 +209,15 @@ export function DashboardSettings() {
             setSeoKeywords(data.seoKeywords || '')
             setOgImage(data.ogImage || '')
             setCoverImageUrl(data.coverImageUrl || '')
+            // Restore notification preferences
+            if (data.notificationPreferences) {
+              try {
+                setNotifPrefs(JSON.parse(data.notificationPreferences))
+              } catch { /* ignore */ }
+            }
+            if (data.notificationEmail) {
+              setNotifEmail(data.notificationEmail)
+            }
           }
         })
         .catch(() => {})
