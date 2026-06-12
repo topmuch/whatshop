@@ -39,7 +39,6 @@ import {
   ChevronDown,
   Zap,
   Eye,
-  Clock,
 } from 'lucide-react'
 import { useAppStore, type Product, type Category } from '@/lib/store'
 import { formatPrice, openWhatsApp } from '@/lib/shared'
@@ -68,101 +67,6 @@ type SortOption = 'recent' | 'price-asc' | 'price-desc'
 function useStableRandom(min: number, max: number) {
   const [val] = useState(() => Math.floor(Math.random() * (max - min + 1)) + min)
   return val
-}
-
-// ═══════════════════════════════════════════════════════════════
-// SECTION 1 : LIVE BANNER (top of page)
-// ═══════════════════════════════════════════════════════════════
-
-function TikTokLiveBanner() {
-  const viewerCount = useStableRandom(800, 1999)
-  const [countdown, setCountdown] = useState(30 * 60) // 30 min default
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCountdown((prev) => (prev > 0 ? prev - 1 : 0))
-    }, 1000)
-    return () => clearInterval(timer)
-  }, [])
-
-  const minutes = Math.floor(countdown / 60)
-  const seconds = countdown % 60
-  const pad = (n: number) => String(n).padStart(2, '0')
-
-  return (
-    <div
-      className="w-full relative overflow-hidden"
-      style={{
-        background: `linear-gradient(90deg, ${TT.redOrange}, ${TT.red}, ${TT.redOrange})`,
-      }}
-    >
-      {/* Subtle animated glow behind */}
-      <div
-        className="absolute inset-0 opacity-30"
-        style={{
-          background: 'radial-gradient(ellipse at 30% 50%, rgba(255,255,255,0.15) 0%, transparent 70%)',
-        }}
-      />
-
-      <div className="relative z-10 flex items-center justify-center gap-4 sm:gap-8 px-4 py-3 sm:py-4 flex-wrap">
-        {/* LIVE indicator */}
-        <div className="flex items-center gap-2">
-          <span
-            className="relative flex items-center justify-center text-lg font-black uppercase tracking-wider text-white"
-            style={{ textShadow: '0 0 12px rgba(255,0,80,0.8)' }}
-          >
-            <span
-              className="absolute -left-5 top-1/2 -translate-y-1/2 inline-block w-2.5 h-2.5 rounded-full"
-              style={{
-                background: TT.yellow,
-                boxShadow: `0 0 8px ${TT.yellow}, 0 0 16px ${TT.yellow}`,
-                animation: 'ttPulse 1.2s ease-in-out infinite',
-              }}
-            />
-            🔴 LIVE EN DIRECT
-          </span>
-        </div>
-
-        {/* Viewers badge */}
-        <div
-          className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs sm:text-sm font-bold text-white"
-          style={{
-            background: 'rgba(0,0,0,0.25)',
-            backdropFilter: 'blur(4px)',
-          }}
-        >
-          <Eye className="size-3.5 sm:size-4" />
-          <span>{viewerCount.toLocaleString('fr-FR')}</span>
-          <span className="hidden sm:inline">en ligne</span>
-        </div>
-
-        {/* Countdown timer */}
-        <div className="flex items-center gap-1">
-          <Clock className="size-3.5 sm:size-4 text-white/80" />
-          <div
-            className="flex items-center gap-0.5 px-2.5 py-1 rounded-lg font-mono text-sm sm:text-base font-bold text-white"
-            style={{
-              background: 'rgba(0,0,0,0.35)',
-              textShadow: `0 0 10px ${TT.cyan}, 0 0 20px ${TT.cyan}`,
-              letterSpacing: '2px',
-            }}
-          >
-            {pad(minutes)}:{pad(seconds)}
-          </div>
-        </div>
-      </div>
-
-      {/* Shimmer overlay */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.06) 50%, transparent 100%)',
-          backgroundSize: '200% 100%',
-          animation: 'ttShimmer 2.5s ease-in-out infinite',
-        }}
-      />
-    </div>
-  )
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1608,9 +1512,6 @@ export function TikTokLiveShopPage() {
     >
       {/* CSS Animations */}
       <TikTokAnimations />
-
-      {/* ═══ LIVE BANNER ═══ */}
-      <TikTokLiveBanner />
 
       {/* ═══ HEADER ═══ */}
       <TikTokHeader

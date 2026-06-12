@@ -31,6 +31,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Product as ProductType, formatPrice } from '@/lib/shared'
+import { LiveShopFeatures } from '../live-shop-features'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -217,6 +218,7 @@ export function GroceryGrid({
 
   return (
     <div className="w-full max-w-6xl mx-auto">
+      <LiveShopFeatures />
       {/* ── 1. Delivery Info Bar ────────────────────────────────────────── */}
       <div
         className="mb-6 rounded-xl px-4 py-3.5 flex items-center justify-center gap-3 text-white font-semibold text-sm sm:text-base"

@@ -22,6 +22,7 @@ import {
   Heart,
 } from 'lucide-react'
 import { Product as ProductType, formatPrice } from '@/lib/shared'
+import { LiveShopFeatures } from '../live-shop-features'
 
 /* ─── Types ─── */
 
@@ -439,6 +440,7 @@ export function FashionGrid({
 
   return (
     <div className="w-full" style={{ background: COLORS.bg, color: COLORS.text }}>
+      <LiveShopFeatures />
 
       {/* ════════════════════════════════════════════════
           SEARCH BAR & SORT

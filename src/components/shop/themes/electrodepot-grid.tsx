@@ -31,6 +31,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Product as ProductType, formatPrice } from '@/lib/shared'
+import { LiveShopFeatures } from '../live-shop-features'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -910,6 +911,7 @@ export function ElectroDepotGrid({
 
   return (
     <div className="w-full min-h-screen flex flex-col" style={{ backgroundColor: COLORS.bg }}>
+      <LiveShopFeatures />
       <MarqueeStyles />
 
       {/* ─── 1. Promo Bar ─── */}

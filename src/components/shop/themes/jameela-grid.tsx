@@ -30,6 +30,7 @@ import {
   Star,
 } from 'lucide-react'
 import { Product as ProductType, formatPrice } from '@/lib/shared'
+import { LiveShopFeatures } from '../live-shop-features'
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -559,6 +560,7 @@ export function JameelaGrid({
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+      <LiveShopFeatures />
       {/* ============================================================ */}
       {/*  TOP BAR: Search + Sort                                       */}
       {/* ============================================================ */}
