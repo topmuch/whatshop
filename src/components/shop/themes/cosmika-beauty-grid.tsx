@@ -300,7 +300,7 @@ function CosmikaCategories({
                 transition={{ duration: 0.2 }}
               >
                 <div
-                  className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full overflow-hidden border-2 transition-all duration-300 group-hover:scale-110"
+                  className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-2 transition-all duration-300 group-hover:scale-110"
                   style={{
                     borderColor: isActive ? '#f43f5e' : '#fda4af',
                     boxShadow: isActive ? '0 0 0 3px rgba(244,63,94,0.2)' : 'none',
@@ -314,7 +314,7 @@ function CosmikaCategories({
                     />
                   ) : (
                     <div className="w-full h-full bg-rose-50 flex items-center justify-center">
-                      <Package className="size-5 text-rose-300" />
+                      <Package className="size-6 text-rose-300" />
                     </div>
                   )}
                 </div>
