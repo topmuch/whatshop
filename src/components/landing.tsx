@@ -679,32 +679,62 @@ function SocialSelling() {
 const features = [
   {
     title: 'Multi-Boutiques',
-    desc: 'Gérez jusqu\'à 10 boutiques avec un seul compte',
+    desc: 'Gérez jusqu\'à 10 boutiques avec un seul compte.',
+    bullets: [
+      'Créez des boutiques pour chaque activité',
+      'Tableau de bord unique pour tout gérer',
+      'Changez de boutique en un clic',
+    ],
     image: '/landing/feature-multi-boutiques.png',
   },
   {
     title: 'Commandes WhatsApp',
-    desc: 'Recevez et gérez vos commandes directement sur WhatsApp',
+    desc: 'Recevez et gérez vos commandes directement sur WhatsApp.',
+    bullets: [
+      'Message auto avec détails de commande',
+      'Zone de livraison & frais calculés',
+      'Aucune formation technique requise',
+    ],
     image: '/landing/feature-whatsapp-orders.png',
   },
   {
     title: 'Mode Live',
-    desc: 'Vendez en direct avec le mode TikTok Live',
+    desc: 'Vendez en direct avec le mode TikTok Live.',
+    bullets: [
+      'Affichez vos produits en temps réel',
+      'Vos viewers commandent instantanément',
+      'Boostez vos ventes pendant le live',
+    ],
     image: '/landing/feature-live-mode.png',
   },
   {
     title: 'Mobile Money',
-    desc: 'Acceptez Orange Money, MTN Mobile Money, Wave',
+    desc: 'Acceptez Orange Money, MTN Mobile Money, Wave.',
+    bullets: [
+      'Paiements locaux sécurisés',
+      'Confirmation instantanée de paiement',
+      'Compatible tous opérateurs africains',
+    ],
     image: '/landing/feature-mobile-money.png',
   },
   {
     title: 'Statistiques',
-    desc: 'Suivez vos ventes et performances en temps réel',
+    desc: 'Suivez vos ventes et performances en temps réel.',
+    bullets: [
+      'Chiffre d\'affaires & commandes du jour',
+      'Produits les plus vendus',
+      'Tableaux de bord visuels clairs',
+    ],
     image: '/landing/feature-statistiques.png',
   },
   {
     title: 'Domaine personnalisé',
-    desc: 'Votre propre nom de domaine professionnel',
+    desc: 'Votre propre nom de domaine professionnel.',
+    bullets: [
+      'www.votrenom.com au lieu d\'un sous-domaine',
+      'Plus de confiance pour vos clients',
+      'Configuration simple en quelques clics',
+    ],
     image: '/landing/feature-domaine.png',
   },
 ]
@@ -762,12 +792,20 @@ function Features() {
                   <h3 className="font-bold text-gray-900 text-sm sm:text-base lg:text-lg leading-tight">
                     {f.title}
                   </h3>
-                  <p className="text-xs sm:text-sm text-gray-500 leading-snug line-clamp-3">
+                  <p className="text-xs sm:text-sm text-gray-500 leading-snug">
                     {f.desc}
                   </p>
-                  <div className="mt-auto pt-2 sm:pt-3">
-                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-pink-500 to-orange-400 flex items-center justify-center shadow-sm group-hover:shadow-md group-hover:scale-110 transition-all duration-300">
-                      <span className="text-white font-bold text-base sm:text-lg leading-none">+</span>
+                  <ul className="space-y-1.5 sm:space-y-2 mt-1">
+                    {f.bullets.map((b, j) => (
+                      <li key={j} className="flex items-start gap-1.5 sm:gap-2">
+                        <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-pink-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                        <span className="text-[11px] sm:text-xs text-gray-600 leading-snug">{b}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="mt-auto pt-1 sm:pt-2">
+                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-pink-500 to-orange-400 flex items-center justify-center shadow-sm group-hover:shadow-md group-hover:scale-110 transition-all duration-300">
+                      <span className="text-white font-bold text-sm sm:text-base leading-none">+</span>
                     </div>
                   </div>
                 </div>
