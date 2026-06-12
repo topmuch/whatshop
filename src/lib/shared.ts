@@ -32,9 +32,21 @@ export function formatPrice(price: number): string {
 /**
  * Open WhatsApp with a pre-filled message for a product order.
  */
-export function openWhatsApp(product: { name: string; price: number }, whatsapp: string, qty: number = 1) {
-  const price = (product.price * qty).toLocaleString('fr-FR')
-  const msg = `Bonjour ! 👋\n\nJe souhaite commander :\n\n🛍️ ${product.name} x${qty} — ${price} FCFA\n\nMerci ! 🙏`
+export function openWhatsApp(
+  product: { name: string; price: number },
+  whatsapp: string,
+  qty: number = 1,
+  shippingZone?: { name: string; price: number } | null
+) {
+  const itemTotal = product.price * qty
+  const price = itemTotal.toLocaleString('fr-FR')
+  let msg: string
+  if (shippingZone) {
+    const totalWithShipping = itemTotal + shippingZone.price
+    msg = `Bonjour ! 👋\n\nJe souhaite commander :\n\n🛍️ ${product.name} x${qty} — ${price} FCFA\n\n📍 Zone de livraison : ${shippingZone.name}\n🚚 Frais de livraison : ${shippingZone.price.toLocaleString('fr-FR')} FCFA\n━━━━━━━━━━━━━━\n💵 Total : ${totalWithShipping.toLocaleString('fr-FR')} FCFA\n\nMerci ! 🙏`
+  } else {
+    msg = `Bonjour ! 👋\n\nJe souhaite commander :\n\n🛍️ ${product.name} x${qty} — ${price} FCFA\n\nMerci ! 🙏`
+  }
   const encoded = encodeURIComponent(msg)
   const phone = whatsapp.replace(/\D/g, '')
   window.open(`https://wa.me/${phone}?text=${encoded}`, '_blank')

@@ -53,6 +53,7 @@ import { LuxeFashionShopPage } from './themes/luxe-fashion-grid'
 import { TikTokLiveShopPage } from './themes/tiktok-live-grid'
 import { BeautyPremiumShopPage } from './themes/beauty-premium-grid'
 import { CosmikaBeautyShopPage } from './themes/cosmika-beauty-grid'
+import { ShippingZoneSelector } from './shipping-zone-selector'
 
 type SortOption = 'recent' | 'price-asc' | 'price-desc'
 
@@ -369,6 +370,7 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
     updateCartQuantity,
     getCartTotal,
     clearCart,
+    selectedShippingZone,
   } = useAppStore()
 
   const template = useTemplate()
@@ -481,6 +483,8 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
 
   const total = getCartTotal()
   const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0)
+  const deliveryFee = selectedShippingZone?.price ?? 0
+  const grandTotal = total + deliveryFee
 
   function handleAddToCart(product: Product) {
     const cartImage = (product.images && product.images[0]) || product.image || undefined
@@ -495,7 +499,12 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
   function handleWhatsAppCheckout() {
     if (!publicShop) return
     const itemsText = cart.map((c) => `🛍 ${c.name} x${c.quantity} — ${(c.price * c.quantity).toLocaleString('fr-FR')} FCFA`).join('\n')
-    const msg = `Bonjour ${publicShop.name} ! 👋\n\nJe souhaite commander :\n\n${itemsText}\n\n━━━━━━━━━━━━━━\n💰 Total : ${total.toLocaleString('fr-FR')} FCFA\n\n📝 Mes informations :\nNom :\nAdresse :\nTéléphone :\n\nMerci ! 🙏`
+    let msg: string
+    if (selectedShippingZone) {
+      msg = `Bonjour ${publicShop.name} ! 👋\n\nJe souhaite commander :\n\n${itemsText}\n\n📍 Zone de livraison : ${selectedShippingZone.name}\n🚚 Frais de livraison : ${deliveryFee.toLocaleString('fr-FR')} FCFA\n━━━━━━━━━━━━━━\n💵 Total : ${grandTotal.toLocaleString('fr-FR')} FCFA\n\n📝 Mes informations :\nNom :\nAdresse :\nTéléphone :\n\nMerci ! 🙏`
+    } else {
+      msg = `Bonjour ${publicShop.name} ! 👋\n\nJe souhaite commander :\n\n${itemsText}\n\n━━━━━━━━━━━━━━\n💰 Total : ${total.toLocaleString('fr-FR')} FCFA\n\n📝 Mes informations :\nNom :\nAdresse :\nTéléphone :\n\nMerci ! 🙏`
+    }
     const encoded = encodeURIComponent(msg)
     const phone = publicShop.whatsapp?.replace(/\D/g, '') || ''
     window.open(`https://wa.me/${phone}?text=${encoded}`, '_blank')
@@ -528,8 +537,15 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
 
   function handleSingleProductWhatsApp(product: Product, qty: number) {
     if (!publicShop) return
-    const itemText = `\ud83d\uded2 ${product.name} x${qty} \u2014 ${(product.price * qty).toLocaleString('fr-FR')} FCFA`
-    const msg = `Bonjour ${publicShop.name} ! \ud83d\udc4b\n\nJe souhaite commander :\n\n${itemText}\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcb0 Total : ${(product.price * qty).toLocaleString('fr-FR')} FCFA\n\n\ud83d\udcdd Mes informations :\nNom :\nAdresse :\nT\u00e9l\u00e9phone :\n\nMerci ! \ud83d\ude4f`
+    const itemTotal = product.price * qty
+    const itemText = `🛍 ${product.name} x${qty} — ${itemTotal.toLocaleString('fr-FR')} FCFA`
+    let msg: string
+    if (selectedShippingZone) {
+      const totalWithShipping = itemTotal + selectedShippingZone.price
+      msg = `Bonjour ${publicShop.name} ! 👋\n\nJe souhaite commander :\n\n${itemText}\n\n📍 Zone de livraison : ${selectedShippingZone.name}\n🚚 Frais de livraison : ${selectedShippingZone.price.toLocaleString('fr-FR')} FCFA\n━━━━━━━━━━━━━━\n💵 Total : ${totalWithShipping.toLocaleString('fr-FR')} FCFA\n\n📝 Mes informations :\nNom :\nAdresse :\nTéléphone :\n\nMerci ! 🙏`
+    } else {
+      msg = `Bonjour ${publicShop.name} ! 👋\n\nJe souhaite commander :\n\n${itemText}\n\n━━━━━━━━━━━━━━\n💰 Total : ${itemTotal.toLocaleString('fr-FR')} FCFA\n\n📝 Mes informations :\nNom :\nAdresse :\nTéléphone :\n\nMerci ! 🙏`
+    }
     const encoded = encodeURIComponent(msg)
     const phone = publicShop.whatsapp?.replace(/\D/g, '') || ''
     window.open(`https://wa.me/${phone}?text=${encoded}`, '_blank')
@@ -1226,6 +1242,11 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
               </Button>
             </div>
 
+            {/* Shipping zone selector */}
+            <div className="mb-4">
+              <ShippingZoneSelector />
+            </div>
+
             {/* WhatsApp order button */}
             <Button
               className="w-full h-12 gap-2 text-sm font-semibold"
@@ -1610,9 +1631,25 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
                         </div>
                       ))}
                       <Separator />
+                      {/* Shipping zone selector in cart */}
+                      <ShippingZoneSelector />
                       <div className="flex items-center justify-between font-bold">
-                        <span>Total</span>
+                        <span>Sous-total</span>
                         <span style={{ color: 'var(--tpl-price)' }}>{formatPrice(total)}</span>
+                      </div>
+                      {selectedShippingZone && (
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="flex items-center gap-1" style={{ color: 'var(--tpl-text-muted)' }}>
+                            <MapPin className="h-3.5 w-3.5" />
+                            Livraison {selectedShippingZone.name}
+                          </span>
+                          <span style={{ color: 'var(--tpl-text-muted)' }}>{formatPrice(deliveryFee)}</span>
+                        </div>
+                      )}
+                      <Separator />
+                      <div className="flex items-center justify-between font-bold text-base">
+                        <span>Total</span>
+                        <span style={{ color: 'var(--tpl-price)' }}>{formatPrice(grandTotal)}</span>
                       </div>
                     </div>
                   </ScrollArea>
@@ -1642,8 +1679,10 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
                   </Button>
 
                   <div className="flex-1">
-                    <p className="text-xs" style={{ color: 'var(--tpl-text-muted)' }}>Total</p>
-                    <p className="font-bold text-sm" style={{ color: 'var(--tpl-price)' }}>{formatPrice(total)}</p>
+                    <p className="text-xs" style={{ color: 'var(--tpl-text-muted)' }}>
+                      {selectedShippingZone ? 'Total (avec livraison)' : 'Total'}
+                    </p>
+                    <p className="font-bold text-sm" style={{ color: 'var(--tpl-price)' }}>{formatPrice(grandTotal)}</p>
                   </div>
 
                   <Button

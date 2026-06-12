@@ -14,22 +14,24 @@ import { MapPin, Loader2 } from 'lucide-react'
 
 export function ShippingZoneSelector() {
   const publicShop = useAppStore((s) => s.publicShop)
+  const shopSlug = useAppStore((s) => s.shopSlug)
   const selectedShippingZone = useAppStore((s) => s.selectedShippingZone)
   const setSelectedShippingZone = useAppStore((s) => s.setSelectedShippingZone)
 
   const [zones, setZones] = useState<ShippingZone[]>([])
   const [loading, setLoading] = useState(true)
 
-  const shopId = publicShop?.id ?? ''
+  // Use slug for the public API (no auth needed)
+  const slug = shopSlug || ''
 
   useEffect(() => {
-    if (!shopId) return
+    if (!slug) return
 
     let cancelled = false
 
     async function fetchZones() {
       try {
-        const res = await fetch(`/api/shops/${shopId}/shipping-zones`)
+        const res = await fetch(`/api/shops/${slug}/public-shipping-zones`)
         if (!res.ok) return
         const data = await res.json()
         if (!cancelled) {
@@ -49,17 +51,17 @@ export function ShippingZoneSelector() {
     return () => {
       cancelled = true
     }
-  }, [shopId])
+  }, [slug])
 
   // Reset selection when shop changes
   useEffect(() => {
     setSelectedShippingZone(null)
     setZones([])
     setLoading(true)
-  }, [shopId, setSelectedShippingZone])
+  }, [slug, setSelectedShippingZone])
 
   // If still loading, no shop, or no zones -> don't render
-  if (loading || !shopId || zones.length === 0) return null
+  if (loading || !slug || zones.length === 0) return null
 
   return (
     <div className="flex flex-col gap-2">
