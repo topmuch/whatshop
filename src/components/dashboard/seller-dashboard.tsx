@@ -301,27 +301,30 @@ function SidebarContent({
   myShops: MyShop[]
   consolidatedStats: ConsolidatedStats | null
 }) {
-  const { dashboardTab, setDashboardTab, setUser, setShop, setView, shop } = useAppStore()
+  const { dashboardTab, setDashboardTab, setUser, setShop, setShops, setView, shop } = useAppStore()
   const { isDark, toggleTheme } = useThemeMode()
 
   async function handleLogout() {
     try {
-      const res = await fetch('/api/auth/session', { method: 'DELETE' })
+      const res = await fetch('/api/auth/logout', { method: 'POST' })
       if (res.ok) {
         setUser(null)
         setShop(null)
-        setView('landing')
-        window.history.replaceState(null, '', '/')
-        window.location.replace('/')
+        setShops([])
+        setView('login')
+        window.location.replace('/login')
         return
       }
     } catch { /* ignore */ }
+    // Fallback: clear cookies client-side and redirect to /login
     document.cookie = 'boutiko-user=; path=/; max-age=0'
+    document.cookie = 'boutiko-god-mode=; path=/; max-age=0'
+    document.cookie = 'boutiko-god-mode-user=; path=/; max-age=0'
     setUser(null)
     setShop(null)
-    setView('landing')
-    window.history.replaceState(null, '', '/')
-    window.location.replace('/')
+    setShops([])
+    setView('login')
+    window.location.replace('/login')
   }
 
   function handleShopChange(shopId: string) {

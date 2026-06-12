@@ -53,6 +53,11 @@ export function AuthLogin() {
       }
       setUser(data.user)
       if (data.shop) setShop(data.shop)
+
+      // Check for redirect param (set by middleware when user tried to access a protected route)
+      const params = new URLSearchParams(window.location.search)
+      const redirectUrl = params.get('redirect')
+
       if (data.user.role === 'ADMIN' || data.user.role === 'SUPER_ADMIN') {
         setView('admin')
         window.history.replaceState(null, '', '/admin')
@@ -60,6 +65,11 @@ export function AuthLogin() {
         // New seller without a shop → go to onboarding
         setView('onboarding')
         window.history.replaceState(null, '', '/onboarding')
+      } else if (redirectUrl && !redirectUrl.startsWith('/login') && !redirectUrl.startsWith('/register')) {
+        // Redirect to the page the user originally tried to access
+        setView('dashboard')
+        window.location.replace(redirectUrl)
+        return
       } else {
         setView('dashboard')
         window.history.replaceState(null, '', '/dashboard')

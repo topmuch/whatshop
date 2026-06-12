@@ -18,6 +18,23 @@ const APP_ROUTES = new Set([
   'p',
 ])
 
+// Routes that require authentication
+const PROTECTED_ROUTES = new Set([
+  'dashboard',
+  'admin',
+  'reseller',
+  'revendeur',
+  'onboarding',
+])
+
+// Auth routes — redirect authenticated users away
+const AUTH_ROUTES = new Set([
+  'login',
+  'connexion',
+  'inscription',
+  'register',
+])
+
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
@@ -33,6 +50,22 @@ export function proxy(request: NextRequest) {
   }
 
   const slug = pathname.slice(1).toLowerCase()
+
+  // ─── Route Protection ────────────────────────────────────────────
+  const isAuthenticated = !!request.cookies.get('boutiko-user')?.value
+
+  // Unauthenticated user accessing a protected route → redirect to /login
+  if (!isAuthenticated && PROTECTED_ROUTES.has(slug)) {
+    const loginUrl = request.nextUrl.clone()
+    loginUrl.pathname = '/login'
+    loginUrl.searchParams.set('redirect', pathname)
+    return NextResponse.redirect(loginUrl)
+  }
+
+  // Authenticated user accessing /login or /register → redirect to /dashboard
+  if (isAuthenticated && AUTH_ROUTES.has(slug)) {
+    return NextResponse.redirect(new URL('/dashboard', request.url))
+  }
 
   // Let Next.js handle known app routes (they have their own page.tsx)
   if (APP_ROUTES.has(slug)) {

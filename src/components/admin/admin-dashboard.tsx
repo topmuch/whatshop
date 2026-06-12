@@ -408,28 +408,23 @@ function AdminSidebarContent() {
 
   async function handleLogout() {
     try {
-      const res = await fetch('/api/auth/session', { method: 'DELETE' })
+      const res = await fetch('/api/auth/logout', { method: 'POST' })
       if (res.ok) {
-        // Clear non-httpOnly cookies client-side as well
-        document.cookie = 'boutiko-god-mode-user=; path=/; max-age=0'
-        // Reset Zustand state
         setUser(null)
         setShop(null)
-        setView('landing')
-        window.history.replaceState(null, '', '/')
-        window.location.replace('/')
+        setView('login')
+        window.location.replace('/login')
         return
       }
     } catch { /* ignore */ }
-    // Fallback: clear cookies client-side and redirect anyway
+    // Fallback: clear cookies client-side and redirect to /login
     document.cookie = 'boutiko-user=; path=/; max-age=0'
     document.cookie = 'boutiko-god-mode=; path=/; max-age=0'
     document.cookie = 'boutiko-god-mode-user=; path=/; max-age=0'
     setUser(null)
     setShop(null)
-    setView('landing')
-    window.history.replaceState(null, '', '/')
-    window.location.replace('/')
+    setView('login')
+    window.location.replace('/login')
   }
 
   return (

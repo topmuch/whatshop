@@ -173,13 +173,24 @@ export default function Home() {
               // Route based on role
               if (data.user.role === 'ADMIN' || data.user.role === 'SUPER_ADMIN') {
                 setView('admin')
+                if (urlView.view === 'login' || urlView.view === 'register') {
+                  window.history.replaceState(null, '', '/admin')
+                }
               } else if (data.user.role === 'RESELLER') {
                 setView('reseller')
-                window.history.replaceState(null, '', '/reseller')
+                if (urlView.view === 'login' || urlView.view === 'register') {
+                  window.history.replaceState(null, '', '/reseller')
+                } else {
+                  window.history.replaceState(null, '', '/reseller')
+                }
               } else if (!data.shop || (data.shops && data.shops.length === 0)) {
                 // Seller without shops → onboarding
                 setView('onboarding')
                 window.history.replaceState(null, '', '/onboarding')
+              } else if (urlView.view === 'login' || urlView.view === 'register') {
+                // Authenticated user on login/register → redirect to dashboard
+                setView('dashboard')
+                window.history.replaceState(null, '', '/dashboard')
               } else if (urlView.view === 'onboarding') {
                 // User has shops but is on onboarding URL → go to dashboard
                 setView('dashboard')
