@@ -49,21 +49,6 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { ShippingZonesManager } from './shipping-zones-manager'
-import { TemplateCustomization } from './template-customization'
-
-const templateOptions = [
-  { id: 'minimal', name: 'Classique', description: 'Épuré et professionnel', color: '#18181b', gradient: 'linear-gradient(135deg, #18181b, #52525b)' },
-  { id: 'luxe-fashion', name: 'Luxe Fashion', description: 'Glassmorphism & or', color: '#D4AF37', gradient: 'linear-gradient(135deg, #D4AF37, #FFE5E5)' },
-  { id: 'tiktok-live', name: 'TikTok Live', description: 'Urgence & conversion', color: '#FF0050', gradient: 'linear-gradient(135deg, #FF0050, #FE2C55)' },
-  { id: 'beauty-premium', name: 'Beauty Premium', description: 'Rose gold & confiance', color: '#B76E79', gradient: 'linear-gradient(135deg, #B76E79, #DCAE96)' },
-  { id: 'jameela', name: 'Beauté', description: 'Luxe et élégance', color: '#C8A882', gradient: 'linear-gradient(135deg, #C8A882, #C9788F)' },
-  { id: 'rose', name: 'Mode', description: 'Doux et tendance', color: '#EC4899', gradient: 'linear-gradient(135deg, #EC4899, #F9A8D4)' },
-  { id: 'ocean', name: 'Tech', description: 'Moderne et frais', color: '#0891B2', gradient: 'linear-gradient(135deg, #0891B2, #06B6D4)' },
-  { id: 'xstore-electro', name: 'Electro', description: 'Tech moderne', color: '#0066FF', gradient: 'linear-gradient(135deg, #0066FF, #0052CC)' },
-  { id: 'xstore-grocery', name: 'Épicerie', description: 'Fraîcheur alimentaire', color: '#00A651', gradient: 'linear-gradient(135deg, #00A651, #16A34A)' },
-  { id: 'sunset', name: 'Flash Live', description: 'Énergie vibrante', color: '#F97316', gradient: 'linear-gradient(135deg, #F97316, #EF4444)' },
-  { id: 'cosmika-beauty', name: 'Cosmika Beauty', description: 'Rose, noir & élégance', color: '#E11D48', gradient: 'linear-gradient(135deg, #E11D48, #1C1917)' },
-] as const
 
 const planLimits = {
   FREE: { products: 10, price: '0 FCFA/mois', features: { categories: true, orders: true, whatsapp: true, customLogo: false, analytics: false } },
@@ -1611,113 +1596,6 @@ export function DashboardSettings() {
           )}
         </CardContent>
       </Card>
-
-      {/* Template de la boutique */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Palette className="h-5 w-5 text-primary" />
-            Template de la boutique
-          </CardTitle>
-          <CardDescription>
-            Choisissez un template pour personnaliser l&apos;apparence de votre boutique.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Template grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {templateOptions.map((opt) => {
-              const isActive = template === opt.id
-              return (
-                <button
-                  key={opt.id}
-                  type="button"
-                  onClick={() => {
-                    setTemplate(opt.id)
-                    setAccentColor(opt.color)
-                  }}
-                  className={`relative flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all duration-200 cursor-pointer ${
-                    isActive
-                      ? 'border-primary shadow-md bg-primary/5'
-                      : 'border-muted hover:border-muted-foreground/30 hover:bg-muted/30'
-                  }`}
-                >
-                  {/* Colored preview box */}
-                  <div
-                    className="w-12 h-12 rounded-lg flex-shrink-0 shadow-sm"
-                    style={{ background: opt.gradient }}
-                  />
-                  {/* Name */}
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-semibold ${isActive ? 'text-primary' : 'text-foreground'}`}>{
-                      opt.name
-                    }</p>
-                    <p className="text-xs text-muted-foreground">{opt.description}</p>
-                  </div>
-                  {/* Selected indicator */}
-                  {isActive && (
-                    <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                      <Check className="h-3 w-3 text-primary-foreground" />
-                    </div>
-                  )}
-                </button>
-              )
-            })}
-          </div>
-
-          <Separator />
-
-          {/* Color customization */}
-          <div className="space-y-3">
-            <Label className="text-sm font-medium">Couleur d&apos;accent</Label>
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <input
-                  type="color"
-                  value={accentColor}
-                  onChange={(e) => setAccentColor(e.target.value)}
-                  className="w-10 h-10 rounded-lg border border-muted cursor-pointer appearance-none bg-transparent [&::-webkit-color-swatch-wrapper]:p-0.5 [&::-webkit-color-swatch]:rounded-md [&::-webkit-color-swatch]:border-none"
-                />
-              </div>
-              <Input
-                value={accentColor}
-                onChange={(e) => {
-                  const val = e.target.value
-                  if (/^#[0-9A-Fa-f]{0,6}$/.test(val)) {
-                    setAccentColor(val)
-                  }
-                }}
-                placeholder="#25D366"
-                maxLength={7}
-                className="flex-1 h-10 font-mono text-sm"
-              />
-            </div>
-            {/* Live preview */}
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-muted-foreground">Aperçu :</span>
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-md" style={{ backgroundColor: accentColor }} />
-                <div className="h-2 w-16 rounded-full" style={{ backgroundColor: accentColor, opacity: 0.6 }} />
-                <div className="h-2 w-10 rounded-full" style={{ backgroundColor: accentColor, opacity: 0.3 }} />
-              </div>
-            </div>
-          </div>
-
-          <Button onClick={handleSave} disabled={saving} className="gap-2">
-            {saving ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Check className="h-4 w-4" />
-            )}
-            Enregistrer le template
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Cosmika Beauty Template Customization */}
-      {template === 'cosmika-beauty' && shop && (
-        <TemplateCustomization shopSlug={shop.slug} />
-      )}
 
       {/* SEO & Référencement */}
       <Card>

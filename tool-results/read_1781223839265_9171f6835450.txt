@@ -1,0 +1,798 @@
+     1→'use client'
+     2→
+     3→import { useAppStore, type DashboardTab } from '@/lib/store'
+     4→import { useEffect, useState, useCallback } from 'react'
+     5→import { Button } from '@/components/ui/button'
+     6→import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
+     7→import { ScrollArea } from '@/components/ui/scroll-area'
+     8→import { Separator } from '@/components/ui/separator'
+     9→import {
+    10→  Dialog,
+    11→  DialogContent,
+    12→  DialogHeader,
+    13→  DialogTitle,
+    14→  DialogFooter,
+    15→} from '@/components/ui/dialog'
+    16→import { Input } from '@/components/ui/input'
+    17→import { Label } from '@/components/ui/label'
+    18→import {
+    19→  Select,
+    20→  SelectContent,
+    21→  SelectItem,
+    22→  SelectTrigger,
+    23→  SelectValue,
+    24→} from '@/components/ui/select'
+    25→import { Badge } from '@/components/ui/badge'
+    26→import {
+    27→  Tooltip,
+    28→  TooltipTrigger,
+    29→  TooltipContent,
+    30→} from '@/components/ui/tooltip'
+    31→import { Card, CardContent } from '@/components/ui/card'
+    32→import {
+    33→  LayoutDashboard,
+    34→  Package,
+    35→  Tags,
+    36→  ShoppingCart,
+    37→  Settings,
+    38→  LogOut,
+    39→  Menu,
+    40→  Store,
+    41→  Sparkles,
+    42→  Sun,
+    43→  Moon,
+    44→  Radio,
+    45→  Plus,
+    46→  Megaphone,
+    47→  Crown,
+    48→} from 'lucide-react'
+    49→import { useThemeMode } from '@/lib/use-theme'
+    50→import { DashboardOverview } from './dashboard-overview'
+    51→import { DashboardProducts } from './dashboard-products'
+    52→import { DashboardCategories } from './dashboard-categories'
+    53→import { DashboardOrders } from './dashboard-orders'
+    54→import { DashboardSettings } from './dashboard-settings'
+    55→import { DashboardAiTools } from './dashboard-ai-tools'
+    56→import { DashboardLive } from './dashboard-live'
+    57→import { MarketingKit } from './marketing-kit'
+    58→import { toast } from 'sonner'
+    59→
+    60→/* ------------------------------------------------------------------ */
+    61→/*  Types                                                              */
+    62→/* ------------------------------------------------------------------ */
+    63→
+    64→interface MyShop {
+    65→  id: string
+    66→  name: string
+    67→  slug: string
+    68→  description?: string
+    69→  logo?: string
+    70→  banner?: string
+    71→  whatsapp: string
+    72→  plan: string
+    73→  template: string
+    74→  isActive: boolean
+    75→  sector?: string
+    76→  createdAt: string
+    77→  primaryColor?: string
+    78→  secondaryColor?: string
+    79→  _count: { products: number; orders: number; visits: number }
+    80→}
+    81→
+    82→interface ConsolidatedStats {
+    83→  shopCount: number
+    84→  totalProducts: number
+    85→  totalOrders: number
+    86→  totalVisits: number
+    87→  pendingOrders: number
+    88→  shops: { id: string }[]
+    89→  subscription: {
+    90→    planType: string
+    91→    planLabel: string
+    92→    status: string
+    93→    maxShops: number
+    94→    canCreateShop: boolean
+    95→  }
+    96→}
+    97→
+    98→/* ------------------------------------------------------------------ */
+    99→/*  Nav items (unchanged)                                              */
+   100→/* ------------------------------------------------------------------ */
+   101→
+   102→const navItems: { id: DashboardTab; label: string; icon: React.ReactNode }[] = [
+   103→  { id: 'overview', label: "Vue d'ensemble", icon: <LayoutDashboard className="h-5 w-5" /> },
+   104→  { id: 'products', label: 'Produits', icon: <Package className="h-5 w-5" /> },
+   105→  { id: 'categories', label: 'Catégories', icon: <Tags className="h-5 w-5" /> },
+   106→  { id: 'orders', label: 'Commandes', icon: <ShoppingCart className="h-5 w-5" /> },
+   107→  { id: 'live', label: 'Live TikTok', icon: <Radio className="h-5 w-5" /> },
+   108→  { id: 'ai-tools', label: 'Outils IA', icon: <Sparkles className="h-5 w-5" /> },
+   109→  { id: 'marketing-kit', label: 'Kit Marketing', icon: <Megaphone className="h-5 w-5" /> },
+   110→  { id: 'settings', label: 'Paramètres', icon: <Settings className="h-5 w-5" /> },
+   111→]
+   112→
+   113→/* ------------------------------------------------------------------ */
+   114→/*  Consolidated stats bar (shown at top of main content on overview)   */
+   115→/* ------------------------------------------------------------------ */
+   116→
+   117→function ConsolidatedStatsBar({ stats }: { stats: ConsolidatedStats | null }) {
+   118→  if (!stats) return null
+   119→
+   120→  const cards = [
+   121→    {
+   122→      label: 'Boutiques',
+   123→      value: `${stats.shopCount} / ${stats.subscription.maxShops}`,
+   124→      icon: <Store className="h-5 w-5" />,
+   125→      accent: 'text-pink-600 dark:text-pink-400',
+   126→    },
+   127→    {
+   128→      label: 'Produits',
+   129→      value: stats.totalProducts.toLocaleString('fr-FR'),
+   130→      icon: <Package className="h-5 w-5" />,
+   131→      accent: 'text-amber-600 dark:text-amber-400',
+   132→    },
+   133→    {
+   134→      label: 'Commandes',
+   135→      value: stats.totalOrders.toLocaleString('fr-FR'),
+   136→      icon: <ShoppingCart className="h-5 w-5" />,
+   137→      accent: 'text-emerald-600 dark:text-emerald-400',
+   138→    },
+   139→    {
+   140→      label: 'Visites',
+   141→      value: stats.totalVisits.toLocaleString('fr-FR'),
+   142→      icon: <LayoutDashboard className="h-5 w-5" />,
+   143→      accent: 'text-sky-600 dark:text-sky-400',
+   144→    },
+   145→  ]
+   146→
+   147→  return (
+   148→    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+   149→      {cards.map((c) => (
+   150→        <div
+   151→          key={c.label}
+   152→          className="rounded-xl border bg-card p-4 flex items-center gap-3 shadow-sm"
+   153→        >
+   154→          <div className={`${c.accent}`}>{c.icon}</div>
+   155→          <div className="min-w-0">
+   156→            <p className="text-xs text-muted-foreground">{c.label}</p>
+   157→            <p className="text-lg font-semibold truncate">{c.value}</p>
+   158→          </div>
+   159→        </div>
+   160→      ))}
+   161→      {stats.pendingOrders > 0 && (
+   162→        <Badge variant="secondary" className="col-span-2 lg:col-span-4 w-fit text-xs">
+   163→          {stats.pendingOrders} commande(s) en attente
+   164→        </Badge>
+   165→      )}
+   166→    </div>
+   167→  )
+   168→}
+   169→
+   170→/* ------------------------------------------------------------------ */
+   171→/*  Create Shop Dialog                                                  */
+   172→/* ------------------------------------------------------------------ */
+   173→
+   174→function CreateShopDialog({
+   175→  open,
+   176→  onOpenChange,
+   177→  onCreated,
+   178→}: {
+   179→  open: boolean
+   180→  onOpenChange: (open: boolean) => void
+   181→  onCreated: (shop: MyShop) => void
+   182→}) {
+   183→  const [name, setName] = useState('')
+   184→  const [slug, setSlug] = useState('')
+   185→  const [whatsapp, setWhatsapp] = useState('')
+   186→  const [submitting, setSubmitting] = useState(false)
+   187→
+   188→  // Reset form when dialog opens
+   189→  useEffect(() => {
+   190→    if (open) {
+   191→      setName('')
+   192→      setSlug('')
+   193→      setWhatsapp('')
+   194→    }
+   195→  }, [open])
+   196→
+   197→  // Auto-generate slug from name
+   198→  function handleNameChange(value: string) {
+   199→    setName(value)
+   200→    setSlug(
+   201→      value
+   202→        .toLowerCase()
+   203→        .trim()
+   204→        .replace(/[^a-z0-9àâäéèêëïîôùûüÿçœæ\s-]/g, '')
+   205→        .replace(/\s+/g, '-')
+   206→    )
+   207→  }
+   208→
+   209→  async function handleSubmit(e: React.FormEvent) {
+   210→    e.preventDefault()
+   211→    if (!name.trim() || !slug.trim() || !whatsapp.trim()) return
+   212→
+   213→    setSubmitting(true)
+   214→    try {
+   215→      const res = await fetch('/api/shops', {
+   216→        method: 'POST',
+   217→        headers: { 'Content-Type': 'application/json' },
+   218→        body: JSON.stringify({ name: name.trim(), slug: slug.trim(), whatsapp: whatsapp.trim() }),
+   219→      })
+   220→
+   221→      if (!res.ok) {
+   222→        const data = await res.json().catch(() => ({}))
+   223→        throw new Error(data.error || data.message || 'Erreur lors de la création')
+   224→      }
+   225→
+   226→      const newShop = await res.json()
+   227→      toast.success(`Boutique "${newShop.name}" créée avec succès !`)
+   228→      onOpenChange(false)
+   229→      onCreated(newShop)
+   230→    } catch (err) {
+   231→      toast.error(err instanceof Error ? err.message : 'Erreur lors de la création')
+   232→    } finally {
+   233→      setSubmitting(false)
+   234→    }
+   235→  }
+   236→
+   237→  return (
+   238→    <Dialog open={open} onOpenChange={onOpenChange}>
+   239→      <DialogContent>
+   240→        <DialogHeader>
+   241→          <DialogTitle>Créer une boutique</DialogTitle>
+   242→        </DialogHeader>
+   243→        <form onSubmit={handleSubmit} className="flex flex-col gap-4 py-2">
+   244→          <div className="flex flex-col gap-2">
+   245→            <Label htmlFor="shop-name">Nom de la boutique</Label>
+   246→            <Input
+   247→              id="shop-name"
+   248→              placeholder="Ex: Ma Belle Boutique"
+   249→              value={name}
+   250→              onChange={(e) => handleNameChange(e.target.value)}
+   251→              required
+   252→              disabled={submitting}
+   253→            />
+   254→          </div>
+   255→          <div className="flex flex-col gap-2">
+   256→            <Label htmlFor="shop-slug">Identifiant (slug)</Label>
+   257→            <Input
+   258→              id="shop-slug"
+   259→              placeholder="ma-belle-boutique"
+   260→              value={slug}
+   261→              onChange={(e) => setSlug(e.target.value)}
+   262→              required
+   263→              disabled={submitting}
+   264→            />
+   265→            <p className="text-xs text-muted-foreground">
+   266→              Utilisé dans l&apos;URL de votre boutique. Lettres minuscules, chiffres et tirets uniquement.
+   267→            </p>
+   268→          </div>
+   269→          <div className="flex flex-col gap-2">
+   270→            <Label htmlFor="shop-whatsapp">Numéro WhatsApp</Label>
+   271→            <Input
+   272→              id="shop-whatsapp"
+   273→              type="tel"
+   274→              placeholder="+225 07 XX XX XX XX"
+   275→              value={whatsapp}
+   276→              onChange={(e) => setWhatsapp(e.target.value)}
+   277→              required
+   278→              disabled={submitting}
+   279→            />
+   280→          </div>
+   281→          <DialogFooter className="pt-2">
+   282→            <Button
+   283→              type="button"
+   284→              variant="outline"
+   285→              onClick={() => onOpenChange(false)}
+   286→              disabled={submitting}
+   287→            >
+   288→              Annuler
+   289→            </Button>
+   290→            <Button type="submit" disabled={submitting || !name.trim() || !slug.trim() || !whatsapp.trim()}>
+   291→              {submitting ? 'Création...' : 'Créer'}
+   292→            </Button>
+   293→          </DialogFooter>
+   294→        </form>
+   295→      </DialogContent>
+   296→    </Dialog>
+   297→  )
+   298→}
+   299→
+   300→/* ------------------------------------------------------------------ */
+   301→/*  Sidebar Content (shared between desktop sidebar & mobile sheet)   */
+   302→/* ------------------------------------------------------------------ */
+   303→
+   304→function SidebarContent({
+   305→  myShops,
+   306→  consolidatedStats,
+   307→  onCreateShopClick,
+   308→}: {
+   309→  myShops: MyShop[]
+   310→  consolidatedStats: ConsolidatedStats | null
+   311→  onCreateShopClick: () => void
+   312→}) {
+   313→  const { dashboardTab, setDashboardTab, setUser, setShop, setView, shop } = useAppStore()
+   314→  const { isDark, toggleTheme } = useThemeMode()
+   315→
+   316→  async function handleLogout() {
+   317→    try {
+   318→      const res = await fetch('/api/auth/session', { method: 'DELETE' })
+   319→      if (res.ok) {
+   320→        setUser(null)
+   321→        setShop(null)
+   322→        setView('landing')
+   323→        window.history.replaceState(null, '', '/')
+   324→        window.location.replace('/')
+   325→        return
+   326→      }
+   327→    } catch { /* ignore */ }
+   328→    document.cookie = 'boutiko-user=; path=/; max-age=0'
+   329→    setUser(null)
+   330→    setShop(null)
+   331→    setView('landing')
+   332→    window.history.replaceState(null, '', '/')
+   333→    window.location.replace('/')
+   334→  }
+   335→
+   336→  function handleShopChange(shopId: string) {
+   337→    const selected = myShops.find((s) => s.id === shopId)
+   338→    if (selected) {
+   339→      setShop({
+   340→        id: selected.id,
+   341→        name: selected.name,
+   342→        slug: selected.slug,
+   343→        description: selected.description,
+   344→        logo: selected.logo,
+   345→        banner: selected.banner,
+   346→        whatsapp: selected.whatsapp,
+   347→        plan: selected.plan,
+   348→        template: selected.template,
+   349→        isActive: selected.isActive,
+   350→        sector: selected.sector,
+   351→        primaryColor: selected.primaryColor,
+   352→        secondaryColor: selected.secondaryColor,
+   353→      })
+   354→    }
+   355→  }
+   356→
+   357→  const canCreateShop = consolidatedStats?.subscription.canCreateShop ?? true
+   358→
+   359→  const createShopButton = canCreateShop ? (
+   360→    <Button
+   361→      variant="ghost"
+   362→      className="w-full justify-start gap-3 h-11 px-3 text-white/70 hover:text-white hover:bg-white/10"
+   363→      onClick={onCreateShopClick}
+   364→    >
+   365→      <Plus className="h-5 w-5" />
+   366→      <span>Créer une boutique</span>
+   367→    </Button>
+   368→  ) : (
+   369→    <Tooltip>
+   370→      <TooltipTrigger asChild>
+   371→        <Button
+   372→          variant="ghost"
+   373→          className="w-full justify-start gap-3 h-11 px-3 text-white/40 cursor-not-allowed"
+   374→          disabled
+   375→        >
+   376→          <Plus className="h-5 w-5" />
+   377→          <span>Créer une boutique</span>
+   378→        </Button>
+   379→      </TooltipTrigger>
+   380→      <TooltipContent side="right" sideOffset={8}>
+   381→        Limite atteinte. Passez au plan supérieur.
+   382→      </TooltipContent>
+   383→    </Tooltip>
+   384→  )
+   385→
+   386→  return (
+   387→    <div className="flex flex-col h-full">
+   388→      {/* Logo */}
+   389→      <div className="flex items-center gap-2 px-6 py-5">
+   390→        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/20 text-white">
+   391→          <Store className="h-5 w-5" />
+   392→        </div>
+   393→        <span className="text-lg font-bold text-white">Boutiko</span>
+   394→      </div>
+   395→
+   396→      <Separator className="bg-white/15" />
+   397→
+   398→      {/* Shop Selector */}
+   399→      {myShops.length > 0 && (
+   400→        <div className="px-3 py-3">
+   401→          <Select value={shop?.id ?? ''} onValueChange={handleShopChange}>
+   402→            <SelectTrigger className="w-full bg-white/15 border-white/20 text-white hover:bg-white/20 data-[placeholder]:text-white/60 [&_svg]:text-white/70 focus-visible:ring-white/30">
+   403→              <SelectValue placeholder="Sélectionner..." />
+   404→            </SelectTrigger>
+   405→            <SelectContent>
+   406→              {myShops.map((s) => (
+   407→                <SelectItem key={s.id} value={s.id}>
+   408→                  <div className="flex items-center gap-2">
+   409→                    <span className="truncate max-w-[160px]">{s.name}</span>
+   410→                    {s.isActive ? (
+   411→                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+   412→                        Actif
+   413→                      </Badge>
+   414→                    ) : (
+   415→                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">
+   416→                        Inactif
+   417→                      </Badge>
+   418→                    )}
+   419→                  </div>
+   420→                </SelectItem>
+   421→              ))}
+   422→            </SelectContent>
+   423→          </Select>
+   424→        </div>
+   425→      )}
+   426→
+   427→      <Separator className="bg-white/15" />
+   428→
+   429→      {/* Navigation */}
+   430→      <ScrollArea className="flex-1 px-3 py-2">
+   431→        <nav className="flex flex-col gap-1">
+   432→          {navItems
+   433→            .filter((item) => {
+   434→              if (consolidatedStats?.subscription.planType === 'STARTER') {
+   435→                return item.id !== 'live' && item.id !== 'ai-tools'
+   436→              }
+   437→              return true
+   438→            })
+   439→            .map((item) => (
+   440→            <Button
+   441→              key={item.id}
+   442→              variant={dashboardTab === item.id ? 'secondary' : 'ghost'}
+   443→              className={`w-full justify-start gap-3 h-11 px-3 ${
+   444→                dashboardTab === item.id
+   445→                  ? 'bg-white/20 text-white font-medium hover:bg-white/25'
+   446→                  : 'text-white/70 hover:text-white hover:bg-white/10'
+   447→              }`}
+   448→              onClick={() => setDashboardTab(item.id)}
+   449→            >
+   450→              {item.icon}
+   451→              <span>{item.label}</span>
+   452→            </Button>
+   453→          ))}
+   454→        </nav>
+   455→      </ScrollArea>
+   456→
+   457→      <Separator className="bg-white/15" />
+   458→
+   459→      {/* Create shop button */}
+   460→      <div className="px-3 py-2">{createShopButton}</div>
+   461→
+   462→      <Separator className="bg-white/15" />
+   463→
+   464→      {/* Theme Toggle */}
+   465→      <div className="px-3 py-2">
+   466→        <Button
+   467→          variant="ghost"
+   468→          className="w-full justify-start gap-3 h-11 px-3 text-white/70 hover:text-white hover:bg-white/10"
+   469→          onClick={toggleTheme}
+   470→        >
+   471→          {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+   472→          <span>{isDark ? 'Mode clair' : 'Mode sombre'}</span>
+   473→        </Button>
+   474→      </div>
+   475→
+   476→      <Separator className="bg-white/15" />
+   477→
+   478→      {/* Logout */}
+   479→      <div className="px-3 py-4">
+   480→        <Button
+   481→          variant="ghost"
+   482→          className="w-full justify-start gap-3 h-11 px-3 text-white/70 hover:text-red-200 hover:bg-white/10"
+   483→          onClick={handleLogout}
+   484→        >
+   485→          <LogOut className="h-5 w-5" />
+   486→          <span>Déconnexion</span>
+   487→        </Button>
+   488→      </div>
+   489→    </div>
+   490→  )
+   491→}
+   492→
+   493→/* ------------------------------------------------------------------ */
+   494→/*  Upgrade Prompt (for locked features)                                */
+   495→/* ------------------------------------------------------------------ */
+   496→
+   497→function UpgradePrompt({ feature, plan }: { feature: string; plan: string }) {
+   498→  return (
+   499→    <Card className="max-w-md mx-auto mt-12">
+   500→      <CardContent className="flex flex-col items-center text-center py-12 gap-4">
+   501→        <div className="w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+   502→          <Crown className="h-8 w-8 text-amber-600 dark:text-amber-400" />
+   503→        </div>
+   504→        <h2 className="text-xl font-bold">Fonctionnalité premium</h2>
+   505→        <p className="text-muted-foreground">
+   506→          {feature} est disponible à partir du plan {plan}.
+   507→        </p>
+   508→        <Button onClick={() => window.location.href = '/tarifs'} className="gap-2">
+   509→          <Crown className="h-4 w-4" />
+   510→          Voir les offres
+   511→        </Button>
+   512→      </CardContent>
+   513→    </Card>
+   514→  )
+   515→}
+   516→
+   517→/* ------------------------------------------------------------------ */
+   518→/*  Dashboard Content (tab rendering)                                   */
+   519→/* ------------------------------------------------------------------ */
+   520→
+   521→function DashboardContent({ consolidatedStats }: { consolidatedStats: ConsolidatedStats | null }) {
+   522→  const { dashboardTab, shop } = useAppStore()
+   523→
+   524→  if (!shop) {
+   525→    return null
+   526→  }
+   527→
+   528→  switch (dashboardTab) {
+   529→    case 'overview':
+   530→      return (
+   531→        <>
+   532→          <ConsolidatedStatsBar stats={consolidatedStats} />
+   533→          <DashboardOverview />
+   534→        </>
+   535→      )
+   536→    case 'products':
+   537→      return <DashboardProducts />
+   538→    case 'categories':
+   539→      return <DashboardCategories />
+   540→    case 'orders':
+   541→      return <DashboardOrders />
+   542→    case 'live':
+   543→      if (consolidatedStats?.subscription.planType === 'STARTER') {
+   544→        return <UpgradePrompt feature="Live TikTok" plan="Pro" />
+   545→      }
+   546→      return <DashboardLive />
+   547→    case 'settings':
+   548→      return <DashboardSettings />
+   549→    case 'ai-tools':
+   550→      if (consolidatedStats?.subscription.planType === 'STARTER') {
+   551→        return <UpgradePrompt feature="Outils IA" plan="Pro" />
+   552→      }
+   553→      return <DashboardAiTools />
+   554→    case 'marketing-kit':
+   555→      return <MarketingKit />
+   556→    default:
+   557→      return (
+   558→        <>
+   559→          <ConsolidatedStatsBar stats={consolidatedStats} />
+   560→          <DashboardOverview />
+   561→        </>
+   562→      )
+   563→  }
+   564→}
+   565→
+   566→/* ------------------------------------------------------------------ */
+   567→/*  Main Exported Component                                            */
+   568→/* ------------------------------------------------------------------ */
+   569→
+   570→export function SellerDashboard() {
+   571→  const { user, shop, setUser, setView, setShop } = useAppStore()
+   572→  const [mobileOpen, setMobileOpen] = useState(false)
+   573→  const [loading, setLoading] = useState(true)
+   574→  const [myShops, setMyShops] = useState<MyShop[]>([])
+   575→  const [consolidatedStats, setConsolidatedStats] = useState<ConsolidatedStats | null>(null)
+   576→  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+   577→  const { isDark, toggleTheme } = useThemeMode()
+   578→
+   579→  const fetchMyShops = useCallback(async () => {
+   580→    try {
+   581→      const res = await fetch('/api/shops/my-shops')
+   582→      if (res.ok) {
+   583→        const data = await res.json()
+   584→        setMyShops(Array.isArray(data) ? data : data.shops ?? [])
+   585→      }
+   586→    } catch {
+   587→      // Silently fail — shops list is non-critical
+   588→    }
+   589→  }, [])
+   590→
+   591→  const fetchMyStats = useCallback(async () => {
+   592→    try {
+   593→      const res = await fetch('/api/shops/my-stats')
+   594→      if (res.ok) {
+   595→        const data = await res.json()
+   596→        setConsolidatedStats(data)
+   597→      }
+   598→    } catch {
+   599→      // Silently fail
+   600→    }
+   601→  }, [])
+   602→
+   603→  // Initial session load
+   604→  useEffect(() => {
+   605→    let cancelled = false
+   606→    async function loadSession() {
+   607→      try {
+   608→        const res = await fetch('/api/auth/session')
+   609→        if (res.ok && !cancelled) {
+   610→          const data = await res.json()
+   611→          if (data.user) {
+   612→            setUser(data.user)
+   613→            if (data.shop) {
+   614→              setShop(data.shop)
+   615→            } else {
+   616→              // Seller without a shop → redirect to onboarding wizard
+   617→              setView('onboarding')
+   618→              window.history.replaceState(null, '', '/onboarding')
+   619→            }
+   620→          } else {
+   621→            setView('landing')
+   622→          }
+   623→        }
+   624→      } catch {
+   625→        // Error fetching session
+   626→      } finally {
+   627→        if (!cancelled) setLoading(false)
+   628→      }
+   629→    }
+   630→    if (user && shop) {
+   631→      setLoading(false)
+   632→    } else {
+   633→      loadSession()
+   634→    }
+   635→    return () => { cancelled = true }
+   636→  }, [])
+   637→
+   638→  // Fetch shops & stats once session is ready
+   639→  useEffect(() => {
+   640→    if (!loading && user) {
+   641→      fetchMyShops()
+   642→      fetchMyStats()
+   643→    }
+   644→  }, [loading, user, fetchMyShops, fetchMyStats])
+   645→
+   646→  // If user has no shop after session fetch, onboarding redirect should have kicked in
+   647→  if (user && !shop) {
+   648→    setView('onboarding')
+   649→    window.history.replaceState(null, '', '/onboarding')
+   650→    return null
+   651→  }
+   652→
+   653→  // Handle new shop created
+   654→  async function handleShopCreated(newShop: MyShop) {
+   655→    // Refresh both lists
+   656→    await Promise.all([fetchMyShops(), fetchMyStats()])
+   657→    // Switch to the newly created shop
+   658→    setShop({
+   659→      id: newShop.id,
+   660→      name: newShop.name,
+   661→      slug: newShop.slug,
+   662→      description: newShop.description,
+   663→      logo: newShop.logo,
+   664→      banner: newShop.banner,
+   665→      whatsapp: newShop.whatsapp,
+   666→      plan: newShop.plan,
+   667→      template: newShop.template,
+   668→      isActive: newShop.isActive,
+   669→      sector: newShop.sector,
+   670→      primaryColor: newShop.primaryColor,
+   671→      secondaryColor: newShop.secondaryColor,
+   672→    })
+   673→  }
+   674→
+   675→  // Build sidebar props
+   676→  const sidebarProps = {
+   677→    myShops,
+   678→    consolidatedStats,
+   679→    onCreateShopClick: () => setCreateDialogOpen(true),
+   680→  }
+   681→
+   682→  if (loading) {
+   683→    return (
+   684→      <div className="min-h-screen flex items-center justify-center bg-muted/30">
+   685→        <div className="flex flex-col items-center gap-3">
+   686→          <div className="w-10 h-10 border-4 border-pink-500 border-t-transparent rounded-full animate-spin" />
+   687→          <p className="text-sm text-muted-foreground">Boutiko</p>
+   688→        </div>
+   689→      </div>
+   690→    )
+   691→  }
+   692→
+   693→  return (
+   694→    <>
+   695→      <div className="min-h-screen flex bg-muted/30">
+   696→        {/* Desktop sidebar */}
+   697→        <aside className="hidden lg:flex lg:w-64 lg:flex-col bg-gradient-to-b from-pink-500 to-pink-700 border-r border-pink-400/30 min-h-screen sticky top-0">
+   698→          <SidebarContent {...sidebarProps} />
+   699→        </aside>
+   700→
+   701→        {/* Mobile + Main area */}
+   702→        <div className="flex-1 flex flex-col min-h-screen">
+   703→          {/* Mobile header */}
+   704→          <header className="lg:hidden h-14 bg-card border-b flex items-center gap-3 px-4 sticky top-0 z-40">
+   705→            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+   706→              <SheetTrigger asChild>
+   707→                <Button variant="ghost" size="icon" className="h-9 w-9">
+   708→                  <Menu className="h-5 w-5" />
+   709→                </Button>
+   710→              </SheetTrigger>
+   711→              <SheetContent side="left" className="w-64 p-0 bg-gradient-to-b from-pink-500 to-pink-700 border-r border-pink-400/30">
+   712→                <SidebarContent {...sidebarProps} />
+   713→              </SheetContent>
+   714→            </Sheet>
+   715→
+   716→            {/* Mobile shop selector dropdown */}
+   717→            {myShops.length > 1 ? (
+   718→              <Select
+   719→                value={shop?.id ?? ''}
+   720→                onValueChange={(shopId) => {
+   721→                  const selected = myShops.find((s) => s.id === shopId)
+   722→                  if (selected) {
+   723→                    setShop({
+   724→                      id: selected.id,
+   725→                      name: selected.name,
+   726→                      slug: selected.slug,
+   727→                      description: selected.description,
+   728→                      logo: selected.logo,
+   729→                      banner: selected.banner,
+   730→                      whatsapp: selected.whatsapp,
+   731→                      plan: selected.plan,
+   732→                      template: selected.template,
+   733→                      isActive: selected.isActive,
+   734→                      sector: selected.sector,
+   735→                      primaryColor: selected.primaryColor,
+   736→                      secondaryColor: selected.secondaryColor,
+   737→                    })
+   738→                  }
+   739→                }}
+   740→              >
+   741→                <SelectTrigger size="sm" className="flex-1 max-w-[200px]">
+   742→                  <div className="flex items-center gap-2 overflow-hidden">
+   743→                    <Store className="h-4 w-4 shrink-0 text-pink-500" />
+   744→                    <SelectValue placeholder="Boutique" />
+   745→                  </div>
+   746→                </SelectTrigger>
+   747→                <SelectContent>
+   748→                  {myShops.map((s) => (
+   749→                    <SelectItem key={s.id} value={s.id}>
+   750→                      <span className="truncate max-w-[160px]">{s.name}</span>
+   751→                    </SelectItem>
+   752→                  ))}
+   753→                </SelectContent>
+   754→              </Select>
+   755→            ) : (
+   756→              <div className="flex items-center gap-2 overflow-hidden">
+   757→                <div className="flex items-center justify-center w-7 h-7 rounded-md bg-pink-500 text-primary-foreground shrink-0">
+   758→                  <Store className="h-4 w-4" />
+   759→                </div>
+   760→                <span className="font-semibold text-sm truncate">{shop?.name || 'Boutiko'}</span>
+   761→              </div>
+   762→            )}
+   763→
+   764→            {/* Plan badge + theme toggle on right */}
+   765→            <div className="ml-auto flex items-center gap-2">
+   766→              {consolidatedStats && (
+   767→                <Badge variant="outline" className="text-[10px] h-5 hidden sm:flex">
+   768→                  {consolidatedStats.subscription.planLabel}
+   769→                </Badge>
+   770→              )}
+   771→              <Button
+   772→                variant="ghost"
+   773→                size="icon"
+   774→                className="h-8 w-8 text-muted-foreground hover:text-purple-600"
+   775→                onClick={toggleTheme}
+   776→              >
+   777→                {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+   778→              </Button>
+   779→            </div>
+   780→          </header>
+   781→
+   782→          {/* Main content */}
+   783→          <main className="flex-1 p-4 md:p-6 lg:p-8">
+   784→            <DashboardContent consolidatedStats={consolidatedStats} />
+   785→          </main>
+   786→        </div>
+   787→      </div>
+   788→
+   789→      {/* Create Shop Dialog */}
+   790→      <CreateShopDialog
+   791→        open={createDialogOpen}
+   792→        onOpenChange={setCreateDialogOpen}
+   793→        onCreated={handleShopCreated}
+   794→      />
+   795→    </>
+   796→  )
+   797→}
+   798→

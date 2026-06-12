@@ -22,6 +22,10 @@ import {
   Plus,
   ArrowRight,
   TrendingUp,
+  QrCode,
+  ExternalLink,
+  Loader2,
+  Store,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -125,6 +129,8 @@ export function DashboardOverview() {
   const [stats, setStats] = useState<Stats | null>(null)
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
+  const [qrLoading, setQrLoading] = useState(false)
 
   useEffect(() => {
     async function fetchData() {
@@ -146,6 +152,9 @@ export function DashboardOverview() {
           categories: categories.length,
         })
         setOrders(ordersData.slice(0, 5))
+
+        // Generate QR code
+        generateQrCode()
       } catch {
         // Error fetching data
       } finally {
@@ -155,10 +164,37 @@ export function DashboardOverview() {
     fetchData()
   }, [shop])
 
+  async function generateQrCode() {
+    if (!shop) return
+    setQrLoading(true)
+    try {
+      const shopUrl = `https://boutiko.pro/${shop.slug}`
+      const res = await fetch('/api/ai/qr-code', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: shopUrl, shopName: shop.name }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setQrDataUrl(data.dataUrl)
+      }
+    } catch {
+      // Silently fail for QR code
+    } finally {
+      setQrLoading(false)
+    }
+  }
+
   function copyShopUrl() {
     if (!shop) return
     navigator.clipboard.writeText(`boutiko.pro/${shop.slug}`)
     toast.success('URL copiée !')
+  }
+
+  function openMyShop() {
+    if (!shop) return
+    window.open(`/${shop.slug}`, '_blank')
   }
 
   if (loading) {
@@ -193,7 +229,7 @@ export function DashboardOverview() {
         </div>
       </div>
 
-      {/* Stats cards */}
+      {/* Stats cards + QR Code */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           icon={<Package className="h-6 w-6" />}
@@ -221,16 +257,85 @@ export function DashboardOverview() {
         />
       </div>
 
-      {/* Quick Actions */}
-      <div className="flex flex-wrap gap-3">
-        <Button onClick={() => setDashboardTab('products')} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Ajouter un produit
-        </Button>
-        <Button variant="outline" onClick={() => setDashboardTab('categories')} className="gap-2">
-          <Tags className="h-4 w-4" />
-          Gérer catégories
-        </Button>
+      {/* QR Code + Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* QR Code Card */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg font-semibold flex items-center gap-2">
+              <QrCode className="h-5 w-5 text-primary" />
+              QR Code de ma boutique
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-4">
+              <div className="flex-shrink-0 w-28 h-28 rounded-xl border bg-muted/50 flex items-center justify-center overflow-hidden">
+                {qrLoading ? (
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                ) : qrDataUrl ? (
+                  <img src={qrDataUrl} alt="QR Code" className="w-full h-full object-contain p-2" />
+                ) : (
+                  <QrCode className="h-10 w-10 text-muted-foreground/30" />
+                )}
+              </div>
+              <div className="flex flex-col gap-2 min-w-0">
+                <a
+                  href={`/${shop?.slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm font-medium text-primary hover:underline flex items-center gap-1 truncate"
+                >
+                  boutiko.pro/{shop?.slug}
+                  <ExternalLink className="h-3.5 w-3.5 flex-shrink-0" />
+                </a>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 w-fit"
+                  onClick={openMyShop}
+                >
+                  <Store className="h-3.5 w-3.5" />
+                  Voir ma boutique
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 w-fit"
+                  onClick={copyShopUrl}
+                >
+                  <Copy className="h-3.5 w-3.5" />
+                  Copier le lien
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Quick Actions Card */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg font-semibold flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-primary" />
+              Actions rapides
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col gap-2">
+              <Button onClick={() => setDashboardTab('products')} className="gap-2 justify-start">
+                <Plus className="h-4 w-4" />
+                Ajouter un produit
+              </Button>
+              <Button variant="outline" onClick={() => setDashboardTab('categories')} className="gap-2 justify-start">
+                <Tags className="h-4 w-4" />
+                Gérer les catégories
+              </Button>
+              <Button variant="outline" onClick={() => setDashboardTab('templates')} className="gap-2 justify-start">
+                <Store className="h-4 w-4" />
+                Changer de template
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Recent Orders */}

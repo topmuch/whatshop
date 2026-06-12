@@ -23,11 +23,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
-import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-} from '@/components/ui/tooltip'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   LayoutDashboard,
@@ -38,11 +33,10 @@ import {
   LogOut,
   Menu,
   Store,
-  Sparkles,
   Sun,
   Moon,
   Radio,
-  Plus,
+  Palette,
   Megaphone,
   Crown,
 } from 'lucide-react'
@@ -52,8 +46,8 @@ import { DashboardProducts } from './dashboard-products'
 import { DashboardCategories } from './dashboard-categories'
 import { DashboardOrders } from './dashboard-orders'
 import { DashboardSettings } from './dashboard-settings'
-import { DashboardAiTools } from './dashboard-ai-tools'
 import { DashboardLive } from './dashboard-live'
+import { DashboardTemplates } from './dashboard-templates'
 import { MarketingKit } from './marketing-kit'
 import { toast } from 'sonner'
 
@@ -91,7 +85,6 @@ interface ConsolidatedStats {
     planLabel: string
     status: string
     maxShops: number
-    canCreateShop: boolean
   }
 }
 
@@ -105,8 +98,8 @@ const navItems: { id: DashboardTab; label: string; icon: React.ReactNode }[] = [
   { id: 'categories', label: 'Catégories', icon: <Tags className="h-5 w-5" /> },
   { id: 'orders', label: 'Commandes', icon: <ShoppingCart className="h-5 w-5" /> },
   { id: 'live', label: 'Live TikTok', icon: <Radio className="h-5 w-5" /> },
-  { id: 'ai-tools', label: 'Outils IA', icon: <Sparkles className="h-5 w-5" /> },
   { id: 'marketing-kit', label: 'Kit Marketing', icon: <Megaphone className="h-5 w-5" /> },
+  { id: 'templates', label: 'Templates', icon: <Palette className="h-5 w-5" /> },
   { id: 'settings', label: 'Paramètres', icon: <Settings className="h-5 w-5" /> },
 ]
 
@@ -304,11 +297,9 @@ function CreateShopDialog({
 function SidebarContent({
   myShops,
   consolidatedStats,
-  onCreateShopClick,
 }: {
   myShops: MyShop[]
   consolidatedStats: ConsolidatedStats | null
-  onCreateShopClick: () => void
 }) {
   const { dashboardTab, setDashboardTab, setUser, setShop, setView, shop } = useAppStore()
   const { isDark, toggleTheme } = useThemeMode()
@@ -353,35 +344,6 @@ function SidebarContent({
       })
     }
   }
-
-  const canCreateShop = consolidatedStats?.subscription.canCreateShop ?? true
-
-  const createShopButton = canCreateShop ? (
-    <Button
-      variant="ghost"
-      className="w-full justify-start gap-3 h-11 px-3 text-white/70 hover:text-white hover:bg-white/10"
-      onClick={onCreateShopClick}
-    >
-      <Plus className="h-5 w-5" />
-      <span>Créer une boutique</span>
-    </Button>
-  ) : (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
-          variant="ghost"
-          className="w-full justify-start gap-3 h-11 px-3 text-white/40 cursor-not-allowed"
-          disabled
-        >
-          <Plus className="h-5 w-5" />
-          <span>Créer une boutique</span>
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent side="right" sideOffset={8}>
-        Limite atteinte. Passez au plan supérieur.
-      </TooltipContent>
-    </Tooltip>
-  )
 
   return (
     <div className="flex flex-col h-full">
@@ -432,7 +394,7 @@ function SidebarContent({
           {navItems
             .filter((item) => {
               if (consolidatedStats?.subscription.planType === 'STARTER') {
-                return item.id !== 'live' && item.id !== 'ai-tools'
+                return item.id !== 'live'
               }
               return true
             })
@@ -451,41 +413,31 @@ function SidebarContent({
               <span>{item.label}</span>
             </Button>
           ))}
+
+          {/* Dark mode + Logout below Paramètres */}
+          <Separator className="bg-white/15 my-2" />
+          <Button
+            variant="ghost"
+            className="w-full justify-start gap-3 h-11 px-3 text-white/70 hover:text-white hover:bg-white/10"
+            onClick={toggleTheme}
+          >
+            {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            <span>{isDark ? 'Mode clair' : 'Mode sombre'}</span>
+          </Button>
+          <Button
+            variant="ghost"
+            className="w-full justify-start gap-3 h-11 px-3 text-white/70 hover:text-red-200 hover:bg-white/10"
+            onClick={handleLogout}
+          >
+            <LogOut className="h-5 w-5" />
+            <span>Déconnexion</span>
+          </Button>
         </nav>
       </ScrollArea>
 
       <Separator className="bg-white/15" />
 
-      {/* Create shop button */}
-      <div className="px-3 py-2">{createShopButton}</div>
 
-      <Separator className="bg-white/15" />
-
-      {/* Theme Toggle */}
-      <div className="px-3 py-2">
-        <Button
-          variant="ghost"
-          className="w-full justify-start gap-3 h-11 px-3 text-white/70 hover:text-white hover:bg-white/10"
-          onClick={toggleTheme}
-        >
-          {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-          <span>{isDark ? 'Mode clair' : 'Mode sombre'}</span>
-        </Button>
-      </div>
-
-      <Separator className="bg-white/15" />
-
-      {/* Logout */}
-      <div className="px-3 py-4">
-        <Button
-          variant="ghost"
-          className="w-full justify-start gap-3 h-11 px-3 text-white/70 hover:text-red-200 hover:bg-white/10"
-          onClick={handleLogout}
-        >
-          <LogOut className="h-5 w-5" />
-          <span>Déconnexion</span>
-        </Button>
-      </div>
     </div>
   )
 }
@@ -546,13 +498,10 @@ function DashboardContent({ consolidatedStats }: { consolidatedStats: Consolidat
       return <DashboardLive />
     case 'settings':
       return <DashboardSettings />
-    case 'ai-tools':
-      if (consolidatedStats?.subscription.planType === 'STARTER') {
-        return <UpgradePrompt feature="Outils IA" plan="Pro" />
-      }
-      return <DashboardAiTools />
     case 'marketing-kit':
       return <MarketingKit />
+    case 'templates':
+      return <DashboardTemplates />
     default:
       return (
         <>
@@ -574,7 +523,6 @@ export function SellerDashboard() {
   const [myShops, setMyShops] = useState<MyShop[]>([])
   const [consolidatedStats, setConsolidatedStats] = useState<ConsolidatedStats | null>(null)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
-  const { isDark, toggleTheme } = useThemeMode()
 
   const fetchMyShops = useCallback(async () => {
     try {
@@ -676,7 +624,6 @@ export function SellerDashboard() {
   const sidebarProps = {
     myShops,
     consolidatedStats,
-    onCreateShopClick: () => setCreateDialogOpen(true),
   }
 
   if (loading) {
@@ -761,21 +708,13 @@ export function SellerDashboard() {
               </div>
             )}
 
-            {/* Plan badge + theme toggle on right */}
+            {/* Plan badge on mobile */}
             <div className="ml-auto flex items-center gap-2">
               {consolidatedStats && (
                 <Badge variant="outline" className="text-[10px] h-5 hidden sm:flex">
                   {consolidatedStats.subscription.planLabel}
                 </Badge>
               )}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-muted-foreground hover:text-purple-600"
-                onClick={toggleTheme}
-              >
-                {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-              </Button>
             </div>
           </header>
 
