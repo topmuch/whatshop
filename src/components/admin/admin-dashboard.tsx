@@ -4232,6 +4232,9 @@ function AdminOrders() {
       if (res.ok) {
         const data = await res.json()
         setOrders(data.orders)
+      } else {
+        const errData = await res.json().catch(() => ({}))
+        toast.error(errData.error || 'Erreur lors du chargement des commandes')
       }
     } catch {
       toast.error('Erreur lors du chargement des commandes')

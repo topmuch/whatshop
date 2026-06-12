@@ -33,6 +33,7 @@ export interface AuthShop {
   brands?: string
   primaryColor?: string
   secondaryColor?: string
+  accentColor?: string
   heroTitle?: string
   heroSubtitle?: string
   heroTagline?: string
@@ -267,6 +268,7 @@ export function mapShopToAuthShop(shop: Record<string, unknown>): AuthShop {
     heroImages: (shop.heroImages as string) ?? '[]',
     promoBanners: (shop.promoBanners as string) ?? '[]',
     brands: (shop.brands as string) ?? '[]',
+    accentColor: (shop.accentColor as string) ?? null,
     primaryColor: (shop.primaryColor as string) ?? '#EC4899',
     secondaryColor: (shop.secondaryColor as string) ?? null,
   }

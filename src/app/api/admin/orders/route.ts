@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
         ...(status ? { status } : {}),
         ...(search ? {
           OR: [
-            { id: { contains: search, mode: 'insensitive' } },
+            { id: { contains: search } },
             { customerName: { contains: search } },
             { shop: { name: { contains: search } } },
           ],

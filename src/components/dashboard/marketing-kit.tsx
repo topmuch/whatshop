@@ -499,10 +499,18 @@ function StoriesTab() {
 
   function drawStory(product: ProductOption) {
     const canvas = canvasRef.current
-    if (!canvas) return
+    if (!canvas) {
+      setGenerating(false)
+      toast.error('Canvas non disponible')
+      return
+    }
 
     const ctx = canvas.getContext('2d')
-    if (!ctx) return
+    if (!ctx) {
+      setGenerating(false)
+      toast.error('Erreur de contexte canvas')
+      return
+    }
 
     const W = 1080
     const H = 1920
@@ -744,22 +752,32 @@ function StoriesTab() {
 
   function finishStory(ctx: CanvasRenderingContext2D, _W: number, H: number) {
     const canvas = canvasRef.current
-    if (!canvas) return
+    if (!canvas) {
+      setGenerating(false)
+      toast.error('Canvas non disponible')
+      return
+    }
 
-    canvas.toBlob(
-      (blob) => {
-        if (blob) {
-          const url = URL.createObjectURL(blob)
-          setPreviewUrl(url)
-          setGenerating(false)
-        } else {
-          setGenerating(false)
-          toast.error('Erreur lors de la génération de l\'image')
-        }
-      },
-      'image/png',
-      1
-    )
+    try {
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            const url = URL.createObjectURL(blob)
+            setPreviewUrl(url)
+            setGenerating(false)
+          } else {
+            setGenerating(false)
+            toast.error('Erreur lors de la génération de l\'image. Vérifiez que les images sont accessibles.')
+          }
+        },
+        'image/png',
+        1
+      )
+    } catch (err) {
+      console.error('Story generation error:', err)
+      setGenerating(false)
+      toast.error('Erreur de sécurité CORS. Utilisez des images hébergées sur votre boutique.')
+    }
     void _W
     void H
   }
@@ -1202,22 +1220,32 @@ function BusinessCardTab() {
 
   function finishCard(_ctx: CanvasRenderingContext2D) {
     const canvas = canvasRef.current
-    if (!canvas) return
+    if (!canvas) {
+      setGenerating(false)
+      toast.error('Canvas non disponible')
+      return
+    }
 
-    canvas.toBlob(
-      (blob) => {
-        if (blob) {
-          const url = URL.createObjectURL(blob)
-          setPreviewUrl(url)
-          setGenerating(false)
-        } else {
-          setGenerating(false)
-          toast.error('Erreur lors de la génération')
-        }
-      },
-      'image/png',
-      1
-    )
+    try {
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            const url = URL.createObjectURL(blob)
+            setPreviewUrl(url)
+            setGenerating(false)
+          } else {
+            setGenerating(false)
+            toast.error('Erreur lors de la génération de la carte')
+          }
+        },
+        'image/png',
+        1
+      )
+    } catch (err) {
+      console.error('Business card generation error:', err)
+      setGenerating(false)
+      toast.error('Erreur lors de la génération. Vérifiez que le logo est accessible.')
+    }
     void _ctx
   }
 

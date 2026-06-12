@@ -496,7 +496,19 @@ export function DashboardSettings() {
   }
 
   async function handleSave() {
-    if (!shop) return
+    if (!shop) {
+      toast.error('Aucune boutique sélectionnée')
+      return
+    }
+    // Basic validation
+    if (!name.trim()) {
+      toast.error('Le nom de la boutique est requis')
+      return
+    }
+    if (!whatsapp.trim()) {
+      toast.error('Le numéro WhatsApp est requis')
+      return
+    }
     setSaving(true)
     try {
       const res = await fetch('/api/shops', {
@@ -504,9 +516,9 @@ export function DashboardSettings() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: shop.id,
-          name,
+          name: name.trim(),
           description,
-          whatsapp,
+          whatsapp: whatsapp.trim(),
           address,
           phone,
           logo,
@@ -526,23 +538,12 @@ export function DashboardSettings() {
       }
 
       const updatedShop = await res.json()
+      // Spread existing shop to preserve all fields, then override with updated values
       setShop({
-        id: updatedShop.id,
-        name: updatedShop.name,
-        slug: updatedShop.slug,
-        description: updatedShop.description,
-        logo: updatedShop.logo,
-        banner: updatedShop.banner,
-        whatsapp: updatedShop.whatsapp,
-        address: updatedShop.address,
-        phone: updatedShop.phone,
-        plan: updatedShop.plan,
+        ...shop,
+        ...updatedShop,
         template: updatedShop.template || 'classic',
         accentColor: updatedShop.accentColor || accentColor,
-        isActive: updatedShop.isActive,
-        heroImages: updatedShop.heroImages,
-        promoBanners: updatedShop.promoBanners,
-        brands: updatedShop.brands,
       })
       // Also update publicShop so the shop view reflects changes immediately
       if (publicShop && publicShop.id === shop.id) {
@@ -551,13 +552,11 @@ export function DashboardSettings() {
           ...updatedShop,
           template: updatedShop.template || 'classic',
           accentColor: updatedShop.accentColor || accentColor,
-          heroImages: updatedShop.heroImages,
-          promoBanners: updatedShop.promoBanners,
-          brands: updatedShop.brands,
         })
       }
       toast.success('Boutique mise à jour !')
-    } catch {
+    } catch (err) {
+      console.error('Settings save error:', err)
       toast.error('Erreur de connexion')
     } finally {
       setSaving(false)
