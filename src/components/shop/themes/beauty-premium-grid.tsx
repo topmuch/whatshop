@@ -57,6 +57,7 @@ import {
 } from 'lucide-react'
 import { useAppStore, type Product, type Category } from '@/lib/store'
 import { formatPrice, openWhatsApp } from '@/lib/shared'
+import { LiveShopFeatures } from '../live-shop-features'
 
 // ─── Rose Gold Beauty Palette ───
 const ROSE = {
@@ -1766,6 +1767,7 @@ export function BeautyPremiumShopPage() {
       />
 
       <main className="flex-1 relative z-10">
+        <LiveShopFeatures />
         <AnimatePresence mode="wait" initial={false}>
           {selectedProduct ? (
             /* ═══ PRODUCT DETAIL ═══ */

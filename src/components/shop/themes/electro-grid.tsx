@@ -47,6 +47,7 @@ import {
 } from 'lucide-react'
 import { useAppStore, type Product, type Category } from '@/lib/store'
 import { formatPrice, openWhatsApp } from '@/lib/shared'
+import { LiveShopFeatures } from '../live-shop-features'
 
 // ─── Couleurs du template ELECTRO BLEU ───
 const BLUE = {
@@ -1585,6 +1586,7 @@ export function ElectroShopPage() {
       />
 
       <main className="flex-1">
+        <LiveShopFeatures />
         <AnimatePresence mode="wait" initial={false}>
           {selectedProduct ? (
             /* ═══ PRODUCT DETAIL ═══ */
