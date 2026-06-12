@@ -49,6 +49,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { ShippingZonesManager } from './shipping-zones-manager'
+import { TemplateCustomization } from './template-customization'
 
 const templateOptions = [
   { id: 'minimal', name: 'Classique', description: 'Épuré et professionnel', color: '#18181b', gradient: 'linear-gradient(135deg, #18181b, #52525b)' },
@@ -61,6 +62,7 @@ const templateOptions = [
   { id: 'xstore-electro', name: 'Electro', description: 'Tech moderne', color: '#0066FF', gradient: 'linear-gradient(135deg, #0066FF, #0052CC)' },
   { id: 'xstore-grocery', name: 'Épicerie', description: 'Fraîcheur alimentaire', color: '#00A651', gradient: 'linear-gradient(135deg, #00A651, #16A34A)' },
   { id: 'sunset', name: 'Flash Live', description: 'Énergie vibrante', color: '#F97316', gradient: 'linear-gradient(135deg, #F97316, #EF4444)' },
+  { id: 'cosmika-beauty', name: 'Cosmika Beauty', description: 'Rose, noir & élégance', color: '#E11D48', gradient: 'linear-gradient(135deg, #E11D48, #1C1917)' },
 ] as const
 
 const planLimits = {
@@ -1711,6 +1713,11 @@ export function DashboardSettings() {
           </Button>
         </CardContent>
       </Card>
+
+      {/* Cosmika Beauty Template Customization */}
+      {template === 'cosmika-beauty' && shop && (
+        <TemplateCustomization shopSlug={shop.slug} />
+      )}
 
       {/* SEO & Référencement */}
       <Card>
