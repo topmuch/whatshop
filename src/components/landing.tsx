@@ -118,7 +118,7 @@ function Header() {
             <a
               key={l.href}
               href={l.href}
-              className="text-base font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-100 px-4 py-2 rounded-full transition-all duration-200"
+              className="text-lg font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-100 px-4 py-2 rounded-full transition-all duration-200"
             >
               {l.label}
             </a>
@@ -130,14 +130,14 @@ function Header() {
             variant="ghost"
             size="sm"
             onClick={() => setView('login')}
-            className="text-gray-500 hover:text-gray-900 text-base"
+            className="text-gray-500 hover:text-gray-900 text-lg"
           >
             Connexion
           </Button>
           <Button
             size="sm"
             onClick={() => setView('register')}
-            className="bg-gray-900 hover:bg-gray-800 text-white rounded-full px-6 text-base font-medium shadow-lg shadow-gray-900/20"
+            className="bg-gray-900 hover:bg-gray-800 text-white rounded-full px-6 text-lg font-medium shadow-lg shadow-gray-900/20"
           >
             Commencer
           </Button>
@@ -237,6 +237,83 @@ function StoryCircles() {
   )
 }
 
+/* ── HERO FORM (Linktree-style boutique name input) ── */
+function HeroForm() {
+  const { setView } = useAppStore()
+  const [boutiqueName, setBoutiqueName] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const slug = boutiqueName.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
+    if (!slug) {
+      setError('Entrez un nom de boutique')
+      return
+    }
+    setLoading(true)
+    setError('')
+    try {
+      const res = await fetch('/api/shops/check-slug', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.available) {
+          // Slug available → redirect to register with pre-filled shop name
+          setView('register')
+          // Store the chosen slug so onboarding can pick it up
+          sessionStorage.setItem('preferred-slug', slug)
+        } else {
+          setError('Ce nom est déjà pris')
+        }
+      } else {
+        setError('Erreur, réessayez')
+      }
+    } catch {
+      setError('Erreur de connexion')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row w-full max-w-lg gap-3 mb-6">
+      <div className="relative flex-1">
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-base font-medium pointer-events-none select-none">
+          boutiko.pro/
+        </div>
+        <input
+          type="text"
+          value={boutiqueName}
+          onChange={(e) => { setBoutiqueName(e.target.value); setError('') }}
+          placeholder="votre-boutique"
+          className={`w-full h-14 pl-[calc(7.5rem+1rem)] pr-4 rounded-2xl border-2 bg-white text-gray-900 text-base font-medium placeholder:text-gray-400 focus:outline-none focus:ring-2 transition-all duration-200 ${error ? 'border-red-300 focus:border-red-400 focus:ring-red-100' : 'border-gray-200 focus:border-pink-400 focus:ring-pink-100'}`}
+        />
+        {error && (
+          <p className="absolute -bottom-6 left-1 text-sm text-red-500 font-medium">{error}</p>
+        )}
+      </div>
+      <button
+        type="submit"
+        disabled={loading}
+        className="h-14 px-7 rounded-2xl bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white text-base font-semibold shadow-lg shadow-pink-500/25 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap"
+      >
+        {loading ? (
+          <span className="flex items-center gap-2">
+            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            Vérification...
+          </span>
+        ) : (
+          'Commencer gratuitement'
+        )}
+      </button>
+    </form>
+  )
+}
+
 /* ── HERO ── */
 const heroSlides = [
   { image: '/landing/hero-influencer-1.png', alt: 'Influenceuse avec smartphone' },
@@ -321,6 +398,15 @@ function Hero() {
                   <ChevronRight className="w-5 h-5 ml-1" />
                 </Button>
               </a>
+            </motion.div>
+
+            {/* Boutique name form — Linktree style */}
+            <motion.div
+              variants={fadeUp}
+              custom={0.45}
+              className="mt-8"
+            >
+              <HeroForm />
             </motion.div>
           </motion.div>
 
