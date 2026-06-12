@@ -20,6 +20,7 @@ import { PrivacyPage } from '@/components/pages/privacy-page'
 import { TermsPage } from '@/components/pages/terms-page'
 import { WhatsAppFloat } from '@/components/ui/whatsapp-float'
 import { CookieConsent } from '@/components/ui/cookie-consent'
+import { injectShopMeta, resetMeta } from '@/lib/seo'
 
 // Map of page query param values to AppView types
 const PAGE_VIEW_MAP: Record<string, AppView> = {
@@ -135,7 +136,7 @@ function LoadingShell() {
 }
 
 export default function Home() {
-  const { view, setView, setUser, setShop, setShops, shopSlug, setShopSlug } = useAppStore()
+  const { view, setView, setUser, setShop, setShops, shopSlug, setShopSlug, publicShop } = useAppStore()
   const pathname = useClientPathname()
   const [hydrated, setHydrated] = useState(false)
 
@@ -154,6 +155,15 @@ export default function Home() {
       setShopSlug(urlView.shopSlug)
     }
     }, [urlView.shopSlug, shopSlug])
+
+  // Inject/reset SEO meta tags when publicShop changes
+  useEffect(() => {
+    if (publicShop) {
+      injectShopMeta(publicShop)
+    } else if (hydrated) {
+      resetMeta()
+    }
+  }, [publicShop, hydrated])
 
   // Check for existing session and hydrate
   useEffect(() => {

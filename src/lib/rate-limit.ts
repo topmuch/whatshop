@@ -158,4 +158,12 @@ export const RATE_LIMITS = {
   visit: { maxRequests: 30, windowSeconds: 60 },
   /** General API: 60 per minute */
   default: { maxRequests: 60, windowSeconds: 60 },
+  /** Shop live session: 30 per minute */
+  shopLive: { maxRequests: 30, windowSeconds: 60 },
+  /** Shop leads (form submission): 5 per minute */
+  shopLeads: { maxRequests: 5, windowSeconds: 60 },
+  /** Shop products: 60 per minute */
+  shopProducts: { maxRequests: 60, windowSeconds: 60 },
+  /** Shop logos listing: 30 per minute */
+  shopLogos: { maxRequests: 30, windowSeconds: 60 },
 } as const

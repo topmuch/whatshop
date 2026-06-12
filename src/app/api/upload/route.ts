@@ -5,6 +5,7 @@ import crypto from 'crypto'
 import sharp from 'sharp'
 import { UPLOADS_DIR } from '@/lib/storage'
 import { rateLimit, getClientIp, RATE_LIMITS } from '@/lib/rate-limit'
+import { logger } from '@/lib/logger'
 
 const ALLOWED_MIMES = new Set([
   'image/jpeg',
@@ -106,7 +107,7 @@ export async function POST(request: NextRequest) {
           .toBuffer()
       } catch (sharpErr) {
         // If sharp fails (corrupted image?), save original
-        console.error('Sharp processing failed, saving original:', sharpErr)
+        logger.warn('Sharp processing failed, saving original', 'UploadAPI', { error: sharpErr })
         finalBuffer = rawBuffer
       }
     }
@@ -119,7 +120,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ url }, { status: 201 })
   } catch (error) {
-    console.error('Upload error:', error)
+    logger.error('Failed to upload file', 'UploadAPI', error)
     return NextResponse.json(
       { error: 'Erreur serveur lors du téléchargement' },
       { status: 500 },

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { requireShopOwner } from '@/lib/auth'
+import { logger } from '@/lib/logger'
+import { createNotification } from '@/lib/notifications'
 
 // GET /api/live/[shopId] - Get live session for a shop (public read)
 export async function GET(
@@ -51,7 +53,7 @@ export async function GET(
       leads: liveSession.leads,
     })
   } catch (error) {
-    console.error('Error fetching seller live session:', error)
+    logger.error('Failed to fetch live session', 'LiveAPI', error)
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
   }
 }
@@ -132,12 +134,23 @@ export async function POST(
       },
     })
 
+    // Notify seller when going live
+    if (isActive === true && user) {
+      createNotification(
+        'SHOP_LIVE',
+        'Votre boutique est en direct !',
+        `La boutique "${shop.name}" est maintenant en live.`,
+        { shopId, shopName: shop.name },
+        user.id,
+      )
+    }
+
     return NextResponse.json({
       success: true,
       session: updatedSession,
     })
   } catch (error) {
-    console.error('Live session create/update error:', error)
+    logger.error('Failed to create/update live session', 'LiveAPI', error)
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
   }
 }
@@ -213,7 +226,7 @@ export async function PUT(
       session: updatedSession,
     })
   } catch (error) {
-    console.error('Live session update error:', error)
+    logger.error('Failed to update live session', 'LiveAPI', error)
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
   }
 }

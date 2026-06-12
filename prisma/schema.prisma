@@ -58,6 +58,7 @@ model User {
   reseller        User?            @relation("ResellerClients", fields: [resellerId], references: [id])
   upgradeRequests  UpgradeRequest[]
   reviewedUpgrades UpgradeRequest[] @relation("UpgradeReviews")
+  notifications    Notification[]
 }
 
 // ─── SUBSCRIPTION (liée au COMPTE UTILISATEUR, pas à la boutique) ─────────────
@@ -443,14 +444,18 @@ model BroadcastMessage {
 
 model Notification {
   id          String   @id @default(cuid())
-  type        String   // "NEW_SHOP" | "NEW_ORDER" | "NEW_SELLER" | "DOMAIN_REQUEST" | "SUPPORT_TICKET" | "LOW_STOCK" | "UPGRADE_REQUEST" | "SUSPENDED_USER"
+  type        String   // "NEW_SHOP" | "NEW_ORDER" | "NEW_SELLER" | "DOMAIN_REQUEST" | "SUPPORT_TICKET" | "LOW_STOCK" | "UPGRADE_REQUEST" | "SUSPENDED_USER" | "SHOP_LIVE"
   title       String
   message     String
   isRead      Boolean  @default(false)
+  userId      String?
   metadata    String   @default("{}") // JSON: { shopId?, orderId?, userId?, shopName?, etc. }
   createdAt   DateTime @default(now())
+
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([type])
   @@index([isRead])
   @@index([createdAt])
+  @@index([userId])
 }

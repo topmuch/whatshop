@@ -26,6 +26,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   LayoutDashboard,
+  BarChart3,
   Package,
   Tags,
   ShoppingCart,
@@ -42,6 +43,7 @@ import {
 } from 'lucide-react'
 import { useThemeMode } from '@/lib/use-theme'
 import { DashboardOverview } from './dashboard-overview'
+import { DashboardAnalytics } from './dashboard-analytics'
 import { DashboardProducts } from './dashboard-products'
 import { DashboardCategories } from './dashboard-categories'
 import { DashboardOrders } from './dashboard-orders'
@@ -49,6 +51,7 @@ import { DashboardSettings } from './dashboard-settings'
 import { DashboardLive } from './dashboard-live'
 import { DashboardTemplates } from './dashboard-templates'
 import { MarketingKit } from './marketing-kit'
+import { NotificationBell } from './notification-bell'
 import { toast } from 'sonner'
 
 /* ------------------------------------------------------------------ */
@@ -94,6 +97,7 @@ interface ConsolidatedStats {
 
 const navItems: { id: DashboardTab; label: string; icon: React.ReactNode }[] = [
   { id: 'overview', label: "Vue d'ensemble", icon: <LayoutDashboard className="h-5 w-5" /> },
+  { id: 'analytics', label: 'Analytics', icon: <BarChart3 className="h-5 w-5" /> },
   { id: 'products', label: 'Produits', icon: <Package className="h-5 w-5" /> },
   { id: 'categories', label: 'Catégories', icon: <Tags className="h-5 w-5" /> },
   { id: 'orders', label: 'Commandes', icon: <ShoppingCart className="h-5 w-5" /> },
@@ -350,12 +354,15 @@ function SidebarContent({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Logo */}
-      <div className="flex items-center gap-2 px-6 py-5">
-        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/20 text-white">
-          <Store className="h-5 w-5" />
+      {/* Logo + Notification bell */}
+      <div className="flex items-center justify-between px-6 py-5">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/20 text-white">
+            <Store className="h-5 w-5" />
+          </div>
+          <span className="text-lg font-bold text-white">Boutiko</span>
         </div>
-        <span className="text-lg font-bold text-white">Boutiko</span>
+        <NotificationBell />
       </div>
 
       <Separator className="bg-white/15" />
@@ -488,6 +495,8 @@ function DashboardContent({ consolidatedStats }: { consolidatedStats: Consolidat
           <DashboardOverview />
         </>
       )
+    case 'analytics':
+      return <DashboardAnalytics />
     case 'products':
       return <DashboardProducts />
     case 'categories':
@@ -711,8 +720,9 @@ export function SellerDashboard() {
               </div>
             )}
 
-            {/* Plan badge on mobile */}
-            <div className="ml-auto flex items-center gap-2">
+            {/* Notification bell + Plan badge on mobile */}
+            <div className="ml-auto flex items-center gap-1">
+              <NotificationBell dark={false} />
               {consolidatedStats && (
                 <Badge variant="outline" className="text-[10px] h-5 hidden sm:flex">
                   {consolidatedStats.subscription.planLabel}

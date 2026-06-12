@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { authenticateUser, setSessionCookie, hashPassword, mapShopToAuthShop } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { rateLimit, getClientIp, RATE_LIMITS } from '@/lib/rate-limit'
+import { logger } from '@/lib/logger'
 
 // Default superadmin credentials (used only for first-time setup)
 const DEFAULT_ADMIN_EMAIL = process.env.SUPER_ADMIN_EMAIL || 'admin@boutiko.pro'
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
         },
         include: { shops: true },
       })
-      console.log('[SETUP] First login — SUPER_ADMIN auto-created:', newAdmin.email)
+      logger.info('SUPER_ADMIN auto-created on first login', 'LoginAPI', { email: newAdmin.email })
 
       const response = NextResponse.json({
         user: { id: newAdmin.id, email: newAdmin.email, name: newAdmin.name, role: newAdmin.role },
@@ -63,7 +64,7 @@ export async function POST(request: NextRequest) {
     setSessionCookie(response, user.email)
     return response
   } catch (error) {
-    console.error('Login error:', error)
+    logger.error('Login failed', 'LoginAPI', error)
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
   }
 }

@@ -1,10 +1,18 @@
 import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
+import { rateLimit, getClientIp, RATE_LIMITS } from '@/lib/rate-limit'
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ slug: string }> }
 ) {
+  // Rate limiting: 30 req/min
+  const ip = getClientIp(request)
+  const rl = rateLimit(ip, RATE_LIMITS.shopLive)
+  if (!rl.success) {
+    return NextResponse.json({ error: 'Trop de requêtes' }, { status: 429 })
+  }
+
   try {
     const { slug } = await params
 

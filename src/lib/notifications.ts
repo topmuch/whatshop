@@ -1,4 +1,5 @@
 import { db } from '@/lib/db'
+import { logger } from '@/lib/logger'
 import type { Notification } from '@prisma/client'
 
 type NotificationType =
@@ -10,6 +11,7 @@ type NotificationType =
   | 'NEW_SHOP'
   | 'UPGRADE_REQUEST'
   | 'SUSPENDED_USER'
+  | 'SHOP_LIVE'
 
 /**
  * Mapping of notification types to their SaaSConfig toggle fields.
@@ -41,7 +43,8 @@ export async function createNotification(
   type: NotificationType,
   title: string,
   message: string,
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
+  userId?: string
 ): Promise<Notification | null> {
   try {
     const configField = typeToConfigField[type]
@@ -63,6 +66,7 @@ export async function createNotification(
         type,
         title,
         message,
+        userId: userId ?? null,
         metadata: metadata ? JSON.stringify(metadata) : '{}',
       },
     })
@@ -70,7 +74,7 @@ export async function createNotification(
     return notification
   } catch (error) {
     // Silently fail — notifications should never break the main flow
-    console.error('[Notification] Failed to create notification:', error)
+    logger.error('Failed to create notification', 'Notification', error)
     return null
   }
 }

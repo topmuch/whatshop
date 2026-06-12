@@ -33,13 +33,21 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Fire-and-forget notification
+    // Fire-and-forget notification (admin + seller)
     try {
       await createNotification(
         'NEW_ORDER',
         'Nouvelle commande',
         `Commande de ${total.toLocaleString('fr-FR')} FCFA sur la boutique "${shop.name}".`,
         { orderId: order.id, shopId: shop.id, shopName: shop.name, total }
+      )
+      // Also notify the shop owner (seller-visible)
+      await createNotification(
+        'NEW_ORDER',
+        'Nouvelle commande reçue',
+        `Vous avez reçu une commande de ${total.toLocaleString('fr-FR')} FCFA.`,
+        { orderId: order.id, shopId: shop.id, shopName: shop.name, total },
+        shop.ownerId,
       )
     } catch (_notifyError) {
       // Notification failure must not break order creation

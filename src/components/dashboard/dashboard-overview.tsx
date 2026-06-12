@@ -26,6 +26,8 @@ import {
   ExternalLink,
   Loader2,
   Store,
+  Download,
+  ClipboardList,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -227,6 +229,18 @@ export function DashboardOverview() {
             <Copy className="h-3.5 w-3.5" />
           </Button>
         </div>
+      </div>
+
+      {/* Export buttons */}
+      <div className="flex flex-wrap gap-2">
+        <Button variant="outline" size="sm" className="gap-1.5" onClick={() => window.open('/api/shops/my-export?type=products', '_blank')}>
+          <Download className="h-4 w-4" />
+          Exporter les produits
+        </Button>
+        <Button variant="outline" size="sm" className="gap-1.5" onClick={() => window.open('/api/shops/my-export?type=orders', '_blank')}>
+          <ClipboardList className="h-4 w-4" />
+          Exporter les commandes
+        </Button>
       </div>
 
       {/* Stats cards + QR Code */}

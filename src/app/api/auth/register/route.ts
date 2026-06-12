@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { hashPassword, setSessionCookie } from '@/lib/auth'
 import { rateLimit, getClientIp, RATE_LIMITS } from '@/lib/rate-limit'
 import { createNotification } from '@/lib/notifications'
+import { logger } from '@/lib/logger'
 
 // Basic email format validation
 function isValidEmail(email: string): boolean {
@@ -71,7 +72,7 @@ export async function POST(request: NextRequest) {
     setSessionCookie(response, user.email)
     return response
   } catch (error) {
-    console.error('Register error:', error)
+    logger.error('Registration failed', 'RegisterAPI', error)
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
   }
 }

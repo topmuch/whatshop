@@ -25,7 +25,10 @@ import {
   ShoppingCart,
   ChevronRight,
   X,
+  Sun,
+  Moon,
 } from 'lucide-react'
+import { useThemeMode } from '@/lib/use-theme'
 
 /* ── ANIMATION VARIANTS ── */
 const fadeUp = {
@@ -91,6 +94,7 @@ function Logo({ light = false, size = 'default' }: { light?: boolean; size?: 'de
 /* ── HEADER (Linktree-style minimal) ── */
 function Header() {
   const { setView } = useAppStore()
+  const { isDark, toggleTheme } = useThemeMode()
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
 
@@ -126,6 +130,15 @@ function Header() {
         </nav>
 
         <div className="hidden lg:flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleTheme}
+            className="rounded-full hover:bg-gray-100 text-gray-700"
+            aria-label="Toggle dark mode"
+          >
+            {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          </Button>
           <Button
             variant="ghost"
             size="sm"

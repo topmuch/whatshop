@@ -1,5 +1,6 @@
 import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
+import { rateLimit, getClientIp, RATE_LIMITS } from '@/lib/rate-limit'
 
 // Helper: parse JSON images field into string[]
 function parseImages(imagesRaw: unknown): string[] {
@@ -17,9 +18,16 @@ function parseImages(imagesRaw: unknown): string[] {
 }
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ slug: string }> }
 ) {
+  // Rate limiting: 60 req/min
+  const ip = getClientIp(request)
+  const rl = rateLimit(ip, RATE_LIMITS.shopProducts)
+  if (!rl.success) {
+    return NextResponse.json({ error: 'Trop de requêtes' }, { status: 429 })
+  }
+
   try {
     const { slug } = await params
 
