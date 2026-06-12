@@ -7,7 +7,6 @@ export async function GET() {
   try {
     const shops = await db.shop.findMany({
       where: {
-        logo: { not: null },
         isActive: true,
       },
       select: {

@@ -1133,7 +1133,7 @@ function Pricing() {
 interface ShopLogoItem {
   name: string
   slug: string
-  logo: string
+  logo: string | null
 }
 
 function ShopLogosSlider() {
@@ -1163,27 +1163,36 @@ function ShopLogosSlider() {
         <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
 
         <div className="flex animate-logos-slide">
-          {items.map((shop, i) => (
-            <a
-              key={`${shop.slug}-${i}`}
-              href={`${typeof window !== 'undefined' ? window.location.origin : ''}/${shop.slug}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-shrink-0 mx-4 group"
-              title={shop.name}
-            >
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden border-2 border-gray-100 bg-white shadow-sm group-hover:shadow-md group-hover:border-pink-200 transition-all duration-300 group-hover:scale-105 flex items-center justify-center p-2">
-                <img
-                  src={shop.logo}
-                  alt={shop.name}
-                  className="w-full h-full object-contain"
-                />
-              </div>
-              <p className="mt-2 text-xs text-center text-gray-500 group-hover:text-pink-500 font-medium truncate w-20 sm:w-24 transition-colors">
-                {shop.name}
-              </p>
-            </a>
-          ))}
+          {items.map((shop, i) => {
+            const initial = (shop.name || '?')[0].toUpperCase()
+            return (
+              <a
+                key={`${shop.slug}-${i}`}
+                href={`${typeof window !== 'undefined' ? window.location.origin : ''}/${shop.slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-shrink-0 mx-4 group"
+                title={shop.name}
+              >
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden border-2 border-gray-100 bg-white shadow-sm group-hover:shadow-md group-hover:border-pink-200 transition-all duration-300 group-hover:scale-105 flex items-center justify-center p-2">
+                  {shop.logo ? (
+                    <img
+                      src={shop.logo}
+                      alt={shop.name}
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    <span className="text-2xl sm:text-3xl font-bold text-pink-500 select-none">
+                      {initial}
+                    </span>
+                  )}
+                </div>
+                <p className="mt-2 text-xs text-center text-gray-500 group-hover:text-pink-500 font-medium truncate w-20 sm:w-24 transition-colors">
+                  {shop.name}
+                </p>
+              </a>
+            )
+          })}
         </div>
       </div>
       <style>{`
