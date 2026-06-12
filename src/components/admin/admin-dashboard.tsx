@@ -237,7 +237,7 @@ interface PlatformConfig {
   logoUrl: string
   primaryColor: string
   defaultWhatsappMessage: string
-  adminWhatsappNumber: string
+  adminWhatsAppNumber: string
   standardPrice: number
   proPrice: number
   starterPrice: number
@@ -2223,7 +2223,7 @@ function AdminConfig() {
     logoUrl: '',
     primaryColor: '#3b82f6',
     defaultWhatsappMessage: '',
-    adminWhatsappNumber: '',
+    adminWhatsAppNumber: '',
     standardPrice: 0,
     proPrice: 0,
     starterPrice: 0,
@@ -2262,7 +2262,7 @@ function AdminConfig() {
             logoUrl: data.logoUrl ?? prev.logoUrl,
             primaryColor: data.primaryColor ?? prev.primaryColor,
             defaultWhatsappMessage: data.defaultWhatsappMessage ?? prev.defaultWhatsappMessage,
-            adminWhatsappNumber: data.adminWhatsappNumber ?? prev.adminWhatsappNumber,
+            adminWhatsAppNumber: data.adminWhatsAppNumber ?? prev.adminWhatsAppNumber,
             standardPrice: data.standardPrice ?? prev.standardPrice,
             proPrice: data.proPrice ?? prev.proPrice,
             starterPrice: data.starterPrice ?? prev.starterPrice,
@@ -2340,7 +2340,7 @@ function AdminConfig() {
           logoUrl: config.logoUrl,
           primaryColor: config.primaryColor,
           defaultWhatsappMessage: config.defaultWhatsappMessage,
-          adminWhatsappNumber: config.adminWhatsappNumber,
+          adminWhatsAppNumber: config.adminWhatsAppNumber,
         }),
       })
       if (res.ok) {
@@ -2577,8 +2577,8 @@ function AdminConfig() {
                   <Input
                     id="admin-whatsapp"
                     placeholder="+225 XX XX XX XX"
-                    value={config.adminWhatsappNumber}
-                    onChange={(e) => setConfig(prev => ({ ...prev, adminWhatsappNumber: e.target.value }))}
+                    value={config.adminWhatsAppNumber}
+                    onChange={(e) => setConfig(prev => ({ ...prev, adminWhatsAppNumber: e.target.value }))}
                   />
                 </div>
                 <Button onClick={savePlatformConfig} disabled={savingConfig} className="bg-blue-600 hover:bg-blue-700">
@@ -2912,7 +2912,7 @@ function AdminSupport() {
         const res = await fetch('/api/admin/config')
         if (res.ok) {
           const data = await res.json()
-          setAdminPhone(data.adminWhatsappNumber || '')
+          setAdminPhone(data.adminWhatsAppNumber || '')
         }
       } catch { /* ignore */ }
     }

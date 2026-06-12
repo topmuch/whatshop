@@ -1,0 +1,2002 @@
+     1→     1→'use client'
+     2→     2→
+     3→     3→import { useAppStore } from '@/lib/store'
+     4→     4→import { useState, useEffect, useRef } from 'react'
+     5→     5→import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+     6→     6→import { Button } from '@/components/ui/button'
+     7→     7→import { Input } from '@/components/ui/input'
+     8→     8→import { Textarea } from '@/components/ui/textarea'
+     9→     9→import { Label } from '@/components/ui/label'
+    10→    10→import { Badge } from '@/components/ui/badge'
+    11→    11→import { Separator } from '@/components/ui/separator'
+    12→    12→import {
+    13→    13→  Table,
+    14→    14→  TableBody,
+    15→    15→  TableCell,
+    16→    16→  TableHead,
+    17→    17→  TableHeader,
+    18→    18→  TableRow,
+    19→    19→} from '@/components/ui/table'
+    20→    20→import { templates, type TemplateId } from '@/lib/templates'
+    21→    21→import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible'
+    22→    22→import {
+    23→    23→  Check,
+    24→    24→  X,
+    25→    25→  Copy,
+    26→    26→  Share2,
+    27→    27→  Loader2,
+    28→    28→  Store,
+    29→    29→  Crown,
+    30→    30→  Globe,
+    31→    31→  Instagram,
+    32→    32→  Palette,
+    33→    33→  QrCode,
+    34→    34→  Download,
+    35→    35→  RefreshCw,
+    36→    36→  Search,
+    37→    37→  ImagePlus,
+    38→    38→  Trash2,
+    39→    39→  Type,
+    40→    40→  AlertCircle,
+    41→    41→  Clock,
+    42→    42→  CheckCircle2,
+    43→    43→  XCircle,
+    44→    44→  ChevronDown,
+    45→    45→  Upload,
+    46→    46→  LinkIcon,
+    47→    47→  Zap,
+    48→    48→  ArrowUpRight,
+    49→    49→} from 'lucide-react'
+    50→    50→import { toast } from 'sonner'
+    51→    51→import { ShippingZonesManager } from './shipping-zones-manager'
+    52→    52→
+    53→    53→const planLimits = {
+    54→    54→  FREE: { products: 10, price: '0 FCFA/mois', features: { categories: true, orders: true, whatsapp: true, customLogo: false, analytics: false } },
+    55→    55→  STANDARD: { products: 100, price: '5 000 FCFA/mois', features: { categories: true, orders: true, whatsapp: true, customLogo: true, analytics: true } },
+    56→    56→  PREMIUM: { products: Infinity, price: '15 000 FCFA/mois', features: { categories: true, orders: true, whatsapp: true, customLogo: true, analytics: true } },
+    57→    57→}
+    58→    58→
+    59→    59→const planBadgeColors: Record<string, string> = {
+    60→    60→  FREE: 'bg-gray-100 text-gray-800 hover:bg-gray-100',
+    61→    61→  STANDARD: 'bg-green-100 text-green-800 hover:bg-green-100',
+    62→    62→  PREMIUM: 'bg-amber-100 text-amber-800 hover:bg-amber-100',
+    63→    63→}
+    64→    64→
+    65→    65→const planLabels: Record<string, string> = {
+    66→    66→  FREE: 'Gratuit',
+    67→    67→  STANDARD: 'Standard',
+    68→    68→  PREMIUM: 'Premium',
+    69→    69→}
+    70→    70→
+    71→    71→export function DashboardSettings() {
+    72→    72→  const { shop, setShop, publicShop, setPublicShop } = useAppStore()
+    73→    73→  const [saving, setSaving] = useState(false)
+    74→    74→  const [productCount, setProductCount] = useState(0)
+    75→    75→  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
+    76→    76→  const [qrLoading, setQrLoading] = useState(false)
+    77→    77→
+    78→    78→  // Shop form state
+    79→    79→  const [name, setName] = useState('')
+    80→    80→  const [description, setDescription] = useState('')
+    81→    81→  const [whatsapp, setWhatsapp] = useState('')
+    82→    82→  const [address, setAddress] = useState('')
+    83→    83→  const [phone, setPhone] = useState('')
+    84→    84→  const [logo, setLogo] = useState('')
+    85→    85→  const [logoUrlInput, setLogoUrlInput] = useState('')
+    86→    86→  const [banner, setBanner] = useState('')
+    87→    87→  const [template, setTemplate] = useState('classic')
+    88→    88→  const [accentColor, setAccentColor] = useState('#25D366')
+    89→    89→
+    90→    90→  // Hero images (slider)
+    91→    91→  const [heroImages, setHeroImages] = useState<string[]>([])
+    92→    92→
+    93→    93→  // Promo banners
+    94→    94→  const [promoBanners, setPromoBanners] = useState<{id: string; image: string; title: string; link: string}[]>([])
+    95→    95→  const [promoUploading, setPromoUploading] = useState(false)
+    96→    96→
+    97→    97→  // Brands carousel
+    98→    98→  const [brands, setBrands] = useState<{id: string; name: string; image: string; link: string}[]>([])
+    99→    99→  const [brandUploading, setBrandUploading] = useState(false)
+   100→   100→
+   101→   101→  // URL input states
+   102→   102→
+   103→   103→  // Notification preferences
+   104→   104→  const [notifPrefs, setNotifPrefs] = useState<Record<string, boolean>>({
+   105→   105→    notifyNewOrder: true,
+   106→   106→    notifyLowStock: false,
+   107→   107→    notifyWeeklyReport: false,
+   108→   108→    notifyNewReview: true,
+   109→   109→  })
+   110→   110→  const [notifEmail, setNotifEmail] = useState('')
+   111→   111→  const [savingNotif, setSavingNotif] = useState(false)
+   112→   112→  const [heroUrlInput, setHeroUrlInput] = useState('')
+   113→   113→  const [promoUrlInput, setPromoUrlInput] = useState('')
+   114→   114→  const [brandUrlInput, setBrandUrlInput] = useState('')
+   115→   115→  const [brandNameInput, setBrandNameInput] = useState('')
+   116→   116→
+   117→   117→  // Upload states
+   118→   118→  const [logoUploading, setLogoUploading] = useState(false)
+   119→   119→  const [bannerUploading, setBannerUploading] = useState(false)
+   120→   120→  const [heroUploading, setHeroUploading] = useState(false)
+   121→   121→
+   122→   122→  // SEO form state
+   123→   123→  const [seoTitle, setSeoTitle] = useState('')
+   124→   124→  const [seoDescription, setSeoDescription] = useState('')
+   125→   125→  const [seoKeywords, setSeoKeywords] = useState('')
+   126→   126→  const [ogImage, setOgImage] = useState('')
+   127→   127→  const [coverImageUrl, setCoverImageUrl] = useState('')
+   128→   128→  const [seoSaving, setSeoSaving] = useState(false)
+   129→   129→
+   130→   130→  // Domain state
+   131→   131→  const [domainStatus, setDomainStatus] = useState<'NONE' | 'PENDING' | 'APPROVED' | 'REJECTED'>('NONE')
+   132→   132→  const [domainName, setDomainName] = useState('')
+   133→   133→  const [domainRejectionReason, setDomainRejectionReason] = useState('')
+   134→   134→  const [domainLoading, setDomainLoading] = useState(false)
+   135→   135→  const [dnsOpen, setDnsOpen] = useState(false)
+   136→   136→  const [domainInput, setDomainInput] = useState('')
+   137→   137→
+   138→   138→  // File input refs
+   139→   139→  const logoInputRef = useRef<HTMLInputElement>(null)
+   140→   140→  const bannerInputRef = useRef<HTMLInputElement>(null)
+   141→   141→  const heroInputRef = useRef<HTMLInputElement>(null)
+   142→   142→  const promoInputRef = useRef<HTMLInputElement>(null)
+   143→   143→  const brandInputRef = useRef<HTMLInputElement>(null)
+   144→   144→
+   145→   145→  useEffect(() => {
+   146→   146→    if (shop) {
+   147→   147→      setName(shop.name)
+   148→   148→      setDescription(shop.description || '')
+   149→   149→      setWhatsapp(shop.whatsapp)
+   150→   150→      setAddress(shop.address || '')
+   151→   151→      setPhone(shop.phone || '')
+   152→   152→      setLogo(shop.logo || '')
+   153→   153→      setBanner(shop.banner || '')
+   154→   154→      setTemplate(shop.template || 'classic')
+   155→   155→      setAccentColor((shop as unknown as Record<string, unknown>).accentColor as string || templates[(shop.template as TemplateId) || 'classic']?.colors?.primary || '#25D366')
+   156→   156→
+   157→   157→      // Parse hero images from shop data
+   158→   158→      try {
+   159→   159→        const heroRaw = (shop as Record<string, unknown>).heroImages as string | undefined
+   160→   160→        const parsed = heroRaw ? JSON.parse(heroRaw) : []
+   161→   161→        setHeroImages(Array.isArray(parsed) ? parsed : [])
+   162→   162→      } catch {
+   163→   163→        setHeroImages([])
+   164→   164→      }
+   165→   165→
+   166→   166→      // Parse promo banners from shop data
+   167→   167→      try {
+   168→   168→        const promoRaw = (shop as Record<string, unknown>).promoBanners as string | undefined
+   169→   169→        const parsed = promoRaw ? JSON.parse(promoRaw) : []
+   170→   170→        setPromoBanners(Array.isArray(parsed) ? parsed : [])
+   171→   171→      } catch {
+   172→   172→        setPromoBanners([])
+   173→   173→      }
+   174→   174→
+   175→   175→      // Parse brands from shop data
+   176→   176→      try {
+   177→   177→        const brandsRaw = (shop as Record<string, unknown>).brands as string | undefined
+   178→   178→        const parsed = brandsRaw ? JSON.parse(brandsRaw) : []
+   179→   179→        setBrands(Array.isArray(parsed) ? parsed : [])
+   180→   180→      } catch {
+   181→   181→        setBrands([])
+   182→   182→      }
+   183→   183→
+   184→   184→      // Fetch product count
+   185→   185→      fetch(`/api/products?shopId=${shop.id}&all=true`)
+   186→   186→        .then((res) => res.ok ? res.json() : null)
+   187→   187→        .then((data) => {
+   188→   188→          if (data && data.pagination) {
+   189→   189→            setProductCount(data.pagination.total || 0)
+   190→   190→          } else if (Array.isArray(data)) {
+   191→   191→            setProductCount(data.length)
+   192→   192→          } else {
+   193→   193→            setProductCount(0)
+   194→   194→          }
+   195→   195→        })
+   196→   196→        .catch(() => setProductCount(0))
+   197→   197→
+   198→   198→      // Generate QR code
+   199→   199→      generateQrCode()
+   200→   200→
+   201→   201→      // Fetch SEO settings
+   202→   202→      fetch('/api/settings')
+   203→   203→        .then((res) => res.ok ? res.json() : null)
+   204→   204→        .then((data) => {
+   205→   205→          if (data) {
+   206→   206→            setSeoTitle(data.seoTitle || '')
+   207→   207→            setSeoDescription(data.seoDescription || '')
+   208→   208→            setSeoKeywords(data.seoKeywords || '')
+   209→   209→            setOgImage(data.ogImage || '')
+   210→   210→            setCoverImageUrl(data.coverImageUrl || '')
+   211→   211→          }
+   212→   212→        })
+   213→   213→        .catch(() => {})
+   214→   214→
+   215→   215→      // Fetch domain status
+   216→   216→      fetch('/api/settings/domain/status')
+   217→   217→        .then((res) => res.ok ? res.json() : null)
+   218→   218→        .then((data) => {
+   219→   219→          if (data) {
+   220→   220→            setDomainStatus(data.status || 'NONE')
+   221→   221→            setDomainName(data.domain || '')
+   222→   222→            setDomainRejectionReason(data.rejectionReason || '')
+   223→   223→          }
+   224→   224→        })
+   225→   225→        .catch(() => {})
+   226→   226→    }
+   227→   227→  }, [shop])
+   228→   228→
+   229→   229→  // Upload helper
+   230→   230→  async function uploadFile(file: File): Promise<string | null> {
+   231→   231→    const formData = new FormData()
+   232→   232→    formData.append('file', file)
+   233→   233→    const res = await fetch('/api/upload', { method: 'POST', body: formData })
+   234→   234→    if (!res.ok) {
+   235→   235→      const data = await res.json().catch(() => ({}))
+   236→   236→      toast.error(data.error || 'Erreur lors du téléchargement')
+   237→   237→      return null
+   238→   238→    }
+   239→   239→    const data = await res.json()
+   240→   240→    return data.url
+   241→   241→  }
+   242→   242→
+   243→   243→  async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+   244→   244→    const file = e.target.files?.[0]
+   245→   245→    if (!file) return
+   246→   246→    setLogoUploading(true)
+   247→   247→    try {
+   248→   248→      const url = await uploadFile(file)
+   249→   249→      if (url) {
+   250→   250→        setLogo(url)
+   251→   251→        toast.success('Logo téléchargé avec succès !')
+   252→   252→      }
+   253→   253→    } finally {
+   254→   254→      setLogoUploading(false)
+   255→   255→      if (logoInputRef.current) logoInputRef.current.value = ''
+   256→   256→    }
+   257→   257→  }
+   258→   258→
+   259→   259→  async function handleBannerUpload(e: React.ChangeEvent<HTMLInputElement>) {
+   260→   260→    const file = e.target.files?.[0]
+   261→   261→    if (!file) return
+   262→   262→    setBannerUploading(true)
+   263→   263→    try {
+   264→   264→      const url = await uploadFile(file)
+   265→   265→      if (url) {
+   266→   266→        setBanner(url)
+   267→   267→        toast.success('Bannière téléchargée avec succès !')
+   268→   268→      }
+   269→   269→    } finally {
+   270→   270→      setBannerUploading(false)
+   271→   271→      if (bannerInputRef.current) bannerInputRef.current.value = ''
+   272→   272→    }
+   273→   273→  }
+   274→   274→
+   275→   275→  async function handleHeroUpload(e: React.ChangeEvent<HTMLInputElement>) {
+   276→   276→    const files = e.target.files
+   277→   277→    if (!files || files.length === 0) return
+   278→   278→    setHeroUploading(true)
+   279→   279→    try {
+   280→   280→      const newImages: string[] = []
+   281→   281→      for (let i = 0; i < files.length; i++) {
+   282→   282→        if (heroImages.length + newImages.length >= 6) {
+   283→   283→          toast.warning('Maximum 6 images autorisées')
+   284→   284→          break
+   285→   285→        }
+   286→   286→        const url = await uploadFile(files[i])
+   287→   287→        if (url) newImages.push(url)
+   288→   288→      }
+   289→   289→      if (newImages.length > 0) {
+   290→   290→        setHeroImages((prev) => [...prev, ...newImages])
+   291→   291→        toast.success(`${newImages.length} image(s) ajoutée(s) au slide !`)
+   292→   292→      }
+   293→   293→    } finally {
+   294→   294→      setHeroUploading(false)
+   295→   295→      if (heroInputRef.current) heroInputRef.current.value = ''
+   296→   296→    }
+   297→   297→  }
+   298→   298→
+   299→   299→  function removeHeroImage(index: number) {
+   300→   300→    setHeroImages((prev) => prev.filter((_, i) => i !== index))
+   301→   301→    toast.success('Image retirée du slide')
+   302→   302→  }
+   303→   303→
+   304→   304→  function addHeroFromUrl() {
+   305→   305→    const url = heroUrlInput.trim()
+   306→   306→    if (!url) return
+   307→   307→    if (heroImages.length >= 6) {
+   308→   308→      toast.warning('Maximum 6 images autorisées')
+   309→   309→      return
+   310→   310→    }
+   311→   311→    setHeroImages((prev) => [...prev, url])
+   312→   312→    setHeroUrlInput('')
+   313→   313→    toast.success('Image ajoutée au slide !')
+   314→   314→  }
+   315→   315→
+   316→   316→  async function handlePromoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+   317→   317→    const file = e.target.files?.[0]
+   318→   318→    if (!file) return
+   319→   319→    setPromoUploading(true)
+   320→   320→    try {
+   321→   321→      const url = await uploadFile(file)
+   322→   322→      if (url) {
+   323→   323→        const newBanner = {
+   324→   324→          id: Date.now().toString(),
+   325→   325→          image: url,
+   326→   326→          title: 'Promotion',
+   327→   327→          link: '',
+   328→   328→        }
+   329→   329→        setPromoBanners((prev) => [...prev, newBanner])
+   330→   330→        toast.success('Bannière publicitaire ajoutée !')
+   331→   331→      }
+   332→   332→    } finally {
+   333→   333→      setPromoUploading(false)
+   334→   334→      if (promoInputRef.current) promoInputRef.current.value = ''
+   335→   335→    }
+   336→   336→  }
+   337→   337→
+   338→   338→  function removePromoBanner(id: string) {
+   339→   339→    setPromoBanners((prev) => prev.filter((b) => b.id !== id))
+   340→   340→    toast.success('Bannière retirée')
+   341→   341→  }
+   342→   342→
+   343→   343→  function addPromoFromUrl() {
+   344→   344→    const url = promoUrlInput.trim()
+   345→   345→    if (!url) return
+   346→   346→    if (promoBanners.length >= 4) {
+   347→   347→      toast.warning('Maximum 4 bannières autorisées')
+   348→   348→      return
+   349→   349→    }
+   350→   350→    const newBanner = {
+   351→   351→      id: Date.now().toString(),
+   352→   352→      image: url,
+   353→   353→      title: 'Promotion',
+   354→   354→      link: '',
+   355→   355→    }
+   356→   356→    setPromoBanners((prev) => [...prev, newBanner])
+   357→   357→    setPromoUrlInput('')
+   358→   358→    toast.success('Bannière publicitaire ajoutée !')
+   359→   359→  }
+   360→   360→
+   361→   361→  function updatePromoBanner(id: string, field: 'title' | 'link', value: string) {
+   362→   362→    setPromoBanners((prev) =>
+   363→   363→      prev.map((b) => (b.id === id ? { ...b, [field]: value } : b))
+   364→   364→    )
+   365→   365→  }
+   366→   366→
+   367→   367→  // ── Brand handlers ──
+   368→   368→  async function handleBrandUpload(e: React.ChangeEvent<HTMLInputElement>) {
+   369→   369→    const file = e.target.files?.[0]
+   370→   370→    if (!file) return
+   371→   371→    setBrandUploading(true)
+   372→   372→    try {
+   373→   373→      const url = await uploadFile(file)
+   374→   374→      if (url) {
+   375→   375→        const newBrand = {
+   376→   376→          id: Date.now().toString(),
+   377→   377→          image: url,
+   378→   378→          name: brandNameInput.trim() || 'Marque',
+   379→   379→          link: '',
+   380→   380→        }
+   381→   381→        setBrands((prev) => [...prev, newBrand])
+   382→   382→        setBrandNameInput('')
+   383→   383→        toast.success('Marque ajoutée !')
+   384→   384→      }
+   385→   385→    } finally {
+   386→   386→      setBrandUploading(false)
+   387→   387→      if (brandInputRef.current) brandInputRef.current.value = ''
+   388→   388→    }
+   389→   389→  }
+   390→   390→
+   391→   391→  function removeBrand(id: string) {
+   392→   392→    setBrands((prev) => prev.filter((b) => b.id !== id))
+   393→   393→    toast.success('Marque retirée')
+   394→   394→  }
+   395→   395→
+   396→   396→  function addBrandFromUrl() {
+   397→   397→    const url = brandUrlInput.trim()
+   398→   398→    const name = brandNameInput.trim() || 'Marque'
+   399→   399→    if (!url) {
+   400→   400→      toast.error('Entrez une URL pour le logo de la marque')
+   401→   401→      return
+   402→   402→    }
+   403→   403→    if (brands.length >= 20) {
+   404→   404→      toast.warning('Maximum 20 marques autorisées')
+   405→   405→      return
+   406→   406→    }
+   407→   407→    const newBrand = {
+   408→   408→      id: Date.now().toString(),
+   409→   409→      image: url,
+   410→   410→      name,
+   411→   411→      link: '',
+   412→   412→    }
+   413→   413→    setBrands((prev) => [...prev, newBrand])
+   414→   414→    setBrandUrlInput('')
+   415→   415→    setBrandNameInput('')
+   416→   416→    toast.success('Marque ajoutée !')
+   417→   417→  }
+   418→   418→
+   419→   419→  function updateBrand(id: string, field: 'name' | 'link', value: string) {
+   420→   420→    setBrands((prev) =>
+   421→   421→      prev.map((b) => (b.id === id ? { ...b, [field]: value } : b))
+   422→   422→    )
+   423→   423→  }
+   424→   424→
+   425→   425→  async function generateQrCode() {
+   426→   426→    if (!shop) return
+   427→   427→    setQrLoading(true)
+   428→   428→    try {
+   429→   429→      const shopUrl = `https://boutiko.pro/${shop.slug}`
+   430→   430→      const res = await fetch('/api/ai/qr-code', {
+   431→   431→        method: 'POST',
+   432→   432→        credentials: 'same-origin',
+   433→   433→        headers: { 'Content-Type': 'application/json' },
+   434→   434→        body: JSON.stringify({ url: shopUrl, shopName: shop.name }),
+   435→   435→      })
+   436→   436→      if (res.ok) {
+   437→   437→        const data = await res.json()
+   438→   438→        setQrDataUrl(data.dataUrl)
+   439→   439→      } else {
+   440→   440→        const data = await res.json().catch(() => ({}))
+   441→   441→        toast.error(data.error || 'Erreur lors de la génération du QR code')
+   442→   442→      }
+   443→   443→    } catch {
+   444→   444→      toast.error('Erreur de connexion lors de la génération du QR code')
+   445→   445→    } finally {
+   446→   446→      setQrLoading(false)
+   447→   447→    }
+   448→   448→  }
+   449→   449→
+   450→   450→  function downloadQrCode() {
+   451→   451→    if (!qrDataUrl || !shop) return
+   452→   452→    const img = new Image()
+   453→   453→    img.crossOrigin = 'anonymous'
+   454→   454→    img.onload = () => {
+   455→   455→      const canvas = document.createElement('canvas')
+   456→   456→      canvas.width = 800
+   457→   457→      canvas.height = 900
+   458→   458→      const ctx = canvas.getContext('2d')
+   459→   459→      if (!ctx) return
+   460→   460→      ctx.fillStyle = '#FFFFFF'
+   461→   461→      ctx.fillRect(0, 0, 800, 900)
+   462→   462→      const qrSize = 600
+   463→   463→      const offsetX = (800 - qrSize) / 2
+   464→   464→      ctx.drawImage(img, offsetX, 60, qrSize, qrSize)
+   465→   465→      ctx.fillStyle = '#1a1a2e'
+   466→   466→      ctx.font = 'bold 28px system-ui, -apple-system, sans-serif'
+   467→   467→      ctx.textAlign = 'center'
+   468→   468→      ctx.fillText(shop.name, 400, 720)
+   469→   469→      ctx.fillStyle = '#6b7280'
+   470→   470→      ctx.font = '18px monospace'
+   471→   471→      ctx.fillText(`boutiko.pro/${shop.slug}`, 400, 760)
+   472→   472→      ctx.fillStyle = '#25D366'
+   473→   473→      ctx.font = '14px system-ui, -apple-system, sans-serif'
+   474→   474→      ctx.fillText('Propulsé par Boutiko', 400, 800)
+   475→   475→      canvas.toBlob((blob) => {
+   476→   476→        if (!blob) return
+   477→   477→        const pngUrl = URL.createObjectURL(blob)
+   478→   478→        const a = document.createElement('a')
+   479→   479→        a.href = pngUrl
+   480→   480→        a.download = `qr-${shop.slug}.png`
+   481→   481→        a.click()
+   482→   482→        URL.revokeObjectURL(pngUrl)
+   483→   483→      }, 'image/png')
+   484→   484→    }
+   485→   485→    img.src = qrDataUrl
+   486→   486→  }
+   487→   487→
+   488→   488→  async function handleSave() {
+   489→   489→    if (!shop) return
+   490→   490→    setSaving(true)
+   491→   491→    try {
+   492→   492→      const res = await fetch('/api/shops', {
+   493→   493→        method: 'PUT',
+   494→   494→        headers: { 'Content-Type': 'application/json' },
+   495→   495→        body: JSON.stringify({
+   496→   496→          id: shop.id,
+   497→   497→          name,
+   498→   498→          description,
+   499→   499→          whatsapp,
+   500→   500→          address,
+   501→   501→          phone,
+   502→   502→          logo,
+   503→   503→          banner,
+   504→   504→          template,
+   505→   505→          accentColor,
+   506→   506→          heroImages: JSON.stringify(heroImages),
+   507→   507→          promoBanners: JSON.stringify(promoBanners),
+   508→   508→          brands: JSON.stringify(brands),
+   509→   509→        }),
+   510→   510→      })
+   511→   511→
+   512→   512→      if (!res.ok) {
+   513→   513→        const errData = await res.json().catch(() => ({}))
+   514→   514→        toast.error(errData.error || 'Erreur lors de la sauvegarde')
+   515→   515→        return
+   516→   516→      }
+   517→   517→
+   518→   518→      const updatedShop = await res.json()
+   519→   519→      setShop({
+   520→   520→        id: updatedShop.id,
+   521→   521→        name: updatedShop.name,
+   522→   522→        slug: updatedShop.slug,
+   523→   523→        description: updatedShop.description,
+   524→   524→        logo: updatedShop.logo,
+   525→   525→        banner: updatedShop.banner,
+   526→   526→        whatsapp: updatedShop.whatsapp,
+   527→   527→        address: updatedShop.address,
+   528→   528→        phone: updatedShop.phone,
+   529→   529→        plan: updatedShop.plan,
+   530→   530→        template: updatedShop.template || 'classic',
+   531→   531→        accentColor: updatedShop.accentColor || accentColor,
+   532→   532→        isActive: updatedShop.isActive,
+   533→   533→        heroImages: updatedShop.heroImages,
+   534→   534→        promoBanners: updatedShop.promoBanners,
+   535→   535→        brands: updatedShop.brands,
+   536→   536→      })
+   537→   537→      // Also update publicShop so the shop view reflects changes immediately
+   538→   538→      if (publicShop && publicShop.id === shop.id) {
+   539→   539→        setPublicShop({
+   540→   540→          ...publicShop,
+   541→   541→          ...updatedShop,
+   542→   542→          template: updatedShop.template || 'classic',
+   543→   543→          accentColor: updatedShop.accentColor || accentColor,
+   544→   544→          heroImages: updatedShop.heroImages,
+   545→   545→          promoBanners: updatedShop.promoBanners,
+   546→   546→          brands: updatedShop.brands,
+   547→   547→        })
+   548→   548→      }
+   549→   549→      toast.success('Boutique mise à jour !')
+   550→   550→    } catch {
+   551→   551→      toast.error('Erreur de connexion')
+   552→   552→    } finally {
+   553→   553→      setSaving(false)
+   554→   554→    }
+   555→   555→  }
+   556→   556→
+   557→   557→  function copyShopUrl() {
+   558→   558→    if (!shop) return
+   559→   559→    navigator.clipboard.writeText(`boutiko.pro/${shop.slug}`)
+   560→   560→    toast.success('URL copiée !')
+   561→   561→  }
+   562→   562→
+   563→   563→  async function saveNotifPrefs() {
+   564→   564→    setSavingNotif(true)
+   565→   565→    try {
+   566→   566→      const res = await fetch('/api/settings', {
+   567→   567→        method: 'PUT',
+   568→   568→        headers: { 'Content-Type': 'application/json' },
+   569→   569→        body: JSON.stringify({
+   570→   570→          notificationPreferences: JSON.stringify(notifPrefs),
+   571→   571→          notificationEmail: notifEmail,
+   572→   572→        }),
+   573→   573→      })
+   574→   574→      if (!res.ok) {
+   575→   575→        toast.error('Erreur lors de la sauvegarde des préférences')
+   576→   576→        return
+   577→   577→      }
+   578→   578→      toast.success('Préférences de notification enregistrées !')
+   579→   579→    } catch {
+   580→   580→      toast.error('Erreur de connexion')
+   581→   581→    } finally {
+   582→   582→      setSavingNotif(false)
+   583→   583→    }
+   584→   584→  }
+   585→   585→
+   586→   586→  async function handleSeoSave() {
+   587→   587→    setSeoSaving(true)
+   588→   588→    try {
+   589→   589→      const res = await fetch('/api/settings', {
+   590→   590→        method: 'PUT',
+   591→   591→        headers: { 'Content-Type': 'application/json' },
+   592→   592→        body: JSON.stringify({
+   593→   593→          seoTitle,
+   594→   594→          seoDescription,
+   595→   595→          seoKeywords,
+   596→   596→          ogImage,
+   597→   597→          coverImageUrl,
+   598→   598→        }),
+   599→   599→      })
+   600→   600→      if (!res.ok) {
+   601→   601→        const errData = await res.json().catch(() => ({}))
+   602→   602→        toast.error(errData.error || 'Erreur lors de la sauvegarde SEO')
+   603→   603→        return
+   604→   604→      }
+   605→   605→      toast.success('Paramètres SEO enregistrés !')
+   606→   606→    } catch {
+   607→   607→      toast.error('Erreur de connexion')
+   608→   608→    } finally {
+   609→   609→      setSeoSaving(false)
+   610→   610→    }
+   611→   611→  }
+   612→   612→
+   613→   613→  async function handleDomainRequest() {
+   614→   614→    if (!domainInput.trim()) {
+   615→   615→      toast.error('Veuillez entrer un nom de domaine')
+   616→   616→      return
+   617→   617→    }
+   618→   618→    setDomainLoading(true)
+   619→   619→    try {
+   620→   620→      const res = await fetch('/api/settings/domain', {
+   621→   621→        method: 'POST',
+   622→   622→        headers: { 'Content-Type': 'application/json' },
+   623→   623→        body: JSON.stringify({ domain: domainInput.trim() }),
+   624→   624→      })
+   625→   625→      if (!res.ok) {
+   626→   626→        const data = await res.json().catch(() => ({}))
+   627→   627→        toast.error(data.error || 'Erreur lors de la demande de domaine')
+   628→   628→        return
+   629→   629→      }
+   630→   630→      const data = await res.json()
+   631→   631→      setDomainStatus(data.status || 'PENDING')
+   632→   632→      setDomainName(data.domain || domainInput.trim())
+   633→   633→      setDnsOpen(true)
+   634→   634→      toast.success('Demande de domaine envoyée !')
+   635→   635→    } catch {
+   636→   636→      toast.error('Erreur de connexion')
+   637→   637→    } finally {
+   638→   638→      setDomainLoading(false)
+   639→   639→    }
+   640→   640→  }
+   641→   641→
+   642→   642→  // Subscription state
+   643→   643→  const [subscriptionData, setSubscriptionData] = useState<{
+   644→   644→    planType: string
+   645→   645→    status: string
+   646→   646→    maxShops: number
+   647→   647→    currentShopCount: number
+   648→   648→    endDate: string | null
+   649→   649→    pendingUpgrade: { id: string; requestedPlan: string; requestedLabel: string; requestedPrice: number; createdAt: string } | null
+   650→   650→    planConfig: { label: string; price: number; maxShops: number; customDomain: boolean; features: string[] }
+   651→   651→    allPlans: { type: string; label: string; price: number; maxShops: number; customDomain: boolean; features: string[] }[]
+   652→   652→  } | null>(null)
+   653→   653→  const [subLoading, setSubLoading] = useState(true)
+   654→   654→  const [upgrading, setUpgrading] = useState<string | null>(null)
+   655→   655→
+   656→   656→  // Fetch subscription data
+   657→   657→  useEffect(() => {
+   658→   658→    fetch('/api/subscription')
+   659→   659→      .then((res) => (res.ok ? res.json() : null))
+   660→   660→      .then((data) => {
+   661→   661→        if (data) setSubscriptionData(data)
+   662→   662→      })
+   663→   663→      .catch(() => {})
+   664→   664→      .finally(() => setSubLoading(false))
+   665→   665→  }, [])
+   666→   666→
+   667→   667→  async function handleUpgrade(planType: string) {
+   668→   668→    setUpgrading(planType)
+   669→   669→    try {
+   670→   670→      const res = await fetch('/api/subscription', {
+   671→   671→        method: 'PUT',
+   672→   672→        headers: { 'Content-Type': 'application/json' },
+   673→   673→        body: JSON.stringify({ planType }),
+   674→   674→      })
+   675→   675→      if (!res.ok) {
+   676→   676→        const err = await res.json().catch(() => ({}))
+   677→   677→        toast.error(err.error || 'Erreur lors de la demande')
+   678→   678→        return
+   679→   679→      }
+   680→   680→      const data = await res.json()
+   681→   681→      // Update local state to show pending
+   682→   682→      setSubscriptionData((prev) =>
+   683→   683→        prev
+   684→   684→          ? {
+   685→   685→              ...prev,
+   686→   686→              pendingUpgrade: data.request || null,
+   687→   687→            }
+   688→   688→          : prev
+   689→   689→      )
+   690→   690→      toast.success('Demande envoyée ! Un administrateur va la valider.')
+   691→   691→    } catch {
+   692→   692→      toast.error('Erreur de connexion')
+   693→   693→    } finally {
+   694→   694→      setUpgrading(null)
+   695→   695→    }
+   696→   696→  }
+   697→   697→
+   698→   698→  function prevLabel(planType: string) {
+   699→   699→    return subscriptionData?.allPlans.find((p) => p.type === planType)?.label || planType
+   700→   700→  }
+   701→   701→
+   702→   702→  const currentPlan = shop?.plan || 'FREE'
+   703→   703→  const limits = planLimits[currentPlan as keyof typeof planLimits] || planLimits.FREE
+   704→   704→
+   705→   705→  return (
+   706→   706→    <div className="space-y-6 max-w-3xl">
+   707→   707→      <h1 className="text-2xl font-bold">Paramètres</h1>
+   708→   708→
+   709→   709→      {/* ═══ Subscription / Plan Card ═══ */}
+   710→   710→      <Card className="overflow-hidden">
+   711→   711→        <CardHeader className="pb-3">
+   712→   712→          <CardTitle className="flex items-center gap-2">
+   713→   713→            <Crown className="h-5 w-5 text-amber-500" />
+   714→   714→            Mon forfait
+   715→   715→          </CardTitle>
+   716→   716→          <CardDescription>
+   717→   717→            Gérez votre abonnement et créez jusqu&apos;à 10 boutiques
+   718→   718→          </CardDescription>
+   719→   719→        </CardHeader>
+   720→   720→        <CardContent>
+   721→   721→          {subLoading ? (
+   722→   722→            <div className="flex items-center justify-center py-8">
+   723→   723→              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+   724→   724→            </div>
+   725→   725→          ) : subscriptionData ? (
+   726→   726→            <>
+   727→   727→              {/* Current plan summary */}
+   728→   728→              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border p-4 mb-5"
+   729→   729→                style={{ borderColor: subscriptionData.planType === 'BUSINESS' ? '#D4AF37' : subscriptionData.planType === 'PRO' ? '#0891B2' : '#9ca3af' }}
+   730→   730→              >
+   731→   731→                <div className="flex items-center gap-3">
+   732→   732→                  <div
+   733→   733→                    className="flex items-center justify-center w-11 h-11 rounded-xl"
+   734→   734→                    style={{
+   735→   735→                      background: subscriptionData.planType === 'BUSINESS'
+   736→   736→                        ? 'linear-gradient(135deg, #D4AF37, #F59E0B)'
+   737→   737→                        : subscriptionData.planType === 'PRO'
+   738→   738→                        ? 'linear-gradient(135deg, #0891B2, #06B6D4)'
+   739→   739→                        : 'linear-gradient(135deg, #6b7280, #9ca3af)',
+   740→   740→                    }}
+   741→   741→                  >
+   742→   742→                    <Zap className="h-5 w-5 text-white" />
+   743→   743→                  </div>
+   744→   744→                  <div>
+   745→   745→                    <div className="flex items-center gap-2">
+   746→   746→                      <span className="font-bold text-lg">{subscriptionData.planConfig.label}</span>
+   747→   747→                      <Badge
+   748→   748→                        variant="secondary"
+   749→   749→                        className={
+   750→   750→                          subscriptionData.status === 'ACTIVE'
+   751→   751→                            ? 'bg-green-100 text-green-700 hover:bg-green-100'
+   752→   752→                            : subscriptionData.status === 'TRIAL'
+   753→   753→                            ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-100'
+   754→   754→                            : 'bg-red-100 text-red-700 hover:bg-red-100'
+   755→   755→                        }
+   756→   756→                      >
+   757→   757→                        {subscriptionData.status === 'ACTIVE'
+   758→   758→                          ? 'Actif'
+   759→   759→                          : subscriptionData.status === 'TRIAL'
+   760→   760→                          ? 'Essai'
+   761→   761→                          : subscriptionData.status}
+   762→   762→                      </Badge>
+   763→   763→                    </div>
+   764→   764→                    <p className="text-sm text-muted-foreground">
+   765→   765→                      {subscriptionData.currentShopCount}/{subscriptionData.maxShops} boutiques utilisées
+   766→   766→                      {subscriptionData.endDate && (
+   767→   767→                        <span className="ml-2">
+   768→   768→                          · Expire le {new Date(subscriptionData.endDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
+   769→   769→                        </span>
+   770→   770→                      )}
+   771→   771→                    </p>
+   772→   772→                  </div>
+   773→   773→                </div>
+   774→   774→                <div className="text-right">
+   775→   775→                  <p className="text-2xl font-bold">{subscriptionData.planConfig.price.toLocaleString('fr-FR')}</p>
+   776→   776→                  <p className="text-xs text-muted-foreground">FCFA/mois</p>
+   777→   777→                </div>
+   778→   778→              </div>
+   779→   779→
+   780→   780→              {/* Shop usage bar */}
+   781→   781→              <div className="mb-5">
+   782→   782→                <div className="flex items-center justify-between text-sm mb-1.5">
+   783→   783→                  <span className="text-muted-foreground">Boutiques utilisées</span>
+   784→   784→                  <span className="font-semibold">{subscriptionData.currentShopCount} / {subscriptionData.maxShops}</span>
+   785→   785→                </div>
+   786→   786→                <div className="h-2.5 rounded-full bg-muted overflow-hidden">
+   787→   787→                  <div
+   788→   788→                    className="h-full rounded-full transition-all duration-500"
+   789→   789→                    style={{
+   790→   790→                      width: `${Math.min((subscriptionData.currentShopCount / subscriptionData.maxShops) * 100, 100)}%`,
+   791→   791→                      background: subscriptionData.currentShopCount >= subscriptionData.maxShops
+   792→   792→                        ? '#ef4444'
+   793→   793→                        : subscriptionData.planType === 'BUSINESS'
+   794→   794→                        ? '#D4AF37'
+   795→   795→                        : subscriptionData.planType === 'PRO'
+   796→   796→                        ? '#0891B2'
+   797→   797→                        : '#6b7280',
+   798→   798→                    }}
+   799→   799→                  />
+   800→   800→                </div>
+   801→   801→                {subscriptionData.currentShopCount >= subscriptionData.maxShops && (
+   802→   802→                  <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1">
+   803→   803→                    <AlertCircle className="h-3 w-3" />
+   804→   804→                    Limite atteinte ! Passez à un forfait supérieur pour créer plus de boutiques.
+   805→   805→                  </p>
+   806→   806→                )}
+   807→   807→              </div>
+   808→   808→
+   809→   809→              {/* Pending upgrade banner */}
+   810→   810→              {subscriptionData.pendingUpgrade && (
+   811→   811→                <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 mb-5">
+   812→   812→                  <div className="flex items-start gap-3">
+   813→   813→                    <Clock className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
+   814→   814→                    <div className="flex-1 min-w-0">
+   815→   815→                      <p className="font-semibold text-amber-800 text-sm">
+   816→   816→                        Demande en attente de validation
+   817→   817→                      </p>
+   818→   818→                      <p className="text-xs text-amber-700 mt-1">
+   819→   819→                        Vous avez demandé le forfait <strong>{subscriptionData.pendingUpgrade.requestedLabel}</strong>{' '}
+   820→   820→                        ({subscriptionData.pendingUpgrade.requestedPrice.toLocaleString('fr-FR')} FCFA/mois) le{' '}
+   821→   821→                        {new Date(subscriptionData.pendingUpgrade.createdAt).toLocaleDateString('fr-FR', {
+   822→   822→                          day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
+   823→   823→                        })}
+   824→   824→                      </p>
+   825→   825→                      <p className="text-xs text-amber-600 mt-1.5">
+   826→   826→                        Un administrateur va examiner votre demande. Vous serez notifié dès validation.
+   827→   827→                      </p>
+   828→   828→                    </div>
+   829→   829→                  </div>
+   830→   830→                </div>
+   831→   831→              )}
+   832→   832→
+   833→   833→              {/* Available upgrades */}
+   834→   834→              {subscriptionData.allPlans
+   835→   835→                .filter((p) => p.type !== subscriptionData.planType)
+   836→   836→                .filter((p) => {
+   837→   837→                  const order = ['STARTER', 'PRO', 'BUSINESS']
+   838→   838→                  return order.indexOf(p.type) > order.indexOf(subscriptionData.planType)
+   839→   839→                })
+   840→   840→                .length > 0 && (
+   841→   841→                <div className="space-y-3">
+   842→   842→                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+   843→   843→                    Passer à un forfait supérieur
+   844→   844→                  </h3>
+   845→   845→                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+   846→   846→                    {subscriptionData.allPlans
+   847→   847→                      .filter((p) => p.type !== subscriptionData.planType)
+   848→   848→                      .filter((p) => {
+   849→   849→                        const order = ['STARTER', 'PRO', 'BUSINESS']
+   850→   850→                        return order.indexOf(p.type) > order.indexOf(subscriptionData.planType)
+   851→   851→                      })
+   852→   852→                      .map((plan) => (
+   853→   853→                        <div
+   854→   854→                          key={plan.type}
+   855→   855→                          className="relative rounded-xl border p-4 hover:shadow-md transition-shadow"
+   856→   856→                        >
+   857→   857→                          {plan.type === 'BUSINESS' && (
+   858→   858→                            <div className="absolute -top-2.5 left-4">
+   859→   859→                              <span className="bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+   860→   860→                                POPULAIRE
+   861→   861→                              </span>
+   862→   862→                            </div>
+   863→   863→                          )}
+   864→   864→                          <div className="flex items-center justify-between mb-3">
+   865→   865→                            <span className="font-bold">{plan.label}</span>
+   866→   866→                            <div className="text-right">
+   867→   867→                              <span className="text-lg font-bold">{plan.price.toLocaleString('fr-FR')}</span>
+   868→   868→                              <span className="text-xs text-muted-foreground ml-0.5">FCFA/mois</span>
+   869→   869→                            </div>
+   870→   870→                          </div>
+   871→   871→                          <div className="space-y-1.5 mb-4">
+   872→   872→                            <p className="text-sm font-medium flex items-center gap-2">
+   873→   873→                              <Store className="h-3.5 w-3.5 text-green-600" />
+   874→   874→                              Jusqu&apos;à {plan.maxShops} boutique{plan.maxShops > 1 ? 's' : ''}
+   875→   875→                            </p>
+   876→   876→                            {plan.features.map((f) => (
+   877→   877→                              <p key={f} className="text-xs text-muted-foreground flex items-center gap-2">
+   878→   878→                                <Check className="h-3 w-3 text-green-500" />
+   879→   879→                                {f}
+   880→   880→                              </p>
+   881→   881→                            ))}
+   882→   882→                            {plan.customDomain && (
+   883→   883→                              <p className="text-xs text-muted-foreground flex items-center gap-2">
+   884→   884→                                <Globe className="h-3 w-3 text-blue-500" />
+   885→   885→                                Domaine personnalisé
+   886→   886→                              </p>
+   887→   887→                            )}
+   888→   888→                          </div>
+   889→   889→                          <Button
+   890→   890→                            className="w-full gap-1.5"
+   891→   891→                            size="sm"
+   892→   892→                            onClick={() => handleUpgrade(plan.type)}
+   893→   893→                            disabled={upgrading === plan.type || !!subscriptionData.pendingUpgrade}
+   894→   894→                          >
+   895→   895→                            {upgrading === plan.type ? (
+   896→   896→                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+   897→   897→                            ) : subscriptionData.pendingUpgrade ? (
+   898→   898→                              <Clock className="h-3.5 w-3.5" />
+   899→   899→                            ) : (
+   900→   900→                              <ArrowUpRight className="h-3.5 w-3.5" />
+   901→   901→                            )}
+   902→   902→                            {subscriptionData.pendingUpgrade ? 'Demande en cours...' : `Demander le ${plan.label}`}
+   903→   903→                          </Button>
+   904→   904→                        </div>
+   905→   905→                      ))}
+   906→   906→                  </div>
+   907→   907→                </div>
+   908→   908→              )}
+   909→   909→            </>
+   910→   910→          ) : (
+   911→   911→            <p className="text-sm text-muted-foreground text-center py-4">
+   912→   912→              Impossible de charger les informations d&apos;abonnement.
+   913→   913→            </p>
+   914→   914→          )}
+   915→   915→        </CardContent>
+   916→   916→      </Card>
+   917→   917→
+   918→   918→      {/* Shop Information */}
+   919→   919→      <Card>
+   920→   920→        <CardHeader>
+   921→   921→          <CardTitle className="flex items-center gap-2">
+   922→   922→            <Store className="h-5 w-5 text-primary" />
+   923→   923→            Informations de la boutique
+   924→   924→          </CardTitle>
+   925→   925→          <CardDescription>
+   926→   926→            Modifiez les informations de votre boutique en ligne
+   927→   927→          </CardDescription>
+   928→   928→        </CardHeader>
+   929→   929→        <CardContent className="space-y-4">
+   930→   930→          <div className="space-y-2">
+   931→   931→            <Label htmlFor="shop-name">Nom de la boutique</Label>
+   932→   932→            <Input
+   933→   933→              id="shop-name"
+   934→   934→              value={name}
+   935→   935→              onChange={(e) => setName(e.target.value)}
+   936→   936→              placeholder="Nom de votre boutique"
+   937→   937→            />
+   938→   938→          </div>
+   939→   939→          <div className="space-y-2">
+   940→   940→            <Label htmlFor="shop-desc">Description</Label>
+   941→   941→            <Textarea
+   942→   942→              id="shop-desc"
+   943→   943→              value={description}
+   944→   944→              onChange={(e) => setDescription(e.target.value)}
+   945→   945→              placeholder="Décrivez votre activité..."
+   946→   946→              rows={3}
+   947→   947→            />
+   948→   948→          </div>
+   949→   949→          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   950→   950→            <div className="space-y-2">
+   951→   951→              <Label htmlFor="shop-whatsapp">Numéro WhatsApp *</Label>
+   952→   952→              <Input
+   953→   953→                id="shop-whatsapp"
+   954→   954→                type="tel"
+   955→   955→                value={whatsapp}
+   956→   956→                onChange={(e) => setWhatsapp(e.target.value)}
+   957→   957→                placeholder="+221 77 123 45 67"
+   958→   958→              />
+   959→   959→            </div>
+   960→   960→            <div className="space-y-2">
+   961→   961→              <Label htmlFor="shop-phone">Téléphone</Label>
+   962→   962→              <Input
+   963→   963→                id="shop-phone"
+   964→   964→                type="tel"
+   965→   965→                value={phone}
+   966→   966→                onChange={(e) => setPhone(e.target.value)}
+   967→   967→                placeholder="+221 33 987 65 43"
+   968→   968→              />
+   969→   969→            </div>
+   970→   970→          </div>
+   971→   971→          <div className="space-y-2">
+   972→   972→            <Label htmlFor="shop-address">Adresse</Label>
+   973→   973→            <Input
+   974→   974→              id="shop-address"
+   975→   975→              value={address}
+   976→   976→              onChange={(e) => setAddress(e.target.value)}
+   977→   977→              placeholder="Ex: Dakar, Sénégal"
+   978→   978→            />
+   979→   979→          </div>
+   980→   980→
+   981→   981→          {/* Logo & Banner Upload */}
+   982→   982→          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   983→   983→            {/* Logo Upload */}
+   984→   984→            <div className="space-y-2">
+   985→   985→              <Label>Logo de la boutique</Label>
+   986→   986→              {/* URL input */}
+   987→   987→              <div className="flex gap-2">
+   988→   988→                <Input
+   989→   989→                  type="url"
+   990→   990→                  placeholder="Coller l'URL du logo (https://...)"
+   991→   991→                  value={logoUrlInput}
+   992→   992→                  onChange={(e) => setLogoUrlInput(e.target.value)}
+   993→   993→                  className="flex-1 h-9 text-sm"
+   994→   994→                />
+   995→   995→                <Button
+   996→   996→                  type="button"
+   997→   997→                  variant="outline"
+   998→   998→                  size="sm"
+   999→   999→                  className="h-9 px-3 shrink-0"
+  1000→  1000→                  onClick={() => {
+  1001→  1001→                    const url = logoUrlInput.trim()
+  1002→  1002→                    if (url) {
+  1003→  1003→                      setLogo(url)
+  1004→  1004→                      setLogoUrlInput('')
+  1005→  1005→                      toast.success('Logo URL appliquée !')
+  1006→  1006→                    }
+  1007→  1007→                  }}
+  1008→  1008→                  disabled={!logoUrlInput.trim()}
+  1009→  1009→                >
+  1010→  1010→                  <LinkIcon className="h-3.5 w-3.5 mr-1" />
+  1011→  1011→                  Appliquer
+  1012→  1012→                </Button>
+  1013→  1013→              </div>
+  1014→  1014→              <input
+  1015→  1015→                ref={logoInputRef}
+  1016→  1016→                type="file"
+  1017→  1017→                accept="image/jpeg,image/png,image/gif,image/webp"
+  1018→  1018→                className="hidden"
+  1019→  1019→                onChange={handleLogoUpload}
+  1020→  1020→              />
+  1021→  1021→              {logo ? (
+  1022→  1022→                <div className="relative rounded-lg border border-muted overflow-hidden group">
+  1023→  1023→                  <img
+  1024→  1024→                    src={logo}
+  1025→  1025→                    alt="Logo"
+  1026→  1026→                    className="w-full h-24 object-contain bg-white p-2"
+  1027→  1027→                  />
+  1028→  1028→                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+  1029→  1029→                    <Button
+  1030→  1030→                      size="sm"
+  1031→  1031→                      variant="secondary"
+  1032→  1032→                      className="h-8 text-xs"
+  1033→  1033→                      onClick={() => logoInputRef.current?.click()}
+  1034→  1034→                    >
+  1035→  1035→                      <Upload className="h-3.5 w-3.5 mr-1" />
+  1036→  1036→                      Changer
+  1037→  1037→                    </Button>
+  1038→  1038→                    <Button
+  1039→  1039→                      size="sm"
+  1040→  1040→                      variant="destructive"
+  1041→  1041→                      className="h-8 text-xs"
+  1042→  1042→                      onClick={() => setLogo('')}
+  1043→  1043→                    >
+  1044→  1044→                      <Trash2 className="h-3.5 w-3.5 mr-1" />
+  1045→  1045→                      Supprimer
+  1046→  1046→                    </Button>
+  1047→  1047→                  </div>
+  1048→  1048→                </div>
+  1049→  1049→              ) : (
+  1050→  1050→                <button
+  1051→  1051→                  type="button"
+  1052→  1052→                  onClick={() => logoInputRef.current?.click()}
+  1053→  1053→                  disabled={logoUploading}
+  1054→  1054→                  className="w-full h-24 rounded-lg border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 bg-muted/20 flex flex-col items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+  1055→  1055→                >
+  1056→  1056→                  {logoUploading ? (
+  1057→  1057→                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+  1058→  1058→                  ) : (
+  1059→  1059→                    <ImagePlus className="h-5 w-5 text-muted-foreground" />
+  1060→  1060→                  )}
+  1061→  1061→                  <span className="text-xs text-muted-foreground">
+  1062→  1062→                    {logoUploading ? 'Téléchargement...' : 'Ou collez une URL ci-dessus'}
+  1063→  1063→                  </span>
+  1064→  1064→                </button>
+  1065→  1065→              )}
+  1066→  1066→            </div>
+  1067→  1067→
+  1068→  1068→            {/* Banner Upload */}
+  1069→  1069→            <div className="space-y-2">
+  1070→  1070→              <Label>Bannière de la boutique</Label>
+  1071→  1071→              <input
+  1072→  1072→                ref={bannerInputRef}
+  1073→  1073→                type="file"
+  1074→  1074→                accept="image/jpeg,image/png,image/gif,image/webp"
+  1075→  1075→                className="hidden"
+  1076→  1076→                onChange={handleBannerUpload}
+  1077→  1077→              />
+  1078→  1078→              {banner ? (
+  1079→  1079→                <div className="relative rounded-lg border border-muted overflow-hidden group">
+  1080→  1080→                  <img
+  1081→  1081→                    src={banner}
+  1082→  1082→                    alt="Bannière"
+  1083→  1083→                    className="w-full h-24 object-cover"
+  1084→  1084→                  />
+  1085→  1085→                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+  1086→  1086→                    <Button
+  1087→  1087→                      size="sm"
+  1088→  1088→                      variant="secondary"
+  1089→  1089→                      className="h-8 text-xs"
+  1090→  1090→                      onClick={() => bannerInputRef.current?.click()}
+  1091→  1091→                    >
+  1092→  1092→                      <Upload className="h-3.5 w-3.5 mr-1" />
+  1093→  1093→                      Changer
+  1094→  1094→                    </Button>
+  1095→  1095→                    <Button
+  1096→  1096→                      size="sm"
+  1097→  1097→                      variant="destructive"
+  1098→  1098→                      className="h-8 text-xs"
+  1099→  1099→                      onClick={() => setBanner('')}
+  1100→  1100→                    >
+  1101→  1101→                      <Trash2 className="h-3.5 w-3.5 mr-1" />
+  1102→  1102→                      Supprimer
+  1103→  1103→                    </Button>
+  1104→  1104→                  </div>
+  1105→  1105→                </div>
+  1106→  1106→              ) : (
+  1107→  1107→                <button
+  1108→  1108→                  type="button"
+  1109→  1109→                  onClick={() => bannerInputRef.current?.click()}
+  1110→  1110→                  disabled={bannerUploading}
+  1111→  1111→                  className="w-full h-24 rounded-lg border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 bg-muted/20 flex flex-col items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+  1112→  1112→                >
+  1113→  1113→                  {bannerUploading ? (
+  1114→  1114→                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+  1115→  1115→                  ) : (
+  1116→  1116→                    <ImagePlus className="h-5 w-5 text-muted-foreground" />
+  1117→  1117→                  )}
+  1118→  1118→                  <span className="text-xs text-muted-foreground">
+  1119→  1119→                    {bannerUploading ? 'Téléchargement...' : 'Cliquez pour télécharger la bannière'}
+  1120→  1120→                  </span>
+  1121→  1121→                </button>
+  1122→  1122→              )}
+  1123→  1123→            </div>
+  1124→  1124→          </div>
+  1125→  1125→
+  1126→  1126→          <Button onClick={handleSave} disabled={saving} className="gap-2">
+  1127→  1127→            {saving ? (
+  1128→  1128→              <Loader2 className="h-4 w-4 animate-spin" />
+  1129→  1129→            ) : (
+  1130→  1130→              <Check className="h-4 w-4" />
+  1131→  1131→            )}
+  1132→  1132→            Enregistrer
+  1133→  1133→          </Button>
+  1134→  1134→        </CardContent>
+  1135→  1135→      </Card>
+  1136→  1136→
+  1137→  1137→      {/* ═══ NOTIFICATIONS & EMAIL ═══ */}
+  1138→  1138→      <Card>
+  1139→  1139→        <CardHeader>
+  1140→  1140→          <CardTitle className="flex items-center gap-2">
+  1141→  1141→            <Zap className="h-5 w-5 text-primary" />
+  1142→  1142→            Notifications & Email
+  1143→  1143→          </CardTitle>
+  1144→  1144→          <CardDescription>
+  1145→  1145→            Choisissez les notifications que vous souhaitez recevoir par email
+  1146→  1146→          </CardDescription>
+  1147→  1147→        </CardHeader>
+  1148→  1148→        <CardContent className="space-y-4">
+  1149→  1149→          <div className="grid gap-4 sm:grid-cols-2">
+  1150→  1150→            {[
+  1151→  1151→              { key: 'notifyNewOrder', label: 'Nouvelle commande', desc: 'Recevez un email à chaque nouvelle commande' },
+  1152→  1152→              { key: 'notifyLowStock', label: 'Alerte stock bas', desc: 'Notification quand un produit a moins de 5 en stock' },
+  1153→  1153→              { key: 'notifyWeeklyReport', label: 'Rapport hebdomadaire', desc: 'Résumé de vos ventes chaque lundi' },
+  1154→  1154→              { key: 'notifyNewReview', label: 'Avis client', desc: 'Quand un client laisse un avis ou commentaire' },
+  1155→  1155→            ].map((item) => (
+  1156→  1156→              <label
+  1157→  1157→                key={item.key}
+  1158→  1158→                className="flex items-start gap-3 p-3 rounded-lg border border-muted cursor-pointer hover:bg-muted/50 transition-colors"
+  1159→  1159→              >
+  1160→  1160→                <input
+  1161→  1161→                  type="checkbox"
+  1162→  1162→                  checked={!!(notifPrefs as Record<string, boolean>)[item.key]}
+  1163→  1163→                  onChange={(e) =>
+  1164→  1164→                    setNotifPrefs((prev: Record<string, boolean>) => ({ ...prev, [item.key]: e.target.checked }))
+  1165→  1165→                  }
+  1166→  1166→                  className="mt-0.5 h-4 w-4 rounded border-muted-foreground/30 text-primary focus:ring-primary"
+  1167→  1167→                />
+  1168→  1168→                <div>
+  1169→  1169→                  <p className="text-sm font-medium leading-none">{item.label}</p>
+  1170→  1170→                  <p className="text-xs text-muted-foreground mt-1">{item.desc}</p>
+  1171→  1171→                </div>
+  1172→  1172→              </label>
+  1173→  1173→            ))}
+  1174→  1174→          </div>
+  1175→  1175→
+  1176→  1176→          <div className="pt-2">
+  1177→  1177→            <Label className="text-sm font-medium">Email de contact</Label>
+  1178→  1178→            <p className="text-xs text-muted-foreground mb-2">Adresse où recevoir les notifications</p>
+  1179→  1179→            <Input
+  1180→  1180→              type="email"
+  1181→  1181→              value={notifEmail}
+  1182→  1182→              onChange={(e) => setNotifEmail(e.target.value)}
+  1183→  1183→              placeholder="votre@email.com"
+  1184→  1184→              className="max-w-sm"
+  1185→  1185→            />
+  1186→  1186→          </div>
+  1187→  1187→
+  1188→  1188→          <Button
+  1189→  1189→            onClick={saveNotifPrefs}
+  1190→  1190→            disabled={savingNotif}
+  1191→  1191→            className="gap-2"
+  1192→  1192→          >
+  1193→  1193→            {savingNotif ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+  1194→  1194→            Enregistrer les préférences
+  1195→  1195→          </Button>
+  1196→  1196→        </CardContent>
+  1197→  1197→      </Card>
+  1198→  1198→
+  1199→  1199→      {/* Shipping Zones */}
+  1200→  1200→      <ShippingZonesManager />
+  1201→  1201→
+  1202→  1202→      {/* Hero Slider Images */}
+  1203→  1203→      <Card>
+  1204→  1204→        <CardHeader>
+  1205→  1205→          <CardTitle className="flex items-center gap-2">
+  1206→  1206→            <ImagePlus className="h-5 w-5 text-primary" />
+  1207→  1207→            Images du slide (page d&apos;accueil)
+  1208→  1208→          </CardTitle>
+  1209→  1209→          <CardDescription>
+  1210→  1210→            Ajoutez jusqu&apos;à 6 images qui défilent en haut de votre boutique publique
+  1211→  1211→          </CardDescription>
+  1212→  1212→        </CardHeader>
+  1213→  1213→        <CardContent className="space-y-4">
+  1214→  1214→          {/* Current hero images */}
+  1215→  1215→          {heroImages.length > 0 && (
+  1216→  1216→            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+  1217→  1217→              {heroImages.map((img, idx) => (
+  1218→  1218→                <div
+  1219→  1219→                  key={idx}
+  1220→  1220→                  className="relative rounded-lg border border-muted overflow-hidden group aspect-video"
+  1221→  1221→                >
+  1222→  1222→                  <img
+  1223→  1223→                    src={img}
+  1224→  1224→                    alt={`Slide ${idx + 1}`}
+  1225→  1225→                    className="w-full h-full object-cover"
+  1226→  1226→                  />
+  1227→  1227→                  <div className="absolute top-1.5 left-1.5">
+  1228→  1228→                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-black/60 text-white border-0">
+  1229→  1229→                      {idx + 1}
+  1230→  1230→                    </Badge>
+  1231→  1231→                  </div>
+  1232→  1232→                  <button
+  1233→  1233→                    type="button"
+  1234→  1234→                    onClick={() => removeHeroImage(idx)}
+  1235→  1235→                    className="absolute top-1.5 right-1.5 h-6 w-6 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+  1236→  1236→                  >
+  1237→  1237→                    <X className="h-3.5 w-3.5" />
+  1238→  1238→                  </button>
+  1239→  1239→                </div>
+  1240→  1240→              ))}
+  1241→  1241→            </div>
+  1242→  1242→          )}
+  1243→  1243→
+  1244→  1244→          {/* Upload button */}
+  1245→  1245→          <input
+  1246→  1246→            ref={heroInputRef}
+  1247→  1247→            type="file"
+  1248→  1248→            accept="image/jpeg,image/png,image/gif,image/webp"
+  1249→  1249→            multiple
+  1250→  1250→            className="hidden"
+  1251→  1251→            onChange={handleHeroUpload}
+  1252→  1252→          />
+  1253→  1253→          {heroImages.length < 6 && (
+  1254→  1254→            <button
+  1255→  1255→              type="button"
+  1256→  1256→              onClick={() => heroInputRef.current?.click()}
+  1257→  1257→              disabled={heroUploading}
+  1258→  1258→              className="w-full rounded-lg border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 bg-muted/20 py-6 flex flex-col items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50"
+  1259→  1259→            >
+  1260→  1260→              {heroUploading ? (
+  1261→  1261→                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+  1262→  1262→              ) : (
+  1263→  1263→                <Upload className="h-6 w-6 text-muted-foreground" />
+  1264→  1264→              )}
+  1265→  1265→              <span className="text-sm text-muted-foreground">
+  1266→  1266→                {heroUploading
+  1267→  1267→                  ? 'Téléchargement en cours...'
+  1268→  1268→                  : `Cliquez pour ajouter des images (${heroImages.length}/6)`}
+  1269→  1269→              </span>
+  1270→  1270→              <span className="text-xs text-muted-foreground/60">
+  1271→  1271→                JPG, PNG, GIF ou WebP — Max 5 Mo par image
+  1272→  1272→              </span>
+  1273→  1273→            </button>
+  1274→  1274→          )}
+  1275→  1275→
+  1276→  1276→          {/* URL input for hero images */}
+  1277→  1277→          {heroImages.length < 6 && (
+  1278→  1278→            <div className="flex items-center gap-2">
+  1279→  1279→              <Input
+  1280→  1280→                value={heroUrlInput}
+  1281→  1281→                onChange={(e) => setHeroUrlInput(e.target.value)}
+  1282→  1282→                placeholder="Ou collez une URL d'image..."
+  1283→  1283→                className="flex-1 h-9 text-sm"
+  1284→  1284→                onKeyDown={(e) => {
+  1285→  1285→                  if (e.key === 'Enter') addHeroFromUrl()
+  1286→  1286→                }}
+  1287→  1287→              />
+  1288→  1288→              <Button
+  1289→  1289→                type="button"
+  1290→  1290→                variant="outline"
+  1291→  1291→                size="sm"
+  1292→  1292→                onClick={addHeroFromUrl}
+  1293→  1293→                disabled={!heroUrlInput.trim()}
+  1294→  1294→                className="gap-1.5 h-9 flex-shrink-0"
+  1295→  1295→              >
+  1296→  1296→                <ImagePlus className="h-3.5 w-3.5" />
+  1297→  1297→                Ajouter
+  1298→  1298→              </Button>
+  1299→  1299→            </div>
+  1300→  1300→          )}
+  1301→  1301→
+  1302→  1302→          {heroImages.length > 0 && (
+  1303→  1303→            <Button onClick={handleSave} disabled={saving} size="sm" className="gap-2">
+  1304→  1304→              {saving ? (
+  1305→  1305→                <Loader2 className="h-4 w-4 animate-spin" />
+  1306→  1306→              ) : (
+  1307→  1307→                <Check className="h-4 w-4" />
+  1308→  1308→              )}
+  1309→  1309→              Enregistrer les images du slide
+  1310→  1310→            </Button>
+  1311→  1311→          )}
+  1312→  1312→
+  1313→  1313→          {heroImages.length === 0 && (
+  1314→  1314→            <p className="text-xs text-muted-foreground text-center">
+  1315→  1315→              Si aucune image n&apos;est ajoutée, les images par défaut du slide seront affichées sur votre boutique.
+  1316→  1316→            </p>
+  1317→  1317→          )}
+  1318→  1318→        </CardContent>
+  1319→  1319→      </Card>
+  1320→  1320→
+  1321→  1321→      {/* Promo Banners */}
+  1322→  1322→      <Card>
+  1323→  1323→        <CardHeader>
+  1324→  1324→          <CardTitle className="flex items-center gap-2">
+  1325→  1325→            <ImagePlus className="h-5 w-5 text-primary" />
+  1326→  1326→            Bannières publicitaires
+  1327→  1327→          </CardTitle>
+  1328→  1328→          <CardDescription>
+  1329→  1329→            Ajoutez des bannières promotionnelles sur votre boutique (jusqu&apos;à 4)
+  1330→  1330→          </CardDescription>
+  1331→  1331→        </CardHeader>
+  1332→  1332→        <CardContent className="space-y-4">
+  1333→  1333→          {/* Current promo banners */}
+  1334→  1334→          {promoBanners.length > 0 && (
+  1335→  1335→            <div className="space-y-4">
+  1336→  1336→              {promoBanners.map((banner, idx) => (
+  1337→  1337→                <div key={banner.id} className="rounded-lg border border-muted overflow-hidden">
+  1338→  1338→                  {/* Banner preview */}
+  1339→  1339→                  <div className="relative aspect-[16/5] bg-muted/20">
+  1340→  1340→                    <img
+  1341→  1341→                      src={banner.image}
+  1342→  1342→                      alt={banner.title || `Bannière ${idx + 1}`}
+  1343→  1343→                      className="w-full h-full object-cover"
+  1344→  1344→                    />
+  1345→  1345→                    <div className="absolute top-2 left-2">
+  1346→  1346→                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-black/60 text-white border-0">
+  1347→  1347→                        {idx + 1}/{promoBanners.length}
+  1348→  1348→                      </Badge>
+  1349→  1349→                    </div>
+  1350→  1350→                    <button
+  1351→  1351→                      type="button"
+  1352→  1352→                      onClick={() => removePromoBanner(banner.id)}
+  1353→  1353→                      className="absolute top-2 right-2 h-7 w-7 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 shadow-sm transition-opacity"
+  1354→  1354→                    >
+  1355→  1355→                      <Trash2 className="h-3.5 w-3.5" />
+  1356→  1356→                    </button>
+  1357→  1357→                  </div>
+  1358→  1358→                  {/* Banner fields */}
+  1359→  1359→                  <div className="p-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+  1360→  1360→                    <div className="space-y-1.5">
+  1361→  1361→                      <Label className="text-xs text-muted-foreground">Titre de la bannière</Label>
+  1362→  1362→                      <Input
+  1363→  1363→                        value={banner.title}
+  1364→  1364→                        onChange={(e) => updatePromoBanner(banner.id, 'title', e.target.value)}
+  1365→  1365→                        placeholder="Ex: Promotion d'été"
+  1366→  1366→                        className="h-8 text-sm"
+  1367→  1367→                      />
+  1368→  1368→                    </div>
+  1369→  1369→                    <div className="space-y-1.5">
+  1370→  1370→                      <Label className="text-xs text-muted-foreground">Lien (optionnel)</Label>
+  1371→  1371→                      <Input
+  1372→  1372→                        value={banner.link}
+  1373→  1373→                        onChange={(e) => updatePromoBanner(banner.id, 'link', e.target.value)}
+  1374→  1374→                        placeholder="https://example.com/promo"
+  1375→  1375→                        className="h-8 text-sm"
+  1376→  1376→                      />
+  1377→  1377→                    </div>
+  1378→  1378→                  </div>
+  1379→  1379→                </div>
+  1380→  1380→              ))}
+  1381→  1381→            </div>
+  1382→  1382→          )}
+  1383→  1383→
+  1384→  1384→          {/* Upload button */}
+  1385→  1385→          <input
+  1386→  1386→            ref={promoInputRef}
+  1387→  1387→            type="file"
+  1388→  1388→            accept="image/jpeg,image/png,image/gif,image/webp"
+  1389→  1389→            className="hidden"
+  1390→  1390→            onChange={handlePromoUpload}
+  1391→  1391→          />
+  1392→  1392→          {promoBanners.length < 4 && (
+  1393→  1393→            <button
+  1394→  1394→              type="button"
+  1395→  1395→              onClick={() => promoInputRef.current?.click()}
+  1396→  1396→              disabled={promoUploading}
+  1397→  1397→              className="w-full rounded-lg border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 bg-muted/20 py-6 flex flex-col items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50"
+  1398→  1398→            >
+  1399→  1399→              {promoUploading ? (
+  1400→  1400→                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+  1401→  1401→              ) : (
+  1402→  1402→                <Upload className="h-6 w-6 text-muted-foreground" />
+  1403→  1403→              )}
+  1404→  1404→              <span className="text-sm text-muted-foreground">
+  1405→  1405→                {promoUploading
+  1406→  1406→                  ? 'Téléchargement en cours...'
+  1407→  1407→                  : `Cliquez pour ajouter une bannière (${promoBanners.length}/4)`}
+  1408→  1408→              </span>
+  1409→  1409→              <span className="text-xs text-muted-foreground/60">
+  1410→  1410→                JPG, PNG, GIF ou WebP — Max 5 Mo — Ratio 16:5 recommandé
+  1411→  1411→              </span>
+  1412→  1412→            </button>
+  1413→  1413→          )}
+  1414→  1414→
+  1415→  1415→          {/* URL input for promo banners */}
+  1416→  1416→          {promoBanners.length < 4 && (
+  1417→  1417→            <div className="flex items-center gap-2">
+  1418→  1418→              <Input
+  1419→  1419→                value={promoUrlInput}
+  1420→  1420→                onChange={(e) => setPromoUrlInput(e.target.value)}
+  1421→  1421→                placeholder="Ou collez une URL d'image..."
+  1422→  1422→                className="flex-1 h-9 text-sm"
+  1423→  1423→                onKeyDown={(e) => {
+  1424→  1424→                  if (e.key === 'Enter') addPromoFromUrl()
+  1425→  1425→                }}
+  1426→  1426→              />
+  1427→  1427→              <Button
+  1428→  1428→                type="button"
+  1429→  1429→                variant="outline"
+  1430→  1430→                size="sm"
+  1431→  1431→                onClick={addPromoFromUrl}
+  1432→  1432→                disabled={!promoUrlInput.trim()}
+  1433→  1433→                className="gap-1.5 h-9 flex-shrink-0"
+  1434→  1434→              >
+  1435→  1435→                <ImagePlus className="h-3.5 w-3.5" />
+  1436→  1436→                Ajouter
+  1437→  1437→              </Button>
+  1438→  1438→            </div>
+  1439→  1439→          )}
+  1440→  1440→
+  1441→  1441→          {promoBanners.length > 0 && (
+  1442→  1442→            <Button onClick={handleSave} disabled={saving} size="sm" className="gap-2">
+  1443→  1443→              {saving ? (
+  1444→  1444→                <Loader2 className="h-4 w-4 animate-spin" />
+  1445→  1445→              ) : (
+  1446→  1446→                <Check className="h-4 w-4" />
+  1447→  1447→              )}
+  1448→  1448→              Enregistrer les bannières
+  1449→  1449→            </Button>
+  1450→  1450→          )}
+  1451→  1451→
+  1452→  1452→          {promoBanners.length === 0 && (
+  1453→  1453→            <p className="text-xs text-muted-foreground text-center">
+  1454→  1454→              Les bannières publicitaires s&apos;affichent sur votre boutique entre les sections produits.
+  1455→  1455→            </p>
+  1456→  1456→          )}
+  1457→  1457→        </CardContent>
+  1458→  1458→      </Card>
+  1459→  1459→
+  1460→  1460→      {/* Brands Carousel */}
+  1461→  1461→      <Card>
+  1462→  1462→        <CardHeader>
+  1463→  1463→          <CardTitle className="flex items-center gap-2">
+  1464→  1464→            <Globe className="h-5 w-5 text-primary" />
+  1465→  1465→            Carousel des marques
+  1466→  1466→          </CardTitle>
+  1467→  1467→          <CardDescription>
+  1468→  1468→            Ajoutez les logos des marques que vous distribuez (jusqu&apos;à 20). Ils apparaissent dans un carousel sur votre boutique.
+  1469→  1469→          </CardDescription>
+  1470→  1470→        </CardHeader>
+  1471→  1471→        <CardContent className="space-y-4">
+  1472→  1472→          {/* Current brands */}
+  1473→  1473→          {brands.length > 0 && (
+  1474→  1474→            <div className="space-y-3">
+  1475→  1475→              {brands.map((brand, idx) => (
+  1476→  1476→                <div key={brand.id} className="flex items-center gap-3 rounded-lg border border-muted p-3">
+  1477→  1477→                  {/* Brand logo thumbnail */}
+  1478→  1478→                  <div className="shrink-0 w-16 h-10 rounded-lg overflow-hidden bg-muted/20 flex items-center justify-center">
+  1479→  1479→                    <img src={brand.image} alt={brand.name} className="max-w-full max-h-full object-contain" />
+  1480→  1480→                  </div>
+  1481→  1481→                  {/* Brand info */}
+  1482→  1482→                  <div className="flex-1 min-w-0 space-y-1.5">
+  1483→  1483→                    <div className="grid grid-cols-2 gap-2">
+  1484→  1484→                      <div>
+  1485→  1485→                        <Label className="text-xs text-muted-foreground">Nom</Label>
+  1486→  1486→                        <Input
+  1487→  1487→                          value={brand.name}
+  1488→  1488→                          onChange={(e) => updateBrand(brand.id, 'name', e.target.value)}
+  1489→  1489→                          placeholder="Nom de la marque"
+  1490→  1490→                          className="h-8 text-sm"
+  1491→  1491→                        />
+  1492→  1492→                      </div>
+  1493→  1493→                      <div>
+  1494→  1494→                        <Label className="text-xs text-muted-foreground">Lien (optionnel)</Label>
+  1495→  1495→                        <Input
+  1496→  1496→                          value={brand.link}
+  1497→  1497→                          onChange={(e) => updateBrand(brand.id, 'link', e.target.value)}
+  1498→  1498→                          placeholder="https://example.com"
+  1499→  1499→                          className="h-8 text-sm"
+  1500→  1500→                        />
+  1501→  1501→                      </div>
+  1502→  1502→                    </div>
+  1503→  1503→                    <p className="text-[10px] text-muted-foreground truncate">{brand.image}</p>
+  1504→  1504→                  </div>
+  1505→  1505→                  {/* Delete */}
+  1506→  1506→                  <button
+  1507→  1507→                    type="button"
+  1508→  1508→                    onClick={() => removeBrand(brand.id)}
+  1509→  1509→                    className="shrink-0 h-7 w-7 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition-colors"
+  1510→  1510→                  >
+  1511→  1511→                    <Trash2 className="h-3.5 w-3.5" />
+  1512→  1512→                  </button>
+  1513→  1513→                </div>
+  1514→  1514→              ))}
+  1515→  1515→            </div>
+  1516→  1516→          )}
+  1517→  1517→
+  1518→  1518→          {/* Add brand form */}
+  1519→  1519→          <div className="space-y-3">
+  1520→  1520→            <div className="flex items-center gap-2">
+  1521→  1521→              <Input
+  1522→  1522→                value={brandNameInput}
+  1523→  1523→                onChange={(e) => setBrandNameInput(e.target.value)}
+  1524→  1524→                placeholder="Nom de la marque"
+  1525→  1525→                className="h-9 text-sm"
+  1526→  1526→              />
+  1527→  1527→              <Input
+  1528→  1528→                value={brandUrlInput}
+  1529→  1529→                onChange={(e) => setBrandUrlInput(e.target.value)}
+  1530→  1530→                placeholder="URL du logo (https://...)"
+  1531→  1531→                className="flex-1 h-9 text-sm"
+  1532→  1532→                onKeyDown={(e) => {
+  1533→  1533→                  if (e.key === 'Enter') addBrandFromUrl()
+  1534→  1534→                }}
+  1535→  1535→              />
+  1536→  1536→              <Button
+  1537→  1537→                type="button"
+  1538→  1538→                variant="outline"
+  1539→  1539→                size="sm"
+  1540→  1540→                onClick={addBrandFromUrl}
+  1541→  1541→                disabled={!brandUrlInput.trim() || brands.length >= 20}
+  1542→  1542→                className="gap-1.5 h-9 flex-shrink-0"
+  1543→  1543→              >
+  1544→  1544→                <ImagePlus className="h-3.5 w-3.5" />
+  1545→  1545→                Ajouter
+  1546→  1546→              </Button>
+  1547→  1547→            </div>
+  1548→  1548→
+  1549→  1549→            {/* Upload button */}
+  1550→  1550→            <input
+  1551→  1551→              ref={brandInputRef}
+  1552→  1552→              type="file"
+  1553→  1553→              accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml"
+  1554→  1554→              className="hidden"
+  1555→  1555→              onChange={handleBrandUpload}
+  1556→  1556→            />
+  1557→  1557→            {brands.length < 20 && (
+  1558→  1558→              <button
+  1559→  1559→                type="button"
+  1560→  1560→                onClick={() => brandInputRef.current?.click()}
+  1561→  1561→                disabled={brandUploading}
+  1562→  1562→                className="w-full rounded-lg border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 bg-muted/20 py-4 flex flex-col items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+  1563→  1563→              >
+  1564→  1564→                {brandUploading ? (
+  1565→  1565→                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+  1566→  1566→                ) : (
+  1567→  1567→                  <Upload className="h-5 w-5 text-muted-foreground" />
+  1568→  1568→                )}
+  1569→  1569→                <span className="text-sm text-muted-foreground">
+  1570→  1570→                  {brandUploading
+  1571→  1571→                    ? 'Téléchargement en cours...'
+  1572→  1572→                    : `Ou téléchargez un logo (${brands.length}/20)`}
+  1573→  1573→                </span>
+  1574→  1574→                <span className="text-xs text-muted-foreground/60">
+  1575→  1575→                  JPG, PNG, GIF, WebP ou SVG — Max 5 Mo
+  1576→  1576→                </span>
+  1577→  1577→              </button>
+  1578→  1578→            )}
+  1579→  1579→          </div>
+  1580→  1580→
+  1581→  1581→          {brands.length > 0 && (
+  1582→  1582→            <Button onClick={handleSave} disabled={saving} size="sm" className="gap-2">
+  1583→  1583→              {saving ? (
+  1584→  1584→                <Loader2 className="h-4 w-4 animate-spin" />
+  1585→  1585→              ) : (
+  1586→  1586→                <Check className="h-4 w-4" />
+  1587→  1587→              )}
+  1588→  1588→              Enregistrer les marques
+  1589→  1589→            </Button>
+  1590→  1590→          )}
+  1591→  1591→
+  1592→  1592→          {brands.length === 0 && (
+  1593→  1593→            <p className="text-xs text-muted-foreground text-center">
+  1594→  1594→              Le carousel de marques s&apos;affiche sur votre boutique au-dessus des produits. Ajoutez les logos des marques que vous vendez.
+  1595→  1595→            </p>
+  1596→  1596→          )}
+  1597→  1597→        </CardContent>
+  1598→  1598→      </Card>
+  1599→  1599→
+  1600→  1600→      {/* SEO & Référencement */}
+  1601→  1601→      <Card>
+  1602→  1602→        <CardHeader>
+  1603→  1603→          <CardTitle className="flex items-center gap-2">
+  1604→  1604→            <Search className="h-5 w-5 text-primary" />
+  1605→  1605→            SEO &amp; Référencement
+  1606→  1606→          </CardTitle>
+  1607→  1607→          <CardDescription>
+  1608→  1608→            Optimisez le référencement de votre boutique sur les moteurs de recherche.
+  1609→  1609→          </CardDescription>
+  1610→  1610→        </CardHeader>
+  1611→  1611→        <CardContent className="space-y-4">
+  1612→  1612→          {/* Titre SEO */}
+  1613→  1613→          <div className="space-y-2">
+  1614→  1614→            <div className="flex items-center justify-between">
+  1615→  1615→              <Label htmlFor="seo-title" className="flex items-center gap-2">
+  1616→  1616→                <Type className="h-3.5 w-3.5 text-muted-foreground" />
+  1617→  1617→                Titre SEO
+  1618→  1618→              </Label>
+  1619→  1619→              <span className={`text-xs tabular-nums ${seoTitle.length > 60 ? 'text-red-500 font-medium' : 'text-muted-foreground'}`}>
+  1620→  1620→                {seoTitle.length}/60
+  1621→  1621→              </span>
+  1622→  1622→            </div>
+  1623→  1623→            <Input
+  1624→  1624→              id="seo-title"
+  1625→  1625→              value={seoTitle}
+  1626→  1626→              onChange={(e) => {
+  1627→  1627→                if (e.target.value.length <= 60) setSeoTitle(e.target.value)
+  1628→  1628→              }}
+  1629→  1629→              placeholder="Ma Boutique - Produits de qualité"
+  1630→  1630→              maxLength={60}
+  1631→  1631→            />
+  1632→  1632→          </div>
+  1633→  1633→
+  1634→  1634→          {/* Description SEO */}
+  1635→  1635→          <div className="space-y-2">
+  1636→  1636→            <div className="flex items-center justify-between">
+  1637→  1637→              <Label htmlFor="seo-description" className="flex items-center gap-2">
+  1638→  1638→                <Type className="h-3.5 w-3.5 text-muted-foreground" />
+  1639→  1639→                Description SEO
+  1640→  1640→              </Label>
+  1641→  1641→              <span className={`text-xs tabular-nums ${seoDescription.length > 160 ? 'text-red-500 font-medium' : 'text-muted-foreground'}`}>
+  1642→  1642→                {seoDescription.length}/160
+  1643→  1643→              </span>
+  1644→  1644→            </div>
+  1645→  1645→            <Textarea
+  1646→  1646→              id="seo-description"
+  1647→  1647→              value={seoDescription}
+  1648→  1648→              onChange={(e) => {
+  1649→  1649→                if (e.target.value.length <= 160) setSeoDescription(e.target.value)
+  1650→  1650→              }}
+  1651→  1651→              placeholder="Découvrez nos produits de qualité à des prix imbattables..."
+  1652→  1652→              rows={3}
+  1653→  1653→              maxLength={160}
+  1654→  1654→            />
+  1655→  1655→          </div>
+  1656→  1656→
+  1657→  1657→          {/* Mots-clés SEO */}
+  1658→  1658→          <div className="space-y-2">
+  1659→  1659→            <Label htmlFor="seo-keywords" className="flex items-center gap-2">
+  1660→  1660→              <Type className="h-3.5 w-3.5 text-muted-foreground" />
+  1661→  1661→              Mots-clés SEO
+  1662→  1662→            </Label>
+  1663→  1663→            <Input
+  1664→  1664→              id="seo-keywords"
+  1665→  1665→              value={seoKeywords}
+  1666→  1666→              onChange={(e) => setSeoKeywords(e.target.value)}
+  1667→  1667→              placeholder="mode, beaute, vetements"
+  1668→  1668→            />
+  1669→  1669→            <p className="text-xs text-muted-foreground">
+  1670→  1670→              Séparez les mots-clés par des virgules
+  1671→  1671→            </p>
+  1672→  1672→          </div>
+  1673→  1673→
+  1674→  1674→          {/* Image OG */}
+  1675→  1675→          <div className="space-y-2">
+  1676→  1676→            <Label htmlFor="og-image" className="flex items-center gap-2">
+  1677→  1677→              <ImagePlus className="h-3.5 w-3.5 text-muted-foreground" />
+  1678→  1678→              Image OG
+  1679→  1679→            </Label>
+  1680→  1680→            <Input
+  1681→  1681→              id="og-image"
+  1682→  1682→              type="url"
+  1683→  1683→              value={ogImage}
+  1684→  1684→              onChange={(e) => setOgImage(e.target.value)}
+  1685→  1685→              placeholder="https://..."
+  1686→  1686→            />
+  1687→  1687→            {ogImage && (
+  1688→  1688→              <div className="mt-2 rounded-lg border border-muted overflow-hidden">
+  1689→  1689→                <img
+  1690→  1690→                  src={ogImage}
+  1691→  1691→                  alt="Aperçu Image OG"
+  1692→  1692→                  className="w-full h-32 object-cover"
+  1693→  1693→                />
+  1694→  1694→              </div>
+  1695→  1695→            )}
+  1696→  1696→          </div>
+  1697→  1697→
+  1698→  1698→          {/* Image de couverture */}
+  1699→  1699→          <div className="space-y-2">
+  1700→  1700→            <Label htmlFor="cover-image-url" className="flex items-center gap-2">
+  1701→  1701→              <ImagePlus className="h-3.5 w-3.5 text-muted-foreground" />
+  1702→  1702→              Image de couverture
+  1703→  1703→            </Label>
+  1704→  1704→            <Input
+  1705→  1705→              id="cover-image-url"
+  1706→  1706→              type="url"
+  1707→  1707→              value={coverImageUrl}
+  1708→  1708→              onChange={(e) => setCoverImageUrl(e.target.value)}
+  1709→  1709→              placeholder="https://..."
+  1710→  1710→            />
+  1711→  1711→            {coverImageUrl && (
+  1712→  1712→              <div className="mt-2 rounded-lg border border-muted overflow-hidden">
+  1713→  1713→                <img
+  1714→  1714→                  src={coverImageUrl}
+  1715→  1715→                  alt="Aperçu image de couverture"
+  1716→  1716→                  className="w-full h-32 object-cover"
+  1717→  1717→                />
+  1718→  1718→              </div>
+  1719→  1719→            )}
+  1720→  1720→          </div>
+  1721→  1721→
+  1722→  1722→          <Button onClick={handleSeoSave} disabled={seoSaving} className="gap-2">
+  1723→  1723→            {seoSaving ? (
+  1724→  1724→              <Loader2 className="h-4 w-4 animate-spin" />
+  1725→  1725→            ) : (
+  1726→  1726→              <Check className="h-4 w-4" />
+  1727→  1727→            )}
+  1728→  1728→            Enregistrer le référencement
+  1729→  1729→          </Button>
+  1730→  1730→        </CardContent>
+  1731→  1731→      </Card>
+  1732→  1732→
+  1733→  1733→      {/* Nom de Domaine Personnalisé */}
+  1734→  1734→      <Card>
+  1735→  1735→        <CardHeader>
+  1736→  1736→          <CardTitle className="flex items-center gap-2">
+  1737→  1737→            <Globe className="h-5 w-5 text-primary" />
+  1738→  1738→            Nom de domaine personnalisé
+  1739→  1739→          </CardTitle>
+  1740→  1740→          <CardDescription>
+  1741→  1741→            Utilisez votre propre nom de domaine pour votre boutique Boutiko
+  1742→  1742→          </CardDescription>
+  1743→  1743→        </CardHeader>
+  1744→  1744→        <CardContent className="space-y-4">
+  1745→  1745→          {/* Domain Status Display */}
+  1746→  1746→          {domainStatus === 'APPROVED' && (
+  1747→  1747→            <div className="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 p-4">
+  1748→  1748→              <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
+  1749→  1749→              <div>
+  1750→  1750→                <p className="text-sm font-medium text-green-800">Domaine actif</p>
+  1751→  1751→                <p className="text-sm text-green-700 font-mono">{domainName}</p>
+  1752→  1752→              </div>
+  1753→  1753→              <Badge className="bg-green-100 text-green-800 hover:bg-green-100 ml-auto flex-shrink-0">APPROUVÉ</Badge>
+  1754→  1754→            </div>
+  1755→  1755→          )}
+  1756→  1756→
+  1757→  1757→          {domainStatus === 'PENDING' && (
+  1758→  1758→            <div className="flex items-center gap-3 rounded-lg border border-yellow-200 bg-yellow-50 p-4">
+  1759→  1759→              <Clock className="h-5 w-5 text-yellow-600 flex-shrink-0" />
+  1760→  1760→              <div>
+  1761→  1761→                <p className="text-sm font-medium text-yellow-800">En attente de validation</p>
+  1762→  1762→                <p className="text-sm text-yellow-700">Votre domaine <span className="font-mono">{domainName}</span> est en cours de vérification.</p>
+  1763→  1763→              </div>
+  1764→  1764→              <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 ml-auto flex-shrink-0">EN ATTENTE</Badge>
+  1765→  1765→            </div>
+  1766→  1766→          )}
+  1767→  1767→
+  1768→  1768→          {domainStatus === 'REJECTED' && (
+  1769→  1769→            <div className="flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-4">
+  1770→  1770→              <XCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
+  1771→  1771→              <div>
+  1772→  1772→                <p className="text-sm font-medium text-red-800">Demande rejetée</p>
+  1773→  1773→                <p className="text-sm text-red-700">{domainRejectionReason || 'Votre demande de domaine a été rejetée. Vous pouvez soumettre une nouvelle demande.'}</p>
+  1774→  1774→              </div>
+  1775→  1775→              <Badge className="bg-red-100 text-red-800 hover:bg-red-100 ml-auto flex-shrink-0">REJETÉ</Badge>
+  1776→  1776→            </div>
+  1777→  1777→          )}
+  1778→  1778→
+  1779→  1779→          {domainStatus === 'NONE' && (
+  1780→  1780→            <div className="flex items-center gap-3 rounded-lg border border-muted bg-muted/30 p-4">
+  1781→  1781→              <AlertCircle className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+  1782→  1782→              <p className="text-sm text-muted-foreground">Aucun domaine personnalisé configuré</p>
+  1783→  1783→            </div>
+  1784→  1784→          )}
+  1785→  1785→
+  1786→  1786→          {/* Domain Request Form */}
+  1787→  1787→          {(domainStatus === 'NONE' || domainStatus === 'REJECTED') && (
+  1788→  1788→            <div className="space-y-3">
+  1789→  1789→              <Separator />
+  1790→  1790→              <h3 className="text-sm font-semibold">Demander un domaine</h3>
+  1791→  1791→              <div className="flex items-center gap-2">
+  1792→  1792→                <Input
+  1793→  1793→                  value={domainInput}
+  1794→  1794→                  onChange={(e) => setDomainInput(e.target.value)}
+  1795→  1795→                  placeholder="maboutique.com"
+  1796→  1796→                  onKeyDown={(e) => {
+  1797→  1797→                    if (e.key === 'Enter') handleDomainRequest()
+  1798→  1798→                  }}
+  1799→  1799→                />
+  1800→  1800→                <Button
+  1801→  1801→                  onClick={handleDomainRequest}
+  1802→  1802→                  disabled={domainLoading || !domainInput.trim()}
+  1803→  1803→                  className="gap-2 flex-shrink-0"
+  1804→  1804→                >
+  1805→  1805→                  {domainLoading ? (
+  1806→  1806→                    <Loader2 className="h-4 w-4 animate-spin" />
+  1807→  1807→                  ) : (
+  1808→  1808→                    <Globe className="h-4 w-4" />
+  1809→  1809→                  )}
+  1810→  1810→                  Demander
+  1811→  1811→                </Button>
+  1812→  1812→              </div>
+  1813→  1813→            </div>
+  1814→  1814→          )}
+  1815→  1815→
+  1816→  1816→          {/* DNS Instructions (collapsible) */}
+  1817→  1817→          {(domainStatus === 'PENDING' || domainStatus === 'APPROVED') && domainName && (
+  1818→  1818→            <>
+  1819→  1819→              <Separator />
+  1820→  1820→              <Collapsible open={dnsOpen} onOpenChange={setDnsOpen}>
+  1821→  1821→                <CollapsibleTrigger asChild>
+  1822→  1822→                  <Button
+  1823→  1823→                    variant="outline"
+  1824→  1824→                    className="w-full justify-between gap-2"
+  1825→  1825→                  >
+  1826→  1826→                    <span className="flex items-center gap-2">
+  1827→  1827→                      <AlertCircle className="h-4 w-4" />
+  1828→  1828→                      Configuration DNS requise
+  1829→  1829→                    </span>
+  1830→  1830→                    <ChevronDown className={`h-4 w-4 transition-transform ${dnsOpen ? 'rotate-180' : ''}`} />
+  1831→  1831→                  </Button>
+  1832→  1832→                </CollapsibleTrigger>
+  1833→  1833→                <CollapsibleContent className="mt-3 space-y-4">
+  1834→  1834→                  <p className="text-sm text-muted-foreground">
+  1835→  1835→                    Pour configurer votre domaine, ajoutez un enregistrement CNAME ou A :
+  1836→  1836→                  </p>
+  1837→  1837→
+  1838→  1838→                  <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
+  1839→  1839→                    <div className="flex items-start gap-3">
+  1840→  1840→                      <div className="flex-1 space-y-1">
+  1841→  1841→                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Type</p>
+  1842→  1842→                        <p className="text-sm font-mono font-semibold">CNAME</p>
+  1843→  1843→                      </div>
+  1844→  1844→                      <div className="flex-1 space-y-1">
+  1845→  1845→                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Nom / Hôte</p>
+  1846→  1846→                        <p className="text-sm font-mono font-semibold">@</p>
+  1847→  1847→                      </div>
+  1848→  1848→                      <div className="flex-1 space-y-1">
+  1849→  1849→                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Valeur</p>
+  1850→  1850→                        <p className="text-sm font-mono font-semibold">boutiko.pro</p>
+  1851→  1851→                      </div>
+  1852→  1852→                    </div>
+  1853→  1853→                  </div>
+  1854→  1854→
+  1855→  1855→                  <div className="flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 p-3">
+  1856→  1856→                    <AlertCircle className="h-4 w-4 text-blue-600 flex-shrink-0 mt-0.5" />
+  1857→  1857→                    <p className="text-xs text-blue-800">
+  1858→  1858→                      La propagation DNS peut prendre jusqu&apos;à 48 heures.
+  1859→  1859→                    </p>
+  1860→  1860→                  </div>
+  1861→  1861→                </CollapsibleContent>
+  1862→  1862→              </Collapsible>
+  1863→  1863→            </>
+  1864→  1864→          )}
+  1865→  1865→        </CardContent>
+  1866→  1866→      </Card>
+  1867→  1867→
+  1868→  1868→      {/* Subscription */}
+  1869→  1869→      <Card>
+  1870→  1870→        <CardHeader>
+  1871→  1871→          <CardTitle className="flex items-center gap-2">
+  1872→  1872→            <Crown className="h-5 w-5 text-primary" />
+  1873→  1873→            Mon abonnement
+  1874→  1874→          </CardTitle>
+  1875→  1875→          <CardDescription>
+  1876→  1876→            Gérez votre plan et consultez votre utilisation
+  1877→  1877→          </CardDescription>
+  1878→  1878→        </CardHeader>
+  1879→  1879→        <CardContent className="space-y-6">
+  1880→  1880→          {/* Current plan */}
+  1881→  1881→          <div className="flex items-center justify-between">
+  1882→  1882→            <div>
+  1883→  1883→              <p className="text-sm text-muted-foreground">Plan actuel</p>
+  1884→  1884→              <div className="flex items-center gap-2 mt-1">
+  1885→  1885→                <Badge variant="secondary" className={planBadgeColors[currentPlan] || planBadgeColors.FREE}>
+  1886→  1886→                  {planLabels[currentPlan] || planLabels.FREE}
+  1887→  1887→                </Badge>
+  1888→  1888→                <span className="text-sm text-muted-foreground">{limits.price}</span>
+  1889→  1889→              </div>
+  1890→  1890→            </div>
+  1891→  1891→            <div className="text-right">
+  1892→  1892→              <p className="text-sm text-muted-foreground">Produits utilisés</p>
+  1893→  1893→              <p className="text-lg font-bold">
+  1894→  1894→                {productCount}
+  1895→  1895→                <span className="text-sm text-muted-foreground font-normal">
+  1896→  1896→                  {' '}/ {limits.products === Infinity ? '∞' : limits.products}
+  1897→  1897→                </span>
+  1898→  1898→              </p>
+  1899→  1899→            </div>
+  1900→  1900→          </div>
+  1901→  1901→
+  1902→  1902→          <Separator />
+  1903→  1903→
+  1904→  1904→          {/* Plan comparison table */}
+  1905→  1905→          <div>
+  1906→  1906→            <h3 className="font-semibold mb-4">Comparer les plans</h3>
+  1907→  1907→            <div className="overflow-x-auto">
+  1908→  1908→              <Table>
+  1909→  1909→                <TableHeader>
+  1910→  1910→                  <TableRow>
+  1911→  1911→                    <TableHead>Fonctionnalité</TableHead>
+  1912→  1912→                    <TableHead className="text-center">Gratuit</TableHead>
+  1913→  1913→                    <TableHead className="text-center">Standard</TableHead>
+  1914→  1914→                    <TableHead className="text-center">Premium</TableHead>
+  1915→  1915→                  </TableRow>
+  1916→  1916→                </TableHeader>
+  1917→  1917→                <TableBody>
+  1918→  1918→                  <TableRow>
+  1919→  1919→                    <TableCell className="font-medium">Produits</TableCell>
+  1920→  1920→                    <TableCell className="text-center">10</TableCell>
+  1921→  1921→                    <TableCell className="text-center">100</TableCell>
+  1922→  1922→                    <TableCell className="text-center">Illimité</TableCell>
+  1923→  1923→                  </TableRow>
+  1924→  1924→                  <TableRow>
+  1925→  1925→                    <TableCell className="font-medium">Prix</TableCell>
+  1926→  1926→                    <TableCell className="text-center">0 FCFA</TableCell>
+  1927→  1927→                    <TableCell className="text-center">5 000 FCFA/mois</TableCell>
+  1928→  1928→                    <TableCell className="text-center">15 000 FCFA/mois</TableCell>
+  1929→  1929→                  </TableRow>
+  1930→  1930→                  <TableRow>
+  1931→  1931→                    <TableCell className="font-medium">Catégories</TableCell>
+  1932→  1932→                    <TableCell className="text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></TableCell>
+  1933→  1933→                    <TableCell className="text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></TableCell>
+  1934→  1934→                    <TableCell className="text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></TableCell>
+  1935→  1935→                  </TableRow>
+  1936→  1936→                  <TableRow>
+  1937→  1937→                    <TableCell className="font-medium">Gestion des commandes</TableCell>
+  1938→  1938→                    <TableCell className="text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></TableCell>
+  1939→  1939→                    <TableCell className="text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></TableCell>
+  1940→  1940→                    <TableCell className="text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></TableCell>
+  1941→  1941→                  </TableRow>
+  1942→  1942→                  <TableRow>
+  1943→  1943→                    <TableCell className="font-medium">Bouton WhatsApp</TableCell>
+  1944→  1944→                    <TableCell className="text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></TableCell>
+  1945→  1945→                    <TableCell className="text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></TableCell>
+  1946→  1946→                    <TableCell className="text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></TableCell>
+  1947→  1947→                  </TableRow>
+  1948→  1948→                  <TableRow>
+  1949→  1949→                    <TableCell className="font-medium">Logo personnalisé</TableCell>
+  1950→  1950→                    <TableCell className="text-center"><X className="h-4 w-4 text-red-400 mx-auto" /></TableCell>
+  1951→  1951→                    <TableCell className="text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></TableCell>
+  1952→  1952→                    <TableCell className="text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></TableCell>
+  1953→  1953→                  </TableRow>
+  1954→  1954→                  <TableRow>
+  1955→  1955→                    <TableCell className="font-medium">Statistiques avancées</TableCell>
+  1956→  1956→                    <TableCell className="text-center"><X className="h-4 w-4 text-red-400 mx-auto" /></TableCell>
+  1957→  1957→                    <TableCell className="text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></TableCell>
+  1958→  1958→                    <TableCell className="text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></TableCell>
+  1959→  1959→                  </TableRow>
+  1960→  1960→                </TableBody>
+  1961→  1961→              </Table>
+  1962→  1962→            </div>
+  1963→  1963→          </div>
+  1964→  1964→
+  1965→  1965→          {/* Upgrade buttons */}
+  1966→  1966→          <div className="flex flex-wrap gap-3">
+  1967→  1967→            {currentPlan !== 'STANDARD' && (
+  1968→  1968→              <Button
+  1969→  1969→                variant="outline"
+  1970→  1970→                className="gap-2"
+  1971→  1971→                onClick={() => toast.info('Bientôt disponible !')}
+  1972→  1972→              >
+  1973→  1973→                Passer au Standard
+  1974→  1974→              </Button>
+  1975→  1975→            )}
+  1976→  1976→            {currentPlan !== 'PREMIUM' && (
+  1977→  1977→              <Button
+  1978→  1978→                className="gap-2"
+  1979→  1979→                onClick={() => toast.info('Bientôt disponible !')}
+  1980→  1980→              >
+  1981→  1981→                Passer au Premium
+  1982→  1982→              </Button>
+  1983→  1983→            )}
+  1984→  1984→          </div>
+  1985→  1985→        </CardContent>
+  1986→  1986→      </Card>
+  1987→  1987→
+  1988→  1988→      {/* QR Code */}
+  1989→  1989→      <Card>
+  1990→  1990→        <CardHeader>
+  1991→  1991→          <CardTitle className="flex items-center gap-2">
+  1992→  1992→            <QrCode className="h-5 w-5 text-primary" />
+  1993→  1993→            QR Code de ma boutique
+  1994→  1994→          </CardTitle>
+  1995→  1995→          <CardDescription>
+  1996→  1996→            Partagez ce QR code pour que vos clients accèdent à votre boutique
+  1997→  1997→          </CardDescription>
+  1998→  1998→        </CardHeader>
+  1999→  1999→        <CardContent>
+  2000→  2000→          <div className="flex flex-col sm:flex-row gap-6 items-center sm:items-start">
+
+[showing lines 1-2000 of 2002; use offset=2001 with limit to continue reading]

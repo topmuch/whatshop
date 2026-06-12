@@ -4,7 +4,7 @@ import { verifyAdmin, adminUnauthorized } from '@/lib/admin-auth'
 
 const CONFIG_FIELDS = [
   'saasName', 'primaryColor', 'logoUrl', 'defaultWhatsappMessage',
-  'standardPrice', 'proPrice', 'adminWhatsAppNumber',
+  'starterPrice', 'standardPrice', 'proPrice', 'businessPrice', 'adminWhatsAppNumber',
   'supportEmail', 'senderName', 'autoWelcomeEmail',
   'notifyNewSeller', 'notifyNewOrder', 'notifyDomainRequest',
   'notifySupportTicket', 'weeklyReport', 'lowStockAlerts',
@@ -17,8 +17,10 @@ function configToJson(config: any) {
     primaryColor: config.primaryColor,
     logoUrl: config.logoUrl,
     defaultWhatsappMessage: config.defaultWhatsappMessage,
+    starterPrice: config.starterPrice,
     standardPrice: config.standardPrice,
     proPrice: config.proPrice,
+    businessPrice: config.businessPrice,
     adminWhatsAppNumber: config.adminWhatsAppNumber,
     supportEmail: config.supportEmail,
     senderName: config.senderName,

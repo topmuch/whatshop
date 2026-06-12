@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/table'
 import { templates, type TemplateId } from '@/lib/templates'
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Check,
   X,
@@ -915,6 +916,135 @@ export function DashboardSettings() {
         </CardContent>
       </Card>
 
+      {/* Subscription */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Crown className="h-5 w-5 text-primary" />
+            Mon abonnement
+          </CardTitle>
+          <CardDescription>
+            Gérez votre plan et consultez votre utilisation
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Current plan */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Plan actuel</p>
+              <div className="flex items-center gap-2 mt-1">
+                <Badge variant="secondary" className={planBadgeColors[currentPlan] || planBadgeColors.FREE}>
+                  {planLabels[currentPlan] || planLabels.FREE}
+                </Badge>
+                <span className="text-sm text-muted-foreground">{limits.price}</span>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-muted-foreground">Produits utilisés</p>
+              <p className="text-lg font-bold">
+                {productCount}
+                <span className="text-sm text-muted-foreground font-normal">
+                  {' '}/ {limits.products === Infinity ? '∞' : limits.products}
+                </span>
+              </p>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Plan comparison table */}
+          <div>
+            <h3 className="font-semibold mb-4">Comparer les plans</h3>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Fonctionnalité</TableHead>
+                    <TableHead className="text-center">Gratuit</TableHead>
+                    <TableHead className="text-center">Standard</TableHead>
+                    <TableHead className="text-center">Premium</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow>
+                    <TableCell className="font-medium">Produits</TableCell>
+                    <TableCell className="text-center">10</TableCell>
+                    <TableCell className="text-center">100</TableCell>
+                    <TableCell className="text-center">Illimité</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="font-medium">Prix</TableCell>
+                    <TableCell className="text-center">0 FCFA</TableCell>
+                    <TableCell className="text-center">5 000 FCFA/mois</TableCell>
+                    <TableCell className="text-center">15 000 FCFA/mois</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="font-medium">Catégories</TableCell>
+                    <TableCell className="text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></TableCell>
+                    <TableCell className="text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></TableCell>
+                    <TableCell className="text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="font-medium">Gestion des commandes</TableCell>
+                    <TableCell className="text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></TableCell>
+                    <TableCell className="text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></TableCell>
+                    <TableCell className="text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="font-medium">Bouton WhatsApp</TableCell>
+                    <TableCell className="text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></TableCell>
+                    <TableCell className="text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></TableCell>
+                    <TableCell className="text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="font-medium">Logo personnalisé</TableCell>
+                    <TableCell className="text-center"><X className="h-4 w-4 text-red-400 mx-auto" /></TableCell>
+                    <TableCell className="text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></TableCell>
+                    <TableCell className="text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="font-medium">Statistiques avancées</TableCell>
+                    <TableCell className="text-center"><X className="h-4 w-4 text-red-400 mx-auto" /></TableCell>
+                    <TableCell className="text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></TableCell>
+                    <TableCell className="text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+
+          {/* Upgrade buttons */}
+          <div className="flex flex-wrap gap-3">
+            {currentPlan !== 'STANDARD' && (
+              <Button
+                variant="outline"
+                className="gap-2"
+                onClick={() => toast.info('Bientôt disponible !')}
+              >
+                Passer au Standard
+              </Button>
+            )}
+            {currentPlan !== 'PREMIUM' && (
+              <Button
+                className="gap-2"
+                onClick={() => toast.info('Bientôt disponible !')}
+              >
+                Passer au Premium
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Tabs defaultValue="boutique" className="space-y-6">
+        <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full">
+          <TabsTrigger value="boutique" className="text-xs sm:text-sm">Boutique</TabsTrigger>
+          <TabsTrigger value="apparence" className="text-xs sm:text-sm">Apparence</TabsTrigger>
+          <TabsTrigger value="seo" className="text-xs sm:text-sm">SEO &amp; Domaine</TabsTrigger>
+          <TabsTrigger value="notifications" className="text-xs sm:text-sm">Notifications</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="boutique" className="space-y-6">
       {/* Shop Information */}
       <Card>
         <CardHeader>
@@ -1134,71 +1264,10 @@ export function DashboardSettings() {
         </CardContent>
       </Card>
 
-      {/* ═══ NOTIFICATIONS & EMAIL ═══ */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Zap className="h-5 w-5 text-primary" />
-            Notifications & Email
-          </CardTitle>
-          <CardDescription>
-            Choisissez les notifications que vous souhaitez recevoir par email
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            {[
-              { key: 'notifyNewOrder', label: 'Nouvelle commande', desc: 'Recevez un email à chaque nouvelle commande' },
-              { key: 'notifyLowStock', label: 'Alerte stock bas', desc: 'Notification quand un produit a moins de 5 en stock' },
-              { key: 'notifyWeeklyReport', label: 'Rapport hebdomadaire', desc: 'Résumé de vos ventes chaque lundi' },
-              { key: 'notifyNewReview', label: 'Avis client', desc: 'Quand un client laisse un avis ou commentaire' },
-            ].map((item) => (
-              <label
-                key={item.key}
-                className="flex items-start gap-3 p-3 rounded-lg border border-muted cursor-pointer hover:bg-muted/50 transition-colors"
-              >
-                <input
-                  type="checkbox"
-                  checked={!!(notifPrefs as Record<string, boolean>)[item.key]}
-                  onChange={(e) =>
-                    setNotifPrefs((prev: Record<string, boolean>) => ({ ...prev, [item.key]: e.target.checked }))
-                  }
-                  className="mt-0.5 h-4 w-4 rounded border-muted-foreground/30 text-primary focus:ring-primary"
-                />
-                <div>
-                  <p className="text-sm font-medium leading-none">{item.label}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{item.desc}</p>
-                </div>
-              </label>
-            ))}
-          </div>
-
-          <div className="pt-2">
-            <Label className="text-sm font-medium">Email de contact</Label>
-            <p className="text-xs text-muted-foreground mb-2">Adresse où recevoir les notifications</p>
-            <Input
-              type="email"
-              value={notifEmail}
-              onChange={(e) => setNotifEmail(e.target.value)}
-              placeholder="votre@email.com"
-              className="max-w-sm"
-            />
-          </div>
-
-          <Button
-            onClick={saveNotifPrefs}
-            disabled={savingNotif}
-            className="gap-2"
-          >
-            {savingNotif ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-            Enregistrer les préférences
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Shipping Zones */}
       <ShippingZonesManager />
+        </TabsContent>
 
+        <TabsContent value="apparence" className="space-y-6">
       {/* Hero Slider Images */}
       <Card>
         <CardHeader>
@@ -1317,7 +1386,6 @@ export function DashboardSettings() {
           )}
         </CardContent>
       </Card>
-
       {/* Promo Banners */}
       <Card>
         <CardHeader>
@@ -1456,7 +1524,6 @@ export function DashboardSettings() {
           )}
         </CardContent>
       </Card>
-
       {/* Brands Carousel */}
       <Card>
         <CardHeader>
@@ -1596,7 +1663,9 @@ export function DashboardSettings() {
           )}
         </CardContent>
       </Card>
+        </TabsContent>
 
+        <TabsContent value="seo" className="space-y-6">
       {/* SEO & Référencement */}
       <Card>
         <CardHeader>
@@ -1729,7 +1798,6 @@ export function DashboardSettings() {
           </Button>
         </CardContent>
       </Card>
-
       {/* Nom de Domaine Personnalisé */}
       <Card>
         <CardHeader>
@@ -1864,214 +1932,6 @@ export function DashboardSettings() {
           )}
         </CardContent>
       </Card>
-
-      {/* Subscription */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Crown className="h-5 w-5 text-primary" />
-            Mon abonnement
-          </CardTitle>
-          <CardDescription>
-            Gérez votre plan et consultez votre utilisation
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Current plan */}
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Plan actuel</p>
-              <div className="flex items-center gap-2 mt-1">
-                <Badge variant="secondary" className={planBadgeColors[currentPlan] || planBadgeColors.FREE}>
-                  {planLabels[currentPlan] || planLabels.FREE}
-                </Badge>
-                <span className="text-sm text-muted-foreground">{limits.price}</span>
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="text-sm text-muted-foreground">Produits utilisés</p>
-              <p className="text-lg font-bold">
-                {productCount}
-                <span className="text-sm text-muted-foreground font-normal">
-                  {' '}/ {limits.products === Infinity ? '∞' : limits.products}
-                </span>
-              </p>
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Plan comparison table */}
-          <div>
-            <h3 className="font-semibold mb-4">Comparer les plans</h3>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Fonctionnalité</TableHead>
-                    <TableHead className="text-center">Gratuit</TableHead>
-                    <TableHead className="text-center">Standard</TableHead>
-                    <TableHead className="text-center">Premium</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <TableRow>
-                    <TableCell className="font-medium">Produits</TableCell>
-                    <TableCell className="text-center">10</TableCell>
-                    <TableCell className="text-center">100</TableCell>
-                    <TableCell className="text-center">Illimité</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-medium">Prix</TableCell>
-                    <TableCell className="text-center">0 FCFA</TableCell>
-                    <TableCell className="text-center">5 000 FCFA/mois</TableCell>
-                    <TableCell className="text-center">15 000 FCFA/mois</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-medium">Catégories</TableCell>
-                    <TableCell className="text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></TableCell>
-                    <TableCell className="text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></TableCell>
-                    <TableCell className="text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-medium">Gestion des commandes</TableCell>
-                    <TableCell className="text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></TableCell>
-                    <TableCell className="text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></TableCell>
-                    <TableCell className="text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-medium">Bouton WhatsApp</TableCell>
-                    <TableCell className="text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></TableCell>
-                    <TableCell className="text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></TableCell>
-                    <TableCell className="text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-medium">Logo personnalisé</TableCell>
-                    <TableCell className="text-center"><X className="h-4 w-4 text-red-400 mx-auto" /></TableCell>
-                    <TableCell className="text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></TableCell>
-                    <TableCell className="text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-medium">Statistiques avancées</TableCell>
-                    <TableCell className="text-center"><X className="h-4 w-4 text-red-400 mx-auto" /></TableCell>
-                    <TableCell className="text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></TableCell>
-                    <TableCell className="text-center"><Check className="h-4 w-4 text-green-600 mx-auto" /></TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </div>
-          </div>
-
-          {/* Upgrade buttons */}
-          <div className="flex flex-wrap gap-3">
-            {currentPlan !== 'STANDARD' && (
-              <Button
-                variant="outline"
-                className="gap-2"
-                onClick={() => toast.info('Bientôt disponible !')}
-              >
-                Passer au Standard
-              </Button>
-            )}
-            {currentPlan !== 'PREMIUM' && (
-              <Button
-                className="gap-2"
-                onClick={() => toast.info('Bientôt disponible !')}
-              >
-                Passer au Premium
-              </Button>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* QR Code */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <QrCode className="h-5 w-5 text-primary" />
-            QR Code de ma boutique
-          </CardTitle>
-          <CardDescription>
-            Partagez ce QR code pour que vos clients accèdent à votre boutique
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col sm:flex-row gap-6 items-center sm:items-start">
-            {/* QR Code display */}
-            <div className="relative flex-shrink-0">
-              {qrLoading ? (
-                <div className="w-48 h-48 rounded-2xl border-2 border-dashed border-muted-foreground/20 flex items-center justify-center bg-muted/30">
-                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                </div>
-              ) : qrDataUrl ? (
-                <div className="w-48 h-48 rounded-2xl bg-white border shadow-sm flex items-center justify-center p-3 hover:shadow-md transition-shadow">
-                  <img src={qrDataUrl} alt="QR Code de la boutique" className="w-full h-full object-contain" />
-                </div>
-              ) : (
-                <div className="w-48 h-48 rounded-2xl border-2 border-dashed border-muted-foreground/20 flex flex-col items-center justify-center gap-2 bg-muted/30">
-                  <QrCode className="h-8 w-8 text-muted-foreground/40" />
-                  <span className="text-xs text-muted-foreground">QR Code</span>
-                </div>
-              )}
-            </div>
-
-            {/* Info & actions */}
-            <div className="flex-1 space-y-4 text-center sm:text-left">
-              <div>
-                <p className="text-sm text-muted-foreground">Boutique</p>
-                <p className="text-lg font-semibold">{shop?.name}</p>
-                <p className="text-sm text-muted-foreground mt-1 font-mono">
-                  boutiko.pro/{shop?.slug}
-                </p>
-              </div>
-
-              <div className="flex flex-wrap gap-3 justify-center sm:justify-start">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                  onClick={downloadQrCode}
-                  disabled={!qrDataUrl}
-                >
-                  <Download className="h-4 w-4" />
-                  Télécharger PNG
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                  onClick={copyShopUrl}
-                >
-                  <Copy className="h-4 w-4" />
-                  Copier le lien
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                  onClick={generateQrCode}
-                  disabled={qrLoading}
-                >
-                  <RefreshCw className={`h-4 w-4 ${qrLoading ? 'animate-spin' : ''}`} />
-                  Régénérer
-                </Button>
-              </div>
-
-              <div className="bg-muted/50 rounded-lg p-3 space-y-1">
-                <p className="text-xs font-medium text-muted-foreground">💡 Idées d&apos;utilisation</p>
-                <ul className="text-xs text-muted-foreground space-y-0.5">
-                  <li>• Imprimez-le sur vos cartes de visite</li>
-                  <li>• Ajoutez-le à vos affiches et flyers</li>
-                  <li>• Partagez-le sur Instagram et WhatsApp</li>
-                  <li>• Affichez-le dans votre magasin physique</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Shop URL */}
       <Card>
         <CardHeader>
@@ -2150,6 +2010,72 @@ export function DashboardSettings() {
           </div>
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="notifications" className="space-y-6">
+      {/* ═══ NOTIFICATIONS & EMAIL ═══ */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Zap className="h-5 w-5 text-primary" />
+            Notifications & Email
+          </CardTitle>
+          <CardDescription>
+            Choisissez les notifications que vous souhaitez recevoir par email
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            {[
+              { key: 'notifyNewOrder', label: 'Nouvelle commande', desc: 'Recevez un email à chaque nouvelle commande' },
+              { key: 'notifyLowStock', label: 'Alerte stock bas', desc: 'Notification quand un produit a moins de 5 en stock' },
+              { key: 'notifyWeeklyReport', label: 'Rapport hebdomadaire', desc: 'Résumé de vos ventes chaque lundi' },
+              { key: 'notifyNewReview', label: 'Avis client', desc: 'Quand un client laisse un avis ou commentaire' },
+            ].map((item) => (
+              <label
+                key={item.key}
+                className="flex items-start gap-3 p-3 rounded-lg border border-muted cursor-pointer hover:bg-muted/50 transition-colors"
+              >
+                <input
+                  type="checkbox"
+                  checked={!!(notifPrefs as Record<string, boolean>)[item.key]}
+                  onChange={(e) =>
+                    setNotifPrefs((prev: Record<string, boolean>) => ({ ...prev, [item.key]: e.target.checked }))
+                  }
+                  className="mt-0.5 h-4 w-4 rounded border-muted-foreground/30 text-primary focus:ring-primary"
+                />
+                <div>
+                  <p className="text-sm font-medium leading-none">{item.label}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{item.desc}</p>
+                </div>
+              </label>
+            ))}
+          </div>
+
+          <div className="pt-2">
+            <Label className="text-sm font-medium">Email de contact</Label>
+            <p className="text-xs text-muted-foreground mb-2">Adresse où recevoir les notifications</p>
+            <Input
+              type="email"
+              value={notifEmail}
+              onChange={(e) => setNotifEmail(e.target.value)}
+              placeholder="votre@email.com"
+              className="max-w-sm"
+            />
+          </div>
+
+          <Button
+            onClick={saveNotifPrefs}
+            disabled={savingNotif}
+            className="gap-2"
+          >
+            {savingNotif ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+            Enregistrer les préférences
+          </Button>
+        </CardContent>
+      </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
