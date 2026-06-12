@@ -339,7 +339,7 @@ function QRCodeTab() {
           <CardHeader>
             <CardTitle className="text-lg">Aperçu</CardTitle>
           </CardHeader>
-          <CardContent className="flex flex-col items-center justify-center min-h-[300px] gap-4">
+          <CardContent className="flex flex-col items-center justify-center min-h-[200px] sm:min-h-[300px] gap-4">
             {loading && !qrData ? (
               <div className="flex flex-col items-center gap-3">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -787,7 +787,7 @@ function StoriesTab() {
       {/* Hidden canvas */}
       <canvas ref={canvasRef} className="hidden" />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Controls */}
         <div className="space-y-4">
           {/* Product selector */}
@@ -1290,7 +1290,7 @@ function BusinessCardTab() {
               Format 16:9 (1200×675) — prêt pour les réseaux sociaux
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-col items-center justify-center min-h-[250px] gap-4">
+          <CardContent className="flex flex-col items-center justify-center min-h-[200px] sm:min-h-[250px] gap-4">
             {generating ? (
               <div className="flex flex-col items-center gap-3">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />

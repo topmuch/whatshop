@@ -269,7 +269,7 @@ export function DashboardOverview() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-4">
-              <div className="flex-shrink-0 w-28 h-28 rounded-xl border bg-muted/50 flex items-center justify-center overflow-hidden">
+              <div className="flex-shrink-0 w-20 h-20 sm:w-28 sm:h-28 rounded-xl border bg-muted/50 flex items-center justify-center overflow-hidden">
                 {qrLoading ? (
                   <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                 ) : qrDataUrl ? (

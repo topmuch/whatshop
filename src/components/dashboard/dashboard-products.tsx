@@ -392,7 +392,7 @@ export function DashboardProducts() {
       ) : (
         <>
           {/* Desktop table */}
-          <div className="hidden md:block">
+          <div className="hidden md:block overflow-x-auto">
             <Card>
               <CardContent className="p-0">
                 <Table>

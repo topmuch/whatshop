@@ -1547,7 +1547,7 @@ export function DashboardSettings() {
                   </div>
                   {/* Brand info */}
                   <div className="flex-1 min-w-0 space-y-1.5">
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <div>
                         <Label className="text-xs text-muted-foreground">Nom</Label>
                         <Input
@@ -1584,7 +1584,7 @@ export function DashboardSettings() {
 
           {/* Add brand form */}
           <div className="space-y-3">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Input
                 value={brandNameInput}
                 onChange={(e) => setBrandNameInput(e.target.value)}

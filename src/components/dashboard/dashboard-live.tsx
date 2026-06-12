@@ -298,7 +298,7 @@ export function DashboardLive() {
             )}
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             {/* Elapsed timer */}
             {isLive && (
               <div className="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2">
@@ -342,7 +342,7 @@ export function DashboardLive() {
                   <Star className="h-3 w-3" /> En vedette
                 </Badge>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex flex-col sm:flex-row items-center gap-4">
                 <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden flex-shrink-0 bg-gray-800 border border-yellow-500/30">
                   {pinnedImage ? (
                     <img src={pinnedImage} alt={pinnedProduct.name} className="w-full h-full object-cover" />
@@ -552,7 +552,7 @@ export function DashboardLive() {
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 <div className="bg-gray-800/50 rounded-lg p-4 text-center border border-gray-700/50">
                   <MessageCircle className="h-6 w-6 text-emerald-400 mx-auto mb-2" />
-                  <p className="text-3xl font-bold text-emerald-400">{whatsappClicks}</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-emerald-400">{whatsappClicks}</p>
                   <p className="text-xs text-gray-400 mt-1">Clics WhatsApp</p>
                 </div>
 
@@ -566,7 +566,7 @@ export function DashboardLive() {
 
                 <div className="bg-gray-800/50 rounded-lg p-4 text-center border border-gray-700/50 col-span-2 sm:col-span-1">
                   <Radio className="h-6 w-6 text-purple-400 mx-auto mb-2" />
-                  <p className="text-3xl font-bold text-purple-400">{connectedViewers}</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-purple-400">{connectedViewers}</p>
                   <p className="text-xs text-gray-400 mt-1">Spectateurs connectés</p>
                 </div>
               </div>
