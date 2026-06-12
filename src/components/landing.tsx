@@ -282,7 +282,7 @@ function HeroForm() {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row w-full max-w-lg gap-3 mb-6">
       <div className="relative flex-1">
-        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-base font-medium pointer-events-none select-none">
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-pink-500 text-base font-semibold pointer-events-none select-none">
           boutiko.pro/
         </div>
         <input
@@ -1129,6 +1129,79 @@ function Pricing() {
   )
 }
 
+/* ── SHOP LOGOS SLIDER ── */
+interface ShopLogoItem {
+  name: string
+  slug: string
+  logo: string
+}
+
+function ShopLogosSlider() {
+  const [shops, setShops] = useState<ShopLogoItem[]>([])
+
+  useEffect(() => {
+    fetch('/api/shops/logos')
+      .then((r) => r.json())
+      .then((data) => setShops(data))
+      .catch(() => {})
+  }, [])
+
+  if (shops.length === 0) return null
+
+  // Duplicate for infinite loop effect
+  const items = [...shops, ...shops]
+  const speed = Math.max(20, shops.length * 3)
+
+  return (
+    <div className="mt-14 overflow-hidden">
+      <p className="text-center text-sm font-medium text-gray-400 uppercase tracking-widest mb-6">
+        Leurs boutiques sur Boutiko
+      </p>
+      <div className="relative">
+        {/* Fade edges */}
+        <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
+
+        <div className="flex animate-logos-slide">
+          {items.map((shop, i) => (
+            <a
+              key={`${shop.slug}-${i}`}
+              href={`${typeof window !== 'undefined' ? window.location.origin : ''}/${shop.slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-shrink-0 mx-4 group"
+              title={shop.name}
+            >
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden border-2 border-gray-100 bg-white shadow-sm group-hover:shadow-md group-hover:border-pink-200 transition-all duration-300 group-hover:scale-105 flex items-center justify-center p-2">
+                <img
+                  src={shop.logo}
+                  alt={shop.name}
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <p className="mt-2 text-xs text-center text-gray-500 group-hover:text-pink-500 font-medium truncate w-20 sm:w-24 transition-colors">
+                {shop.name}
+              </p>
+            </a>
+          ))}
+        </div>
+      </div>
+      <style>{`
+        @keyframes logos-slide {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .animate-logos-slide {
+          animation: logos-slide ${speed}s linear infinite;
+        }
+        .animate-logos-slide:hover {
+          animation-play-state: paused;
+        }
+      `}</style>
+    </div>
+  )
+}
+
 /* ── SOCIAL PROOF / TESTIMONIAL ── */
 const stats = [
   { value: 500, suffix: '+', label: 'vendeurs actifs' },
@@ -1207,6 +1280,9 @@ function SocialProof() {
             </motion.div>
           </motion.div>
         </div>
+
+        {/* Shop logos carousel */}
+        <ShopLogosSlider />
       </div>
     </section>
   )
