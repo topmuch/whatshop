@@ -108,7 +108,7 @@ function Header() {
   ]
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white/90 backdrop-blur-2xl shadow-sm' : 'bg-transparent'}`}>
+    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white shadow-sm' : 'bg-white'}`}>
       <div className="mx-auto max-w-7xl flex h-18 items-center justify-between px-5 sm:px-8">
         <Logo />
 
@@ -118,7 +118,7 @@ function Header() {
             <a
               key={l.href}
               href={l.href}
-              className="text-lg font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-100 px-4 py-2 rounded-full transition-all duration-200"
+              className="text-lg font-medium text-gray-900 hover:text-pink-500 px-4 py-2 rounded-full transition-all duration-200"
             >
               {l.label}
             </a>
@@ -130,7 +130,7 @@ function Header() {
             variant="ghost"
             size="sm"
             onClick={() => setView('login')}
-            className="text-gray-500 hover:text-gray-900 text-lg"
+            className="text-gray-900 hover:text-pink-500 text-lg"
           >
             Connexion
           </Button>
