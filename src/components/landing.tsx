@@ -1173,10 +1173,10 @@ function ShopLogosSlider() {
                 href={`${typeof window !== 'undefined' ? window.location.origin : ''}/${shop.slug}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-shrink-0 mx-4 group"
+                className="flex-shrink-0 mx-6 group"
                 title={shop.name}
               >
-                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden border-2 border-gray-100 bg-white shadow-sm group-hover:shadow-md group-hover:border-pink-200 transition-all duration-300 group-hover:scale-105 flex items-center justify-center p-2">
+                <div className="w-60 h-60 sm:w-72 sm:h-72 rounded-3xl overflow-hidden border-2 border-gray-100 bg-white shadow-sm group-hover:shadow-md group-hover:border-pink-200 transition-all duration-300 group-hover:scale-105 flex items-center justify-center p-4">
                   {shop.logo ? (
                     <img
                       src={shop.logo}
@@ -1184,12 +1184,12 @@ function ShopLogosSlider() {
                       className="w-full h-full object-contain"
                     />
                   ) : (
-                    <span className="text-2xl sm:text-3xl font-bold text-pink-500 select-none">
+                    <span className="text-6xl sm:text-7xl font-bold text-pink-500 select-none">
                       {initial}
                     </span>
                   )}
                 </div>
-                <p className="mt-2 text-xs text-center text-gray-500 group-hover:text-pink-500 font-medium truncate w-20 sm:w-24 transition-colors">
+                <p className="mt-3 text-sm text-center text-gray-500 group-hover:text-pink-500 font-medium truncate w-60 sm:w-72 transition-colors">
                   {shop.name}
                 </p>
               </a>
