@@ -27,6 +27,7 @@ import {
   MessageCircle,
   Menu,
 } from 'lucide-react'
+import { LiveShopFeatures } from '../live-shop-features'
 import { useAppStore, type Product, type Category, type Testimonial, type TrustBadge } from '@/lib/store'
 import { formatPrice, PLATFORM_CONFIG } from '@/lib/shared'
 
@@ -1041,6 +1042,9 @@ export function CosmikaBeautyShopPage() {
       />
 
       <main className="flex-1">
+        {/* Live features (banner + pinned product) */}
+        <LiveShopFeatures />
+
         <AnimatePresence mode="wait" initial={false}>
           {selectedProduct ? (
             <CosmikaProductDetail
