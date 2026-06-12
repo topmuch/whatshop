@@ -194,7 +194,7 @@ export function DashboardOverview() {
 
   function openMyShop() {
     if (!shop) return
-    window.open(`/${shop.slug}`, '_blank')
+    window.open(`${window.location.origin}/${shop.slug}`, '_blank')
   }
 
   if (loading) {
@@ -280,7 +280,7 @@ export function DashboardOverview() {
               </div>
               <div className="flex flex-col gap-2 min-w-0">
                 <a
-                  href={`/${shop?.slug}`}
+                  href={`${window.location.origin}/${shop?.slug}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm font-medium text-primary hover:underline flex items-center gap-1 truncate"

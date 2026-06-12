@@ -375,36 +375,11 @@ function Hero() {
               Créez votre boutique en ligne en 2 minutes. Recevez des commandes
               directement sur WhatsApp et développez votre activité.
             </motion.p>
-            <motion.div
-              variants={fadeUp}
-              custom={0.3}
-              className="mt-12 flex flex-col sm:flex-row gap-4"
-            >
-              <Button
-                size="lg"
-                onClick={() => setView('register')}
-                className="text-lg px-10 py-7 h-auto font-semibold rounded-full bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white shadow-xl shadow-pink-500/30"
-              >
-                Commencer gratuitement{' '}
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-              <a href="#how-it-works">
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="text-lg px-10 py-7 h-auto font-semibold rounded-full border-gray-300 hover:bg-gray-50"
-                >
-                  Voir la démo
-                  <ChevronRight className="w-5 h-5 ml-1" />
-                </Button>
-              </a>
-            </motion.div>
-
             {/* Boutique name form — Linktree style */}
             <motion.div
               variants={fadeUp}
-              custom={0.45}
-              className="mt-8"
+              custom={0.3}
+              className="mt-12"
             >
               <HeroForm />
             </motion.div>
