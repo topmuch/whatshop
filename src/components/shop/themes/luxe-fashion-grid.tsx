@@ -51,6 +51,7 @@ import {
 import { useAppStore, type Product, type Category } from '@/lib/store'
 import { formatPrice, openWhatsApp } from '@/lib/shared'
 import { LiveShopFeatures } from '../live-shop-features'
+import { ShippingZoneSelector } from '../shipping-zone-selector'
 
 // ─── Color Palette: CHAMPAGNE GOLD LUXE ───
 const GOLD = {
@@ -566,6 +567,7 @@ function LuxeProductCard({
   const cartQty = getCartQuantity(product.id)
   const inStock = (product.stock ?? 0) > 0
   const isNew = product.createdAt && (Date.now() - new Date(product.createdAt).getTime()) < 7 * 24 * 60 * 60 * 1000
+  const selectedShippingZone = useAppStore((s) => s.selectedShippingZone)
 
   return (
     <motion.div
@@ -687,7 +689,7 @@ function LuxeProductCard({
                 <Button
                   onClick={(e) => {
                     e.nativeEvent.stopImmediatePropagation()
-                    openWhatsApp(product, whatsapp)
+                    openWhatsApp(product, whatsapp, 1, selectedShippingZone)
                   }}
                   className="gap-1.5 font-semibold rounded-full text-sm h-9 px-3 transition-all duration-200 hover:shadow-lg"
                   style={{ background: THEME.whatsapp, color: THEME.whatsappFg }}
@@ -733,7 +735,7 @@ function LuxeProductCard({
                   size="icon"
                   className="size-8 rounded-full"
                   style={{ color: THEME.whatsapp }}
-                  onClick={(e) => { e.nativeEvent.stopImmediatePropagation(); openWhatsApp(product, whatsapp, cartQty) }}
+                  onClick={(e) => { e.nativeEvent.stopImmediatePropagation(); openWhatsApp(product, whatsapp, cartQty, selectedShippingZone) }}
                 >
                   <MessageCircle className="size-3.5" />
                 </Button>
@@ -767,6 +769,7 @@ function LuxeProductDetail({
 }) {
   const [qty, setQty] = useState(1)
   const [imgIndex, setImgIndex] = useState(0)
+  const selectedShippingZone = useAppStore((s) => s.selectedShippingZone)
 
   const productImages = product.images?.length ? product.images : product.image ? [product.image] : []
   const inStock = (product.stock ?? 0) > 0
@@ -897,13 +900,16 @@ function LuxeProductDetail({
             </Button>
           </div>
 
+          {/* Shipping zone selector */}
+          <ShippingZoneSelector />
+
           {/* WhatsApp */}
           {whatsapp && (
             <Button
               className="w-full h-12 gap-2 text-sm font-bold rounded-full transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
               style={{ background: THEME.whatsapp, color: THEME.whatsappFg }}
               disabled={!inStock}
-              onClick={() => openWhatsApp(product, whatsapp, qty)}
+              onClick={() => openWhatsApp(product, whatsapp, qty, selectedShippingZone)}
             >
               <MessageCircle className="size-5" />
               Commander sur WhatsApp

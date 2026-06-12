@@ -58,6 +58,7 @@ import {
 import { useAppStore, type Product, type Category } from '@/lib/store'
 import { formatPrice, openWhatsApp } from '@/lib/shared'
 import { LiveShopFeatures } from '../live-shop-features'
+import { ShippingZoneSelector } from '../shipping-zone-selector'
 
 // ─── Rose Gold Beauty Palette ───
 const ROSE = {
@@ -555,6 +556,7 @@ function BeautyProductCard({
   const cartQty = getCartQuantity(product.id)
   const inStock = (product.stock ?? 0) > 0
   const [hearted, setHearted] = useState(false)
+  const selectedShippingZone = useAppStore((s) => s.selectedShippingZone)
 
   const isBestseller = index === 0 || index === 3
   const isNew = product.createdAt && (Date.now() - new Date(product.createdAt).getTime()) < 7 * 24 * 60 * 60 * 1000
@@ -691,7 +693,7 @@ function BeautyProductCard({
                 <button
                   onClick={(e) => {
                     e.nativeEvent.stopImmediatePropagation()
-                    openWhatsApp(product, whatsapp)
+                    openWhatsApp(product, whatsapp, 1, selectedShippingZone)
                   }}
                   className="px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300"
                   style={{
@@ -737,7 +739,7 @@ function BeautyProductCard({
                 <button
                   className="size-8 flex items-center justify-center rounded-lg transition-colors"
                   style={{ color: ROSE.whatsapp }}
-                  onClick={(e) => { e.nativeEvent.stopImmediatePropagation(); openWhatsApp(product, whatsapp, cartQty) }}
+                  onClick={(e) => { e.nativeEvent.stopImmediatePropagation(); openWhatsApp(product, whatsapp, cartQty, selectedShippingZone) }}
                 >
                   <MessageCircle className="size-3.5" />
                 </button>
@@ -973,6 +975,7 @@ function BeautyProductDetail({
 }) {
   const [qty, setQty] = useState(1)
   const [imgIndex, setImgIndex] = useState(0)
+  const selectedShippingZone = useAppStore((s) => s.selectedShippingZone)
 
   const productImages = product.images?.length ? product.images : product.image ? [product.image] : []
   const inStock = (product.stock ?? 0) > 0
@@ -1141,6 +1144,9 @@ function BeautyProductDetail({
             </motion.button>
           </div>
 
+          {/* Shipping zone selector */}
+          <ShippingZoneSelector />
+
           {/* WhatsApp */}
           {whatsapp && (
             <motion.button
@@ -1152,7 +1158,7 @@ function BeautyProductDetail({
                 boxShadow: `0 4px 15px ${ROSE.whatsapp}40`,
               }}
               disabled={!inStock}
-              onClick={() => openWhatsApp(product, whatsapp, qty)}
+              onClick={() => openWhatsApp(product, whatsapp, qty, selectedShippingZone)}
             >
               <MessageCircle className="size-5" />
               Commander sur WhatsApp

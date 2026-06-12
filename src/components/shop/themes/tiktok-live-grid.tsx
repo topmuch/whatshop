@@ -44,6 +44,7 @@ import {
 import { useAppStore, type Product, type Category } from '@/lib/store'
 import { formatPrice, openWhatsApp } from '@/lib/shared'
 import { LiveShopFeatures } from '../live-shop-features'
+import { ShippingZoneSelector } from '../shipping-zone-selector'
 
 // ─── Couleurs du template TIKTOK LIVE ───
 const TT = {
@@ -499,6 +500,7 @@ function TikTokProductCard({
   const cartQty = getCartQuantity(product.id)
   const inStock = (product.stock ?? 0) > 0
   const lowStock = inStock && (product.stock ?? 999) <= 5 && (product.stock ?? 999) > 0
+  const selectedShippingZone = useAppStore((s) => s.selectedShippingZone)
 
   return (
     <motion.div
@@ -656,7 +658,7 @@ function TikTokProductCard({
                 <Button
                   onClick={(e) => {
                     e.nativeEvent.stopImmediatePropagation()
-                    openWhatsApp(product, whatsapp)
+                    openWhatsApp(product, whatsapp, 1, selectedShippingZone)
                   }}
                   className="gap-1.5 font-semibold rounded-lg text-sm h-9 px-3 text-white"
                   style={{ background: TT.whatsapp }}
@@ -713,7 +715,7 @@ function TikTokProductCard({
                   style={{ color: TT.whatsapp }}
                   onClick={(e) => {
                     e.nativeEvent.stopImmediatePropagation()
-                    openWhatsApp(product, whatsapp, cartQty)
+                    openWhatsApp(product, whatsapp, cartQty, selectedShippingZone)
                   }}
                 >
                   <MessageCircle className="size-3.5" />
@@ -813,6 +815,7 @@ function TikTokProductDetail({
 }) {
   const [qty, setQty] = useState(1)
   const [imgIndex, setImgIndex] = useState(0)
+  const selectedShippingZone = useAppStore((s) => s.selectedShippingZone)
 
   const productImages = product.images?.length ? product.images : product.image ? [product.image] : []
   const inStock = (product.stock ?? 0) > 0
@@ -986,6 +989,9 @@ function TikTokProductDetail({
             </Button>
           </div>
 
+          {/* Shipping zone selector */}
+          <ShippingZoneSelector />
+
           {/* WhatsApp massive button */}
           {whatsapp && (
             <Button
@@ -995,7 +1001,7 @@ function TikTokProductDetail({
                 boxShadow: `0 4px 16px ${TT.whatsapp}44`,
               }}
               disabled={!inStock}
-              onClick={() => openWhatsApp(product, whatsapp, qty)}
+              onClick={() => openWhatsApp(product, whatsapp, qty, selectedShippingZone)}
             >
               <MessageCircle className="size-6" />
               Commander sur WhatsApp

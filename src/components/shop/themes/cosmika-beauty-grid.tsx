@@ -30,6 +30,7 @@ import {
 import { LiveShopFeatures } from '../live-shop-features'
 import { useAppStore, type Product, type Category, type Testimonial, type TrustBadge } from '@/lib/store'
 import { formatPrice, PLATFORM_CONFIG } from '@/lib/shared'
+import { ShippingZoneSelector } from '../shipping-zone-selector'
 
 // ─── Default trust badges ───
 const DEFAULT_TRUST_BADGES: TrustBadge[] = [
@@ -352,10 +353,18 @@ function CosmikaProductCard({
     : false
   const isPromo = product.price < PLATFORM_CONFIG.PROMO_PRICE_THRESHOLD
 
+  const selectedShippingZone = useAppStore((s) => s.selectedShippingZone)
+
   function handleCommander(e: React.MouseEvent) {
     e.stopPropagation()
     const phone = whatsapp?.replace(/\D/g, '') || ''
-    const msg = `Bonjour ${shopName} 👋, je souhaite commander : 📦 ${product.name} 💰 ${product.price.toLocaleString('fr-FR')} FCFA`
+    let msg: string
+    if (selectedShippingZone) {
+      const grandTotal = product.price + selectedShippingZone.price
+      msg = `Bonjour ${shopName} 👋, je souhaite commander :\n\n📦 Produit : ${product.name}\n💰 Prix : ${product.price.toLocaleString('fr-FR')} FCFA\n📍 Zone de livraison : ${selectedShippingZone.name}\n🚚 Frais de livraison : ${selectedShippingZone.price.toLocaleString('fr-FR')} FCFA\n━━━━━━━━━━━━━━\n💵 Total : ${grandTotal.toLocaleString('fr-FR')} FCFA\n\nMerci de confirmer ma commande !`
+    } else {
+      msg = `Bonjour ${shopName} 👋, je souhaite commander : 📦 ${product.name} 💰 ${product.price.toLocaleString('fr-FR')} FCFA`
+    }
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank')
   }
 
@@ -441,14 +450,22 @@ function CosmikaProductDetail({
 }) {
   const [qty, setQty] = useState(1)
   const [imgIndex, setImgIndex] = useState(0)
+  const selectedShippingZone = useAppStore((s) => s.selectedShippingZone)
 
   const productImages = product.images?.length ? product.images : product.image ? [product.image] : []
   const inStock = (product.stock ?? 0) > 0
 
   function handleWhatsAppOrder() {
     const phone = whatsapp?.replace(/\D/g, '') || ''
-    const total = (product.price * qty).toLocaleString('fr-FR')
-    const msg = `Bonjour ${shopName} 👋, je souhaite commander : 📦 ${product.name} x${qty} 💰 ${total} FCFA`
+    const itemTotal = product.price * qty
+    let msg: string
+    if (selectedShippingZone) {
+      const grandTotal = itemTotal + selectedShippingZone.price
+      msg = `Bonjour ${shopName} 👋, je souhaite commander :\n\n📦 Produit : ${product.name} x${qty}\n💰 Prix : ${itemTotal.toLocaleString('fr-FR')} FCFA\n📍 Zone de livraison : ${selectedShippingZone.name}\n🚚 Frais de livraison : ${selectedShippingZone.price.toLocaleString('fr-FR')} FCFA\n━━━━━━━━━━━━━━\n💵 Total : ${grandTotal.toLocaleString('fr-FR')} FCFA\n\nMerci de confirmer ma commande !`
+    } else {
+      const total = itemTotal.toLocaleString('fr-FR')
+      msg = `Bonjour ${shopName} 👋, je souhaite commander : 📦 ${product.name} x${qty} 💰 ${total} FCFA`
+    }
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank')
   }
 
@@ -558,6 +575,9 @@ function CosmikaProductDetail({
               </button>
             </div>
           </div>
+
+          {/* Shipping zone selector */}
+          <ShippingZoneSelector />
 
           {/* WhatsApp order button */}
           {whatsapp && (

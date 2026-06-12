@@ -48,6 +48,7 @@ import {
 import { useAppStore, type Product, type Category } from '@/lib/store'
 import { formatPrice, openWhatsApp } from '@/lib/shared'
 import { LiveShopFeatures } from '../live-shop-features'
+import { ShippingZoneSelector } from '../shipping-zone-selector'
 
 // ─── Couleurs du template ELECTRO BLEU ───
 const BLUE = {
@@ -514,6 +515,7 @@ function ElectroProductCard({
 }) {
   const cartQty = getCartQuantity(product.id)
   const inStock = (product.stock ?? 0) > 0
+  const selectedShippingZone = useAppStore((s) => s.selectedShippingZone)
 
   return (
     <motion.div
@@ -623,7 +625,7 @@ function ElectroProductCard({
                 <Button
                   onClick={(e) => {
                     e.nativeEvent.stopImmediatePropagation()
-                    openWhatsApp(product, whatsapp)
+                    openWhatsApp(product, whatsapp, 1, selectedShippingZone)
                   }}
                   className="gap-1.5 font-semibold rounded-lg text-sm h-9 px-3"
                   style={{ background: BLUE.whatsapp, color: BLUE.whatsappFg }}
@@ -669,7 +671,7 @@ function ElectroProductCard({
                   size="icon"
                   className="size-8"
                   style={{ color: BLUE.whatsapp }}
-                  onClick={(e) => { e.nativeEvent.stopImmediatePropagation(); openWhatsApp(product, whatsapp, cartQty) }}
+                  onClick={(e) => { e.nativeEvent.stopImmediatePropagation(); openWhatsApp(product, whatsapp, cartQty, selectedShippingZone) }}
                 >
                   <MessageCircle className="size-3.5" />
                 </Button>
@@ -1000,6 +1002,7 @@ function ElectroProductDetail({
 }) {
   const [qty, setQty] = useState(1)
   const [imgIndex, setImgIndex] = useState(0)
+  const selectedShippingZone = useAppStore((s) => s.selectedShippingZone)
 
   const productImages = product.images?.length ? product.images : product.image ? [product.image] : []
   const inStock = (product.stock ?? 0) > 0
@@ -1130,13 +1133,16 @@ function ElectroProductDetail({
             </Button>
           </div>
 
+          {/* Shipping zone selector */}
+          <ShippingZoneSelector />
+
           {/* WhatsApp */}
           {whatsapp && (
             <Button
               className="w-full h-12 gap-2 text-sm font-bold rounded-xl"
               style={{ background: BLUE.whatsapp, color: BLUE.whatsappFg }}
               disabled={!inStock}
-              onClick={() => openWhatsApp(product, whatsapp, qty)}
+              onClick={() => openWhatsApp(product, whatsapp, qty, selectedShippingZone)}
             >
               <MessageCircle className="size-5" />
               Commander sur WhatsApp
