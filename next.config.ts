@@ -11,6 +11,16 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   reactStrictMode: false,
+  // Rewrite legacy /uploads/xxx URLs to /api/uploads/xxx
+  // (old version used public/uploads/, new version uses persisted /app/uploads volume)
+  async rewrites() {
+    return [
+      {
+        source: "/uploads/:path*",
+        destination: "/api/uploads/:path*",
+      },
+    ];
+  },
   // Security headers for production
   async headers() {
     return [
@@ -43,22 +53,22 @@ const nextConfig: NextConfig = {
           },
         ],
       },
-      // Les images uploadées sont immuables → cache longue durée (avant la règle globale /api)
-      {
-        source: "/api/uploads/:path*",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=31536000, immutable",
-          },
-        ],
-      },
       {
         source: "/api/:path*",
         headers: [
           {
             key: "Cache-Control",
             value: "no-store, max-age=0",
+          },
+        ],
+      },
+      // Override: uploaded files get a longer cache (must come AFTER the general /api rule)
+      {
+        source: "/api/uploads/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=86400, stale-while-revalidate=604800",
           },
         ],
       },
