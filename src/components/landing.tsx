@@ -740,33 +740,35 @@ function Features() {
           whileInView="visible"
           viewport={vp}
           variants={stagger}
-          className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2"
+          className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4"
         >
           {features.map((f, i) => (
             <motion.div key={i} variants={fadeUp} custom={i * 0.06}>
-              <div className="h-full rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 bg-white group">
-                {/* Image — 3:2 landscape, full width */}
-                <div className="relative aspect-[3/2] overflow-hidden">
+              <div className="aspect-[510/937] rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 bg-white group flex flex-col cursor-pointer">
+                {/* Image — fills top ~60% */}
+                <div className="relative flex-[3] overflow-hidden">
                   <Image
                     src={f.image}
                     alt={f.title}
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-500"
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 33vw"
                   />
+                  {/* Subtle gradient overlay at bottom of image */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
                 </div>
-                {/* Text block + button */}
-                <div className="flex items-center gap-3 px-4 py-3">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-gray-900 text-sm sm:text-base truncate">
-                      {f.title}
-                    </h3>
-                    <p className="text-xs sm:text-sm text-gray-500 leading-snug mt-0.5 line-clamp-2">
-                      {f.desc}
-                    </p>
-                  </div>
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 shrink-0 rounded-full bg-gradient-to-br from-pink-500 to-orange-400 flex items-center justify-center shadow-sm group-hover:shadow-md group-hover:scale-110 transition-all duration-300">
-                    <span className="text-white font-bold text-base sm:text-lg leading-none">+</span>
+                {/* Text block — fills bottom ~40% */}
+                <div className="flex-[2] flex flex-col justify-center px-4 sm:px-5 py-4 sm:py-5 gap-2 sm:gap-3">
+                  <h3 className="font-bold text-gray-900 text-sm sm:text-base lg:text-lg leading-tight">
+                    {f.title}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-gray-500 leading-snug line-clamp-3">
+                    {f.desc}
+                  </p>
+                  <div className="mt-auto pt-2 sm:pt-3">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-pink-500 to-orange-400 flex items-center justify-center shadow-sm group-hover:shadow-md group-hover:scale-110 transition-all duration-300">
+                      <span className="text-white font-bold text-base sm:text-lg leading-none">+</span>
+                    </div>
                   </div>
                 </div>
               </div>
