@@ -108,8 +108,8 @@ model Shop {
   phone                 String?
   plan                  String   @default("FREE") // FREE | STANDARD | PRO (backward compat, kept for per-shop features)
   sector                String?  // beaute, mode, electronique, alimentation, artisanat, sport, bijoux, maison, auto, autre
-  template              String   @default("classic")
-  accentColor           String   @default("#25D366")
+  template              String   @default("xstore-electro")
+  accentColor           String   @default("#10B981")
   isActive              Boolean  @default(true)
   ownerId               String   // NO @unique — allows multiple shops per user
 

@@ -30,28 +30,14 @@ import {
   Store,
   AlertTriangle,
   ShoppingBag,
-  Crown,
   Zap,
-  Heart,
-  Gem,
-  Palette,
-  Waves,
-  Sun,
-  Globe,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ShopHeroCarousel } from './shop-hero-carousel'
 import { TemplateProvider } from './template-provider'
 import { LiveShopFeatures } from './live-shop-features'
-import { JameelaGrid } from './themes/jameela-grid'
-import { FashionGrid } from './themes/fashion-grid'
 import { ElectroShopPage } from './themes/electro-grid'
-import { GroceryGrid } from './themes/grocery-grid'
-import { ElectroDepotGrid } from './themes/electrodepot-grid'
-import { LuxeFashionShopPage } from './themes/luxe-fashion-grid'
-import { TikTokLiveShopPage } from './themes/tiktok-live-grid'
-import { BeautyPremiumShopPage } from './themes/beauty-premium-grid'
 import { CosmikaBeautyShopPage } from './themes/cosmika-beauty-grid'
 import { ShippingZoneSelector } from './shipping-zone-selector'
 import { ImageWithFallback } from '@/components/ui/image-with-fallback'
@@ -248,25 +234,6 @@ function TemplateCategoryButton({
 
 /* ─── Template Price Display ─── */
 function TemplatePrice({ price, style }: { price: number; style: string }) {
-  if (style === 'elegant') {
-    return (
-      <div className="flex items-baseline gap-1">
-        <span className="text-[10px] uppercase tracking-widest" style={{ color: 'var(--tpl-text-muted)' }}>
-          Prix
-        </span>
-        <span className="text-sm font-bold" style={{ color: 'var(--tpl-price)' }}>
-          {formatPrice(price)}
-        </span>
-      </div>
-    )
-  }
-  if (style === 'minimal') {
-    return (
-      <span className="text-sm font-semibold" style={{ color: 'var(--tpl-text)' }}>
-        {formatPrice(price)}
-      </span>
-    )
-  }
   if (style === 'beauty-elegant') {
     return (
       <div className="flex items-baseline gap-1.5">
@@ -555,18 +522,7 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
   // Template-specific icon for header
   const templateIcon = useMemo(() => {
     const icons: Record<string, React.ReactNode> = {
-      classic: <Store className="h-5 w-5" />,
-      africa: <Globe className="h-5 w-5" />,
-      minimal: <Zap className="h-5 w-5" />,
-      elegant: <Crown className="h-5 w-5" />,
-      neon: <Zap className="h-5 w-5" />,
-      rose: <Heart className="h-5 w-5" />,
-      ocean: <Waves className="h-5 w-5" />,
-      sunset: <Sun className="h-5 w-5" />,
-      jameela: <Gem className="h-5 w-5" />,
-      'xstore-fashion': <Heart className="h-5 w-5" />,
       'xstore-electro': <Zap className="h-5 w-5" />,
-      'xstore-grocery': <Globe className="h-5 w-5" />, electrodepot: <Zap className="h-5 w-5" />,
     }
     return icons[template.id] || <Store className="h-5 w-5" />
   }, [template.id])
@@ -575,15 +531,6 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
   // Early returns after ALL hooks to satisfy React rules-of-hooks.
   if (template.id === 'xstore-electro') {
     return <ElectroShopPage />
-  }
-  if (template.id === 'luxe-fashion') {
-    return <LuxeFashionShopPage />
-  }
-  if (template.id === 'tiktok-live') {
-    return <TikTokLiveShopPage />
-  }
-  if (template.id === 'beauty-premium') {
-    return <BeautyPremiumShopPage />
   }
   if (template.id === 'cosmika-beauty') {
     return <CosmikaBeautyShopPage />
@@ -735,95 +682,7 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
       })()}
 
       {/* ─── Shop Info Bar (template-specific styles) ─── */}
-      {layout.headerStyle === 'centered' ? (
-        <div className="text-center px-4 py-5" style={{ borderBottom: '1px solid var(--tpl-border)' }}>
-          <div className="max-w-5xl mx-auto">
-            <ImageWithFallback
-              src={publicShop.logo}
-              alt={publicShop.name}
-              width={56}
-              height={56}
-              className="w-14 h-14 rounded-2xl object-cover shadow-sm mx-auto mb-3"
-              fallbackIcon="image"
-            />
-            <h1 className="text-xl sm:text-2xl font-bold">{publicShop.name}</h1>
-            {publicShop.description && (
-              <p className="text-sm mt-1 max-w-lg mx-auto" style={{ color: 'var(--tpl-text-muted)' }}>
-                {publicShop.description}
-              </p>
-            )}
-            <div className="flex items-center justify-center gap-4 mt-3 text-xs" style={{ color: 'var(--tpl-text-muted)' }}>
-              {publicShop.whatsapp && (
-                <span className="flex items-center gap-1">
-                  <MessageCircle className="h-3.5 w-3.5" style={{ color: 'var(--tpl-primary)' }} />
-                  WhatsApp
-                </span>
-              )}
-              {publicShop.phone && (
-                <span className="flex items-center gap-1">
-                  <Phone className="h-3.5 w-3.5" />
-                  {publicShop.phone}
-                </span>
-              )}
-              {publicShop.address && (
-                <span className="flex items-center gap-1">
-                  <MapPin className="h-3.5 w-3.5" />
-                  {publicShop.address}
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-      ) : layout.headerStyle === 'minimal' ? (
-        <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--tpl-border)' }}>
-          <div className="max-w-5xl mx-auto flex items-center gap-3">
-            <span className="text-xs font-mono uppercase tracking-widest" style={{ color: 'var(--tpl-text-muted)' }}>
-              Boutique
-            </span>
-            <span className="text-xs" style={{ color: 'var(--tpl-border)' }}>/</span>
-            <h1 className="text-sm font-semibold">{publicShop.name}</h1>
-          </div>
-        </div>
-      ) : layout.headerStyle === 'dark' ? (
-        <div
-          className="px-4 py-4"
-          style={{ background: 'var(--tpl-card)', borderBottom: '1px solid var(--tpl-border)' }}
-        >
-          <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <ImageWithFallback
-                src={publicShop.logo}
-                alt={publicShop.name}
-                width={40}
-                height={40}
-                className="w-10 h-10 rounded-lg object-cover"
-                fallbackIcon="image"
-              />
-              <div>
-                <h1 className="text-base font-bold">{publicShop.name}</h1>
-                {publicShop.description && (
-                  <p className="text-xs" style={{ color: 'var(--tpl-text-muted)' }}>
-                    {publicShop.description}
-                  </p>
-                )}
-              </div>
-            </div>
-            <div className="flex items-center gap-3 text-xs" style={{ color: 'var(--tpl-text-muted)' }}>
-              {publicShop.whatsapp && (
-                <span className="flex items-center gap-1">
-                  <MessageCircle className="h-3.5 w-3.5" style={{ color: 'var(--tpl-primary)' }} />
-                </span>
-              )}
-              {publicShop.address && (
-                <span className="hidden md:flex items-center gap-1">
-                  <MapPin className="h-3.5 w-3.5" />
-                  {publicShop.address}
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-      ) : layout.headerStyle === 'luxury-dark' ? (
+      {layout.headerStyle === 'luxury-dark' ? (
         <div className="px-4 py-6" style={{ background: '#1a1a1a', borderBottom: '1px solid #333' }}>
           <div className="max-w-5xl mx-auto text-center">
             <ImageWithFallback
@@ -855,43 +714,6 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
               )}
               {publicShop.address && (
                 <span className="flex items-center gap-1.5">
-                  <MapPin className="h-3.5 w-3.5" />
-                  {publicShop.address}
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-      ) : layout.headerStyle === 'fashion-clean' ? (
-        <div className="px-4 py-5" style={{ background: '#ffffff', borderBottom: '1px solid #e8e8e8' }}>
-          <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <ImageWithFallback
-                src={publicShop.logo}
-                alt={publicShop.name}
-                width={40}
-                height={40}
-                className="w-10 h-10 rounded object-cover"
-                fallbackIcon="image"
-              />
-              <div>
-                <h1 className="text-base font-bold" style={{ color: '#222222' }}>{publicShop.name}</h1>
-                {publicShop.description && (
-                  <p className="text-xs" style={{ color: '#777' }}>
-                    {publicShop.description}
-                  </p>
-                )}
-              </div>
-            </div>
-            <div className="flex items-center gap-3 text-xs" style={{ color: '#777' }}>
-              {publicShop.whatsapp && (
-                <span className="flex items-center gap-1">
-                  <MessageCircle className="h-3.5 w-3.5" style={{ color: '#C8102E' }} />
-                  <span className="hidden sm:inline">WhatsApp</span>
-                </span>
-              )}
-              {publicShop.address && (
-                <span className="hidden md:flex items-center gap-1">
                   <MapPin className="h-3.5 w-3.5" />
                   {publicShop.address}
                 </span>
@@ -932,66 +754,6 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
                   <MapPin className="h-3.5 w-3.5" />
                   {publicShop.address}
                 </span>
-              )}
-            </div>
-          </div>
-        </div>
-      ) : layout.headerStyle === 'grocery-fresh' ? (
-        <div className="px-4 py-4" style={{ background: '#00A651', borderBottom: '2px solid #008c44' }}>
-          <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <ImageWithFallback
-                src={publicShop.logo}
-                alt={publicShop.name}
-                width={40}
-                height={40}
-                className="w-10 h-10 rounded-lg object-cover border-2 border-white/30"
-                fallbackIcon="image"
-              />
-              <div>
-                <h1 className="text-base font-bold text-white">{publicShop.name}</h1>
-                {publicShop.description && (
-                  <p className="text-xs text-white/80">
-                    {publicShop.description}
-                  </p>
-                )}
-              </div>
-            </div>
-            <div className="flex items-center gap-3 text-xs text-white/80">
-              {publicShop.whatsapp && (
-                <span className="flex items-center gap-1">
-                  <MessageCircle className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">WhatsApp</span>
-                </span>
-              )}
-              {publicShop.address && (
-                <span className="hidden md:flex items-center gap-1">
-                  <MapPin className="h-3.5 w-3.5" />
-                  {publicShop.address}
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-      ) : layout.headerStyle === 'gradient' ? (
-        <div className="px-4 py-5" style={{ background: 'var(--tpl-primary)', borderBottom: '2px solid var(--tpl-accent)' }}>
-          <div className="max-w-5xl mx-auto flex items-center gap-4">
-            <ImageWithFallback
-              src={publicShop.logo}
-              alt={publicShop.name}
-              width={48}
-              height={48}
-              className="w-12 h-12 rounded-xl object-cover shadow-md border-2"
-              fallbackIcon="image"
-            />
-            <div>
-              <h1 className="text-lg font-bold" style={{ color: 'var(--tpl-primary-fg)' }}>
-                {publicShop.name}
-              </h1>
-              {publicShop.description && (
-                <p className="text-xs opacity-80" style={{ color: 'var(--tpl-primary-fg)' }}>
-                  {publicShop.description}
-                </p>
               )}
             </div>
           </div>
@@ -1221,94 +983,6 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
             ref={scrollRef}
           >
         {/* ─── Theme-specific or Generic Product Grid ─── */}
-        {(template.id === 'jameela' || template.id === 'xstore-fashion' || template.id === 'xstore-electro' || template.id === 'xstore-grocery' || template.id === 'electrodepot') ? (
-          <div className="relative z-10" ref={scrollRef}>
-            {template.id === 'jameela' && (
-              <JameelaGrid
-                filteredProducts={filteredProducts}
-                publicCategories={publicCategories}
-                publicProducts={publicProducts}
-                activeCategory={activeCategory}
-                searchQuery={searchQuery}
-                sortBy={sortBy}
-                isSearching={isSearching}
-                totalProductCount={totalProductCount}
-                onCategoryClick={handleCategoryClick}
-                onProductClick={selectProductWithUrl}
-                onAddToCart={handleAddToCart}
-                getCartQuantity={getCartQuantity}
-                updateCartQuantity={updateCartQuantity}
-                onSortChange={setSortBy}
-                onSearchChange={setSearchQuery}
-                shopName={publicShop.name}
-                whatsapp={publicShop.whatsapp}
-              />
-            )}
-            {template.id === 'xstore-fashion' && (
-              <FashionGrid
-                filteredProducts={filteredProducts}
-                publicCategories={publicCategories}
-                publicProducts={publicProducts}
-                activeCategory={activeCategory}
-                searchQuery={searchQuery}
-                sortBy={sortBy}
-                isSearching={isSearching}
-                totalProductCount={totalProductCount}
-                onCategoryClick={handleCategoryClick}
-                onProductClick={selectProductWithUrl}
-                onAddToCart={handleAddToCart}
-                getCartQuantity={getCartQuantity}
-                updateCartQuantity={updateCartQuantity}
-                onSortChange={setSortBy}
-                onSearchChange={setSearchQuery}
-                shopName={publicShop.name}
-                whatsapp={publicShop.whatsapp}
-              />
-            )}
-            {template.id === 'xstore-grocery' && (
-              <GroceryGrid
-                filteredProducts={filteredProducts}
-                publicCategories={publicCategories}
-                publicProducts={publicProducts}
-                activeCategory={activeCategory}
-                searchQuery={searchQuery}
-                sortBy={sortBy}
-                isSearching={isSearching}
-                totalProductCount={totalProductCount}
-                onCategoryClick={handleCategoryClick}
-                onProductClick={selectProductWithUrl}
-                onAddToCart={handleAddToCart}
-                getCartQuantity={getCartQuantity}
-                updateCartQuantity={updateCartQuantity}
-                onSortChange={setSortBy}
-                onSearchChange={setSearchQuery}
-                shopName={publicShop.name}
-                whatsapp={publicShop.whatsapp}
-              />
-            )}
-            {template.id === 'electrodepot' && (
-              <ElectroDepotGrid
-                filteredProducts={filteredProducts}
-                publicCategories={publicCategories}
-                publicProducts={publicProducts}
-                activeCategory={activeCategory}
-                searchQuery={searchQuery}
-                sortBy={sortBy}
-                isSearching={isSearching}
-                totalProductCount={totalProductCount}
-                onCategoryClick={handleCategoryClick}
-                onProductClick={selectProductWithUrl}
-                onAddToCart={handleAddToCart}
-                getCartQuantity={getCartQuantity}
-                updateCartQuantity={updateCartQuantity}
-                onSortChange={setSortBy}
-                onSearchChange={setSearchQuery}
-                shopName={publicShop.name}
-                whatsapp={publicShop.whatsapp}
-              />
-            )}
-          </div>
-        ) : (
         <>
         {/* Category Filter */}
         {publicCategories.length > 0 && (
@@ -1501,7 +1175,6 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
           </div>
         )}
         </>
-        )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -1657,8 +1330,8 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
 export function PublicShop({ initialProductSlug }: { initialProductSlug?: string }) {
   const { publicShop, shopSlug } = useAppStore()
 
-  // We need shop data to know the template - use default 'classic' until loaded
-  const templateId = publicShop?.template || 'classic'
+  // We need shop data to know the template - use default 'xstore-electro' until loaded
+  const templateId = publicShop?.template || 'xstore-electro'
 
   return (
     <TemplateProvider templateId={templateId}>

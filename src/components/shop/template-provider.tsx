@@ -23,7 +23,7 @@ interface TemplateProviderProps {
 
 export function TemplateProvider({ templateId, children }: TemplateProviderProps) {
   const template = useMemo(
-    () => templates[(templateId as TemplateId) || 'classic'] || templates.classic,
+    () => templates[(templateId as TemplateId) || 'xstore-electro'] || templates['xstore-electro'],
     [templateId]
   )
 

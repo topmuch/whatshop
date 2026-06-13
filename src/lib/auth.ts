@@ -256,7 +256,7 @@ export function mapShopToAuthShop(shop: Record<string, unknown>): AuthShop {
     phone: (shop.phone as string) ?? null,
     plan: shop.plan as string,
     sector: (shop.sector as string) ?? null,
-    template: (shop.template as string) ?? 'classic',
+    template: (shop.template as string) ?? 'xstore-electro',
     isActive: shop.isActive as boolean,
     seoTitle: (shop.seoTitle as string) ?? null,
     seoDescription: (shop.seoDescription as string) ?? null,

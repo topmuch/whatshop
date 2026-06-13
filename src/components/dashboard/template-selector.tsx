@@ -19,7 +19,6 @@ function getPreviewGradient(templateId: string, colors: typeof templates.classic
 function TemplatePreviewMini({ templateId }: { templateId: TemplateId }) {
   const t = templates[templateId]
   const c = t.colors
-  const isDark = t.id === 'elegant' || t.id === 'neon'
   const isGradient = c.ctaBg.startsWith('linear') || c.filterActive.startsWith('linear')
 
   return (

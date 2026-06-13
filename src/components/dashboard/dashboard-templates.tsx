@@ -20,8 +20,8 @@ export function DashboardTemplates() {
     if (shop) {
       setAccentColor(
         (shop as unknown as Record<string, unknown>).accentColor as string ||
-        templates[(shop.template as TemplateId) || 'classic']?.colors?.primary ||
-        '#25D366'
+        templates[(shop.template as TemplateId) || 'xstore-electro']?.colors?.primary ||
+        '#10B981'
       )
     }
   }, [shop])
@@ -90,7 +90,7 @@ export function DashboardTemplates() {
         </CardHeader>
         <CardContent>
           <TemplateSelector
-            currentTemplate={shop.template || 'classic'}
+            currentTemplate={shop.template || 'xstore-electro'}
             onSelect={handleTemplateSelect}
           />
           <div className="flex items-center gap-3 mt-4">

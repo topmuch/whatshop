@@ -5,16 +5,16 @@ import { createNotification } from '@/lib/notifications'
 
 // Sector → Template mapping
 const sectorTemplateMap: Record<string, string> = {
-  beaute: 'jameela',
-  mode: 'xstore-fashion',
+  beaute: 'cosmika-beauty',
+  mode: 'cosmika-beauty',
   electronique: 'xstore-electro',
-  alimentation: 'xstore-grocery',
-  artisanat: 'elegant',
-  sport: 'ocean',
-  bijoux: 'elegant',
-  maison: 'sunset',
-  auto: 'minimal',
-  autre: 'classic',
+  alimentation: 'xstore-electro',
+  artisanat: 'cosmika-beauty',
+  sport: 'xstore-electro',
+  bijoux: 'cosmika-beauty',
+  maison: 'xstore-electro',
+  auto: 'xstore-electro',
+  autre: 'xstore-electro',
 }
 
 // Sector → Default categories
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Auto-assign template based on sector
-    const template = sectorTemplateMap[sector] || 'classic'
+    const template = sectorTemplateMap[sector] || 'xstore-electro'
 
     // Create the shop
     const shop = await db.shop.create({

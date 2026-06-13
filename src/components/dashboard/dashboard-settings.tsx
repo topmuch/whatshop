@@ -85,8 +85,8 @@ export function DashboardSettings() {
   const [logo, setLogo] = useState('')
   const [logoUrlInput, setLogoUrlInput] = useState('')
   const [banner, setBanner] = useState('')
-  const [template, setTemplate] = useState('classic')
-  const [accentColor, setAccentColor] = useState('#25D366')
+  const [template, setTemplate] = useState('xstore-electro')
+  const [accentColor, setAccentColor] = useState('#10B981')
 
   // Hero images (slider)
   const [heroImages, setHeroImages] = useState<string[]>([])
@@ -152,8 +152,8 @@ export function DashboardSettings() {
       setPhone(shop.phone || '')
       setLogo(shop.logo || '')
       setBanner(shop.banner || '')
-      setTemplate(shop.template || 'classic')
-      setAccentColor((shop as unknown as Record<string, unknown>).accentColor as string || templates[(shop.template as TemplateId) || 'classic']?.colors?.primary || '#25D366')
+      setTemplate(shop.template || 'xstore-electro')
+      setAccentColor((shop as unknown as Record<string, unknown>).accentColor as string || templates[(shop.template as TemplateId) || 'xstore-electro']?.colors?.primary || '#10B981')
 
       // Parse hero images from shop data
       try {
@@ -542,7 +542,7 @@ export function DashboardSettings() {
       setShop({
         ...shop,
         ...updatedShop,
-        template: updatedShop.template || 'classic',
+        template: updatedShop.template || 'xstore-electro',
         accentColor: updatedShop.accentColor || accentColor,
       })
       // Also update publicShop so the shop view reflects changes immediately
@@ -550,7 +550,7 @@ export function DashboardSettings() {
         setPublicShop({
           ...publicShop,
           ...updatedShop,
-          template: updatedShop.template || 'classic',
+          template: updatedShop.template || 'xstore-electro',
           accentColor: updatedShop.accentColor || accentColor,
         })
       }

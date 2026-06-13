@@ -34,16 +34,16 @@ import {
 /* ──────────────────────────── CONSTANTS ──────────────────────────── */
 
 const sectorTemplateMap: Record<string, TemplateId> = {
-  beaute: 'beauty-premium',
-  mode: 'luxe-fashion',
-  electronique: 'tiktok-live',
-  alimentation: 'xstore-grocery',
-  artisanat: 'elegant',
-  sport: 'ocean',
-  bijoux: 'luxe-fashion',
-  maison: 'sunset',
-  auto: 'minimal',
-  autre: 'classic',
+  beaute: 'cosmika-beauty',
+  mode: 'cosmika-beauty',
+  electronique: 'xstore-electro',
+  alimentation: 'xstore-electro',
+  artisanat: 'cosmika-beauty',
+  sport: 'xstore-electro',
+  bijoux: 'cosmika-beauty',
+  maison: 'xstore-electro',
+  auto: 'xstore-electro',
+  autre: 'xstore-electro',
 }
 
 const sectorCategoriesMap: Record<string, string[]> = {
@@ -152,7 +152,7 @@ export function OnboardingWizard() {
 
   // Derived data
   const assignedTemplate = useMemo(
-    () => templates[sectorTemplateMap[selectedSector] || 'classic'],
+    () => templates[sectorTemplateMap[selectedSector] || 'xstore-electro'],
     [selectedSector]
   )
   const assignedCategories = useMemo(
@@ -738,7 +738,7 @@ function StepInfo({
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                 {sectors.map((sector) => {
                   const isSelected = selectedSector === sector.id
-                  const templateId = sectorTemplateMap[sector.id] || 'classic'
+                  const templateId = sectorTemplateMap[sector.id] || 'xstore-electro'
                   const tpl = templates[templateId]
                   return (
                     <motion.button

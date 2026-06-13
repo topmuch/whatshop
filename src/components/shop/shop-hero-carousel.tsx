@@ -86,17 +86,13 @@ export function ShopHeroCarousel({ slides, shopName, whatsapp, heroImages }: Sho
   }
 
   // Template-specific carousel heights
-  const heroHeight = template.layout.heroStyle === 'minimal'
-    ? 'h-36 sm:h-44 md:h-52'
-    : template.id === 'xstore-electro'
-      ? 'h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px]'
-      : 'h-52 sm:h-64 md:h-80 lg:h-96'
+  const heroHeight = template.id === 'xstore-electro'
+    ? 'h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px]'
+    : 'h-52 sm:h-64 md:h-80 lg:h-96'
 
   // Template-specific overlay styles
-  const overlayStyle = template.layout.heroStyle === 'minimal'
-    ? 'bg-gradient-to-r from-black/60 via-black/30 to-transparent'
-    : template.layout.heroStyle === 'dark'
-    ? 'bg-gradient-to-r from-black/80 via-black/50 to-black/20'
+  const overlayStyle = template.id === 'cosmika-beauty'
+    ? 'bg-black/50'
     : 'bg-gradient-to-r from-black/70 via-black/40 to-black/20'
 
   // Template-specific CTA style
@@ -129,7 +125,7 @@ export function ShopHeroCarousel({ slides, shopName, whatsapp, heroImages }: Sho
               {/* Content */}
               <div className="absolute inset-0 flex items-center">
                 <div className="max-w-5xl mx-auto px-6 sm:px-8 w-full">
-                  <div className={cn('max-w-md', template.layout.heroStyle === 'minimal' && 'max-w-sm')}>
+                  <div className="max-w-md">
                     {/* Shop name badge */}
                     <div
                       className="inline-flex items-center gap-1.5 backdrop-blur-sm text-white text-[11px] sm:text-xs font-medium px-3 py-1 rounded-full mb-3"
@@ -141,7 +137,7 @@ export function ShopHeroCarousel({ slides, shopName, whatsapp, heroImages }: Sho
                     <h2
                       className={cn(
                         'font-bold leading-tight drop-shadow-lg',
-                        template.layout.heroStyle === 'minimal' ? 'text-lg sm:text-xl md:text-2xl' : 'text-xl sm:text-2xl md:text-4xl'
+                          template.id === 'cosmika-beauty' ? 'text-base sm:text-lg md:text-xl' : 'text-xl sm:text-2xl md:text-4xl'
                       )}
                       style={{ color: 'var(--tpl-hero-text)' }}
                     >
@@ -150,7 +146,7 @@ export function ShopHeroCarousel({ slides, shopName, whatsapp, heroImages }: Sho
                     <p
                       className={cn(
                         'mt-2 line-clamp-2 drop-shadow-md',
-                        template.layout.heroStyle === 'minimal' ? 'text-[11px] sm:text-xs' : 'text-xs sm:text-sm md:text-base'
+                        template.id === 'cosmika-beauty' ? 'text-[11px] sm:text-xs' : 'text-xs sm:text-sm md:text-base'
                       )}
                       style={{ color: 'var(--tpl-hero-text)', opacity: 0.8 }}
                     >
@@ -159,7 +155,7 @@ export function ShopHeroCarousel({ slides, shopName, whatsapp, heroImages }: Sho
                     <div className="flex items-center gap-3 mt-4 sm:mt-6">
                       {slide.cta && (
                         <Button
-                          size={template.layout.heroStyle === 'minimal' ? 'sm' : 'default'}
+                          size={template.id === 'cosmika-beauty' ? 'sm' : 'default'}
                           className={cn('h-9 sm:h-10 px-4 sm:px-6 gap-2 text-xs sm:text-sm font-semibold shadow-lg', ctaStyle)}
                           style={{ background: 'var(--tpl-cta-bg)', color: 'var(--tpl-cta-fg)' }}
                           onClick={() => handleCtaClick(slide)}

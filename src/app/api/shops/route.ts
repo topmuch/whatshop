@@ -78,7 +78,7 @@ export async function PUT(request: NextRequest) {
     if (phone !== undefined) data.phone = phone || null
     if (logo !== undefined) data.logo = logo || null
     if (banner !== undefined) data.banner = banner || null
-    if (template !== undefined) data.template = template || 'classic'
+    if (template !== undefined) data.template = template || 'xstore-electro'
     if (heroImages !== undefined) data.heroImages = heroImages
     if (promoBanners !== undefined) data.promoBanners = promoBanners
     if (brands !== undefined) data.brands = brands
@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
         description: description || null,
         whatsapp: whatsapp.trim(),
         ownerId: user.id,
-        template: template || 'classic',
+        template: template || 'xstore-electro',
       },
     })
 
