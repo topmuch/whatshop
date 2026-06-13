@@ -58,11 +58,8 @@ model User {
   reseller        User?            @relation("ResellerClients", fields: [resellerId], references: [id])
   upgradeRequests  UpgradeRequest[]
   reviewedUpgrades UpgradeRequest[] @relation("UpgradeReviews")
-<<<<<<< HEAD
   notifications    Notification[]
-=======
   pushSubscriptions PushSubscription[]
->>>>>>> 8cda927 (feat: PWA — installable, offline-first, push notifications)
 }
 
 // ─── SUBSCRIPTION (liée au COMPTE UTILISATEUR, pas à la boutique) ─────────────
