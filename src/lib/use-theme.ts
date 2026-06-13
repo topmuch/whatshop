@@ -27,7 +27,7 @@ function toggleThemeStorage() {
 
 export function useThemeMode() {
   // Correct order: subscribe first, getSnapshot second
-  const isDark = useSyncExternalStore(subscribeToTheme, getThemeSnapshot)
+  const isDark = useSyncExternalStore(subscribeToTheme, getThemeSnapshot, () => false)
 
   const toggleTheme = useCallback(() => {
     toggleThemeStorage()
