@@ -39,7 +39,6 @@ import {
   Radio,
   Palette,
   Megaphone,
-  Crown,
 } from 'lucide-react'
 import { useThemeMode } from '@/lib/use-theme'
 import { DashboardOverview } from './dashboard-overview'
@@ -402,12 +401,6 @@ function SidebarContent({
       <ScrollArea className="flex-1 px-3 py-2">
         <nav className="flex flex-col gap-1">
           {navItems
-            .filter((item) => {
-              if (consolidatedStats?.subscription.planType === 'STARTER') {
-                return item.id !== 'live'
-              }
-              return true
-            })
             .map((item) => (
             <Button
               key={item.id}
@@ -453,30 +446,6 @@ function SidebarContent({
 }
 
 /* ------------------------------------------------------------------ */
-/*  Upgrade Prompt (for locked features)                                */
-/* ------------------------------------------------------------------ */
-
-function UpgradePrompt({ feature, plan }: { feature: string; plan: string }) {
-  return (
-    <Card className="max-w-md mx-auto mt-12">
-      <CardContent className="flex flex-col items-center text-center py-12 gap-4">
-        <div className="w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-          <Crown className="h-8 w-8 text-amber-600 dark:text-amber-400" />
-        </div>
-        <h2 className="text-xl font-bold">Fonctionnalité premium</h2>
-        <p className="text-muted-foreground">
-          {feature} est disponible à partir du plan {plan}.
-        </p>
-        <Button onClick={() => window.location.href = '/tarifs'} className="gap-2">
-          <Crown className="h-4 w-4" />
-          Voir les offres
-        </Button>
-      </CardContent>
-    </Card>
-  )
-}
-
-/* ------------------------------------------------------------------ */
 /*  Dashboard Content (tab rendering)                                   */
 /* ------------------------------------------------------------------ */
 
@@ -504,9 +473,6 @@ function DashboardContent({ consolidatedStats }: { consolidatedStats: Consolidat
     case 'orders':
       return <DashboardOrders />
     case 'live':
-      if (consolidatedStats?.subscription.planType === 'STARTER') {
-        return <UpgradePrompt feature="Live TikTok" plan="Pro" />
-      }
       return <DashboardLive />
     case 'settings':
       return <DashboardSettings />
