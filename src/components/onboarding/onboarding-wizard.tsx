@@ -140,8 +140,8 @@ const slideVariants = {
 
 /* ──────────────────────── COMPONENT ──────────────────────── */
 
-export default function OnboardingWizard() {
-  const { user, setShop, setPublicShop, setShops } = useAppStore()
+export function OnboardingWizard() {
+  const { user, setShop, setPublicShop, setShops, setView } = useAppStore()
 
   const [step, setStep] = useState(1)
   const [direction, setDirection] = useState(1)
@@ -279,9 +279,10 @@ export default function OnboardingWizard() {
         }
 
         const shopData = await res.json()
+        const shop = shopData.shop || shopData
 
-        setShop(shopData.shop)
-        setPublicShop(shopData.shop)
+        setShop(shop)
+        setPublicShop(shop)
 
         try {
           const sessionRes = await fetch('/api/auth/session')
@@ -296,13 +297,17 @@ export default function OnboardingWizard() {
         }
 
         toast.success('Votre boutique a été créée avec succès ! 🎉')
+
+        // Redirect to dashboard
+        setView('dashboard')
+        window.history.replaceState(null, '', '/dashboard')
       } catch (err) {
         toast.error(err instanceof Error ? err.message : 'Une erreur est survenue')
       } finally {
         setIsSubmitting(false)
       }
     },
-    [form, setShop, setPublicShop, setShops],
+    [form, setShop, setPublicShop, setShops, setView],
   )
 
   /* ──────── Progress Bar ──────── */
