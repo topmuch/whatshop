@@ -18,6 +18,7 @@ export interface AuthShop {
   address?: string | null
   phone?: string | null
   plan: string
+  businessType?: string | null
   sector?: string | null
   template: string
   isActive: boolean
@@ -255,6 +256,7 @@ export function mapShopToAuthShop(shop: Record<string, unknown>): AuthShop {
     address: (shop.address as string) ?? null,
     phone: (shop.phone as string) ?? null,
     plan: shop.plan as string,
+    businessType: (shop.businessType as string) ?? null,
     sector: (shop.sector as string) ?? null,
     template: (shop.template as string) ?? 'xstore-electro',
     isActive: shop.isActive as boolean,

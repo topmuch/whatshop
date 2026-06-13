@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
         banner: true,
         whatsapp: true,
         plan: true,
+        businessType: true,
         template: true,
         isActive: true,
         sector: true,

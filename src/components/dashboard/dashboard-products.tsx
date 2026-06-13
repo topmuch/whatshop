@@ -57,6 +57,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatPrice } from '@/lib/shared'
+import { getBusinessLabels } from '@/lib/business-labels'
 
 interface Product {
   id: string
@@ -100,6 +101,7 @@ const emptyForm: ProductFormData = {
 
 export function DashboardProducts() {
   const { shop, setDashboardTab } = useAppStore()
+  const labels = getBusinessLabels(shop?.businessType)
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
@@ -230,8 +232,8 @@ export function DashboardProducts() {
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
-    if (!form.name || !form.price) {
-      toast.error('Nom et prix sont obligatoires')
+    if (!form.name || (!labels.priceOptional && !form.price)) {
+      toast.error(labels.priceOptional ? 'Le nom est obligatoire' : 'Nom et prix sont obligatoires')
       return
     }
 
@@ -321,10 +323,10 @@ export function DashboardProducts() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold">Mes produits</h1>
+        <h1 className="text-2xl font-bold">{labels.productsTitle}</h1>
         <Button onClick={openAddDialog} className="gap-2">
           <Plus className="h-4 w-4" />
-          Ajouter un produit
+          {labels.productsAddButton}
         </Button>
       </div>
 
@@ -349,7 +351,7 @@ export function DashboardProducts() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Rechercher un produit..."
+            placeholder={labels.productsSearch}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-10"
@@ -375,7 +377,7 @@ export function DashboardProducts() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16 text-center">
             <Package className="h-12 w-12 text-muted-foreground/30 mb-4" />
-            <h3 className="font-medium text-lg mb-1">Aucun produit</h3>
+            <h3 className="font-medium text-lg mb-1">{labels.productsEmpty}</h3>
             <p className="text-sm text-muted-foreground mb-4">
               {search || categoryFilter !== 'all'
                 ? 'Aucun produit ne correspond à votre recherche.'
@@ -384,7 +386,7 @@ export function DashboardProducts() {
             {!search && categoryFilter === 'all' && (
               <Button onClick={openAddDialog} className="gap-2">
                 <Plus className="h-4 w-4" />
-                Ajouter un produit
+                {labels.productsAddButton}
               </Button>
             )}
           </CardContent>
@@ -399,8 +401,8 @@ export function DashboardProducts() {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-16">Image</TableHead>
-                      <TableHead>Nom</TableHead>
-                      <TableHead>Prix</TableHead>
+                      <TableHead>{labels.productLabel}</TableHead>
+                      {labels.showPrice && <TableHead>Prix</TableHead>}
                       <TableHead>Catégorie</TableHead>
                       <TableHead className="text-center">Stock</TableHead>
                       <TableHead className="text-center">Statut</TableHead>
@@ -433,7 +435,7 @@ export function DashboardProducts() {
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className="font-medium">{formatPrice(product.price)}</TableCell>
+                        {labels.showPrice && <TableCell className="font-medium">{formatPrice(product.price)}</TableCell>}
                         <TableCell>
                           {product.category ? (
                             <Badge variant="secondary">{product.category.name}</Badge>
@@ -540,7 +542,7 @@ export function DashboardProducts() {
                         </Badge>
                       </div>
                       <div className="flex items-center justify-between mt-2">
-                        <p className="font-semibold text-primary">{formatPrice(product.price)}</p>
+                        {labels.showPrice && <p className="font-semibold text-primary">{formatPrice(product.price)}</p>}
                         <div className="flex gap-1">
                             <Button
                               variant="ghost"
@@ -590,12 +592,12 @@ export function DashboardProducts() {
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>
-              {editingProduct ? 'Modifier le produit' : 'Ajouter un produit'}
+              {editingProduct ? `Modifier ${labels.productLabel.toLowerCase()}` : labels.productsAddButton}
             </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSave} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="product-name">Nom du produit *</Label>
+              <Label htmlFor="product-name">{`Nom du ${labels.productLabel.toLowerCase()}`} *</Label>
               <Input
                 id="product-name"
                 value={form.name}
@@ -616,7 +618,7 @@ export function DashboardProducts() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="product-price">Prix (FCFA) *</Label>
+                <Label htmlFor="product-price">{labels.priceLabel}{!labels.priceOptional && ' *'}</Label>
                 <Input
                   id="product-price"
                   type="number"
@@ -624,8 +626,8 @@ export function DashboardProducts() {
                   min="0"
                   value={form.price}
                   onChange={(e) => setForm({ ...form, price: e.target.value })}
-                  placeholder="15000"
-                  required
+                  placeholder={labels.pricePlaceholder}
+                  required={!labels.priceOptional}
                 />
               </div>
               <div className="space-y-2">
@@ -810,9 +812,9 @@ export function DashboardProducts() {
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer ce produit ?</AlertDialogTitle>
+            <AlertDialogTitle>{`Supprimer ce ${labels.productLabel.toLowerCase()} ?`}</AlertDialogTitle>
             <AlertDialogDescription>
-              Le produit &quot;{deletingProduct?.name}&quot; sera définitivement supprimé. Cette action est irréversible.
+              {`Le ${labels.productLabel.toLowerCase()} "${deletingProduct?.name}" sera définitivement supprimé. Cette action est irréversible.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

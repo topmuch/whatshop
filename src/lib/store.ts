@@ -32,6 +32,7 @@ export interface Shop {
   address?: string
   phone?: string
   plan: string
+  businessType?: string
   sector?: string
   template: string
   accentColor?: string

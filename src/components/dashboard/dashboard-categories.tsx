@@ -1,6 +1,7 @@
 'use client'
 
 import { useAppStore } from '@/lib/store'
+import { getBusinessLabels } from '@/lib/business-labels'
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -50,6 +51,7 @@ const emptyForm: CategoryFormData = {
 
 export function DashboardCategories() {
   const { shop } = useAppStore()
+  const labels = getBusinessLabels(shop?.businessType)
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -74,7 +76,7 @@ export function DashboardCategories() {
         setCategories(await res.json())
       }
     } catch {
-      toast.error('Erreur de chargement des catégories')
+      toast.error(`Erreur de chargement des ${labels.categoryLabel.toLowerCase()}s`)
     } finally {
       setLoading(false)
     }
@@ -178,7 +180,7 @@ export function DashboardCategories() {
         return
       }
 
-      toast.success(editingCategory ? 'Catégorie modifiée !' : 'Catégorie ajoutée !')
+      toast.success(editingCategory ? `${labels.categoryLabel} modifié !` : `${labels.categoryLabel} ajouté !`)
       setDialogOpen(false)
       fetchCategories()
     } catch {
@@ -197,7 +199,7 @@ export function DashboardCategories() {
         toast.error('Erreur lors de la suppression')
         return
       }
-      toast.success('Catégorie supprimée')
+      toast.success(`${labels.categoryLabel} supprimé`)
       setDeleteOpen(false)
       setDeletingCategory(null)
       fetchCategories()
@@ -225,10 +227,10 @@ export function DashboardCategories() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold">Mes catégories</h1>
+        <h1 className="text-2xl font-bold">{labels.categoriesTitle}</h1>
         <Button onClick={openAddDialog} className="gap-2">
           <Plus className="h-4 w-4" />
-          Ajouter une catégorie
+          {labels.categoriesAddButton}
         </Button>
       </div>
 
@@ -237,7 +239,7 @@ export function DashboardCategories() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16 text-center">
             <Tags className="h-12 w-12 text-muted-foreground/30 mb-4" />
-            <h3 className="font-medium text-lg mb-1">Aucune catégorie</h3>
+            <h3 className="font-medium text-lg mb-1">{labels.categoriesEmpty}</h3>
             <p className="text-sm text-muted-foreground mb-4">
               Créez votre première catégorie pour organiser vos produits.
             </p>
@@ -317,18 +319,18 @@ export function DashboardCategories() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {editingCategory ? 'Modifier la catégorie' : 'Ajouter une catégorie'}
+              {editingCategory ? `Modifier ${labels.categoryLabel.toLowerCase()}` : labels.categoriesAddButton}
             </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSave} className="space-y-4">
             {/* Image upload */}
             <div className="space-y-2">
-              <Label>Image de la catégorie</Label>
+              <Label>{`Image du ${labels.categoryLabel.toLowerCase()}`}</Label>
               {form.image ? (
                 <div className="relative rounded-lg overflow-hidden border h-36 bg-muted/30">
                   <img
                     src={form.image}
-                    alt="Image catégorie"
+                    alt={`Image ${labels.categoryLabel.toLowerCase()}`}
                     className="w-full h-full object-cover"
                   />
                   <button
@@ -374,7 +376,7 @@ export function DashboardCategories() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="cat-name">Nom de la catégorie *</Label>
+              <Label htmlFor="cat-name">{`Nom de ${labels.categoryLabel.toLowerCase()}`}</Label>
               <Input
                 id="cat-name"
                 value={form.name}
@@ -410,9 +412,9 @@ export function DashboardCategories() {
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer cette catégorie ?</AlertDialogTitle>
+            <AlertDialogTitle>{`Supprimer ce ${labels.categoryLabel.toLowerCase()} ?`}</AlertDialogTitle>
             <AlertDialogDescription>
-              La catégorie &quot;{deletingCategory?.name}&quot; et ses {deletingCategory?.productCount} produit(s) associé(s) seront affectés. Les produits ne seront pas supprimés mais perdront leur catégorie.
+              Le {labels.categoryLabel.toLowerCase()} &quot;{deletingCategory?.name}&quot; et ses {deletingCategory?.productCount} produit(s) associé(s) seront affectés. Les produits ne seront pas supprimés mais perdront leur {labels.categoryLabel.toLowerCase()}.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

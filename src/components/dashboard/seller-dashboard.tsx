@@ -41,6 +41,7 @@ import {
   Megaphone,
 } from 'lucide-react'
 import { useThemeMode } from '@/lib/use-theme'
+import { getBusinessLabels } from '@/lib/business-labels'
 import { DashboardOverview } from './dashboard-overview'
 import { DashboardAnalytics } from './dashboard-analytics'
 import { DashboardProducts } from './dashboard-products'
@@ -66,6 +67,7 @@ interface MyShop {
   banner?: string
   whatsapp: string
   plan: string
+  businessType?: string
   template: string
   isActive: boolean
   sector?: string
@@ -94,17 +96,20 @@ interface ConsolidatedStats {
 /*  Nav items (unchanged)                                              */
 /* ------------------------------------------------------------------ */
 
-const navItems: { id: DashboardTab; label: string; icon: React.ReactNode }[] = [
-  { id: 'overview', label: "Vue d'ensemble", icon: <LayoutDashboard className="h-5 w-5" /> },
-  { id: 'analytics', label: 'Analytics', icon: <BarChart3 className="h-5 w-5" /> },
-  { id: 'products', label: 'Produits', icon: <Package className="h-5 w-5" /> },
-  { id: 'categories', label: 'Catégories', icon: <Tags className="h-5 w-5" /> },
-  { id: 'orders', label: 'Commandes', icon: <ShoppingCart className="h-5 w-5" /> },
-  { id: 'live', label: 'Live TikTok', icon: <Radio className="h-5 w-5" /> },
-  { id: 'marketing-kit', label: 'Kit Marketing', icon: <Megaphone className="h-5 w-5" /> },
-  { id: 'templates', label: 'Templates', icon: <Palette className="h-5 w-5" /> },
-  { id: 'settings', label: 'Paramètres', icon: <Settings className="h-5 w-5" /> },
-]
+function getNavItems(businessType?: string | null): { id: DashboardTab; label: string; icon: React.ReactNode }[] {
+  const labels = getBusinessLabels(businessType)
+  return [
+    { id: 'overview', label: "Vue d'ensemble", icon: <LayoutDashboard className="h-5 w-5" /> },
+    { id: 'analytics', label: 'Analytics', icon: <BarChart3 className="h-5 w-5" /> },
+    { id: 'products', label: labels.navProducts, icon: <Package className="h-5 w-5" /> },
+    { id: 'categories', label: labels.navCategories, icon: <Tags className="h-5 w-5" /> },
+    { id: 'orders', label: labels.navOrders, icon: <ShoppingCart className="h-5 w-5" /> },
+    { id: 'live', label: 'Live TikTok', icon: <Radio className="h-5 w-5" /> },
+    { id: 'marketing-kit', label: 'Kit Marketing', icon: <Megaphone className="h-5 w-5" /> },
+    { id: 'templates', label: 'Templates', icon: <Palette className="h-5 w-5" /> },
+    { id: 'settings', label: 'Paramètres', icon: <Settings className="h-5 w-5" /> },
+  ]
+}
 
 /* ------------------------------------------------------------------ */
 /*  Consolidated stats bar (shown at top of main content on overview)   */
@@ -121,13 +126,13 @@ function ConsolidatedStatsBar({ stats }: { stats: ConsolidatedStats | null }) {
       accent: 'text-pink-600 dark:text-pink-400',
     },
     {
-      label: 'Produits',
+      label: getBusinessLabels().statProducts,
       value: stats.totalProducts.toLocaleString('fr-FR'),
       icon: <Package className="h-5 w-5" />,
       accent: 'text-amber-600 dark:text-amber-400',
     },
     {
-      label: 'Commandes',
+      label: getBusinessLabels().statOrders,
       value: stats.totalOrders.toLocaleString('fr-FR'),
       icon: <ShoppingCart className="h-5 w-5" />,
       accent: 'text-emerald-600 dark:text-emerald-400',
@@ -307,6 +312,8 @@ function SidebarContent({
   const { dashboardTab, setDashboardTab, setUser, setShop, setShops, setView, shop } = useAppStore()
   const { isDark, toggleTheme } = useThemeMode()
 
+  const navItems = getNavItems(shop?.businessType)
+
   async function handleLogout() {
     try {
       const res = await fetch('/api/auth/logout', { method: 'POST' })
@@ -342,6 +349,7 @@ function SidebarContent({
         banner: selected.banner,
         whatsapp: selected.whatsapp,
         plan: selected.plan,
+        businessType: selected.businessType,
         template: selected.template,
         isActive: selected.isActive,
         sector: selected.sector,
@@ -590,6 +598,7 @@ export function SellerDashboard() {
       banner: newShop.banner,
       whatsapp: newShop.whatsapp,
       plan: newShop.plan,
+      businessType: newShop.businessType,
       template: newShop.template,
       isActive: newShop.isActive,
       sector: newShop.sector,
@@ -654,6 +663,7 @@ export function SellerDashboard() {
                       banner: selected.banner,
                       whatsapp: selected.whatsapp,
                       plan: selected.plan,
+                      businessType: selected.businessType,
                       template: selected.template,
                       isActive: selected.isActive,
                       sector: selected.sector,

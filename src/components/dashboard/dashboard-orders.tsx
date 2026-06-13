@@ -44,6 +44,7 @@ import {
 import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
 import { formatPrice } from '@/lib/shared'
+import { getBusinessLabels } from '@/lib/business-labels'
 
 interface OrderItem {
   productId: string
@@ -155,6 +156,7 @@ function getOrderNumber(orderId: string): string {
 
 export function DashboardOrders() {
   const { shop } = useAppStore()
+  const labels = getBusinessLabels(shop?.businessType)
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState('ALL')
@@ -173,7 +175,7 @@ export function DashboardOrders() {
         setOrders(await res.json())
       }
     } catch {
-      toast.error('Erreur de chargement des commandes')
+      toast.error(`Erreur de chargement des ${labels.ordersTitle.toLowerCase()}`)
     } finally {
       setLoading(false)
     }
@@ -279,7 +281,7 @@ export function DashboardOrders() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold">Mes commandes</h1>
+        <h1 className="text-2xl font-bold">{`Mes ${labels.ordersTitle.toLowerCase()}`}</h1>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="sm:w-48">
             <SelectValue />
@@ -303,7 +305,7 @@ export function DashboardOrders() {
             </div>
             <div>
               <p className="text-2xl font-bold">{stats.total}</p>
-              <p className="text-xs text-muted-foreground">Total commandes</p>
+              <p className="text-xs text-muted-foreground">{`Total ${labels.ordersTitle.toLowerCase()}`}</p>
             </div>
           </div>
         </Card>
@@ -349,11 +351,11 @@ export function DashboardOrders() {
             <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-6">
               <ShoppingCart className="h-10 w-10 text-muted-foreground/30" />
             </div>
-            <h3 className="font-semibold text-lg mb-2">Aucune commande</h3>
+            <h3 className="font-semibold text-lg mb-2">{labels.ordersEmpty}</h3>
             <p className="text-sm text-muted-foreground mb-6 max-w-sm">
               {statusFilter !== 'ALL'
-                ? `Aucune commande ${statusConfig[statusFilter]?.label?.toLowerCase() || ''} pour le moment.`
-                : 'Partagez votre boutique pour recevoir des commandes.'}
+                ? `${labels.ordersEmpty.split(' pour le moment')[0]} ${statusConfig[statusFilter]?.label?.toLowerCase() || ''} pour le moment.`
+                : `Partagez votre boutique pour recevoir des ${labels.ordersTitle.toLowerCase()}.`}
             </p>
             {statusFilter === 'ALL' && shop && (
               <div className="flex items-center gap-2">
