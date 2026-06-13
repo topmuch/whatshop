@@ -54,6 +54,7 @@ import { TikTokLiveShopPage } from './themes/tiktok-live-grid'
 import { BeautyPremiumShopPage } from './themes/beauty-premium-grid'
 import { CosmikaBeautyShopPage } from './themes/cosmika-beauty-grid'
 import { ShippingZoneSelector } from './shipping-zone-selector'
+import { ImageWithFallback } from '@/components/ui/image-with-fallback'
 
 type SortOption = 'recent' | 'price-asc' | 'price-desc'
 
@@ -710,10 +711,12 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
                     style={{ borderColor: 'var(--tpl-border)' }}
                   >
                     <div className="relative aspect-[16/5]">
-                      <img
+                      <ImageWithFallback
                         src={b.image}
                         alt={b.title || `Promo ${idx + 1}`}
+                        fill
                         className="w-full h-full object-cover"
+                        fallbackIcon="image"
                       />
                       {b.title && (
                         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-4 py-2">
@@ -735,20 +738,14 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
       {layout.headerStyle === 'centered' ? (
         <div className="text-center px-4 py-5" style={{ borderBottom: '1px solid var(--tpl-border)' }}>
           <div className="max-w-5xl mx-auto">
-            {publicShop.logo ? (
-              <img
-                src={publicShop.logo}
-                alt={publicShop.name}
-                className="w-14 h-14 rounded-2xl object-cover shadow-sm mx-auto mb-3"
-              />
-            ) : (
-              <div
-                className="flex items-center justify-center w-14 h-14 rounded-2xl shadow-sm mx-auto mb-3"
-                style={{ background: 'var(--tpl-primary)', color: 'var(--tpl-primary-fg)' }}
-              >
-                {templateIcon}
-              </div>
-            )}
+            <ImageWithFallback
+              src={publicShop.logo}
+              alt={publicShop.name}
+              width={56}
+              height={56}
+              className="w-14 h-14 rounded-2xl object-cover shadow-sm mx-auto mb-3"
+              fallbackIcon="image"
+            />
             <h1 className="text-xl sm:text-2xl font-bold">{publicShop.name}</h1>
             {publicShop.description && (
               <p className="text-sm mt-1 max-w-lg mx-auto" style={{ color: 'var(--tpl-text-muted)' }}>
@@ -794,20 +791,14 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
         >
           <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              {publicShop.logo ? (
-                <img
-                  src={publicShop.logo}
-                  alt={publicShop.name}
-                  className="w-10 h-10 rounded-lg object-cover"
-                />
-              ) : (
-                <div
-                  className="flex items-center justify-center w-10 h-10 rounded-lg"
-                  style={{ background: 'var(--tpl-primary)', color: 'var(--tpl-primary-fg)' }}
-                >
-                  {templateIcon}
-                </div>
-              )}
+              <ImageWithFallback
+                src={publicShop.logo}
+                alt={publicShop.name}
+                width={40}
+                height={40}
+                className="w-10 h-10 rounded-lg object-cover"
+                fallbackIcon="image"
+              />
               <div>
                 <h1 className="text-base font-bold">{publicShop.name}</h1>
                 {publicShop.description && (
@@ -835,20 +826,14 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
       ) : layout.headerStyle === 'luxury-dark' ? (
         <div className="px-4 py-6" style={{ background: '#1a1a1a', borderBottom: '1px solid #333' }}>
           <div className="max-w-5xl mx-auto text-center">
-            {publicShop.logo ? (
-              <img
-                src={publicShop.logo}
-                alt={publicShop.name}
-                className="w-14 h-14 rounded-2xl object-cover shadow-sm mx-auto mb-3"
-              />
-            ) : (
-              <div
-                className="flex items-center justify-center w-14 h-14 rounded-2xl shadow-sm mx-auto mb-3"
-                style={{ background: '#C8A882', color: '#1a1a1a' }}
-              >
-                {templateIcon}
-              </div>
-            )}
+            <ImageWithFallback
+              src={publicShop.logo}
+              alt={publicShop.name}
+              width={56}
+              height={56}
+              className="w-14 h-14 rounded-2xl object-cover shadow-sm mx-auto mb-3"
+              fallbackIcon="image"
+            />
             <h1 className="text-xl sm:text-2xl font-bold text-white tracking-wide">{publicShop.name}</h1>
             {publicShop.description && (
               <p className="text-sm mt-1.5 max-w-lg mx-auto" style={{ color: '#999' }}>
@@ -881,20 +866,14 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
         <div className="px-4 py-5" style={{ background: '#ffffff', borderBottom: '1px solid #e8e8e8' }}>
           <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              {publicShop.logo ? (
-                <img
-                  src={publicShop.logo}
-                  alt={publicShop.name}
-                  className="w-10 h-10 rounded object-cover"
-                />
-              ) : (
-                <div
-                  className="flex items-center justify-center w-10 h-10 rounded"
-                  style={{ background: '#C8102E', color: '#ffffff' }}
-                >
-                  {templateIcon}
-                </div>
-              )}
+              <ImageWithFallback
+                src={publicShop.logo}
+                alt={publicShop.name}
+                width={40}
+                height={40}
+                className="w-10 h-10 rounded object-cover"
+                fallbackIcon="image"
+              />
               <div>
                 <h1 className="text-base font-bold" style={{ color: '#222222' }}>{publicShop.name}</h1>
                 {publicShop.description && (
@@ -924,20 +903,14 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
         <div className="px-4 py-4" style={{ background: '#ffffff', borderBottom: '2px solid #10B981' }}>
           <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              {publicShop.logo ? (
-                <img
-                  src={publicShop.logo}
-                  alt={publicShop.name}
-                  className="w-10 h-10 rounded-lg object-cover"
-                />
-              ) : (
-                <div
-                  className="flex items-center justify-center w-10 h-10 rounded-lg"
-                  style={{ background: '#10B981', color: '#ffffff' }}
-                >
-                  {templateIcon}
-                </div>
-              )}
+              <ImageWithFallback
+                src={publicShop.logo}
+                alt={publicShop.name}
+                width={40}
+                height={40}
+                className="w-10 h-10 rounded-lg object-cover"
+                fallbackIcon="image"
+              />
               <div>
                 <h1 className="text-base font-bold" style={{ color: '#1e293b' }}>{publicShop.name}</h1>
                 {publicShop.description && (
@@ -967,20 +940,14 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
         <div className="px-4 py-4" style={{ background: '#00A651', borderBottom: '2px solid #008c44' }}>
           <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              {publicShop.logo ? (
-                <img
-                  src={publicShop.logo}
-                  alt={publicShop.name}
-                  className="w-10 h-10 rounded-lg object-cover border-2 border-white/30"
-                />
-              ) : (
-                <div
-                  className="flex items-center justify-center w-10 h-10 rounded-lg"
-                  style={{ background: 'rgba(255,255,255,0.2)', color: '#ffffff' }}
-                >
-                  {templateIcon}
-                </div>
-              )}
+              <ImageWithFallback
+                src={publicShop.logo}
+                alt={publicShop.name}
+                width={40}
+                height={40}
+                className="w-10 h-10 rounded-lg object-cover border-2 border-white/30"
+                fallbackIcon="image"
+              />
               <div>
                 <h1 className="text-base font-bold text-white">{publicShop.name}</h1>
                 {publicShop.description && (
@@ -1009,21 +976,14 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
       ) : layout.headerStyle === 'gradient' ? (
         <div className="px-4 py-5" style={{ background: 'var(--tpl-primary)', borderBottom: '2px solid var(--tpl-accent)' }}>
           <div className="max-w-5xl mx-auto flex items-center gap-4">
-            {publicShop.logo ? (
-              <img
-                src={publicShop.logo}
-                alt={publicShop.name}
-                className="w-12 h-12 rounded-xl object-cover shadow-md border-2"
-                style={{ borderColor: 'var(--tpl-accent)' }}
-              />
-            ) : (
-              <div
-                className="flex items-center justify-center w-12 h-12 rounded-xl shadow-md"
-                style={{ background: 'var(--tpl-primary-fg)', color: 'var(--tpl-primary)' }}
-              >
-                {templateIcon}
-              </div>
-            )}
+            <ImageWithFallback
+              src={publicShop.logo}
+              alt={publicShop.name}
+              width={48}
+              height={48}
+              className="w-12 h-12 rounded-xl object-cover shadow-md border-2"
+              fallbackIcon="image"
+            />
             <div>
               <h1 className="text-lg font-bold" style={{ color: 'var(--tpl-primary-fg)' }}>
                 {publicShop.name}
@@ -1041,16 +1001,14 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
         <div className="border-b" style={{ background: 'var(--tpl-primary)', opacity: 0.06, borderColor: 'var(--tpl-border)' }}>
           <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 min-w-0">
-              {publicShop.logo ? (
-                <img src={publicShop.logo} alt={publicShop.name} className="w-10 h-10 rounded-lg object-cover shadow-sm shrink-0" />
-              ) : (
-                <div
-                  className="flex items-center justify-center w-10 h-10 rounded-lg shadow-sm shrink-0"
-                  style={{ background: 'var(--tpl-primary)', color: 'var(--tpl-primary-fg)' }}
-                >
-                  {templateIcon}
-                </div>
-              )}
+              <ImageWithFallback
+                src={publicShop.logo}
+                alt={publicShop.name}
+                width={40}
+                height={40}
+                className="w-10 h-10 rounded-lg object-cover shadow-sm shrink-0"
+                fallbackIcon="image"
+              />
               <div className="min-w-0">
                 <h1 className="text-base sm:text-lg font-bold truncate">{publicShop.name}</h1>
                 {publicShop.description && (
@@ -1116,18 +1074,13 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
                     className="aspect-[4/3] rounded-xl overflow-hidden bg-muted mb-3"
                     style={{ borderRadius: 'var(--tpl-card-rounded)' }}
                   >
-                    {currentImage ? (
-                      <img
-                        src={currentImage}
-                        alt={selectedProduct.name}
-                        className="w-full h-full object-cover transition-opacity duration-200"
-                        key={currentImage}
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
-                        <Package className="h-16 w-16 text-muted-foreground/20" />
-                      </div>
-                    )}
+                    <ImageWithFallback
+                      src={currentImage}
+                      alt={selectedProduct.name}
+                      fill
+                      className="w-full h-full object-cover transition-opacity duration-200"
+                      fallbackIcon="package"
+                    />
                   </div>
                   {/* Thumbnail strip */}
                   {productImages.length > 1 && (
@@ -1437,17 +1390,13 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
                   >
                     {/* Image */}
                     <div className={`${layout.imageSize} bg-muted relative overflow-hidden`} style={{ borderRadius: cardStyle.imageRounded }}>
-                      {(product.images && product.images.length > 0) || product.image ? (
-                        <img
-                          src={(product.images && product.images[0]) || product.image || ''}
-                          alt={product.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
-                          <Package className="h-10 w-10 text-muted-foreground/30" />
-                        </div>
-                      )}
+                      <ImageWithFallback
+                        src={(product.images && product.images[0]) || product.image || ''}
+                        alt={product.name}
+                        fill
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        fallbackIcon="package"
+                      />
 
                       {/* Badges */}
                       <div
@@ -1592,13 +1541,13 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
                       {cart.map((item) => (
                         <div key={item.id} className="flex items-center gap-3">
                           <div className="w-12 h-12 rounded-lg bg-muted shrink-0 overflow-hidden">
-                            {item.image ? (
-                              <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <Package className="h-5 w-5 text-muted-foreground/30" />
-                              </div>
-                            )}
+                            <ImageWithFallback
+                              src={item.image}
+                              alt={item.name}
+                              fill
+                              className="w-full h-full object-cover"
+                              fallbackIcon="package"
+                            />
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium line-clamp-1">{item.name}</p>

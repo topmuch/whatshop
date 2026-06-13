@@ -45,19 +45,39 @@ registerRoute(
   })
 );
 
-// 2. Images — Stale While Revalidate, 7 days max
+// 2a. Uploaded images (/uploads/) — Network First, 1 day cache fallback
+//    IMPORTANT: Uploaded images MUST use NetworkFirst so that if the file
+//    is deleted from disk (e.g. container restart without volume), the
+//    browser immediately gets a 404 instead of serving a stale cached copy.
+//    This prevents the "images randomly disappear" problem.
+registerRoute(
+  ({ url }) => url.pathname.startsWith("/uploads/"),
+  new NetworkFirst({
+    cacheName: "boutiko-uploaded-images-v1",
+    networkTimeoutSeconds: 3,
+    plugins: [
+      new ExpirationPlugin({
+        maxEntries: 200,
+        maxAgeSeconds: 24 * 60 * 60, // 1 day cache fallback
+      }),
+    ],
+  })
+);
+
+// 2b. Static/public images — Stale While Revalidate, 7 days max
+//    These are bundled assets (PWA icons, favicons, etc.) that never disappear
 registerRoute(
   ({ request }) => {
     const accept = request.headers.get("accept") || "";
     return (
-      accept.includes("image/") ||
+      (accept.includes("image/") ||
       /\.(?:png|jpg|jpeg|gif|webp|avif|svg|ico)$/i.test(
         new URL(request.url).pathname
-      )
+      )) && !new URL(request.url).pathname.startsWith("/uploads/")
     );
   },
   new StaleWhileRevalidate({
-    cacheName: "boutiko-images-v1",
+    cacheName: "boutiko-static-images-v1",
     plugins: [
       new ExpirationPlugin({
         maxEntries: 100,

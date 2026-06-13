@@ -52,6 +52,7 @@ import { useAppStore, type Product, type Category } from '@/lib/store'
 import { formatPrice, openWhatsApp } from '@/lib/shared'
 import { LiveShopFeatures } from '../live-shop-features'
 import { ShippingZoneSelector } from '../shipping-zone-selector'
+import { ImageWithFallback } from '@/components/ui/image-with-fallback'
 
 // ─── Color Palette: CHAMPAGNE GOLD LUXE ───
 const GOLD = {
@@ -125,10 +126,13 @@ function LuxeHeader({
           {/* Logo */}
           <button onClick={onNavAccueil} className="flex items-center gap-2 shrink-0">
             {logo && logo.length > 0 ? (
-              <img
+              <ImageWithFallback
                 src={logo}
                 alt={shopName}
+                width={200}
+                height={70}
                 className="h-[70px] w-[200px] object-contain"
+                fallbackIcon="image"
               />
             ) : (
               <div className="flex items-center gap-2">
@@ -383,10 +387,12 @@ function LuxeHero({
               transition={{ duration: 0.6 }}
               className="absolute inset-0"
             >
-              <img
+              <ImageWithFallback
                 src={images[currentSlide]}
                 alt={`${shopName} - Bannière ${currentSlide + 1}`}
+                fill
                 className="w-full h-full object-cover"
+                fallbackIcon="image"
               />
               <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent" />
             </motion.div>
@@ -580,20 +586,13 @@ function LuxeProductCard({
     >
       {/* Image */}
       <div className="relative w-full overflow-hidden bg-gray-100" style={{ aspectRatio: '336 / 320' }}>
-        {product.image ? (
-          <img
-            src={product.image}
-            alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-            loading="lazy"
-            onLoad={(e) => { (e.target as HTMLImageElement).style.opacity = '1' }}
-            style={{ opacity: 0, transition: 'opacity 0.3s ease' }}
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center" style={{ background: `${THEME.goldLight}60` }}>
-            <Package className="size-16" style={{ color: THEME.gold }} />
-          </div>
-        )}
+        <ImageWithFallback
+          src={product.image}
+          alt={product.name}
+          fill
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+          fallbackIcon="package"
+        />
 
         {/* Hover overlay */}
         <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-all duration-300">
@@ -803,17 +802,13 @@ function LuxeProductDetail({
         {/* Image */}
         <div>
           <div className="aspect-square rounded-2xl overflow-hidden backdrop-blur-xl" style={{ background: `${THEME.goldLight}40`, border: `1px solid ${THEME.glassBorder}` }}>
-            {productImages[imgIndex] ? (
-              <img
-                src={productImages[imgIndex]}
-                alt={product.name}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <Package className="size-20" style={{ color: THEME.gold }} />
-              </div>
-            )}
+            <ImageWithFallback
+              src={productImages[imgIndex]}
+              alt={product.name}
+              fill
+              className="w-full h-full object-cover"
+              fallbackIcon="package"
+            />
           </div>
           {/* Thumbnails */}
           {productImages.length > 1 && (
@@ -1039,13 +1034,13 @@ function LuxeCartDrawer({
                 {cart.map((item) => (
                   <div key={item.id} className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-xl shrink-0 overflow-hidden" style={{ background: `${THEME.goldLight}60` }}>
-                      {item.image ? (
-                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Package className="size-5" style={{ color: THEME.gold }} />
-                        </div>
-                      )}
+                      <ImageWithFallback
+                        src={item.image}
+                        alt={item.name}
+                        fill
+                        className="w-full h-full object-cover"
+                        fallbackIcon="package"
+                      />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium line-clamp-1" style={{ color: THEME.text }}>{item.name}</p>

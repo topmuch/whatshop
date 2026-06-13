@@ -32,6 +32,7 @@ import {
 } from '@/components/ui/select'
 import { Product as ProductType, formatPrice } from '@/lib/shared'
 import { LiveShopFeatures } from '../live-shop-features'
+import { ImageWithFallback } from '@/components/ui/image-with-fallback'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -638,23 +639,13 @@ function GroceryProductCard({
         className="relative aspect-square bg-gray-50 overflow-hidden cursor-pointer"
         onClick={() => onProductClick(product)}
       >
-        {product.image || product.images?.[0] ? (
-          <img
-            src={product.image || product.images?.[0]}
-            alt={product.name}
-            className="size-full object-cover group-hover:scale-105 transition-transform duration-300"
-            loading="lazy"
-            onLoad={(e) => { (e.target as HTMLImageElement).style.opacity = '1' }}
-            style={{ opacity: 0, transition: 'opacity 0.3s ease' }}
-          />
-        ) : (
-          <div className="flex items-center justify-center size-full">
-            <div className="flex flex-col items-center gap-2 text-gray-300">
-              <ShoppingBag className="size-10" />
-              <span className="text-xs">Pas d&apos;image</span>
-            </div>
-          </div>
-        )}
+        <ImageWithFallback
+          src={product.image || product.images?.[0]}
+          alt={product.name}
+          fill
+          className="size-full object-cover group-hover:scale-105 transition-transform duration-300"
+          fallbackIcon="package"
+        />
 
         {/* Stock indicator */}
         {product.stock !== undefined && product.stock <= 3 && product.stock > 0 && (

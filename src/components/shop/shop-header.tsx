@@ -2,6 +2,7 @@
 
 import { useAppStore, type Shop } from '@/lib/store'
 import { MessageCircle, MapPin, Phone } from 'lucide-react'
+import { ImageWithFallback } from '@/components/ui/image-with-fallback'
 
 interface ShopHeaderProps {
   shop: Shop
@@ -31,16 +32,14 @@ export function ShopHeader({ shop }: ShopHeaderProps) {
       {/* Logo & Info */}
       <div className="relative flex flex-col items-center px-4 -mt-12 pb-4">
         {/* Logo */}
-        <div className="w-24 h-24 rounded-full border-4 border-background bg-card shadow-lg overflow-hidden flex items-center justify-center">
-          {shop.logo ? (
-            <img
-              src={shop.logo}
-              alt={shop.name}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <span className="text-3xl font-bold text-primary">{initial}</span>
-          )}
+        <div className="w-24 h-24 rounded-full border-4 border-background bg-card shadow-lg overflow-hidden">
+          <ImageWithFallback
+            src={shop.logo}
+            alt={shop.name}
+            fill
+            className="w-full h-full object-cover"
+            fallbackIcon="image"
+          />
         </div>
 
         {/* Shop Name */}

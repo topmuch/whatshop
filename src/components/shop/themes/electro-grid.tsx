@@ -49,6 +49,7 @@ import { useAppStore, type Product, type Category } from '@/lib/store'
 import { formatPrice, openWhatsApp } from '@/lib/shared'
 import { LiveShopFeatures } from '../live-shop-features'
 import { ShippingZoneSelector } from '../shipping-zone-selector'
+import { ImageWithFallback } from '@/components/ui/image-with-fallback'
 
 // ─── Couleurs du template ELECTRO BLEU ───
 const BLUE = {
@@ -101,10 +102,13 @@ function ElectroMenu({
           {/* Logo — 255×82 */}
           <button onClick={onNavAccueil} className="flex items-center gap-2 shrink-0">
             {logo && logo.length > 0 ? (
-              <img
+              <ImageWithFallback
                 src={logo}
                 alt={shopName}
+                width={255}
+                height={82}
                 className="h-[82px] w-[255px] object-contain"
+                fallbackIcon="image"
               />
             ) : (
               <div
@@ -302,10 +306,12 @@ function ElectroHeroSlide({
                 transition={{ duration: 0.6, ease: 'easeInOut' }}
                 className="absolute inset-0"
               >
-                <img
+                <ImageWithFallback
                   src={images[currentSlide]}
                   alt={`${shopName} - Bannière ${currentSlide + 1}`}
+                  fill
                   className="w-full h-full object-cover"
+                  fallbackIcon="image"
                 />
                 {/* Overlay gradient */}
                 <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-black/20 to-transparent" />
@@ -526,20 +532,13 @@ function ElectroProductCard({
     >
       {/* Image 336×280 */}
       <div className="relative w-full overflow-hidden bg-gray-100" style={{ aspectRatio: '336 / 280' }}>
-        {product.image ? (
-          <img
-            src={product.image}
-            alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-            loading="lazy"
-            onLoad={(e) => { (e.target as HTMLImageElement).style.opacity = '1' }}
-            style={{ opacity: 0, transition: 'opacity 0.3s ease' }}
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center" style={{ background: BLUE.bgGray }}>
-            <Package className="size-16" style={{ color: BLUE.border }} />
-          </div>
-        )}
+        <ImageWithFallback
+          src={product.image}
+          alt={product.name}
+          fill
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          fallbackIcon="package"
+        />
 
         {/* Hover overlay */}
         <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-all duration-300">
@@ -727,11 +726,12 @@ function ElectroPromoBanners({
                 if (!banner.link) e.preventDefault()
               }}
             >
-              <img
+              <ImageWithFallback
                 src={banner.image}
                 alt={banner.title || 'Promo ' + (idx + 1)}
+                fill
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                loading="lazy"
+                fallbackIcon="image"
               />
               {/* Title overlay */}
               {banner.title && (
@@ -1036,17 +1036,13 @@ function ElectroProductDetail({
         {/* Image */}
         <div>
           <div className="aspect-square rounded-2xl overflow-hidden" style={{ background: BLUE.bgGray }}>
-            {productImages[imgIndex] ? (
-              <img
-                src={productImages[imgIndex]}
-                alt={product.name}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <Package className="size-20" style={{ color: BLUE.border }} />
-              </div>
-            )}
+            <ImageWithFallback
+              src={productImages[imgIndex]}
+              alt={product.name}
+              fill
+              className="w-full h-full object-cover"
+              fallbackIcon="package"
+            />
           </div>
           {/* Thumbnails */}
           {productImages.length > 1 && (
@@ -1210,13 +1206,13 @@ function ElectroCartBar({
                 {cart.map((item) => (
                   <div key={item.id} className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-lg shrink-0 overflow-hidden" style={{ background: BLUE.bgGray }}>
-                      {item.image ? (
-                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Package className="size-5" style={{ color: BLUE.border }} />
-                        </div>
-                      )}
+                      <ImageWithFallback
+                        src={item.image}
+                        alt={item.name}
+                        fill
+                        className="w-full h-full object-cover"
+                        fallbackIcon="package"
+                      />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium line-clamp-1" style={{ color: BLUE.text }}>{item.name}</p>

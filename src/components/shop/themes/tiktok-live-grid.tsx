@@ -44,6 +44,7 @@ import { useAppStore, type Product, type Category } from '@/lib/store'
 import { formatPrice, openWhatsApp } from '@/lib/shared'
 import { LiveShopFeatures } from '../live-shop-features'
 import { ShippingZoneSelector } from '../shipping-zone-selector'
+import { ImageWithFallback } from '@/components/ui/image-with-fallback'
 
 // ─── Couleurs du template TIKTOK LIVE ───
 const TT = {
@@ -106,7 +107,14 @@ function TikTokHeader({
           {/* Logo */}
           <button onClick={onNavAccueil} className="flex items-center gap-2 shrink-0">
             {logo && logo.length > 0 ? (
-              <img src={logo} alt={shopName} className="h-[50px] w-auto max-w-[200px] object-contain" />
+              <ImageWithFallback
+                src={logo}
+                alt={shopName}
+                width={200}
+                height={50}
+                className="h-[50px] w-auto max-w-[200px] object-contain"
+                fallbackIcon="image"
+              />
             ) : (
               <div className="flex items-center gap-2">
                 <div
@@ -426,23 +434,13 @@ function TikTokProductCard({
     >
       {/* Image */}
       <div className="relative w-full overflow-hidden bg-gray-800" style={{ aspectRatio: '1 / 1' }}>
-        {product.image ? (
-          <img
-            src={product.image}
-            alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-            loading="lazy"
-            onLoad={(e) => { (e.target as HTMLImageElement).style.opacity = '1' }}
-            style={{ opacity: 0, transition: 'opacity 0.3s ease' }}
-          />
-        ) : (
-          <div
-            className="flex h-full w-full items-center justify-center"
-            style={{ background: '#111' }}
-          >
-            <Package className="size-16" style={{ color: '#333' }} />
-          </div>
-        )}
+        <ImageWithFallback
+          src={product.image}
+          alt={product.name}
+          fill
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          fallbackIcon="package"
+        />
 
         {/* Hover overlay */}
         <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-all duration-300">
@@ -754,17 +752,13 @@ function TikTokProductDetail({
         {/* Image */}
         <div>
           <div className="aspect-square rounded-2xl overflow-hidden" style={{ background: '#111' }}>
-            {productImages[imgIndex] ? (
-              <img
-                src={productImages[imgIndex]}
-                alt={product.name}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <Package className="size-20" style={{ color: '#333' }} />
-              </div>
-            )}
+            <ImageWithFallback
+              src={productImages[imgIndex]}
+              alt={product.name}
+              fill
+              className="w-full h-full object-cover"
+              fallbackIcon="package"
+            />
           </div>
           {/* Thumbnails */}
           {productImages.length > 1 && (
@@ -984,13 +978,13 @@ function TikTokCartDrawer({
                       className="w-12 h-12 rounded-lg shrink-0 overflow-hidden"
                       style={{ background: '#111' }}
                     >
-                      {item.image ? (
-                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Package className="size-5" style={{ color: '#333' }} />
-                        </div>
-                      )}
+                      <ImageWithFallback
+                        src={item.image}
+                        alt={item.name}
+                        fill
+                        className="w-full h-full object-cover"
+                        fallbackIcon="package"
+                      />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium line-clamp-1" style={{ color: TT.text }}>

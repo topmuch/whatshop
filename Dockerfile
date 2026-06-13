@@ -49,6 +49,10 @@ RUN mkdir -p /app/db /app/uploads && chmod -R 755 /app/uploads
 
 ENV UPLOADS_DIR=/app/uploads
 
+# Declare persistent volumes — Coolify maps these to host paths
+# Without these, container restarts DELETE all uploaded images!
+VOLUME ["/app/db", "/app/uploads"]
+
 EXPOSE 3000
 
 # Health check (uses bun fetch instead of curl to avoid extra packages)

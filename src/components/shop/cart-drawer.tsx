@@ -13,7 +13,7 @@ import { Separator } from '@/components/ui/separator'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { ShoppingCart, Trash2, Minus, Plus, ShoppingBag, MessageCircle } from 'lucide-react'
-import { Image } from 'next/image'
+import { ImageWithFallback } from '@/components/ui/image-with-fallback'
 import { ShippingZoneSelector } from '@/components/shop/shipping-zone-selector'
 
 interface CartDrawerProps {
@@ -131,19 +131,14 @@ Téléphone :`
                   >
                     {/* Thumbnail */}
                     <div className="relative size-12 flex-shrink-0 overflow-hidden rounded-md bg-muted">
-                      {item.image ? (
-                        <Image
-                          src={item.image}
-                          alt={item.name}
-                          fill
-                          className="object-cover"
-                          sizes="48px"
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center">
-                          <ShoppingBag className="size-5 text-muted-foreground/40" />
-                        </div>
-                      )}
+                      <ImageWithFallback
+                        src={item.image}
+                        alt={item.name}
+                        fill
+                        className="w-full h-full object-cover"
+                        sizes="48px"
+                        fallbackIcon="package"
+                      />
                     </div>
 
                     {/* Info */}

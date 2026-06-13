@@ -33,11 +33,17 @@ NODE_ENV=production
 - Dans **Domains** → Ajoutez votre domaine (ex: `boutiko.pro`)
 - Coolify configure automatiquement le SSL avec Let's Encrypt
 
-### 5. Persistance des données (Important !)
-Le dossier `db/` contient la base SQLite. Pour persister les données :
-- Dans **Volumes** → Ajoutez un volume :
-  - **Container Path** : `/app/db`
-  - **Host Path** : `/data/boutiko/db` (ou tout chemin persistant)
+### 5. Persistance des données (⚠️ TRÈS IMPORTANT !)
+Deux dossiers doivent être persistés via des volumes. Sans ça, **toutes les images et la base de données sont supprimées** à chaque redémarrage du container !
+
+Dans **Volumes** → Ajoutez **deux volumes** :
+
+| Volume | Container Path | Host Path |
+|--------|---------------|-----------|
+| Base de données | `/app/db` | `/data/boutiko/db` |
+| **Images uploadées** | `/app/uploads` | `/data/boutiko/uploads` |
+
+> ⚠️ Si `/app/uploads` n'est pas en volume, les images disparaîtront à chaque redéploiement/restart du container.
 
 ### 6. Commandes de démarrage
 Le Dockerfile utilise : `bun server.js`

@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight, MessageCircle, Sparkles } from 'lucide-react
 import { Button } from '@/components/ui/button'
 import { useTemplate } from './template-provider'
 import { cn } from '@/lib/utils'
+import { ImageWithFallback } from '@/components/ui/image-with-fallback'
 
 interface Slide {
   id: string
@@ -112,13 +113,15 @@ export function ShopHeroCarousel({ slides, shopName, whatsapp, heroImages }: Sho
         <div className="flex h-full">
           {carouselSlides.map((slide) => (
             <div key={slide.id} className="min-w-0 flex-[0_0_100%] h-full relative">
-              <img
+              <ImageWithFallback
                 src={slide.image}
                 alt={slide.title}
+                fill
                 className={cn(
-                  'absolute inset-0 w-full h-full object-cover',
+                  'w-full h-full object-cover',
                   template.id === 'xstore-electro' && 'object-center'
                 )}
+                fallbackIcon="image"
               />
               {/* Template-aware overlay */}
               <div className={cn('absolute inset-0', overlayStyle)} />

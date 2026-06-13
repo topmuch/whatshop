@@ -31,6 +31,7 @@ import { LiveShopFeatures } from '../live-shop-features'
 import { useAppStore, type Product, type Category, type Testimonial, type TrustBadge } from '@/lib/store'
 import { formatPrice, PLATFORM_CONFIG } from '@/lib/shared'
 import { ShippingZoneSelector } from '../shipping-zone-selector'
+import { ImageWithFallback } from '@/components/ui/image-with-fallback'
 
 // ─── Default trust badges ───
 const DEFAULT_TRUST_BADGES: TrustBadge[] = [
@@ -77,10 +78,13 @@ function CosmikaHeader({
           {/* Logo */}
           <button onClick={onNavAccueil} className="flex items-center gap-2 shrink-0">
             {logo && logo.length > 0 ? (
-              <img
+              <ImageWithFallback
                 src={logo}
                 alt={shopName}
+                width={160}
+                height={40}
                 className="h-10 w-auto object-contain"
+                fallbackIcon="image"
               />
             ) : (
               <span className="text-white font-bold text-lg tracking-wide">
@@ -204,10 +208,12 @@ function CosmikaHero({
     <section className="relative w-full overflow-hidden" style={{ height: '80vh', minHeight: '500px' }}>
       {backgroundImage ? (
         <>
-          <img
+          <ImageWithFallback
             src={backgroundImage}
             alt="Hero"
-            className="absolute inset-0 w-full h-full object-cover"
+            fill
+            className="w-full h-full object-cover"
+            fallbackIcon="image"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent" />
         </>
@@ -304,17 +310,13 @@ function CosmikaCategories({
                 <div
                   className="w-[100px] h-[100px] sm:w-[130px] sm:h-[130px] md:w-[160px] md:h-[160px] rounded-full overflow-hidden transition-all duration-300"
                 >
-                  {catImage ? (
-                    <img
-                      src={catImage}
-                      alt={cat.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-rose-50 flex items-center justify-center">
-                      <Package className="size-8 text-rose-300" />
-                    </div>
-                  )}
+                  <ImageWithFallback
+                    src={catImage}
+                    alt={cat.name}
+                    fill
+                    className="w-full h-full object-cover"
+                    fallbackIcon="package"
+                  />
                 </div>
                 <span
                   className={`mt-4 text-xs sm:text-sm font-medium text-center leading-tight max-w-[100px] sm:max-w-[140px] line-clamp-2 transition-colors duration-200 ${
@@ -379,18 +381,13 @@ function CosmikaProductCard({
     >
       {/* Image */}
       <div className="relative w-full aspect-square bg-gray-100 overflow-hidden">
-        {product.image ? (
-          <img
-            src={product.image}
-            alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-            loading="lazy"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gray-50">
-            <Package className="size-16 text-gray-200" />
-          </div>
-        )}
+        <ImageWithFallback
+          src={product.image}
+          alt={product.name}
+          fill
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          fallbackIcon="package"
+        />
 
         {/* Badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-1.5">
@@ -497,17 +494,13 @@ function CosmikaProductDetail({
 
         {/* Image */}
         <div className="aspect-square bg-gray-100 relative">
-          {productImages[imgIndex] ? (
-            <img
-              src={productImages[imgIndex]}
-              alt={product.name}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <Package className="size-20 text-gray-200" />
-            </div>
-          )}
+          <ImageWithFallback
+            src={productImages[imgIndex]}
+            alt={product.name}
+            fill
+            className="w-full h-full object-cover"
+            fallbackIcon="package"
+          />
           {/* Thumbnails */}
           {productImages.length > 1 && (
             <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
@@ -672,17 +665,14 @@ function CosmikaTestimonials({
 
               {/* Client info */}
               <div className="flex items-center gap-3">
-                {t.clientAvatar ? (
-                  <img
-                    src={t.clientAvatar}
-                    alt={t.clientName}
-                    className="w-8 h-8 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-rose-200 flex items-center justify-center text-rose-700 text-xs font-bold">
-                    {t.clientName.charAt(0).toUpperCase()}
-                  </div>
-                )}
+                <ImageWithFallback
+                  src={t.clientAvatar}
+                  alt={t.clientName}
+                  width={32}
+                  height={32}
+                  className="w-8 h-8 rounded-full object-cover"
+                  fallbackIcon="avatar"
+                />
                 <div>
                   <p className="text-sm font-semibold text-gray-900">{t.clientName}</p>
                   <p className="text-xs text-gray-400">
@@ -822,7 +812,7 @@ function CosmikaFooter({
           <div className="md:col-span-1">
             <div className="flex items-center gap-3 mb-4">
               {logo && logo.length > 0 ? (
-                <img src={logo} alt={shopName} className="h-10 w-auto object-contain brightness-0 invert" />
+                <ImageWithFallback src={logo} alt={shopName} width={160} height={40} className="h-10 w-auto object-contain brightness-0 invert" fallbackIcon="image" />
               ) : (
                 <span className="text-lg font-bold">{shopName}</span>
               )}

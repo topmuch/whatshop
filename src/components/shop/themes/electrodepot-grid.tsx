@@ -32,6 +32,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Product as ProductType, formatPrice } from '@/lib/shared'
 import { LiveShopFeatures } from '../live-shop-features'
+import { ImageWithFallback } from '@/components/ui/image-with-fallback'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -411,20 +412,13 @@ function ElectroDepotProductCard({
     >
       {/* Image */}
       <div className="relative aspect-square w-full bg-gray-50 overflow-hidden">
-        {product.image || product.images?.[0] ? (
-          <img
-            src={product.image || product.images?.[0]}
-            alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-            loading="lazy"
-            onLoad={(e) => { (e.target as HTMLImageElement).style.opacity = '1' }}
-            style={{ opacity: 0, transition: 'opacity 0.3s ease' }}
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
-            <Package className="size-12 text-gray-300" />
-          </div>
-        )}
+        <ImageWithFallback
+          src={product.image || product.images?.[0]}
+          alt={product.name}
+          fill
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          fallbackIcon="package"
+        />
 
         {/* Hover overlay */}
         <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-all duration-300">

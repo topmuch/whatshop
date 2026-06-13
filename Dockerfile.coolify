@@ -25,6 +25,10 @@ RUN bun run build
 # Create data + uploads directories
 RUN mkdir -p /app/data /app/uploads && chmod -R 755 /app/uploads
 
+# Declare persistent volumes — Coolify maps these to host paths
+# Without these, container restarts DELETE all uploaded images!
+VOLUME ["/app/data", "/app/uploads"]
+
 EXPOSE 3000
 
 ENV PORT=3000

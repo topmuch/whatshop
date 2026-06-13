@@ -59,6 +59,7 @@ import { useAppStore, type Product, type Category } from '@/lib/store'
 import { formatPrice, openWhatsApp } from '@/lib/shared'
 import { LiveShopFeatures } from '../live-shop-features'
 import { ShippingZoneSelector } from '../shipping-zone-selector'
+import { ImageWithFallback } from '@/components/ui/image-with-fallback'
 
 // ─── Rose Gold Beauty Palette ───
 const ROSE = {
@@ -117,10 +118,13 @@ function BeautyHeader({
           {/* Logo — centered brand */}
           <button onClick={onNavAccueil} className="flex items-center gap-2 shrink-0">
             {logo && logo.length > 0 ? (
-              <img
+              <ImageWithFallback
                 src={logo}
                 alt={shopName}
+                width={200}
+                height={50}
                 className="h-[50px] w-auto object-contain"
+                fallbackIcon="image"
               />
             ) : (
               <div className="flex items-center gap-2">
@@ -324,10 +328,12 @@ function BeautyHero({
             }}
           >
             {images.length > 0 ? (
-              <img
+              <ImageWithFallback
                 src={images[0]}
                 alt={shopName}
+                fill
                 className="w-full h-full object-cover"
+                fallbackIcon="image"
               />
             ) : (
               <div
@@ -574,20 +580,13 @@ function BeautyProductCard({
     >
       {/* Image — aspect 3/4 */}
       <div className="relative w-full overflow-hidden rounded-t-2xl" style={{ aspectRatio: '3/4', background: `${ROSE.primaryLight}40` }}>
-        {product.image ? (
-          <img
-            src={product.image}
-            alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-            loading="lazy"
-            onLoad={(e) => { (e.target as HTMLImageElement).style.opacity = '1' }}
-            style={{ opacity: 0, transition: 'opacity 0.3s ease' }}
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center">
-            <Package className="size-12" style={{ color: `${ROSE.border}` }} />
-          </div>
-        )}
+        <ImageWithFallback
+          src={product.image}
+          alt={product.name}
+          fill
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          fallbackIcon="package"
+        />
 
         {/* Heart button — top right */}
         <motion.button
@@ -1012,17 +1011,13 @@ function BeautyProductDetail({
             className="aspect-[3/4] rounded-2xl overflow-hidden"
             style={{ background: `${ROSE.primaryLight}40`, boxShadow: ROSE.shadow }}
           >
-            {productImages[imgIndex] ? (
-              <img
-                src={productImages[imgIndex]}
-                alt={product.name}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <Package className="size-20" style={{ color: ROSE.border }} />
-              </div>
-            )}
+            <ImageWithFallback
+              src={productImages[imgIndex]}
+              alt={product.name}
+              fill
+              className="w-full h-full object-cover"
+              fallbackIcon="package"
+            />
           </div>
           {/* Thumbnails */}
           {productImages.length > 1 && (
@@ -1235,13 +1230,13 @@ function BeautyCartDrawer({
                       className="w-12 h-12 rounded-xl shrink-0 overflow-hidden"
                       style={{ background: `${ROSE.primaryLight}40` }}
                     >
-                      {item.image ? (
-                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Package className="size-5" style={{ color: ROSE.border }} />
-                        </div>
-                      )}
+                      <ImageWithFallback
+                        src={item.image}
+                        alt={item.name}
+                        fill
+                        className="w-full h-full object-cover"
+                        fallbackIcon="package"
+                      />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium line-clamp-1" style={{ color: ROSE.text }}>{item.name}</p>

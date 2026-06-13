@@ -2,8 +2,8 @@
 
 import { type Product } from '@/lib/store'
 import { Button } from '@/components/ui/button'
-import { Package, Plus, Minus } from 'lucide-react'
-import Image from 'next/image'
+import { Plus, Minus } from 'lucide-react'
+import { ImageWithFallback } from '@/components/ui/image-with-fallback'
 
 interface ProductCardProps {
   product: Product
@@ -25,19 +25,14 @@ export function ProductCard({
     <div className="group flex flex-col overflow-hidden rounded-xl border bg-card shadow-sm transition-all hover:shadow-lg">
       {/* Product Image */}
       <div className="relative aspect-square w-full bg-muted overflow-hidden">
-        {product.image ? (
-          <Image
-            src={product.image}
-            alt={product.name}
-            fill
-            className="object-cover transition-transform group-hover:scale-105"
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-muted to-muted/60">
-            <Package className="size-12 text-muted-foreground/40" />
-          </div>
-        )}
+        <ImageWithFallback
+          src={product.image}
+          alt={product.name}
+          fill
+          className="w-full h-full object-cover transition-transform group-hover:scale-105"
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+          fallbackIcon="package"
+        />
       </div>
 
       {/* Product Info */}
