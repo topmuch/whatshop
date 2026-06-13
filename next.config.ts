@@ -1,9 +1,8 @@
 import type { NextConfig } from "next";
+import withPWA from "@ducanh2912/next-pwa";
 
 const nextConfig: NextConfig = {
   output: "standalone",
-  // Allow all image sources (local + external URLs)
-  // Images are already resized via sharp on upload, so we don't need Next.js optimization
   images: {
     unoptimized: true,
   },
@@ -12,7 +11,6 @@ const nextConfig: NextConfig = {
   },
   reactStrictMode: false,
   // Rewrite legacy /uploads/xxx URLs to /api/uploads/xxx
-  // (old version used public/uploads/, new version uses persisted /app/uploads volume)
   async rewrites() {
     return [
       {
@@ -21,45 +19,41 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  // Security headers for production
   async headers() {
     return [
       {
         source: "/(.*)",
         headers: [
-          {
-            key: "X-Frame-Options",
-            value: "DENY",
-          },
-          {
-            key: "X-Content-Type-Options",
-            value: "nosniff",
-          },
-          {
-            key: "Referrer-Policy",
-            value: "strict-origin-when-cross-origin",
-          },
-          {
-            key: "Permissions-Policy",
-            value: "camera=(), microphone=(), geolocation=()",
-          },
-          {
-            key: "X-XSS-Protection",
-            value: "1; mode=block",
-          },
-          {
-            key: "Strict-Transport-Security",
-            value: "max-age=31536000; includeSubDomains",
-          },
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+          { key: "X-XSS-Protection", value: "1; mode=block" },
+          { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" },
         ],
       },
       {
         source: "/api/:path*",
         headers: [
-          {
-            key: "Cache-Control",
-            value: "no-store, max-age=0",
-          },
+          { key: "Cache-Control", value: "no-store, max-age=0" },
+        ],
+      },
+      {
+        source: "/pwa-icons/:path*",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
+      },
+      {
+        source: "/manifest.json",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=3600" },
+        ],
+      },
+      {
+        source: "/sw.js",
+        headers: [
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
         ],
       },
       // Override: uploaded files get a longer cache (must come AFTER the general /api rule)
@@ -76,4 +70,29 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withPWA({
+  dest: "public",
+  disable: process.env.NODE_ENV === "development",
+  register: true,
+  skipWaiting: true,
+  swSrc: "worker/sw.js",
+  runtimeCaching: [
+    {
+      urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+      handler: "CacheFirst",
+      options: {
+        cacheName: "boutiko-google-fonts",
+        expiration: { maxEntries: 10, maxAgeSeconds: 365 * 24 * 60 * 60 },
+      },
+    },
+    {
+      urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+      handler: "CacheFirst",
+      options: {
+        cacheName: "boutiko-gstatic-fonts",
+        expiration: { maxEntries: 20, maxAgeSeconds: 365 * 24 * 60 * 60 },
+        cacheableResponse: { statuses: [0, 200] },
+      },
+    },
+  ],
+})(nextConfig);

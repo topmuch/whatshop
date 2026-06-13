@@ -58,7 +58,11 @@ model User {
   reseller        User?            @relation("ResellerClients", fields: [resellerId], references: [id])
   upgradeRequests  UpgradeRequest[]
   reviewedUpgrades UpgradeRequest[] @relation("UpgradeReviews")
+<<<<<<< HEAD
   notifications    Notification[]
+=======
+  pushSubscriptions PushSubscription[]
+>>>>>>> 8cda927 (feat: PWA — installable, offline-first, push notifications)
 }
 
 // ─── SUBSCRIPTION (liée au COMPTE UTILISATEUR, pas à la boutique) ─────────────
@@ -461,5 +465,21 @@ model Notification {
   @@index([type])
   @@index([isRead])
   @@index([createdAt])
+}
+
+// ─── PUSH SUBSCRIPTION (PWA) ──────────────────────────────────────────────────
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
 }

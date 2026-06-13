@@ -1,20 +1,33 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
+import { OfflineIndicator } from "@/components/pwa/offline-indicator";
+import { InstallPrompt } from "@/components/pwa/install-prompt";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const siteDescription =
   "Boutiko est la plateforme N°1 pour créer votre boutique en ligne en Côte d'Ivoire, Sénégal et Cameroun. Simple, rapide et abordable. Essai gratuit.";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#000000",
+  maximumScale: 5,
+  userScalable: true,
+};
 
 export const metadata: Metadata = {
   title: {
@@ -54,6 +67,24 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://boutiko.pro",
   },
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Boutiko",
+  },
+  icons: {
+    icon: [
+      { url: "/pwa-icons/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/pwa-icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: [
+      { url: "/pwa-icons/apple-touch-icon.png" },
+    ],
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
 };
 
 const jsonLd = {
@@ -61,7 +92,7 @@ const jsonLd = {
   "@type": "Organization",
   name: "Boutiko",
   url: "https://boutiko.pro",
-  logo: "https://boutiko.pro/favicon.ico",
+  logo: "https://boutiko.pro/pwa-icons/icon-512x512.png",
   description:
     "Plateforme de création de boutiques en ligne en Afrique",
   areaServed: ["CI", "SN", "CM"],
@@ -87,11 +118,21 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
+        {/* Preconnect to critical origins */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
+        style={{
+          WebkitTapHighlightColor: "transparent",
+          touchAction: "manipulation",
+          overscrollBehaviorY: "contain",
+        }}
       >
+        <OfflineIndicator />
         {children}
+        <InstallPrompt />
         <Toaster position="top-center" richColors />
       </body>
     </html>

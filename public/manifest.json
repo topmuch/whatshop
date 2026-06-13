@@ -1,0 +1,105 @@
+{
+  "name": "Boutiko - Vendez sur WhatsApp & TikTok",
+  "short_name": "Boutiko",
+  "description": "Créez votre boutique en ligne et vendez sur les réseaux sociaux. La plateforme N°1 en Afrique de l'Ouest.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "categories": ["shopping", "business", "productivity"],
+  "lang": "fr",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/pwa-icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/pwa-icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Créer un produit",
+      "short_name": "Nouveau produit",
+      "description": "Ajouter un nouveau produit à votre boutique",
+      "url": "/dashboard?tab=products&action=new",
+      "icons": [
+        {
+          "src": "/pwa-icons/icon-96x96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Voir les commandes",
+      "short_name": "Commandes",
+      "description": "Consulter vos dernières commandes",
+      "url": "/dashboard?tab=orders",
+      "icons": [
+        {
+          "src": "/pwa-icons/icon-96x96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Mode Live",
+      "short_name": "Live",
+      "description": "Démarrer ou gérer votre session live",
+      "url": "/dashboard?tab=live",
+      "icons": [
+        {
+          "src": "/pwa-icons/icon-96x96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+  "share_target": {
+    "action": "/api/share-target",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "images",
+          "accept": ["image/*"]
+        }
+      ]
+    }
+  },
+  "screenshots": [],
+  "prefer_related_applications": false
+}
