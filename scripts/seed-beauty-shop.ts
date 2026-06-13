@@ -52,7 +52,11 @@ async function seedBeautyShop() {
       phone: '2217848582226',
       plan: 'STANDARD',
       sector: 'beaute',
-      template: 'jameela',
+      template: 'cosmika-beauty',
+      heroTitle: 'GLAMOUR SHINE',
+      heroSubtitle: 'Découvrez notre nouvelle collection de cosmétiques premium',
+      heroTagline: 'ILLUMINATE DAILY',
+      heroImageUrl: '/banners/beauty-soins.png',
       isActive: true,
       ownerId: userId,
       seoTitle: 'Jameela Beauty - Boutique Beauté Premium à Dakar',
@@ -65,11 +69,12 @@ async function seedBeautyShop() {
 
   // 4. Create categories
   const cats = await Promise.all([
-    db.category.create({ data: { name: 'Soins Visage', description: 'Sérums, crèmes et masques', shopId: shop.id } }),
-    db.category.create({ data: { name: 'Maquillage', description: 'Rouges, palettes et mascaras', shopId: shop.id } }),
-    db.category.create({ data: { name: 'Parfums', description: 'Parfums luxueux et brumes', shopId: shop.id } }),
-    db.category.create({ data: { name: 'Soin Corps', description: 'Huiles et crèmes corps', shopId: shop.id } }),
-    db.category.create({ data: { name: 'Coffrets Cadeaux', description: 'Ensembles prestige', shopId: shop.id } }),
+    db.category.create({ data: { name: 'Soins Visage', description: 'Sérums, crèmes et masques', shopId: shop.id, image: '/products/beauty/serum-eclat.png' } }),
+    db.category.create({ data: { name: 'Maquillage', description: 'Rouges, palettes et mascaras', shopId: shop.id, image: '/products/beauty/rouge-levres.png' } }),
+    db.category.create({ data: { name: 'Parfums', description: 'Parfums luxueux et brumes', shopId: shop.id, image: '/products/beauty/parfum-oriental.png' } }),
+    db.category.create({ data: { name: 'Soin Corps', description: 'Huiles et crèmes corps', shopId: shop.id, image: '/products/beauty/huile-argan.png' } }),
+    db.category.create({ data: { name: 'Coffrets Cadeaux', description: 'Ensembles prestige', shopId: shop.id, image: '/products/beauty/coffret-soin.png' } }),
+    db.category.create({ data: { name: 'Accessoires', description: 'Pinceaux, miroirs et accessoires', shopId: shop.id, image: '/products/beauty/palette-maquillage.png' } }),
   ])
   console.log('  ✓ Categories:', cats.length)
 

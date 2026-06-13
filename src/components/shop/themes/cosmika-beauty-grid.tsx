@@ -186,7 +186,7 @@ function CosmikaHeader({
 }
 
 // ═══════════════════════════════════════════════════════════════
-// SECTION 2 : HERO (80vh)
+// SECTION 2 : HERO (min-h-[90vh] / md:h-screen)
 // ═══════════════════════════════════════════════════════════════
 
 function CosmikaHero({
@@ -205,7 +205,7 @@ function CosmikaHero({
   const backgroundImage = heroImageUrl || banner
 
   return (
-    <section className="relative w-full overflow-hidden" style={{ height: '80vh', minHeight: '500px' }}>
+    <section id="accueil" className="relative min-h-[90vh] md:h-screen overflow-hidden">
       {backgroundImage ? (
         <>
           <ImageWithFallback
@@ -229,33 +229,31 @@ function CosmikaHero({
       <div className="absolute bottom-0 left-1/3 w-64 h-64 rounded-full bg-amber-400/5 blur-3xl" />
 
       {/* Text LEFT-aligned */}
-      <div className="relative z-10 flex items-center h-full">
-        <div className="max-w-7xl mx-auto px-4 lg:px-6 w-full">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: 'easeOut' }}
-            className="max-w-xl"
+      <div className="relative z-10 flex flex-col items-start justify-center h-full text-left px-8 md:px-16 lg:px-32 fade-in">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: 'easeOut' }}
+          className="max-w-xl"
+        >
+          {/* Tagline */}
+          <span className="text-white font-semibold text-sm tracking-widest uppercase mb-4 block">
+            {heroTagline || 'ILLUMINATE DAILY'}
+          </span>
+
+          {/* Title */}
+          <h1
+            className="text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight mb-6"
+            style={{ fontFamily: "'Playfair Display', serif" }}
           >
-            {/* Tagline */}
-            <p className="text-xs sm:text-sm font-semibold uppercase tracking-[0.2em] mb-4 text-amber-400">
-              {heroTagline || 'ILLUMINATE DAILY'}
-            </p>
+            {heroTitle || 'GLAMOUR SHINE'}
+          </h1>
 
-            {/* Title */}
-            <h1
-              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-[1.1] mb-6"
-              style={{ fontFamily: "'Playfair Display', serif" }}
-            >
-              {heroTitle || 'GLAMOUR SHINE'}
-            </h1>
-
-            {/* Subtitle */}
-            <p className="text-base sm:text-lg text-white/70 max-w-md leading-relaxed">
-              {heroSubtitle || 'Découvrez notre collection de soins et cosmétiques pour sublimer votre beauté naturelle.'}
-            </p>
-          </motion.div>
-        </div>
+          {/* Subtitle */}
+          <p className="text-lg md:text-xl lg:text-2xl text-white/90 max-w-xl leading-relaxed">
+            {heroSubtitle || 'Découvrez notre nouvelle collection de cosmétiques premium'}
+          </p>
+        </motion.div>
       </div>
     </section>
   )
@@ -283,18 +281,21 @@ function CosmikaCategories({
   if (categories.length === 0) return null
 
   return (
-    <section id="cosmika-categories" className="w-full bg-white py-12 sm:py-16">
-      <div className="max-w-6xl mx-auto px-4 lg:px-6">
-        <div className="text-center mb-10">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
-            {categoriesTitle || 'NOS CATÉGORIES'}
+    <section id="cosmika-categories" className="w-full bg-white py-20 px-4">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-16">
+          <span className="text-rose-600 font-semibold text-sm tracking-widest uppercase">Nos Produits</span>
+          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mt-2" style={{ fontFamily: "'Playfair Display', serif" }}>
+            {categoriesTitle || 'FOR ALL WALKS OF LIFE'}
           </h2>
-          <p className="text-sm text-gray-500">
-            {categoriesTagline || 'Trouvez ce que vous cherchez'}
-          </p>
+          {categoriesTagline && (
+            <p className="text-sm text-gray-500 mt-2">
+              {categoriesTagline}
+            </p>
+          )}
         </div>
 
-        <div className="flex flex-wrap justify-center gap-[35px] sm:gap-[40px]">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 md:gap-10">
           {categories.map((cat) => {
             const isActive = activeCategory === cat.id
             const catImage = cat.image || products.find((p) => p.categoryId === cat.id && p.image)?.image
@@ -308,7 +309,7 @@ function CosmikaCategories({
                 transition={{ duration: 0.2 }}
               >
                 <div
-                  className="w-[100px] h-[100px] sm:w-[130px] sm:h-[130px] md:w-[160px] md:h-[160px] rounded-full overflow-hidden transition-all duration-300"
+                  className="w-32 h-32 md:w-40 md:h-40 lg:w-44 lg:h-44 rounded-full overflow-hidden mx-auto mb-4 border-4 border-rose-100 group-hover:border-rose-300 transition-all duration-300"
                 >
                   <ImageWithFallback
                     src={catImage}
@@ -319,8 +320,8 @@ function CosmikaCategories({
                   />
                 </div>
                 <span
-                  className={`mt-4 text-xs sm:text-sm font-medium text-center leading-tight max-w-[100px] sm:max-w-[140px] line-clamp-2 transition-colors duration-200 ${
-                    isActive ? 'text-rose-600' : 'text-gray-600 group-hover:text-gray-900'
+                  className={`text-base md:text-lg font-medium text-center transition-colors duration-200 ${
+                    isActive ? 'text-rose-600' : 'text-gray-700 group-hover:text-gray-900'
                   }`}
                 >
                   {cat.name}
