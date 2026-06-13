@@ -7,7 +7,7 @@
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#ffffff",
-  "theme_color": "#000000",
+  "theme_color": "#ec4899",
   "categories": ["shopping", "business", "productivity"],
   "lang": "fr",
   "dir": "ltr",
@@ -27,6 +27,18 @@
     {
       "src": "/pwa-icons/icon-128x128.png",
       "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-icons/icon-150x150.png",
+      "sizes": "150x150",
       "type": "image/png",
       "purpose": "any"
     },
