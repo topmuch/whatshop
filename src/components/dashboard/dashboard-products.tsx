@@ -101,7 +101,7 @@ const emptyForm: ProductFormData = {
 
 export function DashboardProducts() {
   const { shop, setDashboardTab } = useAppStore()
-  const labels = getBusinessLabels(shop?.businessType)
+  const labels = getBusinessLabels(shop?.businessType, shop?.sector)
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)

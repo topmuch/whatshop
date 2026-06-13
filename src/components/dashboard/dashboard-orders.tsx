@@ -156,7 +156,7 @@ function getOrderNumber(orderId: string): string {
 
 export function DashboardOrders() {
   const { shop } = useAppStore()
-  const labels = getBusinessLabels(shop?.businessType)
+  const labels = getBusinessLabels(shop?.businessType, shop?.sector)
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState('ALL')

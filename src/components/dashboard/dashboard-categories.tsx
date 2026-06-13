@@ -51,7 +51,7 @@ const emptyForm: CategoryFormData = {
 
 export function DashboardCategories() {
   const { shop } = useAppStore()
-  const labels = getBusinessLabels(shop?.businessType)
+  const labels = getBusinessLabels(shop?.businessType, shop?.sector)
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
 

@@ -96,8 +96,8 @@ interface ConsolidatedStats {
 /*  Nav items (unchanged)                                              */
 /* ------------------------------------------------------------------ */
 
-function getNavItems(businessType?: string | null): { id: DashboardTab; label: string; icon: React.ReactNode }[] {
-  const labels = getBusinessLabels(businessType)
+function getNavItems(businessType?: string | null, sector?: string | null): { id: DashboardTab; label: string; icon: React.ReactNode }[] {
+  const labels = getBusinessLabels(businessType, sector)
   return [
     { id: 'overview', label: "Vue d'ensemble", icon: <LayoutDashboard className="h-5 w-5" /> },
     { id: 'analytics', label: 'Analytics', icon: <BarChart3 className="h-5 w-5" /> },
@@ -115,8 +115,10 @@ function getNavItems(businessType?: string | null): { id: DashboardTab; label: s
 /*  Consolidated stats bar (shown at top of main content on overview)   */
 /* ------------------------------------------------------------------ */
 
-function ConsolidatedStatsBar({ stats }: { stats: ConsolidatedStats | null }) {
+function ConsolidatedStatsBar({ stats, sector }: { stats: ConsolidatedStats | null; sector?: string | null }) {
   if (!stats) return null
+
+  const labels = getBusinessLabels(undefined, sector)
 
   const cards = [
     {
@@ -126,13 +128,13 @@ function ConsolidatedStatsBar({ stats }: { stats: ConsolidatedStats | null }) {
       accent: 'text-pink-600 dark:text-pink-400',
     },
     {
-      label: getBusinessLabels().statProducts,
+      label: labels.statProducts,
       value: stats.totalProducts.toLocaleString('fr-FR'),
       icon: <Package className="h-5 w-5" />,
       accent: 'text-amber-600 dark:text-amber-400',
     },
     {
-      label: getBusinessLabels().statOrders,
+      label: labels.statOrders,
       value: stats.totalOrders.toLocaleString('fr-FR'),
       icon: <ShoppingCart className="h-5 w-5" />,
       accent: 'text-emerald-600 dark:text-emerald-400',
@@ -312,7 +314,7 @@ function SidebarContent({
   const { dashboardTab, setDashboardTab, setUser, setShop, setShops, setView, shop } = useAppStore()
   const { isDark, toggleTheme } = useThemeMode()
 
-  const navItems = getNavItems(shop?.businessType)
+  const navItems = getNavItems(shop?.businessType, shop?.sector)
 
   async function handleLogout() {
     try {
@@ -468,7 +470,7 @@ function DashboardContent({ consolidatedStats }: { consolidatedStats: Consolidat
     case 'overview':
       return (
         <>
-          <ConsolidatedStatsBar stats={consolidatedStats} />
+          <ConsolidatedStatsBar stats={consolidatedStats} sector={shop?.sector} />
           <DashboardOverview />
         </>
       )
@@ -491,7 +493,7 @@ function DashboardContent({ consolidatedStats }: { consolidatedStats: Consolidat
     default:
       return (
         <>
-          <ConsolidatedStatsBar stats={consolidatedStats} />
+          <ConsolidatedStatsBar stats={consolidatedStats} sector={shop?.sector} />
           <DashboardOverview />
         </>
       )
