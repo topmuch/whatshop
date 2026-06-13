@@ -1,115 +1,131 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useRef, useCallback, type FormEvent } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAppStore } from '@/lib/store'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
+import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
-import { templates, type TemplateId } from '@/lib/templates'
+import { ImageWithFallback } from '@/components/ui/image-with-fallback'
 import {
   ArrowRight,
   ArrowLeft,
+  Upload,
   Check,
   Sparkles,
-  ShoppingBag,
-  Store,
-  Crown,
-  Gift,
-  Zap,
-  Loader2,
   Phone,
-  MapPin,
-  Briefcase,
-  Camera,
-  Rocket,
-  CheckCircle2,
-  Palette,
+  ImageIcon,
+  Loader2,
+  ShoppingCart,
+  ConciergeBell,
 } from 'lucide-react'
 
-/* ──────────────────────────── CONSTANTS ──────────────────────────── */
+/* ──────────────────────── TYPES ──────────────────────── */
 
-const sectorTemplateMap: Record<string, TemplateId> = {
+type BusinessType = 'ECOMMERCE' | 'SERVICE'
+type Sector =
+  | 'beaute'
+  | 'mode'
+  | 'electronique'
+  | 'alimentation'
+  | 'autre'
+  | 'beaute-service'
+  | 'restaurant'
+  | 'consulting'
+  | 'artisanat'
+  | 'sante'
+type TemplateId = 'cosmika-beauty' | 'xstore-electro'
+type Plan = 'TRIAL' | 'PRO'
+
+interface OnboardingFormData {
+  businessType: BusinessType | null
+  sector: Sector | null
+  template: TemplateId | null
+  name: string
+  whatsapp: string
+  description: string
+  logo: string | null
+  plan: Plan | null
+}
+
+/* ──────────────────────── CONSTANTS ──────────────────────── */
+
+const ECOMMERCE_SECTORS: { id: Sector; emoji: string; name: string; subtitle: string }[] = [
+  { id: 'beaute', emoji: '💄', name: 'Beauté', subtitle: 'Maquillage, soins, parfums' },
+  { id: 'mode', emoji: '👗', name: 'Mode', subtitle: 'Vêtements, accessoires, chaussures' },
+  { id: 'electronique', emoji: '📱', name: 'Tech', subtitle: 'Téléphones, accessoires, audio' },
+  { id: 'alimentation', emoji: '🍔', name: 'Alimentation', subtitle: 'Boissons, snacks, épices' },
+  { id: 'autre', emoji: '🛍️', name: 'Autre', subtitle: 'Autres produits' },
+]
+
+const SERVICE_SECTORS: { id: Sector; emoji: string; name: string; subtitle: string }[] = [
+  { id: 'beaute-service', emoji: '💇', name: 'Beauté', subtitle: 'Salon, coiffure, esthétique' },
+  { id: 'restaurant', emoji: '🍽️', name: 'Restaurant', subtitle: 'Restaurant, bar, traiteur' },
+  { id: 'consulting', emoji: '💼', name: 'Consulting', subtitle: 'Conseil, formation, coaching' },
+  { id: 'artisanat', emoji: '🔧', name: 'Artisan/BTP', subtitle: 'Plomberie, électricité, menuiserie' },
+  { id: 'sante', emoji: '🏥', name: 'Santé', subtitle: 'Pharmacie, clinique, bien-être' },
+]
+
+const SECTOR_TEMPLATE_MAP: Partial<Record<Sector, TemplateId>> = {
   beaute: 'cosmika-beauty',
   mode: 'cosmika-beauty',
   electronique: 'xstore-electro',
   alimentation: 'xstore-electro',
-  artisanat: 'cosmika-beauty',
-  sport: 'xstore-electro',
-  bijoux: 'cosmika-beauty',
-  maison: 'xstore-electro',
-  auto: 'xstore-electro',
   autre: 'xstore-electro',
+  'beaute-service': 'cosmika-beauty',
+  restaurant: 'cosmika-beauty',
+  consulting: 'cosmika-beauty',
+  artisanat: 'cosmika-beauty',
+  sante: 'cosmika-beauty',
 }
 
-const sectorCategoriesMap: Record<string, string[]> = {
-  beaute: ['Maquillage', 'Soins', 'Parfums', 'Accessoires Beauté'],
-  mode: ['Robes', 'Accessoires', 'Chaussures', 'Hauts'],
-  electronique: ['Téléphones', 'Accessoires', 'Ordinateurs', 'Audio'],
-  alimentation: ['Boissons', 'Snacks', 'Conserves', 'Épices'],
-  artisanat: ['Sculptures', 'Tissus', 'Bijoux Artisanaux', 'Décorations'],
-  sport: ['Équipements', 'Vêtements Sport', 'Accessoires', 'Nutrition'],
-  bijoux: ['Bagues', 'Colliers', 'Bracelets', "Boucles d'oreilles"],
-  maison: ['Décoration', 'Meubles', 'Cuisine', 'Linge de maison'],
-  auto: ['Pièces détachées', 'Accessoires Auto', 'Entretien', 'Électronique Auto'],
-  autre: ['Produits', 'Services', 'Divers'],
+interface TemplateInfo {
+  id: TemplateId
+  emoji: string
+  name: string
+  features: { ecommerce: string[]; service: string[] }
 }
 
-const sectors = [
-  { id: 'beaute', label: 'Beauté & Cosmétiques', emoji: '💄', description: 'Maquillage, soins, parfums...' },
-  { id: 'mode', label: 'Mode & Vêtements', emoji: '👗', description: 'Robes, costumes, accessoires...' },
-  { id: 'electronique', label: 'Électronique & Tech', emoji: '📱', description: 'Téléphones, accessoires...' },
-  { id: 'alimentation', label: 'Alimentation & Boissons', emoji: '🍕', description: 'Snacks, boissons, épices...' },
-  { id: 'artisanat', label: 'Artisanat & Décoration', emoji: '🏺', description: 'Sculptures, tissus, art...' },
-  { id: 'sport', label: 'Sport & Fitness', emoji: '⚽', description: 'Équipements, vêtements sport...' },
-  { id: 'bijoux', label: 'Bijoux & Accessoires', emoji: '💎', description: 'Bagues, colliers, bracelets...' },
-  { id: 'maison', label: 'Maison & Déco', emoji: '🏠', description: 'Décoration, cuisine, linge...' },
-  { id: 'auto', label: 'Auto & Moto', emoji: '🚗', description: 'Pièces, accessoires auto...' },
-  { id: 'autre', label: 'Autre', emoji: '📦', description: 'Autre secteur d\'activité' },
-]
-
-const plans = [
+const TEMPLATES: TemplateInfo[] = [
   {
-    id: 'FREE',
-    name: 'Gratuit',
-    price: '0',
-    period: '',
-    description: 'Parfait pour démarrer',
-    icon: Gift,
-    popular: false,
-    features: ['10 produits max', 'Boutique publique', 'Commandes WhatsApp', 'Design responsive', 'QR code boutique'],
+    id: 'cosmika-beauty',
+    emoji: '✨',
+    name: 'Cosmika Beauty',
+    features: {
+      ecommerce: ['Panier WhatsApp intégré', 'Gestion des stocks en temps réel', 'Design élégant & moderne'],
+      service: ['Bouton Demander un devis', 'Formulaire de réservation', 'Design élégant & moderne'],
+    },
   },
   {
-    id: 'STANDARD',
-    name: 'Standard',
-    price: '5 000',
-    period: 'FCFA/mois',
-    description: 'Le choix des vendeurs',
-    icon: Zap,
-    popular: true,
-    features: ['100 produits', '8 thèmes premium', 'Statistiques', 'Support prioritaire', 'Logo personnalisé', 'IA descriptions'],
-  },
-  {
-    id: 'PREMIUM',
-    name: 'Premium',
-    price: '15 000',
-    period: 'FCFA/mois',
-    description: 'Pour les pros',
-    icon: Crown,
-    popular: false,
-    features: ['Produits illimités', 'Domaine personnalisé', 'Support 24/7', 'API & intégrations', 'Marque blanche', 'Formation offerte'],
+    id: 'xstore-electro',
+    emoji: '⚡',
+    name: 'Electro Store',
+    features: {
+      ecommerce: ['Catalogue produits avancé', 'Gestion des stocks en temps réel', 'Design tech & épuré'],
+      service: ['Bouton Demander un devis', 'Formulaire de réservation', 'Design tech & épuré'],
+    },
   },
 ]
 
-/* ──────────────────────────── ANIMATIONS ──────────────────────────── */
+const TOTAL_STEPS = 5
+
+/* ──────────────────────── HELPERS ──────────────────────── */
+
+function generateSlug(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
 
 const slideVariants = {
   enter: (direction: number) => ({
-    x: direction > 0 ? 300 : -300,
+    x: direction > 0 ? 80 : -80,
     opacity: 0,
   }),
   center: {
@@ -117,954 +133,946 @@ const slideVariants = {
     opacity: 1,
   },
   exit: (direction: number) => ({
-    x: direction < 0 ? 300 : -300,
+    x: direction < 0 ? 80 : -80,
     opacity: 0,
   }),
 }
 
-const fadeInUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: i * 0.08, duration: 0.5, ease: [0.22, 1, 0.36, 1] },
-  }),
-}
+/* ──────────────────────── COMPONENT ──────────────────────── */
 
-/* ──────────────────────────── MAIN COMPONENT ──────────────────────────── */
+export default function OnboardingWizard() {
+  const { user, setShop, setPublicShop, setShops } = useAppStore()
 
-export function OnboardingWizard() {
-  const { user, setShop, setView } = useAppStore()
-  const [step, setStep] = useState(0) // 0 = plan, 1 = info, 2 = preview
+  const [step, setStep] = useState(1)
   const [direction, setDirection] = useState(1)
-  const [loading, setLoading] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
 
-  // Form state
-  const [selectedPlan, setSelectedPlan] = useState('FREE')
-  const [shopName, setShopName] = useState('')
-  const [address, setAddress] = useState('')
-  const [whatsapp, setWhatsapp] = useState('')
-  const [selectedSector, setSelectedSector] = useState('')
-  const [logoPreview, setLogoPreview] = useState<string | null>(null)
-  const [logoData, setLogoData] = useState<string | null>(null)
+  const [form, setForm] = useState<OnboardingFormData>({
+    businessType: null,
+    sector: null,
+    template: null,
+    name: '',
+    whatsapp: '',
+    description: '',
+    logo: null,
+    plan: null,
+  })
 
-  const progress = ((step + 1) / 3) * 100
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Derived data
-  const assignedTemplate = useMemo(
-    () => templates[sectorTemplateMap[selectedSector] || 'xstore-electro'],
-    [selectedSector]
-  )
-  const assignedCategories = useMemo(
-    () => sectorCategoriesMap[selectedSector] || ['Produits', 'Divers'],
-    [selectedSector]
-  )
+  /* ──────── Navigation ──────── */
 
-  function goNext() {
-    setDirection(1)
-    setStep((s) => Math.min(s + 1, 2))
-  }
+  const goNext = useCallback(() => {
+    if (step < TOTAL_STEPS) {
+      setDirection(1)
+      setStep((s) => s + 1)
+    }
+  }, [step])
 
-  function goBack() {
-    setDirection(-1)
-    setStep((s) => Math.max(s - 1, 0))
-  }
+  const goBack = useCallback(() => {
+    if (step > 1) {
+      setDirection(-1)
+      setStep((s) => s - 1)
+    }
+  }, [step])
 
-  function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  /* ──────── Step 1: Business Type ──────── */
+
+  const canProceedStep1 = form.businessType !== null
+
+  /* ──────── Step 2: Sector ──────── */
+
+  const sectors = form.businessType === 'SERVICE' ? SERVICE_SECTORS : ECOMMERCE_SECTORS
+  const canProceedStep2 = form.sector !== null
+
+  /* ──────── Step 3: Template ──────── */
+
+  const availableTemplates = TEMPLATES.filter((t) => {
+    if (form.sector && SECTOR_TEMPLATE_MAP[form.sector] === t.id) return true
+    return false
+  })
+
+  const canProceedStep3 = form.template !== null
+
+  /* ──────── Step 4: Customization ──────── */
+
+  const slug = generateSlug(form.name)
+  const canProceedStep4 = form.name.trim().length > 0 && form.whatsapp.trim().length >= 8
+
+  /* ──────── Step 5: Plan ──────── */
+
+  const templateEmoji = TEMPLATES.find((t) => t.id === form.template)?.emoji ?? '🏪'
+
+  /* ──────── File Upload ──────── */
+
+  const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error('Logo trop volumineux (max 2 MB)')
-      return
-    }
-    const reader = new FileReader()
-    reader.onload = () => {
-      setLogoPreview(reader.result as string)
-      setLogoData((reader.result as string).split(',')[1]) // base64 without prefix
-    }
-    reader.readAsDataURL(file)
-  }
 
-  function generateSlug(name: string) {
-    return name
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)+/g, '')
-  }
-
-  async function handleComplete() {
-    if (!shopName || !whatsapp) {
-      toast.error('Veuillez remplir tous les champs obligatoires')
+    if (!file.type.startsWith('image/')) {
+      toast.error('Veuillez sélectionner une image')
       return
     }
 
-    setLoading(true)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('L\'image ne doit pas dépasser 5 Mo')
+      return
+    }
+
+    setIsUploading(true)
     try {
-      const slug = generateSlug(shopName)
-      const logoUrl = logoData ? `data:image/png;base64,${logoData}` : null
+      const fd = new FormData()
+      fd.append('file', file)
 
-      const res = await fetch('/api/onboarding', {
+      const res = await fetch('/api/upload', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: user!.id,
-          name: shopName,
-          slug,
-          whatsapp,
-          address,
-          phone: whatsapp,
-          plan: selectedPlan,
-          sector: selectedSector || null,
-          logo: logoUrl,
-        }),
+        body: fd,
       })
 
-      if (!res.ok) {
-        const data = await res.json()
-        toast.error(data.error || 'Erreur lors de la création')
-        setLoading(false)
-        return
-      }
+      if (!res.ok) throw new Error('Erreur lors du téléchargement')
 
-      const shop = await res.json()
-      setShop({
-        id: shop.id,
-        name: shop.name,
-        slug: shop.slug,
-        description: shop.description,
-        logo: shop.logo,
-        banner: shop.banner,
-        whatsapp: shop.whatsapp,
-        address: shop.address,
-        phone: shop.phone,
-        plan: shop.plan,
-        sector: shop.sector,
-        template: shop.template,
-        isActive: shop.isActive,
-      })
-
-      toast.success('🎉 Votre boutique est prête !')
-      setView('dashboard')
+      const data = await res.json()
+      setForm((prev) => ({ ...prev, logo: data.url }))
+      toast.success('Logo ajouté !')
     } catch {
-      toast.error('Erreur de connexion')
-      setLoading(false)
+      toast.error('Impossible de télécharger le logo')
+    } finally {
+      setIsUploading(false)
     }
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }, [])
+
+  /* ──────── Submit ──────── */
+
+  const handleSubmit = useCallback(
+    async (e?: FormEvent) => {
+      if (e) e.preventDefault()
+      if (!form.plan || !form.businessType || !form.sector || !form.template || !form.name) return
+
+      setIsSubmitting(true)
+
+      try {
+        const payload = {
+          businessType: form.businessType,
+          sector: form.sector,
+          template: form.template,
+          name: form.name.trim(),
+          whatsapp: form.whatsapp.trim(),
+          description: form.description.trim() || undefined,
+          logo: form.logo || undefined,
+          plan: form.plan,
+        }
+
+        const res = await fetch('/api/onboarding', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}))
+          throw new Error(errData.error || 'Erreur lors de la création')
+        }
+
+        const shopData = await res.json()
+
+        setShop(shopData.shop)
+        setPublicShop(shopData.shop)
+
+        try {
+          const sessionRes = await fetch('/api/auth/session')
+          if (sessionRes.ok) {
+            const sessionData = await sessionRes.json()
+            if (sessionData.user?.shops) {
+              setShops(sessionData.user.shops)
+            }
+          }
+        } catch {
+          // Non-critical: shops list will be refreshed later
+        }
+
+        toast.success('Votre boutique a été créée avec succès ! 🎉')
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : 'Une erreur est survenue')
+      } finally {
+        setIsSubmitting(false)
+      }
+    },
+    [form, setShop, setPublicShop, setShops],
+  )
+
+  /* ──────── Progress Bar ──────── */
+
+  function ProgressBar() {
+    return (
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium text-rose-600">
+            Étape {step} sur {TOTAL_STEPS}
+          </span>
+          <span className="text-sm text-muted-foreground">
+            {Math.round((step / TOTAL_STEPS) * 100)}%
+          </span>
+        </div>
+        <div className="flex gap-1.5">
+          {Array.from({ length: TOTAL_STEPS }, (_, i) => (
+            <div
+              key={i}
+              className={`h-2 flex-1 rounded-full transition-colors duration-300 ${
+                i < step ? 'bg-rose-600' : 'bg-gray-200'
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+    )
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50/60 via-background to-orange-50/40 flex flex-col">
-      {/* Header */}
-      <header className="w-full border-b border-border/40 bg-background/60 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-4xl items-center justify-between px-4 sm:px-6">
-          <div className="flex items-center gap-2.5">
-            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary shadow-md shadow-primary/20">
-              <ShoppingBag className="w-4 h-4 text-primary-foreground" />
-            </div>
-            <span className="text-lg font-bold tracking-tight">
-              Bouti<span className="text-primary">ko</span>
-            </span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-muted-foreground hidden sm:inline">
-              Étape {step + 1} sur 3
-            </span>
-          </div>
-        </div>
-      </header>
+  /* ──────── Step Renderers ──────── */
 
-      {/* Progress bar */}
-      <div className="w-full bg-border/30">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 pt-3">
-          <Progress value={progress} className="h-1.5" />
-          <div className="flex justify-between mt-2 mb-1">
-            {['Offre', 'Votre boutique', 'Thème'].map((label, i) => (
-              <div
-                key={label}
-                className={`flex items-center gap-1.5 text-xs font-medium transition-colors ${
-                  i <= step ? 'text-primary' : 'text-muted-foreground/50'
-                }`}
-              >
-                <div
-                  className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold transition-all ${
-                    i < step
-                      ? 'bg-primary text-primary-foreground'
-                      : i === step
-                      ? 'bg-primary/15 text-primary ring-2 ring-primary/30'
-                      : 'bg-muted text-muted-foreground/50'
-                  }`}
-                >
-                  {i < step ? <Check className="w-3 h-3" /> : i + 1}
-                </div>
-                <span className="hidden sm:inline">{label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Main content */}
-      <main className="flex-1 flex items-start justify-center px-4 sm:px-6 py-6 sm:py-10">
-        <div className="w-full max-w-3xl relative overflow-hidden">
-          <AnimatePresence mode="wait" custom={direction}>
-            {step === 0 && (
-              <motion.div
-                key="step-plan"
-                custom={direction}
-                variants={slideVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <StepPlan selectedPlan={selectedPlan} onSelect={setSelectedPlan} />
-              </motion.div>
-            )}
-            {step === 1 && (
-              <motion.div
-                key="step-info"
-                custom={direction}
-                variants={slideVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <StepInfo
-                  shopName={shopName}
-                  setShopName={setShopName}
-                  address={address}
-                  setAddress={setAddress}
-                  whatsapp={whatsapp}
-                  setWhatsapp={setWhatsapp}
-                  selectedSector={selectedSector}
-                  setSelectedSector={setSelectedSector}
-                  logoPreview={logoPreview}
-                  onLogoUpload={handleLogoUpload}
-                  assignedTemplate={assignedTemplate}
-                />
-              </motion.div>
-            )}
-            {step === 2 && (
-              <motion.div
-                key="step-preview"
-                custom={direction}
-                variants={slideVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <StepPreview
-                  shopName={shopName}
-                  address={address}
-                  assignedTemplate={assignedTemplate}
-                  assignedCategories={assignedCategories}
-                  selectedSector={selectedSector}
-                  selectedPlan={selectedPlan}
-                  loading={loading}
-                  onComplete={handleComplete}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </main>
-
-      {/* Footer navigation */}
-      <footer className="border-t bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-4xl items-center justify-between px-4 sm:px-6">
-          <Button
-            variant="ghost"
-            onClick={goBack}
-            disabled={step === 0}
-            className="gap-2"
+  function renderStep1() {
+    return (
+      <motion.div
+        key="step1"
+        custom={direction}
+        variants={slideVariants}
+        initial="enter"
+        animate="center"
+        exit="exit"
+        transition={{ duration: 0.3, ease: 'easeInOut' }}
+      >
+        <div className="text-center mb-8">
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.4 }}
+            className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-rose-100 mb-4"
           >
-            <ArrowLeft className="w-4 h-4" />
-            Retour
-          </Button>
-
-          {step < 2 ? (
-            <Button
-              onClick={goNext}
-              disabled={
-                (step === 0 && !selectedPlan) ||
-                (step === 1 && (!shopName || !whatsapp))
-              }
-              className="gap-2 shadow-lg shadow-primary/20"
-            >
-              Continuer
-              <ArrowRight className="w-4 h-4" />
-            </Button>
-          ) : (
-            <Button
-              onClick={handleComplete}
-              disabled={loading || !shopName || !whatsapp}
-              className="gap-2 shadow-lg shadow-primary/20 bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-400"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Création...
-                </>
-              ) : (
-                <>
-                  <Rocket className="w-4 h-4" />
-                  Créer ma boutique
-                </>
-              )}
-            </Button>
-          )}
+            <Sparkles className="w-8 h-8 text-rose-600" />
+          </motion.div>
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+            Bonjour{user?.name ? `, ${user.name.split(' ')[0]}` : ''} ! Que voulez-vous faire avec
+            Boutiko ?
+          </h2>
+          <p className="text-muted-foreground">Choisissez votre type d&apos;activité</p>
         </div>
-      </footer>
-    </div>
-  )
-}
 
-/* ──────────────────────────── STEP 1: PLAN ──────────────────────────── */
+        <div className="grid gap-4 sm:grid-cols-2">
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <Card
+              className={`cursor-pointer transition-all duration-200 hover:shadow-xl ${
+                form.businessType === 'ECOMMERCE'
+                  ? 'ring-2 ring-rose-600 shadow-lg bg-rose-50/50'
+                  : 'hover:border-rose-300'
+              }`}
+              onClick={() => {
+                setForm((prev) => ({ ...prev, businessType: 'ECOMMERCE' }))
+              }}
+            >
+              <CardContent className="p-6 flex flex-col items-center text-center gap-3">
+                <div className="text-5xl mb-1">🛒</div>
+                <ShoppingCart
+                  className={`w-6 h-6 ${
+                    form.businessType === 'ECOMMERCE' ? 'text-rose-600' : 'text-muted-foreground'
+                  }`}
+                />
+                <h3 className="text-lg font-bold text-gray-900">VENDRE DES PRODUITS</h3>
+                <p className="text-sm text-muted-foreground">
+                  Boutique en ligne avec prix, stock, WhatsApp
+                </p>
+                {form.businessType === 'ECOMMERCE' && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="flex items-center gap-1 text-rose-600 text-sm font-medium"
+                  >
+                    <Check className="w-4 h-4" />
+                    Sélectionné
+                  </motion.div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
 
-function StepPlan({
-  selectedPlan,
-  onSelect,
-}: {
-  selectedPlan: string
-  onSelect: (plan: string) => void
-}) {
-  return (
-    <div className="space-y-6">
-      <div className="text-center space-y-3">
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={fadeInUp}
-          custom={0}
-        >
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium">
-            <Sparkles className="w-4 h-4" />
-            Étape 1/3
-          </div>
-        </motion.div>
-        <motion.h1
-          initial="hidden"
-          animate="visible"
-          variants={fadeInUp}
-          custom={1}
-          className="text-2xl sm:text-3xl font-bold tracking-tight"
-        >
-          Choisissez votre{' '}
-          <span className="bg-gradient-to-r from-primary to-amber-600 bg-clip-text text-transparent">
-            offre
-          </span>
-        </motion.h1>
-        <motion.p
-          initial="hidden"
-          animate="visible"
-          variants={fadeInUp}
-          custom={2}
-          className="text-muted-foreground text-sm sm:text-base max-w-lg mx-auto"
-        >
-          Commencez gratuitement et évoluez à votre rythme. Vous pouvez changer de plan à tout moment.
-        </motion.p>
-      </div>
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <Card
+              className={`cursor-pointer transition-all duration-200 hover:shadow-xl ${
+                form.businessType === 'SERVICE'
+                  ? 'ring-2 ring-rose-600 shadow-lg bg-rose-50/50'
+                  : 'hover:border-rose-300'
+              }`}
+              onClick={() => {
+                setForm((prev) => ({ ...prev, businessType: 'SERVICE' }))
+              }}
+            >
+              <CardContent className="p-6 flex flex-col items-center text-center gap-3">
+                <div className="text-5xl mb-1">🛎️</div>
+                <ConciergeBell
+                  className={`w-6 h-6 ${
+                    form.businessType === 'SERVICE' ? 'text-rose-600' : 'text-muted-foreground'
+                  }`}
+                />
+                <h3 className="text-lg font-bold text-gray-900">PROPOSER DES SERVICES</h3>
+                <p className="text-sm text-muted-foreground">
+                  Présentation d&apos;activité, devis, réservation
+                </p>
+                {form.businessType === 'SERVICE' && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="flex items-center gap-1 text-rose-600 text-sm font-medium"
+                  >
+                    <Check className="w-4 h-4" />
+                    Sélectionné
+                  </motion.div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
 
-      <div className="grid sm:grid-cols-3 gap-4">
-        {plans.map((plan, i) => {
-          const isSelected = selectedPlan === plan.id
-          return (
+        <div className="mt-8 flex justify-end">
+          <Button
+            onClick={goNext}
+            disabled={!canProceedStep1}
+            className="w-full sm:w-auto bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white rounded-xl px-8 font-semibold"
+            size="lg"
+          >
+            Suivant
+            <ArrowRight className="ml-2 w-4 h-4" />
+          </Button>
+        </div>
+      </motion.div>
+    )
+  }
+
+  function renderStep2() {
+    return (
+      <motion.div
+        key="step2"
+        custom={direction}
+        variants={slideVariants}
+        initial="enter"
+        animate="center"
+        exit="exit"
+        transition={{ duration: 0.3, ease: 'easeInOut' }}
+      >
+        <div className="text-center mb-8">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+            Quel est votre domaine ?
+          </h2>
+          <p className="text-muted-foreground">
+            Sélectionnez le secteur qui correspond le mieux à votre activité
+          </p>
+        </div>
+
+        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3">
+          {sectors.map((sector, index) => (
             <motion.div
-              key={plan.id}
-              initial="hidden"
-              animate="visible"
-              variants={fadeInUp}
-              custom={i + 3}
+              key={sector.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: index * 0.05 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
               <Card
-                className={`relative cursor-pointer transition-all duration-300 h-full ${
-                  isSelected
-                    ? 'ring-2 ring-primary shadow-xl shadow-primary/15 scale-[1.02]'
-                    : 'hover:ring-1 hover:ring-primary/40 hover:shadow-lg'
+                className={`cursor-pointer transition-all duration-200 hover:shadow-xl ${
+                  form.sector === sector.id
+                    ? 'ring-2 ring-rose-600 shadow-lg bg-rose-50/50'
+                    : 'hover:border-rose-300'
                 }`}
-                onClick={() => onSelect(plan.id)}
+                onClick={() => {
+                  const selectedTemplate = SECTOR_TEMPLATE_MAP[sector.id]
+                  setForm((prev) => ({
+                    ...prev,
+                    sector: sector.id,
+                    template: selectedTemplate ?? null,
+                  }))
+                }}
               >
-                {plan.popular && (
-                  <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 z-10">
-                    <Badge className="px-3 py-0.5 shadow-md bg-gradient-to-r from-primary to-amber-600 text-white border-0 text-[10px]">
-                      Populaire
-                    </Badge>
-                  </div>
-                )}
-                <CardContent className="pt-6 pb-5 p-4 sm:p-5">
-                  <div
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 ${
-                      isSelected
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted text-muted-foreground'
-                    }`}
-                  >
-                    <plan.icon className="w-5 h-5" />
-                  </div>
-                  <h3 className="font-semibold text-base">{plan.name}</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">{plan.description}</p>
-                  <div className="mt-3 mb-4">
-                    <span className="text-2xl sm:text-3xl font-bold tracking-tight">
-                      {plan.price}
-                    </span>
-                    {plan.period && (
-                      <span className="text-xs text-muted-foreground ml-1">{plan.period}</span>
-                    )}
-                  </div>
-                  <ul className="space-y-2">
-                    {plan.features.slice(0, 4).map((feature, j) => (
-                      <li key={j} className="flex items-start gap-2 text-xs">
-                        <Check
-                          className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${
-                            isSelected ? 'text-primary' : 'text-muted-foreground/50'
-                          }`}
-                        />
-                        <span className="text-muted-foreground">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  {isSelected && (
+                <CardContent className="p-4 sm:p-5 flex flex-col items-center text-center gap-2">
+                  <span className="text-3xl sm:text-4xl">{sector.emoji}</span>
+                  <h3 className="font-bold text-gray-900 text-sm sm:text-base">{sector.name}</h3>
+                  <p className="text-xs text-muted-foreground leading-tight">{sector.subtitle}</p>
+                  {form.sector === sector.id && (
                     <motion.div
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
-                      className="mt-3 flex items-center justify-center"
+                      className="mt-1"
                     >
-                      <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
-                        <CheckCircle2 className="w-4 h-4 text-primary-foreground" />
+                      <div className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-rose-600 text-white">
+                        <Check className="w-4 h-4" />
                       </div>
                     </motion.div>
                   )}
                 </CardContent>
               </Card>
             </motion.div>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
+          ))}
+        </div>
 
-/* ──────────────────────────── STEP 2: SHOP INFO ──────────────────────────── */
+        <div className="mt-8 flex justify-between">
+          <Button
+            variant="outline"
+            onClick={goBack}
+            className="rounded-xl px-6"
+            size="lg"
+          >
+            <ArrowLeft className="mr-2 w-4 h-4" />
+            Retour
+          </Button>
+          <Button
+            onClick={goNext}
+            disabled={!canProceedStep2}
+            className="bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white rounded-xl px-8 font-semibold"
+            size="lg"
+          >
+            Suivant
+            <ArrowRight className="ml-2 w-4 h-4" />
+          </Button>
+        </div>
+      </motion.div>
+    )
+  }
 
-function StepInfo({
-  shopName,
-  setShopName,
-  address,
-  setAddress,
-  whatsapp,
-  setWhatsapp,
-  selectedSector,
-  setSelectedSector,
-  logoPreview,
-  onLogoUpload,
-  assignedTemplate,
-}: {
-  shopName: string
-  setShopName: (v: string) => void
-  address: string
-  setAddress: (v: string) => void
-  whatsapp: string
-  setWhatsapp: (v: string) => void
-  selectedSector: string
-  setSelectedSector: (v: string) => void
-  logoPreview: string | null
-  onLogoUpload: (e: React.ChangeEvent<HTMLInputElement>) => void
-  assignedTemplate: { id: string; name: string; emoji: string; description: string; colors: { primary: string; accent: string } }
-}) {
-  const previewSlug = shopName
-    ? shopName
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)+/g, '')
-    : 'votre-boutique'
+  function renderStep3() {
+    const isService = form.businessType === 'SERVICE'
 
-  return (
-    <div className="space-y-6">
-      <div className="text-center space-y-3">
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={fadeInUp}
-          custom={0}
-        >
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium">
-            <Store className="w-4 h-4" />
-            Étape 2/3
-          </div>
-        </motion.div>
-        <motion.h1
-          initial="hidden"
-          animate="visible"
-          variants={fadeInUp}
-          custom={1}
-          className="text-2xl sm:text-3xl font-bold tracking-tight"
-        >
-          Configurez votre{' '}
-          <span className="bg-gradient-to-r from-primary to-amber-600 bg-clip-text text-transparent">
-            boutique
-          </span>
-        </motion.h1>
-        <motion.p
-          initial="hidden"
-          animate="visible"
-          variants={fadeInUp}
-          custom={2}
-          className="text-muted-foreground text-sm sm:text-base max-w-lg mx-auto"
-        >
-          Renseignez les informations de votre boutique. Un thème adapté sera choisi automatiquement.
-        </motion.p>
-      </div>
-
+    return (
       <motion.div
-        initial="hidden"
-        animate="visible"
-        variants={fadeInUp}
-        custom={3}
-        className="space-y-5"
+        key="step3"
+        custom={direction}
+        variants={slideVariants}
+        initial="enter"
+        animate="center"
+        exit="exit"
+        transition={{ duration: 0.3, ease: 'easeInOut' }}
       >
-        <Card className="p-5 sm:p-6">
-          <div className="space-y-5">
-            {/* Logo upload */}
-            <div className="flex items-center gap-5">
-              <div className="relative group cursor-pointer" onClick={() => {
-                const input = document.getElementById('logo-upload') as HTMLInputElement
-                input?.click()
-              }}>
-                <div
-                  className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center overflow-hidden border-2 border-dashed transition-all ${
-                    logoPreview
-                      ? 'border-primary/50'
-                      : 'border-muted-foreground/25 group-hover:border-primary/50 group-hover:bg-primary/5'
-                  }`}
-                >
-                  {logoPreview ? (
-                    <img
-                      src={logoPreview}
-                      alt="Logo"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <Camera className="w-6 h-6 text-muted-foreground/50 group-hover:text-primary/60" />
-                  )}
-                </div>
-                <input
-                  id="logo-upload"
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={onLogoUpload}
-                />
-                <p className="text-[10px] sm:text-xs text-muted-foreground text-center mt-1.5">
-                  Logo (optionnel)
-                </p>
-              </div>
+        <div className="text-center mb-8">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+            Voici les designs disponibles pour votre activité
+          </h2>
+          <p className="text-muted-foreground">
+            {isService
+              ? 'Un design professionnel adapté aux services'
+              : 'Un design optimisé pour la vente en ligne'}
+          </p>
+        </div>
 
-              <div className="flex-1 space-y-4">
-                {/* Shop name */}
-                <div className="space-y-2">
-                  <Label htmlFor="shop-name" className="text-sm font-medium">
-                    Nom de la boutique <span className="text-destructive">*</span>
-                  </Label>
-                  <div className="relative">
-                    <Store className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
-                    <Input
-                      id="shop-name"
-                      placeholder="Ex: Boutique Amina"
-                      value={shopName}
-                      onChange={(e) => setShopName(e.target.value)}
-                      className="pl-9"
-                      required
-                    />
+        <div className="grid gap-4 sm:grid-cols-2">
+          {availableTemplates.map((tpl, index) => (
+            <motion.div
+              key={tpl.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: index * 0.1 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <Card
+                className={`transition-all duration-200 hover:shadow-xl ${
+                  form.template === tpl.id
+                    ? 'ring-2 ring-rose-600 shadow-lg bg-rose-50/50'
+                    : 'hover:border-rose-300'
+                }`}
+              >
+                <CardContent className="p-6 flex flex-col gap-4">
+                  <div className="flex items-center gap-3">
+                    <span className="text-4xl">{tpl.emoji}</span>
+                    <div>
+                      <h3 className="font-bold text-gray-900 text-lg">
+                        {isService ? `${tpl.name} - Services` : tpl.name}
+                      </h3>
+                      {form.template === tpl.id && (
+                        <span className="text-xs font-medium text-rose-600 bg-rose-100 px-2 py-0.5 rounded-full">
+                          Sélectionné
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  {shopName && (
-                    <p className="text-xs text-muted-foreground">
-                      Votre URL : <span className="text-primary font-medium">boutiko.pro/{previewSlug}</span>
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
 
-            {/* WhatsApp */}
-            <div className="space-y-2">
-              <Label htmlFor="whatsapp" className="text-sm font-medium">
-                <span className="flex items-center gap-1.5">
-                  <Phone className="w-3.5 h-3.5" />
-                  Numéro WhatsApp <span className="text-destructive">*</span>
+                  <ul className="space-y-2">
+                    {(isService ? tpl.features.service : tpl.features.ecommerce).map(
+                      (feature, fi) => (
+                        <li key={fi} className="flex items-start gap-2 text-sm text-muted-foreground">
+                          <Check className="w-4 h-4 text-rose-500 mt-0.5 shrink-0" />
+                          {feature}
+                        </li>
+                      ),
+                    )}
+                  </ul>
+
+                  <Button
+                    onClick={() => {
+                      setForm((prev) => ({ ...prev, template: tpl.id }))
+                    }}
+                    variant={form.template === tpl.id ? 'default' : 'outline'}
+                    className={`w-full rounded-xl font-semibold ${
+                      form.template === tpl.id
+                        ? 'bg-gradient-to-r from-rose-600 to-pink-600 text-white hover:from-rose-700 hover:to-pink-700'
+                        : 'hover:border-rose-300 hover:text-rose-600'
+                    }`}
+                  >
+                    {form.template === tpl.id ? (
+                      <>
+                        <Check className="mr-2 w-4 h-4" />
+                        Sélectionné
+                      </>
+                    ) : (
+                      'Sélectionner'
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+
+        {availableTemplates.length === 0 && (
+          <div className="text-center py-8 text-muted-foreground">
+            Aucun template disponible pour ce secteur.
+          </div>
+        )}
+
+        <div className="mt-8 flex justify-between">
+          <Button
+            variant="outline"
+            onClick={goBack}
+            className="rounded-xl px-6"
+            size="lg"
+          >
+            <ArrowLeft className="mr-2 w-4 h-4" />
+            Retour
+          </Button>
+          <Button
+            onClick={goNext}
+            disabled={!canProceedStep3}
+            className="bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white rounded-xl px-8 font-semibold"
+            size="lg"
+          >
+            Suivant
+            <ArrowRight className="ml-2 w-4 h-4" />
+          </Button>
+        </div>
+      </motion.div>
+    )
+  }
+
+  function renderStep4() {
+    return (
+      <motion.div
+        key="step4"
+        custom={direction}
+        variants={slideVariants}
+        initial="enter"
+        animate="center"
+        exit="exit"
+        transition={{ duration: 0.3, ease: 'easeInOut' }}
+      >
+        <div className="text-center mb-8">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+            Personnalisez votre site en 2 minutes
+          </h2>
+          <p className="text-muted-foreground">
+            Ces informations seront utilisées pour créer votre boutique
+          </p>
+        </div>
+
+        <div className="space-y-5">
+          {/* Shop Name */}
+          <div className="space-y-2">
+            <Label htmlFor="shop-name" className="text-sm font-semibold text-gray-700">
+              Nom de votre activité <span className="text-rose-500">*</span>
+            </Label>
+            <Input
+              id="shop-name"
+              type="text"
+              placeholder="Ex: Beauty Glow, Tech Store..."
+              value={form.name}
+              onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
+              className="h-12 rounded-xl border-gray-300 focus:border-rose-500 focus:ring-rose-500/20"
+            />
+            {slug && (
+              <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1.5">
+                <span className="text-gray-400">Votre URL :</span>
+                <span className="font-mono bg-rose-50 text-rose-700 px-2 py-0.5 rounded-md">
+                  boutiko.pro/{slug}
                 </span>
-              </Label>
+              </p>
+            )}
+          </div>
+
+          {/* WhatsApp */}
+          <div className="space-y-2">
+            <Label htmlFor="whatsapp" className="text-sm font-semibold text-gray-700">
+              <span className="inline-flex items-center gap-1.5">
+                <Phone className="w-3.5 h-3.5" />
+                Numéro WhatsApp <span className="text-rose-500">*</span>
+              </span>
+            </Label>
+            <div className="flex items-center">
+              <span className="inline-flex items-center justify-center h-12 px-4 bg-gray-100 border border-r-0 border-gray-300 rounded-l-xl text-sm font-medium text-gray-600">
+                +225
+              </span>
               <Input
                 id="whatsapp"
                 type="tel"
-                placeholder="+221 77 123 45 67"
-                value={whatsapp}
-                onChange={(e) => setWhatsapp(e.target.value)}
-                required
+                placeholder="07 07 07 07"
+                value={form.whatsapp}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/[^0-9\s]/g, '')
+                  setForm((prev) => ({ ...prev, whatsapp: val }))
+                }}
+                className="h-12 rounded-l-none rounded-r-xl border-gray-300 focus:border-rose-500 focus:ring-rose-500/20"
               />
             </div>
+            <p className="text-xs text-muted-foreground">
+              Vos clients pourront vous contacter directement via WhatsApp
+            </p>
+          </div>
 
-            {/* Address */}
-            <div className="space-y-2">
-              <Label htmlFor="address" className="text-sm font-medium">
-                <span className="flex items-center gap-1.5">
-                  <MapPin className="w-3.5 h-3.5" />
-                  Adresse / Ville
-                </span>
-              </Label>
-              <Input
-                id="address"
-                placeholder="Ex: Dakar, Sénégal"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-              />
-            </div>
+          {/* Logo Upload */}
+          <div className="space-y-2">
+            <Label className="text-sm font-semibold text-gray-700">
+              <span className="inline-flex items-center gap-1.5">
+                <ImageIcon className="w-3.5 h-3.5" />
+                Logo
+              </span>
+              <span className="text-xs font-normal text-muted-foreground ml-2">(optionnel)</span>
+            </Label>
 
-            {/* Sector */}
-            <div className="space-y-3">
-              <Label className="text-sm font-medium">
-                <span className="flex items-center gap-1.5">
-                  <Briefcase className="w-3.5 h-3.5" />
-                  Secteur d&apos;activité <span className="text-destructive">*</span>
-                </span>
-              </Label>
-              <p className="text-xs text-muted-foreground">
-                Chaque secteur est associé à un thème adapté à votre activité
-              </p>
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                {sectors.map((sector) => {
-                  const isSelected = selectedSector === sector.id
-                  const templateId = sectorTemplateMap[sector.id] || 'xstore-electro'
-                  const tpl = templates[templateId]
-                  return (
-                    <motion.button
-                      key={sector.id}
-                      type="button"
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setSelectedSector(sector.id)}
-                      className={`relative p-3 rounded-xl border-2 text-center transition-all duration-200 overflow-hidden ${
-                        isSelected
-                          ? 'shadow-lg'
-                          : 'border-border/50 hover:border-primary/30 hover:bg-muted/50'
-                      }`}
-                      style={{
-                        borderColor: isSelected ? tpl.colors.primary : undefined,
-                        background: isSelected ? `${tpl.colors.primary}08` : undefined,
-                        boxShadow: isSelected ? `0 4px 14px ${tpl.colors.primary}20` : undefined,
-                      }}
-                    >
-                      {/* Color accent bar at top */}
-                      <div
-                        className="absolute top-0 left-0 right-0 h-0.5 opacity-0 transition-opacity duration-200"
-                        style={{
-                          backgroundColor: tpl.colors.primary,
-                          opacity: isSelected ? 1 : 0,
-                        }}
-                      />
-                      <span className="text-xl sm:text-2xl block">{sector.emoji}</span>
-                      <span className={`text-[10px] sm:text-xs font-medium mt-1 block leading-tight transition-colors duration-200 ${
-                        isSelected ? '' : 'text-foreground/80'
-                      }`} style={{ color: isSelected ? tpl.colors.primary : undefined }}>
-                        {sector.label.split(' & ')[0]}
-                      </span>
-                      {/* Theme name badge */}
-                      {isSelected && (
-                        <div className="mt-1.5 flex items-center justify-center gap-1">
-                          <span className="text-xs">{tpl.emoji}</span>
-                          <span
-                            className="text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full"
-                            style={{
-                              backgroundColor: `${tpl.colors.primary}18`,
-                              color: tpl.colors.primary,
-                            }}
-                          >
-                            {tpl.name}
-                          </span>
-                        </div>
-                      )}
-                    </motion.button>
-                  )
-                })}
-              </div>
-              {/* Selected theme preview */}
-              {selectedSector && (
-                <motion.div
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-muted/30"
-                >
-                  <div
-                    className="flex items-center justify-center w-10 h-10 rounded-lg text-lg shrink-0"
-                    style={{ backgroundColor: `${assignedTemplate.colors.primary}15` }}
+            <div className="flex items-center gap-4">
+              {form.logo ? (
+                <div className="relative">
+                  <ImageWithFallback
+                    src={form.logo}
+                    alt="Logo de votre activité"
+                    width={72}
+                    height={72}
+                    className="rounded-xl object-cover border border-gray-200"
+                    fallbackIcon="image"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setForm((prev) => ({ ...prev, logo: null }))}
+                    className="absolute -top-2 -right-2 w-6 h-6 flex items-center justify-center rounded-full bg-red-500 text-white text-xs hover:bg-red-600 transition-colors shadow-sm"
+                    aria-label="Supprimer le logo"
                   >
-                    {assignedTemplate.emoji}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium">Thème {assignedTemplate.name}</p>
-                    <p className="text-xs text-muted-foreground truncate">{assignedTemplate.description}</p>
-                  </div>
-                  <div className="ml-auto flex items-center gap-1.5 shrink-0">
-                    <div
-                      className="w-4 h-4 rounded-full border border-border/40"
-                      style={{ backgroundColor: assignedTemplate.colors.primary }}
-                    />
-                    <div
-                      className="w-4 h-4 rounded-full border border-border/40"
-                      style={{ backgroundColor: assignedTemplate.colors.accent }}
-                    />
-                  </div>
-                </motion.div>
+                    ×
+                  </button>
+                </div>
+              ) : (
+                <div className="w-[72px] h-[72px] rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center text-muted-foreground">
+                  <ImageIcon className="w-6 h-6" />
+                </div>
               )}
+
+              <div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                  aria-label="Télécharger un logo"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                  className="rounded-xl border-gray-300 hover:border-rose-300 hover:text-rose-600"
+                >
+                  {isUploading ? (
+                    <>
+                      <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+                      Envoi en cours...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="mr-2 w-4 h-4" />
+                      Télécharger
+                    </>
+                  )}
+                </Button>
+                <p className="text-xs text-muted-foreground mt-1">PNG, JPG — Max 5 Mo</p>
+              </div>
             </div>
           </div>
-        </Card>
+
+          {/* Description */}
+          <div className="space-y-2">
+            <Label htmlFor="description" className="text-sm font-semibold text-gray-700">
+              Description courte
+              <span className="text-xs font-normal text-muted-foreground ml-2">(optionnel)</span>
+            </Label>
+            <Textarea
+              id="description"
+              placeholder="Ex: Les meilleurs cosmétiques d'Afrique"
+              value={form.description}
+              onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
+              rows={2}
+              className="rounded-xl border-gray-300 focus:border-rose-500 focus:ring-rose-500/20 resize-none"
+            />
+          </div>
+        </div>
+
+        <div className="mt-8 flex justify-between">
+          <Button
+            variant="outline"
+            onClick={goBack}
+            className="rounded-xl px-6"
+            size="lg"
+          >
+            <ArrowLeft className="mr-2 w-4 h-4" />
+            Retour
+          </Button>
+          <Button
+            onClick={goNext}
+            disabled={!canProceedStep4}
+            className="bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white rounded-xl px-8 font-semibold"
+            size="lg"
+          >
+            Suivant
+            <ArrowRight className="ml-2 w-4 h-4" />
+          </Button>
+        </div>
       </motion.div>
-    </div>
-  )
-}
+    )
+  }
 
-/* ──────────────────────────── STEP 3: PREVIEW ──────────────────────────── */
+  function renderStep5() {
+    return (
+      <motion.div
+        key="step5"
+        custom={direction}
+        variants={slideVariants}
+        initial="enter"
+        animate="center"
+        exit="exit"
+        transition={{ duration: 0.3, ease: 'easeInOut' }}
+      >
+        <div className="text-center mb-8">
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.4 }}
+            className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-rose-100 mb-4"
+          >
+            <Sparkles className="w-8 h-8 text-rose-600" />
+          </motion.div>
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+            Votre site est prêt ! Choisissez votre formule
+          </h2>
+          <p className="text-muted-foreground">
+            Sélectionnez le plan qui vous convient
+          </p>
+        </div>
 
-function StepPreview({
-  shopName,
-  address,
-  assignedTemplate,
-  assignedCategories,
-  selectedSector,
-  selectedPlan,
-  loading,
-  onComplete,
-}: {
-  shopName: string
-  address: string
-  assignedTemplate: { id: string; name: string; emoji: string; colors: { primary: string; bg: string; text: string; card: string } }
-  assignedCategories: string[]
-  selectedSector: string
-  selectedPlan: string
-  loading: boolean
-  onComplete: () => void
-}) {
-  const sectorInfo = sectors.find((s) => s.id === selectedSector)
-  const planInfo = plans.find((p) => p.id === selectedPlan)
+        {/* Preview Card */}
+        <Card className="mb-6 bg-gradient-to-r from-gray-900 to-gray-800 text-white overflow-hidden">
+          <CardContent className="p-5">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-xl bg-white/10 flex items-center justify-center text-3xl">
+                {form.logo ? (
+                  <ImageWithFallback
+                    src={form.logo}
+                    alt={form.name}
+                    width={48}
+                    height={48}
+                    className="rounded-lg object-cover"
+                    fallbackIcon="image"
+                  />
+                ) : (
+                  templateEmoji
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-lg truncate">{form.name || 'Votre boutique'}</h3>
+                <p className="text-sm text-gray-300 font-mono truncate">
+                  boutiko.pro/{slug || 'votre-boutique'}
+                </p>
+              </div>
+              <div className="text-right shrink-0">
+                <span className="text-xs bg-white/10 px-2 py-1 rounded-full text-gray-300">
+                  {TEMPLATES.find((t) => t.id === form.template)?.name ?? 'Template'}
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Plan Cards */}
+        <div className="grid gap-4 sm:grid-cols-2">
+          {/* Trial Plan */}
+          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <Card
+              className={`cursor-pointer transition-all duration-200 hover:shadow-xl h-full ${
+                form.plan === 'TRIAL'
+                  ? 'ring-2 ring-rose-600 shadow-lg bg-rose-50/50'
+                  : 'hover:border-rose-300'
+              }`}
+              onClick={() => setForm((prev) => ({ ...prev, plan: 'TRIAL' }))}
+            >
+              <CardContent className="p-6 flex flex-col h-full">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-2xl">🟢</span>
+                  <h3 className="font-bold text-lg text-gray-900">ESSAI GRATUIT</h3>
+                </div>
+                <div className="mb-4">
+                  <span className="text-3xl font-bold text-gray-900">0</span>
+                  <span className="text-muted-foreground ml-1">FCFA</span>
+                </div>
+                <ul className="space-y-2.5 flex-1">
+                  {[
+                    '7 jours d\'essai',
+                    '1 boutique',
+                    `${TEMPLATES.find((t) => t.id === form.template)?.name ?? 'Template'} inclus`,
+                    'Domaine boutiko.pro',
+                    'Logo Boutiko',
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                      <Check className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setForm((prev) => ({ ...prev, plan: 'TRIAL' }))
+                  }}
+                  className={`w-full mt-5 rounded-xl font-semibold ${
+                    form.plan === 'TRIAL'
+                      ? 'bg-gradient-to-r from-rose-600 to-pink-600 text-white hover:from-rose-700 hover:to-pink-700'
+                      : 'bg-gradient-to-r from-rose-500 to-pink-500 text-white hover:from-rose-600 hover:to-pink-600'
+                  }`}
+                  size="lg"
+                >
+                  Commencer gratuit →
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Pro Plan */}
+          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <Card
+              className={`cursor-pointer transition-all duration-200 hover:shadow-xl h-full relative ${
+                form.plan === 'PRO'
+                  ? 'ring-2 ring-gray-900 shadow-lg bg-gray-50'
+                  : 'hover:border-gray-400'
+              }`}
+              onClick={() => setForm((prev) => ({ ...prev, plan: 'TRIAL' }))}
+            >
+              {form.plan !== 'PRO' && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <span className="bg-gray-900 text-white text-xs font-semibold px-3 py-1 rounded-full">
+                    Recommandé
+                  </span>
+                </div>
+              )}
+              <CardContent className="p-6 flex flex-col h-full">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-2xl">🔵</span>
+                  <h3 className="font-bold text-lg text-gray-900">PRO</h3>
+                  <span className="text-xs bg-rose-100 text-rose-600 px-2 py-0.5 rounded-full font-medium">
+                    Recommandé
+                  </span>
+                </div>
+                <div className="mb-4">
+                  <span className="text-3xl font-bold text-gray-900">5 000</span>
+                  <span className="text-muted-foreground ml-1">FCFA/mois</span>
+                </div>
+                <ul className="space-y-2.5 flex-1">
+                  {[
+                    'Domaine personnalisé',
+                    'Boutiques illimitées',
+                    'Live TikTok intégré',
+                    'Kit Marketing complet',
+                    'Sans logo Boutiko',
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                      <Check className="w-4 h-4 text-gray-900 mt-0.5 shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    toast.info('Le paiement Pro sera bientôt disponible ! Création en essai gratuit.')
+                    setForm((prev) => ({ ...prev, plan: 'TRIAL' }))
+                  }}
+                  className="w-full mt-5 rounded-xl font-semibold bg-gray-900 text-white hover:bg-gray-800"
+                  size="lg"
+                >
+                  Passer Pro →
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+
+        <div className="mt-8 flex justify-between">
+          <Button
+            variant="outline"
+            onClick={goBack}
+            className="rounded-xl px-6"
+            size="lg"
+          >
+            <ArrowLeft className="mr-2 w-4 h-4" />
+            Retour
+          </Button>
+          <Button
+            onClick={() => handleSubmit()}
+            disabled={!form.plan || isSubmitting}
+            className="bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white rounded-xl px-8 font-semibold"
+            size="lg"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+                Création en cours...
+              </>
+            ) : (
+              <>
+                Créer mon site
+                <ArrowRight className="ml-2 w-4 h-4" />
+              </>
+            )}
+          </Button>
+        </div>
+      </motion.div>
+    )
+  }
+
+  /* ──────── Main Render ──────── */
 
   return (
-    <div className="space-y-6">
-      <div className="text-center space-y-3">
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={fadeInUp}
-          custom={0}
-        >
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium">
-            <Palette className="w-4 h-4" />
-            Étape 3/3
-          </div>
-        </motion.div>
-        <motion.h1
-          initial="hidden"
-          animate="visible"
-          variants={fadeInUp}
-          custom={1}
-          className="text-2xl sm:text-3xl font-bold tracking-tight"
-        >
-          Votre boutique est{' '}
-          <span className="bg-gradient-to-r from-primary to-amber-600 bg-clip-text text-transparent">
-            presque prête
-          </span>
-        </motion.h1>
-        <motion.p
-          initial="hidden"
-          animate="visible"
-          variants={fadeInUp}
-          custom={2}
-          className="text-muted-foreground text-sm sm:text-base max-w-lg mx-auto"
-        >
-          Voici un aperçu de la configuration que nous avons préparée pour vous.
-        </motion.p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-pink-50">
+      <main className="max-w-2xl mx-auto px-4 py-12">
+        <ProgressBar />
 
-      <div className="grid sm:grid-cols-2 gap-4">
-        {/* Shop preview card */}
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={fadeInUp}
-          custom={3}
-        >
-          <Card className="overflow-hidden h-full">
-            {/* Preview header */}
-            <div
-              className="px-5 py-6 text-white relative"
-              style={{
-                background: `linear-gradient(135deg, ${assignedTemplate.colors.primary}, ${assignedTemplate.colors.primary}dd)`,
-              }}
-            >
-              <div className="absolute inset-0 bg-black/10" />
-              <div className="relative z-10 flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-lg font-bold ring-2 ring-white/30">
-                  {shopName.charAt(0).toUpperCase()}
-                </div>
-                <div>
-                  <p className="font-semibold">{shopName || 'Ma Boutique'}</p>
-                  <p className="text-white/70 text-xs">
-                    {address || 'Votre ville'} · {sectorInfo?.label || 'Votre secteur'}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Categories */}
-            <div className="p-4 space-y-3">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Catégories pré-configurées
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {assignedCategories.map((cat) => (
-                  <span
-                    key={cat}
-                    className="px-2.5 py-1 rounded-full text-[11px] font-medium text-white"
-                    style={{ backgroundColor: assignedTemplate.colors.primary }}
-                  >
-                    {cat}
-                  </span>
-                ))}
-              </div>
-
-              {/* Template info */}
-              <div className="pt-2 border-t border-border/50">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">{assignedTemplate.emoji}</span>
-                    <div>
-                      <p className="text-sm font-semibold">Thème {assignedTemplate.name}</p>
-                      <p className="text-[10px] text-muted-foreground">Assigné automatiquement</p>
-                    </div>
-                  </div>
-                  <div
-                    className="w-6 h-6 rounded-full shadow-inner border border-white/30"
-                    style={{ backgroundColor: assignedTemplate.colors.primary }}
-                  />
-                </div>
-              </div>
-
-              {/* Mock product cards */}
-              <div className="grid grid-cols-2 gap-2 pt-2">
-                {[1, 2, 3, 4].map((i) => (
-                  <div
-                    key={i}
-                    className="rounded-lg overflow-hidden border border-border/40"
-                    style={{ backgroundColor: assignedTemplate.colors.card || assignedTemplate.colors.bg }}
-                  >
-                    <div
-                      className="aspect-square flex items-center justify-center text-2xl"
-                      style={{ backgroundColor: `${assignedTemplate.colors.primary}10` }}
-                    >
-                      📦
-                    </div>
-                    <div className="p-1.5">
-                      <div className="h-2 w-3/4 rounded bg-muted/60 mb-1" />
-                      <div className="h-2 w-1/2 rounded" style={{ backgroundColor: `${assignedTemplate.colors.primary}40` }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </Card>
-        </motion.div>
-
-        {/* Summary card */}
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={fadeInUp}
-          custom={4}
-          className="space-y-4"
-        >
-          <Card className="p-5">
-            <h3 className="font-semibold text-base mb-4">Résumé</h3>
-            <div className="space-y-3.5">
-              {/* Shop name */}
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground flex items-center gap-2">
-                  <Store className="w-3.5 h-3.5" />
-                  Nom
-                </span>
-                <span className="text-sm font-medium">{shopName}</span>
-              </div>
-
-              {/* Sector */}
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground flex items-center gap-2">
-                  <Briefcase className="w-3.5 h-3.5" />
-                  Secteur
-                </span>
-                <span className="text-sm font-medium">
-                  {sectorInfo?.emoji} {sectorInfo?.label || 'Non défini'}
-                </span>
-              </div>
-
-              {/* Template */}
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground flex items-center gap-2">
-                  <Palette className="w-3.5 h-3.5" />
-                  Thème
-                </span>
-                <Badge variant="secondary" className="text-xs gap-1">
-                  {assignedTemplate.emoji} {assignedTemplate.name}
-                </Badge>
-              </div>
-
-              {/* Plan */}
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground flex items-center gap-2">
-                  {planInfo && <planInfo.icon className="w-3.5 h-3.5" />}
-                  Offre
-                </span>
-                <span className="text-sm font-medium">
-                  {planInfo?.name} ({planInfo?.price === '0' ? 'Gratuit' : `${planInfo?.price} ${planInfo?.period}`})
-                </span>
-              </div>
-
-              {/* Categories */}
-              <div className="flex items-start justify-between gap-2">
-                <span className="text-sm text-muted-foreground flex items-center gap-2 shrink-0">
-                  📂 Catégories
-                </span>
-                <span className="text-xs text-right text-muted-foreground leading-relaxed">
-                  {assignedCategories.join(', ')}
-                </span>
-              </div>
-            </div>
-          </Card>
-
-          {/* What happens next card */}
-          <Card className="p-5 bg-primary/5 border-primary/10">
-            <h3 className="font-semibold text-base mb-3 flex items-center gap-2">
-              <Rocket className="w-4 h-4 text-primary" />
-              Et ensuite ?
-            </h3>
-            <ul className="space-y-2.5">
-              {[
-                'Votre boutique est créée instantanément',
-                `Le thème "${assignedTemplate.name}" est activé`,
-                `${assignedCategories.length} catégories sont pré-configurées`,
-                'Vous pouvez ajouter vos produits immédiatement',
-                'Partagez votre lien sur WhatsApp !',
-              ].map((text, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm">
-                  <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                  <span className="text-muted-foreground">{text}</span>
-                </li>
-              ))}
-            </ul>
-          </Card>
-        </motion.div>
-      </div>
+        <AnimatePresence mode="wait" custom={direction}>
+          {step === 1 && renderStep1()}
+          {step === 2 && renderStep2()}
+          {step === 3 && renderStep3()}
+          {step === 4 && renderStep4()}
+          {step === 5 && renderStep5()}
+        </AnimatePresence>
+      </main>
     </div>
   )
 }

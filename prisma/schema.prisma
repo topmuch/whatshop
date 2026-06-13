@@ -106,8 +106,10 @@ model Shop {
   whatsapp              String
   address               String?
   phone                 String?
-  plan                  String   @default("FREE") // FREE | STANDARD | PRO (backward compat, kept for per-shop features)
-  sector                String?  // beaute, mode, electronique, alimentation, artisanat, sport, bijoux, maison, auto, autre
+  plan                  String   @default("TRIAL") // TRIAL | FREE | PRO
+  trialEndDate          DateTime?
+  businessType          String   @default("ECOMMERCE") // ECOMMERCE | SERVICE
+  sector                String?  // ECOMMERCE: beaute, mode, electronique, alimentation, autre | SERVICE: beaute-service, restaurant, consulting, artisanat, sante
   template              String   @default("xstore-electro")
   accentColor           String   @default("#10B981")
   isActive              Boolean  @default(true)
