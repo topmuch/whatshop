@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useAppStore } from '@/lib/store'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import { ArrowLeft, ArrowRight, Loader2 } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Loader2, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { SessionInit } from '@/components/session-init'
 import { getTemplateForSector, type BusinessType } from '@/lib/sector-config'
@@ -57,6 +57,7 @@ export default function OnboardingPage() {
   const [step, setStep] = useState(1)
   const [direction, setDirection] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   const [form, setForm] = useState<OnboardingState>({
     businessType: null,
@@ -128,6 +129,7 @@ export default function OnboardingPage() {
   const handleSubmit = useCallback(async () => {
     if (!form.businessType || !form.name.trim() || !form.whatsapp.trim()) return
 
+    setSubmitError(null)
     setIsSubmitting(true)
     try {
       const res = await fetch('/api/onboarding/complete', {
@@ -145,8 +147,34 @@ export default function OnboardingPage() {
       })
 
       if (!res.ok) {
-        const data = await res.json().catch(() => ({ error: 'Erreur serveur' }))
-        throw new Error(data.error || 'Erreur lors de la création')
+        const data = await res.json().catch(() => ({ error: 'Erreur serveur', field: null }))
+        const errorCode = res.status
+        const errorMsg = data.error || 'Erreur lors de la création'
+        const errorField = data.field
+
+        // Handle specific error cases with actionable messages
+        if (errorCode === 409) {
+          // Conflict: shop already exists or slug taken
+          setSubmitError('Ce nom de boutique est déjà utilisé. Essayez un autre nom.')
+          toast.error('Nom déjà pris — modifiez le nom de votre activité')
+          // Go back to step 4 so user can change the name
+          setDirection(-1)
+          setStep(4)
+        } else if (errorField === 'whatsapp') {
+          setSubmitError(errorMsg)
+          toast.error(errorMsg)
+          setDirection(-1)
+          setStep(4)
+        } else if (errorField === 'name') {
+          setSubmitError(errorMsg)
+          toast.error(errorMsg)
+          setDirection(-1)
+          setStep(4)
+        } else {
+          setSubmitError(errorMsg)
+          toast.error(errorMsg)
+        }
+        return
       }
 
       const shopData = await res.json()
@@ -159,6 +187,7 @@ export default function OnboardingPage() {
       window.history.replaceState(null, '', '/dashboard')
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erreur serveur'
+      setSubmitError(message)
       toast.error(message)
     } finally {
       setIsSubmitting(false)
@@ -264,6 +293,31 @@ export default function OnboardingPage() {
                       isValid={step4Valid}
                     />
                   </div>
+                )}
+
+                {/* ── Inline error banner ── */}
+                {submitError && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-4"
+                  >
+                    <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800 dark:border-red-800 dark:bg-red-950/50 dark:text-red-300">
+                      <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <p className="font-medium">Impossible de créer la boutique</p>
+                        <p className="mt-1 opacity-90">{submitError}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setSubmitError(null)}
+                        className="shrink-0 text-red-500 hover:text-red-700 dark:hover:text-red-300 transition-colors"
+                        aria-label="Fermer l'erreur"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </motion.div>
                 )}
 
                 {step === 5 && (
