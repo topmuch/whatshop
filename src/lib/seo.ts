@@ -101,7 +101,9 @@ export function resetMeta() {
     }
   }
 
-  // Remove shop structured data
+  // Remove shop structured data (both old and new)
   const jsonLd = document.getElementById('shop-structured-data')
   if (jsonLd) jsonLd.remove()
+  const boutikoJsonLd = document.getElementById('boutiko-jsonld')
+  if (boutikoJsonLd) boutikoJsonLd.remove()
 }

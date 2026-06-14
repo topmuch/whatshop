@@ -39,11 +39,15 @@ import {
   Radio,
   Palette,
   Megaphone,
+  TrendingUp,
+  Mail,
 } from 'lucide-react'
 import { useThemeMode } from '@/lib/use-theme'
 import { getBusinessLabels } from '@/lib/business-labels'
 import { DashboardOverview } from './dashboard-overview'
 import { DashboardAnalytics } from './dashboard-analytics'
+import { DashboardStats } from './dashboard-stats'
+import { DashboardMessages } from './dashboard-messages'
 import { DashboardProducts } from './dashboard-products'
 import { DashboardCategories } from './dashboard-categories'
 import { DashboardOrders } from './dashboard-orders'
@@ -101,6 +105,8 @@ function getNavItems(businessType?: string | null, sector?: string | null): { id
   return [
     { id: 'overview', label: "Vue d'ensemble", icon: <LayoutDashboard className="h-5 w-5" /> },
     { id: 'analytics', label: 'Analytics', icon: <BarChart3 className="h-5 w-5" /> },
+    { id: 'stats', label: 'Statistiques', icon: <TrendingUp className="h-5 w-5" /> },
+    { id: 'messages', label: 'Messages', icon: <Mail className="h-5 w-5" /> },
     { id: 'products', label: labels.navProducts, icon: <Package className="h-5 w-5" /> },
     { id: 'categories', label: labels.navCategories, icon: <Tags className="h-5 w-5" /> },
     { id: 'orders', label: labels.navOrders, icon: <ShoppingCart className="h-5 w-5" /> },
@@ -476,6 +482,10 @@ function DashboardContent({ consolidatedStats }: { consolidatedStats: Consolidat
       )
     case 'analytics':
       return <DashboardAnalytics />
+    case 'stats':
+      return <DashboardStats />
+    case 'messages':
+      return <DashboardMessages />
     case 'products':
       return <DashboardProducts />
     case 'categories':

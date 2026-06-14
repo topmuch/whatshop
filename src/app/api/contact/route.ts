@@ -45,6 +45,23 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    // Track analytics: increment shop counter
+    await db.shop.update({
+      where: { id: shopId },
+      data: { contactFormSubmits: { increment: 1 } },
+    })
+
+    // Track analytics: create event
+    await db.analyticsEvent.create({
+      data: {
+        shopId,
+        eventType: 'form_submit',
+        metadata: null,
+        userAgent: request.headers.get('user-agent') || null,
+        ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || null,
+      },
+    })
+
     return NextResponse.json({
       success: true,
       message: 'Message envoyé avec succès',

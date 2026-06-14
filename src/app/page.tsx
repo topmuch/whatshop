@@ -12,7 +12,7 @@ import { PublicShop } from '@/components/shop/public-shop'
 import { PublicLayout } from '@/components/pages/public-layout'
 import { WhatsAppFloat } from '@/components/ui/whatsapp-float'
 import { CookieConsent } from '@/components/ui/cookie-consent'
-import { injectShopMeta, resetMeta } from '@/lib/seo'
+import { resetMeta } from '@/lib/seo'
 
 // Heavy dashboards loaded lazily
 const SellerDashboard = dynamic(() => import('@/components/dashboard/seller-dashboard').then(m => ({ default: m.SellerDashboard })), {
@@ -164,11 +164,10 @@ export default function Home() {
     }
   }, [urlView.shopSlug, shopSlug])
 
-  // Inject/reset SEO meta tags when publicShop changes
+  // Reset SEO meta tags when navigating away from a shop
+  // Shop-specific SEO (JSON-LD, OG, title) is handled by the JsonLd component in public-shop.tsx
   useEffect(() => {
-    if (publicShop) {
-      injectShopMeta(publicShop)
-    } else {
+    if (!publicShop) {
       resetMeta()
     }
   }, [publicShop])

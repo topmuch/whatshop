@@ -40,6 +40,7 @@ import { LiveShopFeatures } from './live-shop-features'
 import { ElectroShopPage } from './themes/electro-grid'
 import { ElectroTemplate } from '@/components/templates/electro'
 import { CosmikaTemplate } from '@/components/templates/cosmika'
+import JsonLd from '@/components/seo/json-ld'
 import { CosmikaBeautyShopPage } from './themes/cosmika-beauty-grid'
 import { ShippingZoneSelector } from './shipping-zone-selector'
 import { ImageWithFallback } from '@/components/ui/image-with-fallback'
@@ -534,13 +535,23 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
   if (template.id === 'xstore-electro') {
     // Use new multi-sector Electro template when sector is set, legacy otherwise
     if (publicShop?.sector) {
-      return <ElectroTemplate />
+      return (
+        <>
+          <JsonLd shop={publicShop} products={publicProducts} categories={publicCategories} />
+          <ElectroTemplate />
+        </>
+      )
     }
     return <ElectroShopPage />
   }
   if (template.id === 'cosmika-beauty') {
     if (publicShop?.sector) {
-      return <CosmikaTemplate />
+      return (
+        <>
+          <JsonLd shop={publicShop} products={publicProducts} categories={publicCategories} />
+          <CosmikaTemplate />
+        </>
+      )
     }
     return <CosmikaBeautyShopPage />
   }

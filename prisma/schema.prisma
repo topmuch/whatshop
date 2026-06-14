@@ -171,6 +171,11 @@ model Shop {
   notificationPreferences String   @default("{}") // JSON: { newOrder: true, lowStock: false, ... }
   notificationEmail       String?
 
+  // Analytics counters
+  whatsappClicks        Int       @default(0)
+  contactFormSubmits    Int       @default(0)
+  pageViews             Int       @default(0)
+
   // Moderation
   isFlagged              Boolean   @default(false)
   flaggedReason          String?
@@ -192,6 +197,7 @@ model Shop {
   marketingAssets MarketingAsset[]
   testimonials   Testimonial[]
   contactMessages ContactMessage[]
+  analyticsEvents AnalyticsEvent[]
 }
 
 // ─── CATEGORY ──────────────────────────────────────────────────────────────────
@@ -238,12 +244,14 @@ model ContactMessage {
   phone     String?
   message   String
   status    String   @default("NEW") // NEW, READ, REPLIED
+  source    String   @default("FORM") // FORM, WHATSAPP, CALL
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
 
   @@index([shopId])
+  @@index([status])
 }
 
 // ─── PRODUCT ───────────────────────────────────────────────────────────────────
@@ -261,6 +269,10 @@ model Product {
   isAvailable Boolean  @default(true)
   shopId      String
   categoryId  String?
+
+  // Analytics
+  whatsappClicks Int    @default(0)
+  views          Int    @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -297,6 +309,24 @@ model Visit {
   createdAt DateTime @default(now())
 
   shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+}
+
+// ─── ANALYTICS EVENT ─────────────────────────────────────────────────────────
+
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  shopId    String
+  eventType String   // 'whatsapp_click', 'form_submit', 'page_view', 'product_view'
+  metadata  String?  // JSON: { productId?, path?, productName? }
+  userAgent String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@index([shopId])
+  @@index([eventType])
+  @@index([createdAt])
 }
 
 // ─── LIVE SESSION ──────────────────────────────────────────────────────────────

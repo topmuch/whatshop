@@ -6,6 +6,7 @@ import { ShoppingCart, MessageCircle, Wrench } from 'lucide-react'
 import type { Product } from '@/lib/shared'
 import { formatPrice, openWhatsApp, PLATFORM_CONFIG } from '@/lib/shared'
 import type { ElectroCardMode, ThemeColors } from '@/lib/theme-config'
+import { useTracking } from '@/hooks/useTracking'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -18,6 +19,7 @@ interface ElectroProductCardProps {
   whatsappMessage: string
   showPrice: boolean
   categoryName?: string
+  shopId?: string
   onAddToCart: (product: Product) => void
 }
 
@@ -92,10 +94,12 @@ export default function ElectroProductCard({
   whatsappMessage,
   showPrice,
   categoryName,
+  shopId,
   onAddToCart,
 }: ElectroProductCardProps) {
   const isService = cardMode === 'service'
   const showBadges = cardMode !== 'service'
+  const { trackWhatsAppClick } = useTracking(shopId)
 
   const specs = cardMode === 'specs' ? parseSpecs(product.description) : []
   const comparePrice = cardMode === 'specs' ? extractComparePrice(product.description) : null
@@ -115,6 +119,7 @@ export default function ElectroProductCard({
     e.stopPropagation()
     if (!whatsappNumber) return
 
+    trackWhatsAppClick(product.id, product.name)
     const msg = buildWhatsAppMessage(whatsappMessage, product)
     const phone = whatsappNumber.replace(/\D/g, '')
     const encoded = encodeURIComponent(msg)

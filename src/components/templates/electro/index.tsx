@@ -1126,6 +1126,7 @@ export function ElectroTemplate() {
                             categoryName={
                               publicCategories.find((c) => c.id === product.categoryId)?.name
                             }
+                            shopId={publicShop?.id}
                             onAddToCart={(p) => handleAddToCart(p, 1)}
                           />
                         </div>
