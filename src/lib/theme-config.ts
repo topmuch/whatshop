@@ -514,7 +514,7 @@ const QUINCAILLERIE_THEME: ThemeConfig = {
     { emoji: '🔨', title: 'Outils Professionnels', subtitle: 'Marques de confiance', order: 0 },
     { emoji: '📦', title: 'Stock Disponible', subtitle: 'Livraison immédiate', order: 1 },
     { emoji: '🚚', title: 'Livraison Rapide', subtitle: 'Sur tous vos chantiers', order: 2 },
-    { emoji: '💎', title: 'Prix Competitifs', subtitle: 'Meilleur rapport qualité', order: 3 },
+    { emoji: '💎', title: 'Prix Compétitifs', subtitle: 'Meilleur rapport qualité', order: 3 },
   ],
   cardMode: 'compat',
   navLabels: { catalog: 'Articles', categories: 'Rayons' },

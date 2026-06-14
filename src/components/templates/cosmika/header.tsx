@@ -22,7 +22,6 @@ export function CosmikaHeader({ config, shop }: CosmikaHeaderProps) {
     { label: 'Accueil', href: '#accueil' },
     { label: config.navLabels.categories, href: '#categories' },
     { label: config.navLabels.catalog, href: '#products' },
-    { label: 'Avis', href: '#avis' },
   ]
 
   const handleNavClick = useCallback(

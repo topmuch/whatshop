@@ -15,7 +15,9 @@ interface ElectroHeaderProps {
   shop: Shop | null
   cartItemCount: number
   showSearch: boolean
+  isServiceMode: boolean
   catalogLabel: string
+  onAccueilClick: () => void
   onCatalogClick: () => void
   onContactClick: () => void
   onCartClick: () => void
@@ -28,7 +30,9 @@ export function ElectroHeader({
   shop,
   cartItemCount,
   showSearch,
+  isServiceMode,
   catalogLabel,
+  onAccueilClick,
   onCatalogClick,
   onContactClick,
   onCartClick,
@@ -51,7 +55,7 @@ export function ElectroHeader({
   )
 
   const navItems = [
-    { label: 'Accueil', onClick: () => {} },
+    { label: 'Accueil', onClick: onAccueilClick },
     { label: catalogLabel, onClick: onCatalogClick },
     { label: 'Contact', onClick: onContactClick },
   ]
@@ -149,7 +153,8 @@ export function ElectroHeader({
                 </div>
               )}
 
-              {/* Cart Button */}
+              {/* Cart Button (e-commerce only) */}
+              {!isServiceMode && (
               <Button
                 variant="ghost"
                 size="icon"
@@ -170,6 +175,7 @@ export function ElectroHeader({
                   </Badge>
                 )}
               </Button>
+              )}
 
               {/* Mobile Search Toggle */}
               {showSearch && (
@@ -375,7 +381,8 @@ export function ElectroHeader({
                 )}
               </nav>
 
-              {/* Drawer Footer with Cart */}
+              {/* Drawer Footer with Cart (e-commerce only) */}
+              {!isServiceMode && (
               <div
                 className="shrink-0 px-4 py-4 border-t"
                 style={{ borderColor: colors.primaryLight }}
@@ -406,6 +413,7 @@ export function ElectroHeader({
                   )}
                 </Button>
               </div>
+              )}
             </motion.div>
           </>
         )}

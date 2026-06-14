@@ -42,7 +42,7 @@ import {
   SlidersHorizontal,
 } from 'lucide-react'
 import { useAppStore, type Product, type Category, type Shop } from '@/lib/store'
-import { formatPrice, openWhatsApp, PLATFORM_CONFIG } from '@/lib/shared'
+import { formatPrice, openWhatsApp } from '@/lib/shared'
 import {
   getThemeConfig,
   getThemeTrustBadges,
@@ -738,12 +738,13 @@ function ProductDetail({
               )}
             </div>
 
-            {/* Shipping zone selector */}
+            {/* Shipping zone + trust (e-commerce only) */}
+            {!isService && (
+            <>
             <div className="mt-4">
               <ShippingZoneSelector />
             </div>
 
-            {/* Trust indicators */}
             <div className="mt-4 grid grid-cols-2 gap-3">
               <div className="flex items-center gap-2 text-sm text-gray-500">
                 <Truck className="size-4 shrink-0" />
@@ -754,6 +755,8 @@ function ProductDetail({
                 <span>Paiement sécurisé</span>
               </div>
             </div>
+            </>
+            )}
           </div>
         </div>
       </div>
@@ -1009,7 +1012,9 @@ export function ElectroTemplate() {
         shop={publicShop}
         cartItemCount={itemCount}
         showSearch={showSearch}
+        isServiceMode={isServiceMode}
         catalogLabel={navLabels.catalog}
+        onAccueilClick={handleNavAccueil}
         onCatalogClick={handleNavCatalog}
         onContactClick={handleContact}
         onCartClick={() => cart.length > 0 && setCartExpanded(!cartExpanded)}

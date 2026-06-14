@@ -102,7 +102,8 @@ export default function ElectroProductCard({
 
   const displayCategory = categoryName || product.categoryName || product.category?.name
   const shouldShowPrice = showPrice && !isService
-  const showSurDevis = isService && product.price > 0
+  const showSurDevis = isService && product.price <= 0
+  const showAPartirDe = isService && product.price > 0
 
   const isNew = showBadges && isNewProduct(product.createdAt)
   const isPromo = showBadges && isPromoProduct(product.price)
@@ -112,6 +113,7 @@ export default function ElectroProductCard({
   function handleCta(e: React.MouseEvent) {
     e.preventDefault()
     e.stopPropagation()
+    if (!whatsappNumber) return
 
     const msg = buildWhatsAppMessage(whatsappMessage, product)
     const phone = whatsappNumber.replace(/\D/g, '')
@@ -256,9 +258,19 @@ export default function ElectroProductCard({
           </div>
         )}
 
-        {/* ── "Sur devis" (service mode when price > 0) ──────────── */}
+        {/* ── "À partir de" (service mode with price) ──────────── */}
+        {showAPartirDe && (
+          <p className="text-sm text-gray-600 mt-1">
+            À partir de{' '}
+            <span className="font-bold" style={{ color: colors.primary }}>
+              {formatPrice(product.price)}
+            </span>
+          </p>
+        )}
+
+        {/* ── "Sur devis" (service mode without price) ──────────── */}
         {showSurDevis && (
-          <p className="text-sm text-gray-400 mt-1">
+          <p className="text-sm text-gray-400 mt-1 italic">
             Sur devis
           </p>
         )}

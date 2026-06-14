@@ -74,14 +74,6 @@ export function CosmikaFooter({ config, shop }: CosmikaFooterProps) {
                 {config.navLabels.catalog}
               </button>
             </li>
-            <li>
-              <button
-                onClick={() => handleNavClick('#avis')}
-                className="hover:text-white transition-colors"
-              >
-                Avis clients
-              </button>
-            </li>
           </ul>
         </div>
 

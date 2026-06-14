@@ -32,7 +32,7 @@ import {
   Search,
 } from 'lucide-react'
 import { useAppStore, type Product, type Category, type Shop } from '@/lib/store'
-import { formatPrice, openWhatsApp, PLATFORM_CONFIG } from '@/lib/shared'
+import { formatPrice, openWhatsApp } from '@/lib/shared'
 import {
   getThemeConfig,
   type ThemeConfig,
@@ -47,6 +47,7 @@ import { CosmikaCategories } from './categories'
 import { CosmikaProductCard } from './product-card'
 import { CosmikaTrustBadges } from './trust-badges'
 import { CosmikaFooter } from './footer'
+import { CosmikaTestimonials, type TestimonialItem } from './testimonials'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -876,6 +877,11 @@ export function CosmikaTemplate() {
                   </AnimatePresence>
                 </div>
               </section>
+
+              {/* ═══ TESTIMONIALS ═══ */}
+              {/* NOTE: Testimonials come from shop-specific data.
+                  Currently no testimonials API exists, so section is hidden.
+                  When a testimonials endpoint is added, fetch here and pass to CosmikaTestimonials. */}
 
               {/* ═══ TRUST BADGES ═══ */}
               <CosmikaTrustBadges config={config} />
