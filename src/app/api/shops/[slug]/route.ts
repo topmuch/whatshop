@@ -22,6 +22,7 @@ export async function GET(
         phone: true,
         plan: true,
         sector: true,
+        businessType: true,
         template: true,
         accentColor: true,
         isActive: true,

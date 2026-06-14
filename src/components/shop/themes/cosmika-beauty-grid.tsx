@@ -2,7 +2,7 @@
 
 /**
  * CosmikaBeautyShopPage — Template cosmika-beauty
- * Beauty / Cosmetics shop template with rose-gold & black palette.
+ * Multi-sector adaptive template with sector-aware colors, labels, and CTA behavior.
  *
  * Sections:
  *   1. Header (sticky, dark)
@@ -32,14 +32,8 @@ import { useAppStore, type Product, type Category, type Testimonial, type TrustB
 import { formatPrice, PLATFORM_CONFIG } from '@/lib/shared'
 import { ShippingZoneSelector } from '../shipping-zone-selector'
 import { ImageWithFallback } from '@/components/ui/image-with-fallback'
-
-// ─── Default trust badges ───
-const DEFAULT_TRUST_BADGES: TrustBadge[] = [
-  { emoji: '🚚', title: 'Livraison 24h', subtitle: 'Partout au Sénégal', order: 0 },
-  { emoji: '💵', title: 'Paiement Mobile Money', subtitle: 'Orange Money, Wave…', order: 1 },
-  { emoji: '🔄', title: 'Retour facile', subtitle: 'Satisfait ou remboursé', order: 2 },
-  { emoji: '📱', title: 'Support WhatsApp', subtitle: 'Réponse rapide', order: 3 },
-]
+import { getThemeConfig, type ThemeColors } from '@/lib/theme-config'
+import { getSectorLabels, isServiceBusiness } from '@/lib/sector-config'
 
 // ═══════════════════════════════════════════════════════════════
 // SECTION 1 : HEADER (sticky, dark)
@@ -49,6 +43,7 @@ function CosmikaHeader({
   shopName,
   logo,
   whatsapp,
+  sector,
   onNavAccueil,
   onNavCategories,
   onNavProduits,
@@ -57,17 +52,19 @@ function CosmikaHeader({
   shopName: string
   logo?: string
   whatsapp?: string
+  sector?: string
   onNavAccueil: () => void
   onNavCategories: () => void
   onNavProduits: () => void
   onNavAvis: () => void
 }) {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const labels = getSectorLabels(sector)
 
   const navItems = [
     { label: 'Accueil', onClick: onNavAccueil },
-    { label: 'Catégories', onClick: onNavCategories },
-    { label: 'Produits', onClick: onNavProduits },
+    { label: labels.navCategories, onClick: onNavCategories },
+    { label: labels.navProducts, onClick: onNavProduits },
     { label: 'Avis', onClick: onNavAvis },
   ]
 
@@ -195,13 +192,18 @@ function CosmikaHero({
   heroTagline,
   heroTitle,
   heroSubtitle,
+  sector,
+  colors,
 }: {
   heroImageUrl?: string
   banner?: string
   heroTagline?: string
   heroTitle?: string
   heroSubtitle?: string
+  sector?: string
+  colors: ThemeColors
 }) {
+  const theme = getThemeConfig(sector)
   const backgroundImage = heroImageUrl || banner
 
   return (
@@ -225,8 +227,8 @@ function CosmikaHero({
       )}
 
       {/* Decorative glow */}
-      <div className="absolute top-1/4 right-1/4 w-96 h-96 rounded-full bg-rose-500/10 blur-3xl" />
-      <div className="absolute bottom-0 left-1/3 w-64 h-64 rounded-full bg-amber-400/5 blur-3xl" />
+      <div className="absolute top-1/4 right-1/4 w-96 h-96 rounded-full blur-3xl" style={{ backgroundColor: `${colors.primary}1a` }} />
+      <div className="absolute bottom-0 left-1/3 w-64 h-64 rounded-full blur-3xl" style={{ backgroundColor: `${colors.secondary}0d` }} />
 
       {/* Text LEFT-aligned */}
       <div className="relative z-10 flex flex-col items-start justify-center h-full text-left px-8 md:px-16 lg:px-32 fade-in">
@@ -237,8 +239,8 @@ function CosmikaHero({
           className="max-w-xl"
         >
           {/* Tagline */}
-          <span className="text-white font-semibold text-sm tracking-widest uppercase mb-4 block">
-            {heroTagline || 'ILLUMINATE DAILY'}
+          <span className="font-semibold text-sm tracking-widest uppercase mb-4 block" style={{ color: colors.primary }}>
+            {heroTagline || theme.hero.defaultTagline}
           </span>
 
           {/* Title */}
@@ -246,12 +248,12 @@ function CosmikaHero({
             className="text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight mb-6"
             style={{ fontFamily: "'Playfair Display', serif" }}
           >
-            {heroTitle || 'GLAMOUR SHINE'}
+            {heroTitle || theme.hero.defaultTitle}
           </h1>
 
           {/* Subtitle */}
           <p className="text-lg md:text-xl lg:text-2xl text-white/90 max-w-xl leading-relaxed">
-            {heroSubtitle || 'Découvrez notre nouvelle collection de cosmétiques premium'}
+            {heroSubtitle || theme.hero.defaultSubtitle}
           </p>
         </motion.div>
       </div>
@@ -270,6 +272,7 @@ function CosmikaCategories({
   onCategoryClick,
   categoriesTitle,
   categoriesTagline,
+  colors,
 }: {
   categories: Category[]
   products: Product[]
@@ -277,6 +280,7 @@ function CosmikaCategories({
   onCategoryClick: (id: string | null) => void
   categoriesTitle?: string
   categoriesTagline?: string
+  colors: ThemeColors
 }) {
   if (categories.length === 0) return null
 
@@ -284,7 +288,7 @@ function CosmikaCategories({
     <section id="cosmika-categories" className="w-full bg-white py-20 px-4">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
-          <span className="text-rose-600 font-semibold text-sm tracking-widest uppercase">Nos Produits</span>
+          <span className="font-semibold text-sm tracking-widest uppercase" style={{ color: colors.primary }}>Nos Produits</span>
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mt-2" style={{ fontFamily: "'Playfair Display', serif" }}>
             {categoriesTitle || 'FOR ALL WALKS OF LIFE'}
           </h2>
@@ -309,7 +313,8 @@ function CosmikaCategories({
                 transition={{ duration: 0.2 }}
               >
                 <div
-                  className="w-32 h-32 md:w-40 md:h-40 lg:w-44 lg:h-44 rounded-full overflow-hidden mx-auto mb-4 border-4 border-rose-100 group-hover:border-rose-300 transition-all duration-300"
+                  className="w-32 h-32 md:w-40 md:h-40 lg:w-44 lg:h-44 rounded-full overflow-hidden mx-auto mb-4 border-4 transition-all duration-300"
+                  style={{ borderColor: isActive ? colors.primary : colors.primaryLight }}
                 >
                   <ImageWithFallback
                     src={catImage}
@@ -320,9 +325,8 @@ function CosmikaCategories({
                   />
                 </div>
                 <span
-                  className={`text-base md:text-lg font-medium text-center transition-colors duration-200 ${
-                    isActive ? 'text-rose-600' : 'text-gray-700 group-hover:text-gray-900'
-                  }`}
+                  className="text-base md:text-lg font-medium text-center transition-colors duration-200"
+                  style={{ color: isActive ? colors.primary : undefined }}
                 >
                   {cat.name}
                 </span>
@@ -344,11 +348,17 @@ function CosmikaProductCard({
   onProductClick,
   whatsapp,
   shopName,
+  sector,
+  businessType,
+  colors,
 }: {
   product: Product
   onProductClick: (product: Product) => void
   whatsapp?: string
   shopName: string
+  sector?: string
+  businessType?: string
+  colors: ThemeColors
 }) {
   const inStock = (product.stock ?? 0) > 0
   const isNew = product.createdAt
@@ -357,16 +367,22 @@ function CosmikaProductCard({
   const isPromo = product.price < PLATFORM_CONFIG.PROMO_PRICE_THRESHOLD
 
   const selectedShippingZone = useAppStore((s) => s.selectedShippingZone)
+  const labels = getSectorLabels(sector)
+  const isService = isServiceBusiness(businessType)
 
   function handleCommander(e: React.MouseEvent) {
     e.stopPropagation()
     const phone = whatsapp?.replace(/\D/g, '') || ''
     let msg: string
-    if (selectedShippingZone) {
+    const priceStr = product.price ? `${product.price.toLocaleString('fr-FR')} FCFA` : ''
+    const template = labels.ctaWhatsAppMessage
+      .replace('{productName}', product.name)
+      .replace('{productPrice}', priceStr)
+    if (!isService && selectedShippingZone) {
       const grandTotal = product.price + selectedShippingZone.price
-      msg = `Bonjour ${shopName} 👋, je souhaite commander :\n\n📦 Produit : ${product.name}\n💰 Prix : ${product.price.toLocaleString('fr-FR')} FCFA\n📍 Zone de livraison : ${selectedShippingZone.name}\n🚚 Frais de livraison : ${selectedShippingZone.price.toLocaleString('fr-FR')} FCFA\n━━━━━━━━━━━━━━\n💵 Total : ${grandTotal.toLocaleString('fr-FR')} FCFA\n\nMerci de confirmer ma commande !`
+      msg = `${template}\n📍 Zone de livraison : ${selectedShippingZone.name}\n🚚 Frais de livraison : ${selectedShippingZone.price.toLocaleString('fr-FR')} FCFA\n━━━━━━━━━━━━━━\n💵 Total : ${grandTotal.toLocaleString('fr-FR')} FCFA`
     } else {
-      msg = `Bonjour ${shopName} 👋, je souhaite commander : 📦 ${product.name} 💰 ${product.price.toLocaleString('fr-FR')} FCFA`
+      msg = template
     }
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank')
   }
@@ -393,16 +409,16 @@ function CosmikaProductCard({
         {/* Badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-1.5">
           {isNew && (
-            <span className="inline-block px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white bg-rose-500 rounded-full">
+            <span className="inline-block px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white rounded-full" style={{ backgroundColor: colors.primary }}>
               Nouveau
             </span>
           )}
-          {isPromo && !isNew && (
+          {isPromo && !isNew && !isService && (
             <span className="inline-block px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white bg-amber-500 rounded-full">
               Promo
             </span>
           )}
-          {!inStock && (
+          {!inStock && !isService && (
             <span className="inline-block px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white bg-red-500 rounded-full">
               Rupture
             </span>
@@ -416,15 +432,20 @@ function CosmikaProductCard({
           {product.name}
         </h3>
         <p className="font-bold text-gray-900">
-          {product.price.toLocaleString('fr-FR')} <span className="font-semibold text-gray-500">FCFA</span>
+          {!labels.showPrice && !product.price
+            ? 'Sur devis'
+            : !labels.showPrice && product.price
+              ? <>À partir de {product.price.toLocaleString('fr-FR')} <span className="font-semibold text-gray-500">FCFA</span></>
+              : <>{product.price.toLocaleString('fr-FR')} <span className="font-semibold text-gray-500">FCFA</span></>}
         </p>
 
         <button
           onClick={handleCommander}
-          disabled={!product.isAvailable || !inStock}
-          className="mt-1 w-full bg-black text-white text-sm font-semibold rounded-full px-6 py-2.5 hover:opacity-90 transition-opacity duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+          disabled={!product.isAvailable || (!isService && !inStock)}
+          className="mt-1 w-full text-white text-sm font-semibold rounded-full px-6 py-2.5 hover:opacity-90 transition-opacity duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+          style={{ backgroundColor: colors.ctaBg, color: colors.ctaText }}
         >
-          Commander
+          {labels.ctaButton}
         </button>
       </div>
     </motion.div>
@@ -439,11 +460,17 @@ function CosmikaProductDetail({
   product,
   whatsapp,
   shopName,
+  sector,
+  businessType,
+  colors,
   onClose,
 }: {
   product: Product
   whatsapp?: string
   shopName: string
+  sector?: string
+  businessType?: string
+  colors: ThemeColors
   onClose: () => void
 }) {
   const [qty, setQty] = useState(1)
@@ -452,17 +479,22 @@ function CosmikaProductDetail({
 
   const productImages = product.images?.length ? product.images : product.image ? [product.image] : []
   const inStock = (product.stock ?? 0) > 0
+  const labels = getSectorLabels(sector)
+  const isService = isServiceBusiness(businessType)
 
   function handleWhatsAppOrder() {
     const phone = whatsapp?.replace(/\D/g, '') || ''
     const itemTotal = product.price * qty
+    const priceStr = product.price ? `${itemTotal.toLocaleString('fr-FR')} FCFA` : ''
+    const template = labels.ctaWhatsAppMessage
+      .replace('{productName}', `${product.name}${!isService && qty > 1 ? ` x${qty}` : ''}`)
+      .replace('{productPrice}', priceStr)
     let msg: string
-    if (selectedShippingZone) {
+    if (!isService && selectedShippingZone) {
       const grandTotal = itemTotal + selectedShippingZone.price
-      msg = `Bonjour ${shopName} 👋, je souhaite commander :\n\n📦 Produit : ${product.name} x${qty}\n💰 Prix : ${itemTotal.toLocaleString('fr-FR')} FCFA\n📍 Zone de livraison : ${selectedShippingZone.name}\n🚚 Frais de livraison : ${selectedShippingZone.price.toLocaleString('fr-FR')} FCFA\n━━━━━━━━━━━━━━\n💵 Total : ${grandTotal.toLocaleString('fr-FR')} FCFA\n\nMerci de confirmer ma commande !`
+      msg = `${template}\n📍 Zone de livraison : ${selectedShippingZone.name}\n🚚 Frais de livraison : ${selectedShippingZone.price.toLocaleString('fr-FR')} FCFA\n━━━━━━━━━━━━━━\n💵 Total : ${grandTotal.toLocaleString('fr-FR')} FCFA`
     } else {
-      const total = itemTotal.toLocaleString('fr-FR')
-      msg = `Bonjour ${shopName} 👋, je souhaite commander : 📦 ${product.name} x${qty} 💰 ${total} FCFA`
+      msg = template
     }
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank')
   }
@@ -509,9 +541,11 @@ function CosmikaProductDetail({
                 <button
                   key={idx}
                   onClick={() => setImgIndex(idx)}
-                  className={`w-12 h-12 rounded-lg overflow-hidden border-2 transition-all ${
-                    idx === imgIndex ? 'border-rose-500 opacity-100' : 'border-white/50 opacity-60 hover:opacity-100'
-                  }`}
+                  className="w-12 h-12 rounded-lg overflow-hidden border-2 transition-all"
+                  style={{
+                    borderColor: idx === imgIndex ? colors.primary : 'rgba(255,255,255,0.5)',
+                    opacity: idx === imgIndex ? 1 : 0.6,
+                  }}
                 >
                   <img src={img} alt="" className="w-full h-full object-cover" />
                 </button>
@@ -527,7 +561,11 @@ function CosmikaProductDetail({
           </h1>
 
           <p className="text-2xl font-bold text-gray-900">
-            {product.price.toLocaleString('fr-FR')} <span className="text-base font-normal text-gray-500">FCFA</span>
+            {!labels.showPrice && !product.price
+              ? 'Sur devis'
+              : !labels.showPrice && product.price
+                ? <>À partir de {product.price.toLocaleString('fr-FR')} <span className="text-base font-normal text-gray-500">FCFA</span></>
+                : <>{product.price.toLocaleString('fr-FR')} <span className="text-base font-normal text-gray-500">FCFA</span></>}
           </p>
 
           {product.description && (
@@ -542,46 +580,49 @@ function CosmikaProductDetail({
               ✓ En stock ({product.stock} disponibles)
             </p>
           )}
-          {!inStock && (
+          {!inStock && !isService && (
             <p className="text-sm text-red-500 font-medium">
               Rupture de stock
             </p>
           )}
 
-          {/* Quantity selector */}
-          <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
-            <span className="text-sm font-semibold text-gray-700">Quantité</span>
-            <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden ml-auto">
-              <button
-                onClick={() => setQty(Math.max(1, qty - 1))}
-                className="flex items-center justify-center w-10 h-10 text-gray-600 hover:bg-gray-100 transition-colors"
-              >
-                <Minus className="size-4" />
-              </button>
-              <span className="min-w-[40px] text-center font-bold text-base text-gray-900">
-                {qty}
-              </span>
-              <button
-                onClick={() => setQty(qty + 1)}
-                className="flex items-center justify-center w-10 h-10 text-gray-600 hover:bg-gray-100 transition-colors"
-              >
-                <Plus className="size-4" />
-              </button>
+          {/* Quantity selector (hidden for services) */}
+          {!isService && (
+            <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
+              <span className="text-sm font-semibold text-gray-700">Quantité</span>
+              <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden ml-auto">
+                <button
+                  onClick={() => setQty(Math.max(1, qty - 1))}
+                  className="flex items-center justify-center w-10 h-10 text-gray-600 hover:bg-gray-100 transition-colors"
+                >
+                  <Minus className="size-4" />
+                </button>
+                <span className="min-w-[40px] text-center font-bold text-base text-gray-900">
+                  {qty}
+                </span>
+                <button
+                  onClick={() => setQty(qty + 1)}
+                  className="flex items-center justify-center w-10 h-10 text-gray-600 hover:bg-gray-100 transition-colors"
+                >
+                  <Plus className="size-4" />
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Shipping zone selector */}
-          <ShippingZoneSelector />
+          {/* Shipping zone selector (hidden for services) */}
+          {!isService && <ShippingZoneSelector />}
 
           {/* WhatsApp order button */}
           {whatsapp && (
             <button
               onClick={handleWhatsAppOrder}
-              disabled={!inStock}
-              className="w-full flex items-center justify-center gap-2 bg-black text-white font-semibold rounded-full px-6 py-3.5 hover:opacity-90 transition-opacity duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+              disabled={!isService && !inStock}
+              className="w-full flex items-center justify-center gap-2 font-semibold rounded-full px-6 py-3.5 hover:opacity-90 transition-opacity duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{ backgroundColor: colors.ctaBg, color: colors.ctaText }}
             >
               <MessageCircle className="size-5" />
-              Commander sur WhatsApp
+              {labels.ctaButton}
             </button>
           )}
         </div>
@@ -597,9 +638,11 @@ function CosmikaProductDetail({
 function CosmikaTestimonials({
   testimonialsTitle,
   testimonialsTagline,
+  colors,
 }: {
   testimonialsTitle?: string
   testimonialsTagline?: string
+  colors: ThemeColors
 }) {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([])
   const shopSlug = useAppStore((s) => s.shopSlug)
@@ -643,7 +686,8 @@ function CosmikaTestimonials({
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-40px' }}
               transition={{ duration: 0.4, delay: idx * 0.1 }}
-              className="bg-rose-50 rounded-2xl p-6"
+              className="rounded-2xl p-6"
+              style={{ backgroundColor: colors.primaryBg }}
             >
               {/* Stars */}
               <div className="flex items-center gap-0.5 mb-3">
@@ -697,9 +741,11 @@ function CosmikaTestimonials({
 // SECTION 6 : TRUST BADGES
 // ═══════════════════════════════════════════════════════════════
 
-function CosmikaTrustBadges({ rawTrustBadges }: { rawTrustBadges?: string }) {
+function CosmikaTrustBadges({ rawTrustBadges, sector }: { rawTrustBadges?: string; sector?: string }) {
+  const defaultBadges = getThemeConfig(sector).defaultTrustBadges
+
   const badges = useMemo<TrustBadge[]>(() => {
-    if (!rawTrustBadges) return DEFAULT_TRUST_BADGES
+    if (!rawTrustBadges) return defaultBadges
     try {
       const parsed = JSON.parse(rawTrustBadges)
       if (Array.isArray(parsed) && parsed.length > 0) {
@@ -712,11 +758,11 @@ function CosmikaTrustBadges({ rawTrustBadges }: { rawTrustBadges?: string }) {
           }))
           .sort((a: TrustBadge, b: TrustBadge) => a.order - b.order)
       }
-      return DEFAULT_TRUST_BADGES
+      return defaultBadges
     } catch {
-      return DEFAULT_TRUST_BADGES
+      return defaultBadges
     }
-  }, [rawTrustBadges])
+  }, [rawTrustBadges, defaultBadges])
 
   return (
     <section className="w-full bg-white py-12 sm:py-16">
@@ -758,13 +804,17 @@ function CosmikaFooter({
   description,
   rawFooterLinks,
   whatsapp,
+  sector,
 }: {
   shopName: string
   logo?: string
   description?: string
   rawFooterLinks?: string
   whatsapp?: string
+  sector?: string
 }) {
+  const labels = getSectorLabels(sector)
+
   const footerLinks = useMemo<FooterLink[]>(() => {
     if (!rawFooterLinks) return []
     try {
@@ -782,8 +832,8 @@ function CosmikaFooter({
           title: 'Navigation',
           links: [
             { label: 'Accueil', url: '/' },
-            { label: 'Catégories', url: '#cosmika-categories' },
-            { label: 'Produits', url: '#cosmika-products' },
+            { label: labels.navCategories, url: '#cosmika-categories' },
+            { label: labels.navProducts, url: '#cosmika-products' },
             { label: 'Avis clients', url: '#cosmika-avis' },
           ],
         },
@@ -803,7 +853,7 @@ function CosmikaFooter({
       grouped[sec].push({ label: link.label, url: link.url })
     }
     return Object.entries(grouped).map(([title, links]) => ({ title, links }))
-  }, [footerLinks, whatsapp])
+  }, [footerLinks, whatsapp, labels.navCategories, labels.navProducts])
 
   return (
     <footer className="w-full bg-gray-900 text-white mt-auto">
@@ -865,13 +915,13 @@ function CosmikaFooter({
 // LOADING SKELETON
 // ═══════════════════════════════════════════════════════════════
 
-function CosmikaLoadingSkeleton() {
+function CosmikaLoadingSkeleton({ colors }: { colors: ThemeColors }) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-white">
       <div className="flex flex-col items-center gap-4">
         <div className="relative size-10">
           <div className="absolute inset-0 rounded-full border-2 border-muted-foreground/20" />
-          <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-rose-500 animate-spin" />
+          <div className="absolute inset-0 rounded-full border-2 border-transparent animate-spin" style={{ borderTopColor: colors.primary }} />
         </div>
         <p className="text-sm text-muted-foreground">Boutiko</p>
       </div>
@@ -894,6 +944,12 @@ export function CosmikaBeautyShopPage() {
     publicCategories,
     setPublicCategories,
   } = useAppStore()
+
+  const sector = publicShop?.sector
+  const businessType = publicShop?.businessType
+  const theme = getThemeConfig(sector)
+  const colors = theme.colors
+  const labels = getSectorLabels(sector)
 
   const [loading, setLoading] = useState(true)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
@@ -1000,15 +1056,15 @@ export function CosmikaBeautyShopPage() {
   }
 
   // ── Loading ──
-  if (loading) return <CosmikaLoadingSkeleton />
+  if (loading) return <CosmikaLoadingSkeleton colors={colors} />
 
   // ── Shop not found ──
   if (!publicShop) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white p-4">
         <div className="text-center">
-          <div className="flex items-center justify-center w-20 h-20 rounded-full mx-auto mb-4 bg-rose-50">
-            <Package className="size-10 text-rose-400" />
+          <div className="flex items-center justify-center w-20 h-20 rounded-full mx-auto mb-4" style={{ backgroundColor: colors.primaryBg }}>
+            <Package className="size-10" style={{ color: colors.primary }} />
           </div>
           <h2 className="text-xl font-bold text-gray-900 mb-2">Boutique introuvable</h2>
           <p className="text-sm text-gray-500 mb-4">
@@ -1046,6 +1102,7 @@ export function CosmikaBeautyShopPage() {
         shopName={publicShop.name}
         logo={publicShop.logo}
         whatsapp={publicShop.whatsapp}
+        sector={sector}
         onNavAccueil={handleNavAccueil}
         onNavCategories={handleNavCategories}
         onNavProduits={handleNavProduits}
@@ -1063,6 +1120,9 @@ export function CosmikaBeautyShopPage() {
               product={selectedProduct}
               whatsapp={publicShop.whatsapp}
               shopName={publicShop.name}
+              sector={sector}
+              businessType={businessType}
+              colors={colors}
               onClose={handleBackFromProduct}
             />
           ) : (
@@ -1080,6 +1140,8 @@ export function CosmikaBeautyShopPage() {
                 heroTagline={publicShop.heroTagline}
                 heroTitle={publicShop.heroTitle}
                 heroSubtitle={publicShop.heroSubtitle}
+                sector={sector}
+                colors={colors}
               />
 
               {/* ═══ SECTION 3 : CATÉGORIES ═══ */}
@@ -1097,6 +1159,7 @@ export function CosmikaBeautyShopPage() {
                   }}
                   categoriesTitle={publicShop.categoriesTitle}
                   categoriesTagline={publicShop.categoriesTagline}
+                  colors={colors}
                 />
               </div>
 
@@ -1106,7 +1169,7 @@ export function CosmikaBeautyShopPage() {
                   {/* Section title */}
                   <div className="text-center mb-10">
                     <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
-                      {publicShop.productsTitle || 'NOS PRODUITS'}
+                      {publicShop.productsTitle || labels.productsTitle}
                     </h2>
                     <p className="text-sm text-gray-500">
                       {publicShop.productsTagline || 'Sélection pour vous'}
@@ -1116,10 +1179,10 @@ export function CosmikaBeautyShopPage() {
                   {/* Empty state */}
                   {publicProducts.length === 0 && (
                     <div className="flex flex-col items-center justify-center py-20 text-center">
-                      <div className="flex items-center justify-center w-20 h-20 rounded-full mb-4 bg-rose-50">
-                        <Package className="size-10 text-rose-400" />
+                      <div className="flex items-center justify-center w-20 h-20 rounded-full mb-4" style={{ backgroundColor: colors.primaryBg }}>
+                        <Package className="size-10" style={{ color: colors.primary }} />
                       </div>
-                      <h3 className="text-lg font-bold text-gray-900">Aucun produit disponible</h3>
+                      <h3 className="text-lg font-bold text-gray-900">{labels.productsEmpty}</h3>
                       <p className="mt-1 text-sm max-w-md text-gray-500">
                         Cette boutique n&apos;a pas encore de produits. Revenez bientôt !
                       </p>
@@ -1139,9 +1202,10 @@ export function CosmikaBeautyShopPage() {
                       </p>
                       <button
                         onClick={() => setActiveCategory(null)}
-                        className="text-sm font-semibold text-rose-600 hover:text-rose-700 transition-colors"
+                        className="text-sm font-semibold transition-colors"
+                        style={{ color: colors.primary }}
                       >
-                        Voir tous les produits
+                        Voir tous les {labels.navProducts.toLowerCase()}
                       </button>
                     </motion.div>
                   )}
@@ -1163,6 +1227,9 @@ export function CosmikaBeautyShopPage() {
                           onProductClick={handleProductClick}
                           whatsapp={publicShop.whatsapp}
                           shopName={publicShop.name}
+                          sector={sector}
+                          businessType={businessType}
+                          colors={colors}
                         />
                       ))}
                     </motion.div>
@@ -1175,11 +1242,12 @@ export function CosmikaBeautyShopPage() {
                 <CosmikaTestimonials
                   testimonialsTitle={publicShop.testimonialsTitle}
                   testimonialsTagline={publicShop.testimonialsTagline}
+                  colors={colors}
                 />
               </div>
 
               {/* ═══ SECTION 6 : TRUST BADGES ═══ */}
-              <CosmikaTrustBadges rawTrustBadges={publicShop.trustBadges} />
+              <CosmikaTrustBadges rawTrustBadges={publicShop.trustBadges} sector={sector} />
             </motion.div>
           )}
         </AnimatePresence>
@@ -1192,6 +1260,7 @@ export function CosmikaBeautyShopPage() {
         description={publicShop.description}
         rawFooterLinks={publicShop.footerLinks}
         whatsapp={publicShop.whatsapp}
+        sector={sector}
       />
     </motion.div>
   )
