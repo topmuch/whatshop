@@ -50,6 +50,8 @@ export async function GET(
         footerLinks: true,
         facebookPixelId: true,
         facebookCatalogId: true,
+        catalogEnabled: true,
+        catalogProductCount: true,
         trackPageViews: true,
         trackProductViews: true,
         trackWhatsAppClicks: true,

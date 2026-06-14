@@ -1,25 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { generateWhatsAppLink } from '@/lib/whatsapp-link'
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://boutiko.pro'
 
 /**
- * Facebook Catalog XML feed endpoint.
- *
- * GET /api/catalog/[shopId]/route.xml
+ * Facebook Catalog XML feed — with WhatsApp checkout_url.
+ * GET /api/catalog/[shopId]
  *
  * Generates a Facebook Commerce Manager compatible XML product feed.
- * Cached for 1 hour (revalidate).
- *
- * Facebook catalog field mapping:
- * - id → product.id
- * - title → product.name
- * - description → product.shortDescription || product.description
- * - link → boutique URL
- * - image_link → first image from product.images or product.image
- * - price → product.price XOF
- * - availability → based on product.isAvailable && product.stock
- * - brand → shop.name
+ * Each item includes a checkout_url that redirects to WhatsApp with a
+ * pre-filled order message.
  */
 export async function GET(
   _request: NextRequest,
@@ -28,13 +19,13 @@ export async function GET(
   try {
     const { shopId } = await params
 
-    // Fetch shop with products
     const shop = await db.shop.findUnique({
       where: { id: shopId, isActive: true },
       select: {
         id: true,
         name: true,
         slug: true,
+        whatsapp: true,
         products: {
           where: { isAvailable: true },
           select: {
@@ -48,9 +39,7 @@ export async function GET(
             images: true,
             stock: true,
             isAvailable: true,
-            category: {
-              select: { name: true },
-            },
+            category: { select: { name: true } },
           },
           orderBy: { createdAt: 'desc' },
         },
@@ -64,17 +53,25 @@ export async function GET(
       })
     }
 
-    // Build XML
+    const shopUrl = `${BASE_URL}/${shop.slug}`
+
     const xmlItems = shop.products.map((product) => {
       const images: string[] = product.images ? JSON.parse(product.images) : []
       const mainImage = images[0] || product.image || ''
-
       const description = product.shortDescription || product.description || product.name
-      const shopUrl = `${BASE_URL}/boutique/${shop.slug}`
-      const productUrl = product.slug ? `${shopUrl}?product=${product.slug}` : shopUrl
+      const productUrl = product.slug ? `${shopUrl}/p/${product.slug}` : shopUrl
       const availability = product.isAvailable && (product.stock === null || product.stock === undefined || product.stock > 0)
         ? 'in stock'
         : 'out of stock'
+
+      // WhatsApp checkout link — the core conversion path
+      const checkoutUrl = generateWhatsAppLink({
+        phoneNumber: shop.whatsapp,
+        productName: product.name,
+        productPrice: product.price,
+        productUrl,
+        source: 'facebook',
+      })
 
       return `    <item>
       <g:id>${escapeXml(product.id)}</g:id>
@@ -86,7 +83,8 @@ export async function GET(
       <g:availability>${availability}</g:availability>
       <g:condition>new</g:condition>
       <g:brand>${escapeXml(shop.name)}</g:brand>
-      ${product.category ? `<g:google_product_category>${escapeXml(product.category.name)}</g:google_product_category>` : ''}
+      ${product.category ? `<g:product_type>${escapeXml(product.category.name)}</g:product_type>` : ''}
+      <g:checkout_url>${escapeXml(checkoutUrl)}</g:checkout_url>
     </item>`
     }).join('\n')
 
@@ -94,7 +92,7 @@ export async function GET(
 <rss xmlns:g="http://base.google.com/ns/1.0" version="2.0">
   <channel>
     <title>${escapeXml(shop.name)}</title>
-    <link>${escapeXml(`${BASE_URL}/boutique/${shop.slug}`)}</link>
+    <link>${escapeXml(shopUrl)}</link>
     <description>Catalogue produits - ${escapeXml(shop.name)}</description>
 ${xmlItems}
   </channel>
@@ -104,11 +102,9 @@ ${xmlItems}
       status: 200,
       headers: {
         'Content-Type': 'application/xml; charset=utf-8',
-        // Allow Facebook to fetch the feed
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET',
         'Access-Control-Allow-Headers': 'Content-Type',
-        // Cache for 1 hour
         'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=600',
       },
     })
@@ -121,16 +117,8 @@ ${xmlItems}
   }
 }
 
-// ─── HELPERS ──────────────────────────────────────────────────────────────────
-
 function escapeXml(str: string): string {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;')
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;')
 }
 
-// Enable static revalidation (ISR-like caching)
 export const revalidate = 3600

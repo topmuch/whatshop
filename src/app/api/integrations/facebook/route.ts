@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json()
-  const { pixelId, accessToken, catalogId, trackPageViews, trackProductViews, trackWhatsAppClicks } = body as Record<string, unknown>
+  const { pixelId, accessToken, catalogId, catalogEnabled, trackPageViews, trackProductViews, trackWhatsAppClicks } = body as Record<string, unknown>
 
   // Build update data — only include provided fields
   const updateData: Record<string, unknown> = {}
@@ -81,6 +81,16 @@ export async function POST(request: NextRequest) {
     updateData.facebookCatalogId = catalogId.trim() || null
   }
 
+  if (typeof catalogEnabled === 'boolean') {
+    updateData.catalogEnabled = catalogEnabled
+    // If enabling catalog, count the products
+    if (catalogEnabled) {
+      const count = await db.product.count({ where: { shopId, isAvailable: true } })
+      updateData.catalogProductCount = count
+      updateData.catalogLastSync = new Date()
+    }
+  }
+
   if (typeof trackPageViews === 'boolean') updateData.trackPageViews = trackPageViews
   if (typeof trackProductViews === 'boolean') updateData.trackProductViews = trackProductViews
   if (typeof trackWhatsAppClicks === 'boolean') updateData.trackWhatsAppClicks = trackWhatsAppClicks
@@ -95,6 +105,10 @@ export async function POST(request: NextRequest) {
     select: {
       facebookPixelId: true,
       facebookCatalogId: true,
+      facebookConnected: true,
+      facebookPageName: true,
+      catalogEnabled: true,
+      catalogProductCount: true,
       trackPageViews: true,
       trackProductViews: true,
       trackWhatsAppClicks: true,

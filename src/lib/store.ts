@@ -72,9 +72,14 @@ export interface Shop {
   contactFormSubmits?: number
   pageViews?: number
   // Facebook Integrations
+  facebookConnected?: boolean
+  facebookPageId?: string
+  facebookPageName?: string
   facebookPixelId?: string
-  facebookAccessToken?: string
   facebookCatalogId?: string
+  catalogEnabled?: boolean
+  catalogLastSync?: string
+  catalogProductCount?: number
   trackPageViews?: boolean
   trackProductViews?: boolean
   trackWhatsAppClicks?: boolean

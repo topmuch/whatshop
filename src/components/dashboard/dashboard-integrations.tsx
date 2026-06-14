@@ -10,8 +10,6 @@ import {
   CardDescription,
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { Separator } from '@/components/ui/separator'
@@ -23,22 +21,24 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { FacebookStatus } from '@/components/integrations/facebook-status'
 import {
   Facebook,
   BarChart3,
   Music2,
   MessageCircle,
   ArrowLeft,
+  ArrowRight,
   Loader2,
   CheckCircle2,
-  XCircle,
   Copy,
-  Eye,
-  EyeOff,
   ExternalLink,
-  Plug,
-  Activity,
   RefreshCw,
+  ShoppingBag,
+  Radio,
+  Rss,
+  MessageSquare,
+  Store,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -46,718 +46,661 @@ import { toast } from 'sonner'
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
 
-type IntegrationsView = 'hub' | 'facebook'
+type View = 'hub' | 'wizard' | 'catalog'
 
-interface FacebookEvent {
+interface CatalogProduct {
   id: string
-  eventName: string
-  source: 'PIXEL' | 'CAPI' | 'BOTH'
-  status: 'sent' | 'delivered' | 'failed'
-  createdAt: string
-}
-
-interface FacebookSettingsResponse {
-  pixelId?: string
-  accessToken?: string
-  catalogId?: string
-  trackPageViews?: boolean
-  trackProductViews?: boolean
-  trackWhatsAppClicks?: boolean
-  events?: FacebookEvent[]
-  tokenStatus?: 'valid' | 'invalid'
+  name: string
+  price: number
+  image?: string
+  status: 'synced' | 'error' | 'pending'
 }
 
 /* ------------------------------------------------------------------ */
 /*  Integration card definitions                                       */
 /* ------------------------------------------------------------------ */
 
-interface IntegrationCard {
-  id: string
-  name: string
-  description: string
-  icon: React.ReactNode
-  connected: boolean
-  available: boolean
-  configurable?: IntegrationsView
+const INTEGRATIONS = [
+  {
+    id: 'facebook',
+    name: 'Facebook & Instagram',
+    description: 'Synchronisez vos produits et trackez vos publicités',
+    icon: <Facebook className="size-6" />,
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-50 dark:bg-blue-950/30',
+  },
+  {
+    id: 'google',
+    name: 'Google Analytics',
+    description: 'Suivez le trafic de votre boutique',
+    icon: <BarChart3 className="size-6" />,
+    color: 'text-orange-600',
+    bgColor: 'bg-orange-50 dark:bg-orange-950/30',
+    comingSoon: true,
+  },
+  {
+    id: 'tiktok',
+    name: 'TikTok Shop',
+    description: 'Vendez sur TikTok',
+    icon: <Music2 className="size-6" />,
+    color: 'text-pink-600',
+    bgColor: 'bg-pink-50 dark:bg-pink-950/30',
+    comingSoon: true,
+  },
+  {
+    id: 'email',
+    name: 'Email Marketing',
+    description: 'Newsletters et campagnes email',
+    icon: <MessageSquare className="size-6" />,
+    color: 'text-purple-600',
+    bgColor: 'bg-purple-50 dark:bg-purple-950/30',
+    comingSoon: true,
+  },
+]
+
+/* ------------------------------------------------------------------ */
+/*  Helpers                                                            */
+/* ------------------------------------------------------------------ */
+
+const BASE_URL = typeof window !== 'undefined'
+  ? (process.env.NEXT_PUBLIC_BASE_URL || 'https://boutiko.pro')
+  : 'https://boutiko.pro'
+
+function timeAgo(dateStr?: string | null): string {
+  if (!dateStr) return 'Jamais'
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const mins = Math.floor(diff / 60_000)
+  if (mins < 1) return "À l'instant"
+  if (mins < 60) return `Il y a ${mins} min`
+  const hours = Math.floor(mins / 60)
+  if (hours < 24) return `Il y a ${hours}h`
+  const days = Math.floor(hours / 24)
+  return `Il y a ${days}j`
 }
 
-/* ------------------------------------------------------------------ */
-/*  Component                                                          */
-/* ------------------------------------------------------------------ */
+/* ================================================================== */
+/*  HUB VIEW — All integrations                                       */
+/* ================================================================== */
 
-export function DashboardIntegrations() {
+function HubView({ onOpen }: { onOpen: (id: string) => void }) {
   const shop = useAppStore((s) => s.shop)
 
-  /* ----- View state ----- */
-  const [view, setView] = useState<IntegrationsView>('hub')
-
-  /* ----- Facebook config state ----- */
-  const [pixelId, setPixelId] = useState('')
-  const [accessToken, setAccessToken] = useState('')
-  const [showToken, setShowToken] = useState(false)
-  const [trackPageViews, setTrackPageViews] = useState(true)
-  const [trackProductViews, setTrackProductViews] = useState(true)
-  const [trackWhatsAppClicks, setTrackWhatsAppClicks] = useState(true)
-
-  /* ----- Loading states ----- */
-  const [savingPixel, setSavingPixel] = useState(false)
-  const [testingPixel, setTestingPixel] = useState(false)
-  const [testingToken, setTestingToken] = useState(false)
-  const [loadingEvents, setLoadingEvents] = useState(false)
-  const [savingSettings, setSavingSettings] = useState(false)
-
-  /* ----- Data states ----- */
-  const [events, setEvents] = useState<FacebookEvent[]>([])
-  const [tokenStatus, setTokenStatus] = useState<'valid' | 'invalid' | null>(null)
-
-  /* ----- Initialize from shop data ----- */
-  useEffect(() => {
-    if (shop) {
-      setPixelId(shop.facebookPixelId || '')
-      setAccessToken(shop.facebookAccessToken || '')
-      setTrackPageViews(shop.trackPageViews ?? true)
-      setTrackProductViews(shop.trackProductViews ?? true)
-      setTrackWhatsAppClicks(shop.trackWhatsAppClicks ?? true)
-    }
-  }, [shop])
-
-  /* ----- Fetch events and token status on entering facebook view ----- */
-  const loadFacebookData = useCallback(async () => {
-    setLoadingEvents(true)
-    try {
-      const res = await fetch('/api/integrations/facebook')
-      if (!res.ok) throw new Error('Erreur de chargement')
-      const data: FacebookSettingsResponse = await res.json()
-      setEvents(data.events || [])
-      setTokenStatus(data.tokenStatus || null)
-    } catch {
-      toast.error('Impossible de charger les données Facebook')
-    } finally {
-      setLoadingEvents(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (view === 'facebook') {
-      loadFacebookData()
-    }
-  }, [view, loadFacebookData])
-
-  /* ----- Integration cards ----- */
-  const integrations: IntegrationCard[] = [
-    {
-      id: 'facebook',
-      name: 'Facebook',
-      description: 'Pixel, Conversions API (CAPI) et catalogue produits',
-      icon: <Facebook className="h-6 w-6" />,
-      connected: !!shop?.facebookPixelId,
-      available: true,
-      configurable: 'facebook',
-    },
-    {
-      id: 'google-analytics',
-      name: 'Google Analytics',
-      description: 'Suivi de trafic et statistiques avancées',
-      icon: <BarChart3 className="h-6 w-6" />,
-      connected: false,
-      available: false,
-    },
-    {
-      id: 'tiktok-pixel',
-      name: 'TikTok Pixel',
-      description: 'Suivi des conversions et retargeting TikTok',
-      icon: <Music2 className="h-6 w-6" />,
-      connected: false,
-      available: false,
-    },
-    {
-      id: 'whatsapp-api',
-      name: 'WhatsApp Business API',
-      description: 'Messages automatisés et API WhatsApp Business',
-      icon: <MessageCircle className="h-6 w-6" />,
-      connected: false,
-      available: false,
-    },
-  ]
-
-  /* ----- Save pixel settings ----- */
-  const handleSavePixel = async () => {
-    if (!pixelId.trim()) {
-      toast.error('Veuillez entrer un Pixel ID')
-      return
-    }
-    setSavingPixel(true)
-    try {
-      const res = await fetch('/api/integrations/facebook', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          pixelId: pixelId.trim(),
-          trackPageViews,
-          trackProductViews,
-          trackWhatsAppClicks,
-        }),
-      })
-      if (!res.ok) throw new Error('Erreur lors de la sauvegarde')
-      toast.success('Paramètres du Pixel sauvegardés')
-    } catch {
-      toast.error("Impossible de sauvegarder les paramètres du Pixel")
-    } finally {
-      setSavingPixel(false)
-    }
-  }
-
-  /* ----- Test pixel ----- */
-  const handleTestPixel = async () => {
-    if (!pixelId.trim()) {
-      toast.error('Veuillez entrer un Pixel ID avant de tester')
-      return
-    }
-    setTestingPixel(true)
-    try {
-      const res = await fetch('/api/integrations/facebook', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'test-pixel', pixelId: pixelId.trim() }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Erreur lors du test')
-      toast.success('Pixel testé avec succès ! Un événement test a été envoyé.')
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Erreur lors du test du Pixel')
-    } finally {
-      setTestingPixel(false)
-    }
-  }
-
-  /* ----- Save CAPI token ----- */
-  const handleSaveToken = async () => {
-    setSavingSettings(true)
-    try {
-      const res = await fetch('/api/integrations/facebook', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accessToken: accessToken.trim() }),
-      })
-      if (!res.ok) throw new Error('Erreur lors de la sauvegarde')
-      toast.success('Token d\'accès sauvegardé')
-    } catch {
-      toast.error("Impossible de sauvegarder le token d'accès")
-    } finally {
-      setSavingSettings(false)
-    }
-  }
-
-  /* ----- Test token ----- */
-  const handleTestToken = async () => {
-    if (!accessToken.trim()) {
-      toast.error('Veuillez entrer un token avant de tester')
-      return
-    }
-    setTestingToken(true)
-    try {
-      const res = await fetch('/api/integrations/facebook', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'validate-token', accessToken: accessToken.trim() }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Erreur lors du test')
-      setTokenStatus(data.valid ? 'valid' : 'invalid')
-      toast.success(data.valid ? 'Token valide — Conversions API connecté' : 'Token invalide')
-    } catch (err) {
-      setTokenStatus('invalid')
-      toast.error(err instanceof Error ? err.message : 'Token invalide')
-    } finally {
-      setTestingToken(false)
-    }
-  }
-
-  /* ----- Copy catalog feed URL ----- */
-  const handleCopyFeedUrl = () => {
-    const feedUrl = `https://boutiko.pro/api/catalog/${shop?.id}/route.ts`
-    navigator.clipboard.writeText(feedUrl).then(() => {
-      toast.success('URL du flux copiée dans le presse-papiers')
-    }).catch(() => {
-      toast.error('Impossible de copier l\'URL')
-    })
-  }
-
-  /* ----- Render: Integrations Hub ----- */
-  const renderHub = () => (
+  return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
-        <div className="flex items-center gap-3 mb-2">
-          <Plug className="h-6 w-6 text-primary" />
-          <h1 className="text-2xl font-bold tracking-tight">Intégrations</h1>
-        </div>
-        <p className="text-muted-foreground text-sm">
-          Connectez vos outils marketing et analytique pour suivre vos performances.
+        <h2 className="text-xl font-bold">Intégrations</h2>
+        <p className="text-sm text-muted-foreground mt-1">
+          Connectez vos outils marketing pour booster vos ventes.
         </p>
       </div>
 
-      {/* Integration Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {integrations.map((integration) => (
-          <Card
-            key={integration.id}
-            className="relative overflow-hidden hover:shadow-md transition-shadow"
-          >
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-start gap-4">
-                  {/* Icon */}
-                  <div
-                    className={`flex items-center justify-center h-12 w-12 rounded-xl shrink-0 ${
-                      integration.id === 'facebook'
-                        ? 'bg-[#1877F2]/10 text-[#1877F2]'
-                        : 'bg-muted text-muted-foreground'
-                    }`}
-                  >
-                    {integration.icon}
-                  </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        {INTEGRATIONS.map((item) => {
+          const isFacebook = item.id === 'facebook'
+          const isConnected = isFacebook && !!shop?.facebookConnected
 
-                  {/* Info */}
-                  <div className="space-y-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-base">{integration.name}</h3>
-                      {integration.connected && (
-                        <Badge className="bg-green-100 text-green-700 hover:bg-green-100 text-xs">
-                          Connecté
+          return (
+            <Card key={item.id} className={`relative overflow-hidden ${item.comingSoon ? 'opacity-60' : ''}`}>
+              <CardContent className="p-5">
+                <div className="flex items-start gap-4">
+                  <div className={`rounded-xl p-3 ${item.bgColor}`}>
+                    <span className={item.color}>{item.icon}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-semibold text-sm">{item.name}</h3>
+                      {item.comingSoon && (
+                        <Badge variant="secondary" className="text-[10px] px-1.5">Bientôt</Badge>
+                      )}
+                      {isConnected && (
+                        <Badge className="bg-green-100 text-green-700 text-[10px] px-1.5">
+                          <CheckCircle2 className="size-3 mr-0.5" />Connecté
                         </Badge>
                       )}
                     </div>
-                    <p className="text-muted-foreground text-sm leading-relaxed">
-                      {integration.description}
-                    </p>
+                    <p className="text-xs text-muted-foreground mb-3">{item.description}</p>
+
+                    {isFacebook && !isConnected && (
+                      <Button size="sm" className="h-8 text-xs" onClick={() => onOpen('facebook')}>
+                        <Facebook className="size-3.5 mr-1.5" />
+                        Connecter
+                      </Button>
+                    )}
+
+                    {isFacebook && isConnected && (
+                      <div className="space-y-2">
+                        <FacebookStatus />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 text-xs"
+                          onClick={() => onOpen('facebook')}
+                        >
+                          Voir le dashboard
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+/* ================================================================== */
+/*  3-STEP WIZARD VIEW                                                */
+/* ================================================================== */
+
+function WizardView({ onBack }: { onBack: () => void }) {
+  const shop = useAppStore((s) => s.shop)
+  const [step, setStep] = useState(1)
+  const [loading, setLoading] = useState(false)
+  const [catalogEnabled, setCatalogEnabled] = useState(false)
+  const [syncing, setSyncing] = useState(false)
+
+  // Detect if user just returned from OAuth
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('fb_success')) {
+      toast.success(`Page "${params.get('fb_page') || 'Facebook'}" connectée !`)
+      // Clean URL
+      window.history.replaceState({}, '', '/dashboard')
+      setStep(2) // Jump to catalog config
+    }
+    if (params.get('fb_error')) {
+      toast.error('Erreur de connexion Facebook. Réessayez.')
+      window.history.replaceState({}, '', '/dashboard')
+    }
+  }, [])
+
+  const handleOAuth = async () => {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/facebook/oauth')
+      if (res.redirected) {
+        window.location.href = res.url
+      } else {
+        const data = await res.json()
+        toast.error(data.error || 'Erreur de connexion')
+        setLoading(false)
+      }
+    } catch {
+      toast.error('Erreur réseau')
+      setLoading(false)
+    }
+  }
+
+  const handleActivateCatalog = async () => {
+    if (!shop?.id) return
+    setLoading(true)
+    try {
+      const res = await fetch('/api/integrations/facebook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ catalogEnabled: true }),
+      })
+      if (res.ok) {
+        setCatalogEnabled(true)
+        toast.success('Catalogue activé !')
+        setStep(3)
+      } else {
+        const data = await res.json()
+        toast.error(data.error || 'Erreur')
+      }
+    } catch {
+      toast.error('Erreur réseau')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleForceSync = async () => {
+    if (!shop?.id) return
+    setSyncing(true)
+    try {
+      const res = await fetch('/api/facebook/webhook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ shopId: shop.id }),
+      })
+      if (res.ok) {
+        toast.success('Synchronisation lancée !')
+        window.location.reload()
+      }
+    } catch {
+      toast.error('Erreur de synchronisation')
+    } finally {
+      setSyncing(false)
+    }
+  }
+
+  const catalogUrl = shop?.id ? `${BASE_URL}/api/catalog/${shop.id}` : ''
+  const productCount = shop?.catalogProductCount ?? 0
+
+  // ── Step indicators ──
+  const steps = [
+    { num: 1, label: 'Connexion' },
+    { num: 2, label: 'Catalogue' },
+    { num: 3, label: 'WhatsApp' },
+  ]
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onBack}>
+          <ArrowLeft className="size-4" />
+        </Button>
+        <div>
+          <h2 className="text-xl font-bold flex items-center gap-2">
+            <Facebook className="size-5 text-blue-600" />
+            Intégration Facebook
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Connectez en 3 étapes simples
+          </p>
+        </div>
+      </div>
+
+      {/* Step indicator */}
+      <div className="flex items-center gap-2">
+        {steps.map((s, i) => (
+          <div key={s.num} className="flex items-center gap-2">
+            <div
+              className={`flex items-center justify-center size-8 rounded-full text-sm font-bold transition-colors ${
+                step >= s.num
+                  ? 'bg-emerald-500 text-white'
+                  : 'bg-gray-200 dark:bg-gray-700 text-gray-500'
+              }`}
+            >
+              {step > s.num ? '✓' : s.num}
+            </div>
+            <span className={`text-xs font-medium hidden sm:inline ${step >= s.num ? 'text-foreground' : 'text-muted-foreground'}`}>
+              {s.label}
+            </span>
+            {i < steps.length - 1 && (
+              <div className={`w-8 sm:w-16 h-0.5 ${step > s.num ? 'bg-emerald-500' : 'bg-gray-200 dark:bg-gray-700'}`} />
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* ──────────────────────────── ÉTAPE 1 ──────────────────────────── */}
+      {step === 1 && (
+        <Card>
+          <CardContent className="p-6 space-y-6">
+            <div className="text-center space-y-3">
+              <div className="mx-auto w-16 h-16 rounded-2xl bg-blue-100 dark:bg-blue-950/30 flex items-center justify-center">
+                <Facebook className="size-8 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold">Connectez votre page Facebook</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Nous allons récupérer les informations de votre page Facebook.
+                  Aucune publication ne sera faite sans votre accord.
+                </p>
+              </div>
+            </div>
+
+            {shop?.facebookConnected ? (
+              <div className="bg-green-50 dark:bg-green-950/20 rounded-xl p-4 space-y-2">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="size-5 text-green-600" />
+                  <span className="font-semibold text-green-700 dark:text-green-400">Page connectée</span>
+                </div>
+                <p className="text-sm text-green-700/80 dark:text-green-400/80 pl-7">
+                  {shop.facebookPageName}
+                </p>
+              </div>
+            ) : (
+              <Button
+                className="w-full h-12 text-base bg-blue-600 hover:bg-blue-700"
+                onClick={handleOAuth}
+                disabled={loading}
+              >
+                {loading ? (
+                  <Loader2 className="size-4 mr-2 animate-spin" />
+                ) : (
+                  <Facebook className="size-4 mr-2" />
+                )}
+                Se connecter avec Facebook
+              </Button>
+            )}
+
+            {(shop?.facebookConnected || catalogEnabled) && (
+              <Button
+                variant="outline"
+                className="w-full h-10"
+                onClick={() => setStep(2)}
+              >
+                Continuer <ArrowRight className="size-4 ml-2" />
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ──────────────────────────── ÉTAPE 2 ──────────────────────────── */}
+      {step === 2 && (
+        <Card>
+          <CardContent className="p-6 space-y-6">
+            <div className="text-center space-y-3">
+              <div className="mx-auto w-16 h-16 rounded-2xl bg-amber-100 dark:bg-amber-950/30 flex items-center justify-center">
+                <Rss className="size-8 text-amber-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold">Configurez le catalogue</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Vos produits seront visibles sur Facebook dans ~2 heures.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {/* Catalog toggle */}
+              <div className="flex items-center justify-between rounded-lg border p-4">
+                <div>
+                  <p className="font-medium text-sm">Synchroniser tous les produits</p>
+                  <p className="text-xs text-muted-foreground">
+                    Tous les produits actifs seront envoyés sur Facebook
+                  </p>
+                </div>
+                <Switch
+                  checked={catalogEnabled}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      setCatalogEnabled(true)
+                    }
+                  }}
+                />
+              </div>
+
+              {catalogEnabled && (
+                <div className="bg-amber-50 dark:bg-amber-950/20 rounded-xl p-4 text-sm space-y-2">
+                  <div className="flex items-center gap-2">
+                    <ShoppingBag className="size-4 text-amber-600" />
+                    <span className="font-medium">{productCount} produits seront synchronisés</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Le flux XML sera disponible à l&apos;adresse ci-dessous.
+                  </p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <code className="flex-1 text-xs bg-white dark:bg-gray-800 rounded px-3 py-2 truncate border">
+                      {catalogUrl}
+                    </code>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 text-xs shrink-0"
+                      onClick={() => {
+                        navigator.clipboard.writeText(catalogUrl)
+                        toast.success('URL copiée !')
+                      }}
+                    >
+                      <Copy className="size-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-3">
+              <Button variant="outline" className="flex-1 h-10" onClick={() => setStep(1)}>
+                <ArrowLeft className="size-4 mr-2" /> Retour
+              </Button>
+              <Button
+                className="flex-1 h-10"
+                disabled={!catalogEnabled || loading}
+                onClick={handleActivateCatalog}
+              >
+                {loading ? <Loader2 className="size-4 mr-2 animate-spin" /> : null}
+                Activer la synchronisation
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ──────────────────────────── ÉTAPE 3 ──────────────────────────── */}
+      {step === 3 && (
+        <Card>
+          <CardContent className="p-6 space-y-6">
+            <div className="text-center space-y-3">
+              <div className="mx-auto w-16 h-16 rounded-2xl bg-green-100 dark:bg-green-950/30 flex items-center justify-center">
+                <MessageCircle className="size-8 text-green-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold">Commandes via WhatsApp</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Vos clients seront redirigés vers WhatsApp pour commander.
+                </p>
+              </div>
+            </div>
+
+            {/* WhatsApp info */}
+            <div className="space-y-3">
+              <div className="rounded-lg border p-4 space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="size-10 rounded-full bg-green-100 dark:bg-green-950/30 flex items-center justify-center">
+                    <MessageCircle className="size-5 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">Numéro WhatsApp</p>
+                    <p className="text-lg font-bold">{shop?.whatsapp || 'Non configuré'}</p>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Message automatique envoyé au vendeur :</p>
+                  <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3 text-sm italic">
+                    &quot;Bonjour, je suis intéressé(e) par : &quot;[PRODUIT]&quot; à [PRIX] FCFA
+                    <br />(Vu sur Facebook)&quot;
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* Footer: Action buttons */}
-              <div className="mt-4 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {!integration.available && (
-                    <Badge variant="secondary" className="text-xs">
-                      Bientôt disponible
-                    </Badge>
-                  )}
-                </div>
-
-                {integration.available && integration.configurable && (
-                  <Button
-                    size="sm"
-                    onClick={() => setView(integration.configurable!)}
-                    className="gap-2"
-                  >
-                    Configurer
-                    <ExternalLink className="h-3.5 w-3.5" />
-                  </Button>
-                )}
-
-                {!integration.available && (
-                  <Button size="sm" variant="outline" disabled>
-                    Configurer
-                  </Button>
-                )}
+            {/* Final activation */}
+            <div className="bg-green-50 dark:bg-green-950/20 rounded-xl p-4 space-y-2">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="size-5 text-green-600" />
+                <span className="font-bold text-green-700 dark:text-green-400">
+                  Synchronisation active
+                </span>
               </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              <div className="grid grid-cols-2 gap-2 pl-7 text-sm">
+                <span className="text-muted-foreground">Dernière synchro :</span>
+                <span className="font-medium">{timeAgo(shop?.catalogLastSync as string)}</span>
+                <span className="text-muted-foreground">Produits synchronisés :</span>
+                <span className="font-medium">{productCount}</span>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <Button variant="outline" className="flex-1 h-10" onClick={onBack}>
+                Terminer
+              </Button>
+              <Button
+                variant="outline"
+                className="flex-1 h-10"
+                onClick={handleForceSync}
+                disabled={syncing}
+              >
+                {syncing ? <Loader2 className="size-4 mr-2 animate-spin" /> : <RefreshCw className="size-4 mr-2" />}
+                Forcer une synchro
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
+}
 
-  /* ----- Render: Events Table ----- */
-  const renderEventsTable = () => {
-    if (loadingEvents) {
-      return (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          <span className="ml-2 text-muted-foreground text-sm">Chargement des événements…</span>
-        </div>
-      )
-    }
+/* ================================================================== */
+/*  CATALOG STATUS VIEW                                               */
+/* ================================================================== */
 
-    if (events.length === 0) {
-      return (
-        <div className="text-center py-12">
-          <Activity className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
-          <p className="text-muted-foreground text-sm">Aucun événement récent</p>
-          <p className="text-muted-foreground/60 text-xs mt-1">
-            Les événements Facebook apparaîtront ici une fois le Pixel ou la CAPI configurés.
-          </p>
-        </div>
-      )
-    }
+function CatalogStatusView({ onBack }: { onBack: () => void }) {
+  const shop = useAppStore((s) => s.shop)
+  const [products, setProducts] = useState<CatalogProduct[]>([])
+  const [loading, setLoading] = useState(true)
 
-    return (
-      <div className="max-h-96 overflow-y-auto rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="text-xs">Date</TableHead>
-              <TableHead className="text-xs">Événement</TableHead>
-              <TableHead className="text-xs">Source</TableHead>
-              <TableHead className="text-xs">Statut</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {events.map((event) => (
-              <TableRow key={event.id}>
-                <TableCell className="text-xs text-muted-foreground">
-                  {new Date(event.createdAt).toLocaleDateString('fr-FR', {
-                    day: '2-digit',
-                    month: 'short',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </TableCell>
-                <TableCell className="text-xs font-medium">{event.eventName}</TableCell>
-                <TableCell>
-                  <Badge
-                    variant="secondary"
-                    className={`text-xs ${
-                      event.source === 'CAPI'
-                        ? 'bg-blue-50 text-blue-700'
-                        : event.source === 'PIXEL'
-                          ? 'bg-purple-50 text-purple-700'
-                          : 'bg-green-50 text-green-700'
-                    }`}
-                  >
-                    {event.source}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  {event.status === 'delivered' || event.status === 'sent' ? (
-                    <span className="flex items-center gap-1 text-xs text-green-600">
-                      <CheckCircle2 className="h-3.5 w-3.5" />
-                      Livré
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-1 text-xs text-red-500">
-                      <XCircle className="h-3.5 w-3.5" />
-                      Échoué
-                    </span>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    )
-  }
+  useEffect(() => {
+    if (!shop?.id) return
+    fetch(`/api/catalog/${shop.id}/json`)
+      .then((r) => r.json())
+      .then((data) => {
+        setProducts(
+          (data.items || []).map((p: { id: string; name: string; price: number; image?: string }) => ({
+            id: p.id,
+            name: p.name,
+            price: p.price,
+            image: p.image,
+            status: 'synced' as const,
+          }))
+        )
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [shop?.id])
 
-  /* ----- Render: Facebook Configuration ----- */
-  const renderFacebookConfig = () => {
-    const catalogFeedUrl = `https://boutiko.pro/api/catalog/${shop?.id}/route.ts`
+  const catalogUrl = shop?.id ? `${BASE_URL}/api/catalog/${shop.id}` : ''
 
-    return (
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setView('hub')}
-            className="gap-2 shrink-0"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Retour
-          </Button>
-          <Separator orientation="vertical" className="h-6" />
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-[#1877F2]/10 text-[#1877F2] shrink-0">
-              <Facebook className="h-5 w-5" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-xl font-bold tracking-tight">Configuration Facebook</h1>
-              <p className="text-muted-foreground text-sm truncate">
-                Pixel, Conversions API et Catalogue
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* ─── Section 1: Facebook Pixel ─── */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Facebook Pixel</CardTitle>
-            <CardDescription>
-              Suivez les actions de vos visiteurs sur votre boutique avec le Meta Pixel.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            {/* Pixel ID */}
-            <div className="space-y-2">
-              <Label htmlFor="pixel-id">Pixel ID</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  id="pixel-id"
-                  placeholder="Ex: 123456789012345"
-                  value={pixelId}
-                  onChange={(e) => setPixelId(e.target.value)}
-                  className="max-w-sm"
-                />
-                {pixelId && (
-                  <Badge
-                    className="bg-green-100 text-green-700 hover:bg-green-100 text-xs shrink-0"
-                  >
-                    <CheckCircle2 className="h-3 w-3 mr-1" />
-                    Configuré
-                  </Badge>
-                )}
-              </div>
-              <a
-                href="https://www.facebook.com/business/help/1717878534939900"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-primary hover:underline inline-flex items-center gap-1"
-              >
-                Comment trouver mon Pixel ID ?
-                <ExternalLink className="h-3 w-3" />
-              </a>
-            </div>
-
-            {/* Toggle switches */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <Label htmlFor="toggle-page-views" className="text-sm">Track Page Views</Label>
-                  <p className="text-xs text-muted-foreground">Suivre les vues de pages de la boutique</p>
-                </div>
-                <Switch
-                  id="toggle-page-views"
-                  checked={trackPageViews}
-                  onCheckedChange={setTrackPageViews}
-                />
-              </div>
-              <Separator />
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <Label htmlFor="toggle-product-views" className="text-sm">Track Product Views</Label>
-                  <p className="text-xs text-muted-foreground">Suivre les vues de fiches produits</p>
-                </div>
-                <Switch
-                  id="toggle-product-views"
-                  checked={trackProductViews}
-                  onCheckedChange={setTrackProductViews}
-                />
-              </div>
-              <Separator />
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <Label htmlFor="toggle-wa-clicks" className="text-sm">Track WhatsApp Clicks</Label>
-                  <p className="text-xs text-muted-foreground">Suivre les clics sur le bouton WhatsApp</p>
-                </div>
-                <Switch
-                  id="toggle-wa-clicks"
-                  checked={trackWhatsAppClicks}
-                  onCheckedChange={setTrackWhatsAppClicks}
-                />
-              </div>
-            </div>
-
-            {/* Action buttons */}
-            <div className="flex flex-wrap items-center gap-3 pt-2">
-              <Button onClick={handleSavePixel} disabled={savingPixel || !pixelId.trim()} className="gap-2">
-                {savingPixel ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : null}
-                Sauvegarder
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleTestPixel}
-                disabled={testingPixel || !pixelId.trim()}
-                className="gap-2"
-              >
-                {testingPixel ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : null}
-                Tester le Pixel
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* ─── Section 2: Conversions API (CAPI) ─── */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Conversions API (CAPI)</CardTitle>
-            <CardDescription>
-              Envoyez les événements directement depuis le serveur pour plus de fiabilité et de précision.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            {/* Access token */}
-            <div className="space-y-2">
-              <Label htmlFor="access-token">Token d&apos;accès Facebook</Label>
-              <div className="relative max-w-sm">
-                <Input
-                  id="access-token"
-                  type={showToken ? 'text' : 'password'}
-                  placeholder="Ex: EAAxxxxx..."
-                  value={accessToken}
-                  onChange={(e) => setAccessToken(e.target.value)}
-                  className="pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowToken(!showToken)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                  aria-label={showToken ? 'Masquer le token' : 'Afficher le token'}
-                >
-                  {showToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-              <a
-                href="https://developers.facebook.com/docs/marketing-api/conversions-api/get-started"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-primary hover:underline inline-flex items-center gap-1"
-              >
-                Comment générer un token permanent ?
-                <ExternalLink className="h-3 w-3" />
-              </a>
-            </div>
-
-            {/* Token status */}
-            {tokenStatus && (
-              <div className="flex items-center gap-2">
-                {tokenStatus === 'valid' ? (
-                  <Badge className="bg-green-100 text-green-700 hover:bg-green-100 gap-1">
-                    <CheckCircle2 className="h-3.5 w-3.5" />
-                    Connecté
-                  </Badge>
-                ) : (
-                  <Badge className="bg-red-100 text-red-700 hover:bg-red-100 gap-1">
-                    <XCircle className="h-3.5 w-3.5" />
-                    Non connecté
-                  </Badge>
-                )}
-              </div>
-            )}
-
-            {/* Action buttons */}
-            <div className="flex flex-wrap items-center gap-3 pt-2">
-              <Button onClick={handleSaveToken} disabled={savingSettings || !accessToken.trim()} className="gap-2">
-                {savingSettings ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : null}
-                Sauvegarder le token
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleTestToken}
-                disabled={testingToken || !accessToken.trim()}
-                className="gap-2"
-              >
-                {testingToken ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : null}
-                Tester la connexion
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* ─── Section 3: Catalog Produits ─── */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Catalogue Produits</CardTitle>
-            <CardDescription>
-              Synchronisez automatiquement vos produits avec votre catalogue Facebook.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Catalog ID */}
-            {shop?.facebookCatalogId && (
-              <div className="space-y-2">
-                <Label>Catalogue ID</Label>
-                <Input value={shop.facebookCatalogId} readOnly className="max-w-sm bg-muted" />
-              </div>
-            )}
-
-            {/* Feed URL */}
-            <div className="space-y-2">
-              <Label>URL du flux de produits</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  value={catalogFeedUrl}
-                  readOnly
-                  className="font-mono text-xs bg-muted"
-                />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={handleCopyFeedUrl}
-                  className="shrink-0"
-                  aria-label="Copier l'URL du flux"
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-
-            {/* Instructions */}
-            <div className="rounded-lg border bg-muted/50 p-4 space-y-2">
-              <p className="text-sm font-medium">Comment configurer :</p>
-              <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
-                <li>
-                  Copiez l&apos;URL du flux ci-dessus et collez-la dans votre{' '}
-                  <a
-                    href="https://www.facebook.com/business/help/1253565828232669"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary hover:underline"
-                  >
-                    Catalogue Facebook
-                    <ExternalLink className="h-3 w-3 inline ml-0.5" />
-                  </a>
-                  .
-                </li>
-                <li>Le flux est mis à jour automatiquement à chaque modification de vos produits.</li>
-                <li>Utilisez le format de flux XML pour une meilleure compatibilité.</li>
-              </ol>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* ─── Section 4: Événements Récents ─── */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <CardTitle className="text-base">Événements Récents</CardTitle>
-                <CardDescription>
-                  Historique des événements envoyés via le Pixel et la Conversions API.
-                </CardDescription>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={loadFacebookData}
-                className="gap-2 shrink-0"
-              >
-                <RefreshCw className={`h-3.5 w-3.5 ${loadingEvents ? 'animate-spin' : ''}`} />
-                Actualiser
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>{renderEventsTable()}</CardContent>
-        </Card>
-      </div>
-    )
-  }
-
-  /* ----- Main render ----- */
   return (
-    <div className="w-full max-w-5xl mx-auto">
-      {view === 'hub' ? renderHub() : renderFacebookConfig()}
+    <div className="space-y-6">
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onBack}>
+          <ArrowLeft className="size-4" />
+        </Button>
+        <div>
+          <h2 className="text-xl font-bold">Statut du catalogue</h2>
+          <p className="text-sm text-muted-foreground">Suivez la synchronisation de vos produits</p>
+        </div>
+      </div>
+
+      {/* Status summary */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <StatusCard label="Statut" value={shop?.catalogEnabled ? 'Actif' : 'Inactif'} good={!!shop?.catalogEnabled} />
+            <StatusCard label="Dernière synchro" value={timeAgo(shop?.catalogLastSync as string)} />
+            <StatusCard label="Produits" value={`${shop?.catalogProductCount ?? 0} synchronisés`} />
+            <StatusCard label="Prochaine synchro" value="Automatique (1h)" />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Catalog URL */}
+      <Card>
+        <CardContent className="p-4 space-y-3">
+          <p className="text-sm font-medium">URL du flux XML</p>
+          <div className="flex items-center gap-2">
+            <code className="flex-1 text-xs bg-muted rounded px-3 py-2 truncate border">
+              {catalogUrl}
+            </code>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 text-xs shrink-0"
+              onClick={() => {
+                navigator.clipboard.writeText(catalogUrl)
+                toast.success('URL copiée !')
+              }}
+            >
+              <Copy className="size-3.5 mr-1" /> Copier
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 text-xs shrink-0"
+              onClick={() => window.open(catalogUrl, '_blank')}
+            >
+              <ExternalLink className="size-3.5 mr-1" /> Ouvrir
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Products table */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Produits synchronisés</CardTitle>
+          <CardDescription>{products.length} produits dans le flux</CardDescription>
+        </CardHeader>
+        <CardContent className="p-0">
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="size-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : products.length === 0 ? (
+            <div className="text-center py-12 text-sm text-muted-foreground">
+              Aucun produit synchronisé
+            </div>
+          ) : (
+            <div className="max-h-96 overflow-y-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-12">Statut</TableHead>
+                    <TableHead>Produit</TableHead>
+                    <TableHead className="text-right">Prix</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {products.map((p) => (
+                    <TableRow key={p.id}>
+                      <TableCell>
+                        <CheckCircle2 className="size-4 text-green-500" />
+                      </TableCell>
+                      <TableCell className="font-medium text-sm">{p.name}</TableCell>
+                      <TableCell className="text-right text-sm">
+                        {Number(p.price).toLocaleString('fr-FR')} XOF
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   )
+}
+
+function StatusCard({ label, value, good }: { label: string; value: string; good?: boolean }) {
+  return (
+    <div className="space-y-0.5">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className={`text-sm font-semibold ${good ? 'text-green-600' : ''}`}>{value}</p>
+    </div>
+  )
+}
+
+/* ================================================================== */
+/*  MAIN EXPORT                                                        */
+/* ================================================================== */
+
+export function DashboardIntegrations() {
+  const [view, setView] = useState<View>('hub')
+
+  // If already connected, and user opens facebook, go straight to wizard step 2
+  const shop = useAppStore((s) => s.shop)
+  const handleOpen = useCallback((id: string) => {
+    if (id === 'facebook') {
+      setView(shop?.facebookConnected ? 'wizard' : 'wizard')
+    }
+  }, [shop?.facebookConnected])
+
+  if (view === 'wizard') return <WizardView onBack={() => setView('hub')} />
+  if (view === 'catalog') return <CatalogStatusView onBack={() => setView('hub')} />
+
+  return <HubView onOpen={handleOpen} />
 }

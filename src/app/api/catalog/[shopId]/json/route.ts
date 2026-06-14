@@ -1,16 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { generateWhatsAppLink } from '@/lib/whatsapp-link'
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://boutiko.pro'
 
 /**
- * Facebook Catalog JSON feed endpoint (alternative to XML).
- *
+ * Facebook Catalog JSON feed — with WhatsApp checkout_url.
  * GET /api/catalog/[shopId]/json
- *
- * Returns a JSON array of products compatible with
- * Facebook Commerce Manager and other platforms.
- * Cached for 1 hour.
  */
 export async function GET(
   _request: NextRequest,
@@ -19,13 +15,13 @@ export async function GET(
   try {
     const { shopId } = await params
 
-    // Fetch shop with products
     const shop = await db.shop.findUnique({
       where: { id: shopId, isActive: true },
       select: {
         id: true,
         name: true,
         slug: true,
+        whatsapp: true,
         products: {
           where: { isAvailable: true },
           select: {
@@ -39,9 +35,7 @@ export async function GET(
             images: true,
             stock: true,
             isAvailable: true,
-            category: {
-              select: { name: true },
-            },
+            category: { select: { name: true } },
           },
           orderBy: { createdAt: 'desc' },
         },
@@ -52,39 +46,41 @@ export async function GET(
       return NextResponse.json({ error: 'Boutique introuvable' }, { status: 404 })
     }
 
-    const shopUrl = `${BASE_URL}/boutique/${shop.slug}`
+    const shopUrl = `${BASE_URL}/${shop.slug}`
 
-    const catalog = {
-      name: shop.name,
-      url: shopUrl,
-      products: shop.products.map((product) => {
-        const images: string[] = product.images ? JSON.parse(product.images) : []
-        const mainImage = images[0] || product.image || ''
-        const description = product.shortDescription || product.description || product.name
-        const productUrl = product.slug ? `${shopUrl}?product=${product.slug}` : shopUrl
-        const availability = product.isAvailable && (product.stock === null || product.stock === undefined || product.stock > 0)
-          ? 'in stock'
-          : 'out of stock'
+    const items = shop.products.map((product) => {
+      const images: string[] = product.images ? JSON.parse(product.images) : []
+      const mainImage = images[0] || product.image || ''
+      const description = product.shortDescription || product.description || product.name
+      const productUrl = product.slug ? `${shopUrl}/p/${product.slug}` : shopUrl
+      const availability = product.isAvailable && (product.stock === null || product.stock === undefined || product.stock > 0)
+        ? 'in stock'
+        : 'out of stock'
 
-        return {
-          id: product.id,
-          title: product.name,
-          description,
-          link: productUrl,
-          image_link: mainImage,
-          price: `${product.price.toFixed(2)} XOF`,
-          availability,
-          condition: 'new',
-          brand: shop.name,
-          google_product_category: product.category?.name || '',
-        }
-      }),
-    }
+      return {
+        id: product.id,
+        title: product.name,
+        description,
+        link: productUrl,
+        image_link: mainImage,
+        price: `${product.price.toFixed(2)} XOF`,
+        availability,
+        condition: 'new',
+        brand: shop.name,
+        product_type: product.category?.name || '',
+        checkout_url: generateWhatsAppLink({
+          phoneNumber: shop.whatsapp,
+          productName: product.name,
+          productPrice: product.price,
+          productUrl,
+          source: 'facebook',
+        }),
+      }
+    })
 
-    return NextResponse.json(catalog, {
+    return NextResponse.json({ name: shop.name, url: shopUrl, items }, {
       headers: {
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET',
         'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=600',
       },
     })
@@ -94,5 +90,4 @@ export async function GET(
   }
 }
 
-// Enable static revalidation
 export const revalidate = 3600

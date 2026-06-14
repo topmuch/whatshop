@@ -50,6 +50,11 @@ export interface AuthShop {
   footerLinks?: string
   facebookPixelId?: string
   facebookCatalogId?: string
+  facebookConnected?: boolean
+  facebookPageId?: string
+  facebookPageName?: string
+  catalogEnabled?: boolean
+  catalogProductCount?: number
   trackPageViews?: boolean
   trackProductViews?: boolean
   trackWhatsAppClicks?: boolean
@@ -282,6 +287,11 @@ export function mapShopToAuthShop(shop: Record<string, unknown>): AuthShop {
     customColors: (shop.customColors as string) ?? '{}',
     facebookPixelId: (shop.facebookPixelId as string) ?? undefined,
     facebookCatalogId: (shop.facebookCatalogId as string) ?? undefined,
+    facebookConnected: shop.facebookConnected ?? false,
+    facebookPageId: (shop.facebookPageId as string) ?? undefined,
+    facebookPageName: (shop.facebookPageName as string) ?? undefined,
+    catalogEnabled: shop.catalogEnabled ?? false,
+    catalogProductCount: shop.catalogProductCount ?? 0,
     trackPageViews: shop.trackPageViews ?? true,
     trackProductViews: shop.trackProductViews ?? true,
     trackWhatsAppClicks: shop.trackWhatsAppClicks ?? true,

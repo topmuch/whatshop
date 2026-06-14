@@ -176,10 +176,18 @@ model Shop {
   contactFormSubmits    Int       @default(0)
   pageViews             Int       @default(0)
 
-  // Facebook Integrations
+  // Facebook Integrations (simplified)
+  facebookConnected     Boolean   @default(false)
+  facebookPageId        String?
+  facebookPageName      String?
   facebookPixelId       String?
-  facebookAccessToken   String?   // Encrypted - for Conversions API
+  facebookAccessToken   String?   // Encrypted — for Pixel + CAPI
   facebookCatalogId     String?   // Facebook Commerce Manager catalog ID
+
+  // Catalog sync configuration
+  catalogEnabled        Boolean   @default(false)
+  catalogLastSync       DateTime?
+  catalogProductCount   Int       @default(0)
 
   // Tracking configuration
   trackPageViews        Boolean   @default(true)
