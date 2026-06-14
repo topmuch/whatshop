@@ -45,6 +45,7 @@ import { useAppStore, type Product, type Category, type Shop } from '@/lib/store
 import { formatPrice, openWhatsApp } from '@/lib/shared'
 import {
   getThemeConfig,
+  getThemeWithCustomColors,
   getThemeTrustBadges,
   type ThemeConfig,
   type ElectroCardMode,
@@ -797,8 +798,8 @@ export function ElectroTemplate() {
   // ── Resolve theme config from sector ──
   const sector = publicShop?.sector
   const themeConfig = useMemo(
-    () => getThemeConfig(sector, 'electro'),
-    [sector]
+    () => getThemeWithCustomColors(sector, 'electro', publicShop?.customColors),
+    [sector, publicShop?.customColors]
   )
   const { colors, hero: heroConfig, cardMode, navLabels, showSearch, productsSectionTitle } = themeConfig
   const heroCtaText = themeConfig.heroCtaText

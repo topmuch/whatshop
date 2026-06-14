@@ -708,3 +708,55 @@ export function isElectroSector(sector: string | undefined | null): boolean {
   const config = THEME_MAP.get(sector)
   return config?.engine === 'electro'
 }
+
+/**
+ * Merge a base ThemeConfig with shop-level custom color overrides.
+ * customColors is a JSON string like '{"primary":"#e11d48","accent":"#000000"}'
+ */
+export function getThemeWithCustomColors(
+  sector: string | undefined | null,
+  engine?: 'cosmika' | 'electro',
+  customColorsRaw?: string | null
+): ThemeConfig {
+  const base = getThemeConfig(sector, engine)
+  if (!customColorsRaw) return base
+
+  let custom: Record<string, string> = {}
+  try {
+    custom = JSON.parse(customColorsRaw)
+  } catch {
+    return base
+  }
+
+  if (Object.keys(custom).length === 0) return base
+
+  const { primary, secondary, accent } = custom
+
+  return {
+    ...base,
+    colors: {
+      ...base.colors,
+      ...(primary ? {
+        primary,
+        primaryDark: primary + 'cc',
+        primaryLight: primary + '40',
+        primaryBg: primary + '0a',
+      } : {}),
+      ...(secondary ? { secondary } : {}),
+      ...(accent ? {
+        ctaBg: accent,
+        ctaFg: isLightColor(accent) ? '#0f172a' : '#ffffff',
+      } : {}),
+    },
+  }
+}
+
+/** Quick check if a hex color is light (needs dark text) */
+function isLightColor(hex: string): boolean {
+  if (!hex || hex.length < 7) return false
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  // Luminance formula
+  return (r * 299 + g * 587 + b * 114) / 1000 > 160
+}

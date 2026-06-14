@@ -146,6 +146,7 @@ model Shop {
   // Marketing & Branding colors
   primaryColor          String   @default("#EC4899")
   secondaryColor        String?
+  customColors          String   @default("{}")  // JSON: { primary?, secondary?, accent? } overrides template defaults
 
   // Cosmika Beauty template customization
   heroTitle             String?
@@ -190,6 +191,7 @@ model Shop {
   shippingZones ShippingZone[]
   marketingAssets MarketingAsset[]
   testimonials   Testimonial[]
+  contactMessages ContactMessage[]
 }
 
 // ─── CATEGORY ──────────────────────────────────────────────────────────────────
@@ -220,6 +222,24 @@ model Testimonial {
   isDisplayed  Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@index([shopId])
+}
+
+// ─── CONTACT MESSAGE ──────────────────────────────────────────────────────────
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  shopId    String
+  name      String
+  email     String
+  phone     String?
+  message   String
+  status    String   @default("NEW") // NEW, READ, REPLIED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
 

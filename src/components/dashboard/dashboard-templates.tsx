@@ -4,6 +4,7 @@ import { useAppStore } from '@/lib/store'
 import { templates, type TemplateId } from '@/lib/templates'
 import { TemplateSelector } from './template-selector'
 import { TemplateCustomization } from './template-customization'
+import { ThemeCustomization } from './theme-customization'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Loader2, Check, ExternalLink } from 'lucide-react'
@@ -129,6 +130,9 @@ export function DashboardTemplates() {
 
       {/* Template-specific customization */}
       <TemplateCustomization shopSlug={shop.slug} />
+
+      {/* Color customization */}
+      <ThemeCustomization />
     </div>
   )
 }

@@ -49,6 +49,7 @@ export interface Shop {
   brands?: string
   primaryColor?: string
   secondaryColor?: string
+  customColors?: string // JSON: { primary?, secondary?, accent? }
   heroTitle?: string
   heroSubtitle?: string
   heroTagline?: string

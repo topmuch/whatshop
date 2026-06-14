@@ -35,6 +35,7 @@ import { useAppStore, type Product, type Category, type Shop } from '@/lib/store
 import { formatPrice, openWhatsApp } from '@/lib/shared'
 import {
   getThemeConfig,
+  getThemeWithCustomColors,
   type ThemeConfig,
 } from '@/lib/theme-config'
 import { getCtaButton, getCtaWhatsAppMessage, getSectorLabels } from '@/lib/sector-config'
@@ -470,8 +471,8 @@ export function CosmikaTemplate() {
   // ── Resolve theme config from sector ──
   const sector = publicShop?.sector
   const config = useMemo(
-    () => getThemeConfig(sector, 'cosmika'),
-    [sector]
+    () => getThemeWithCustomColors(sector, 'cosmika', publicShop?.customColors),
+    [sector, publicShop?.customColors]
   )
   const { colors, hero: heroConfig } = config
   const ctaButtonText = getCtaButton(sector)
