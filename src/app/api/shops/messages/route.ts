@@ -165,7 +165,7 @@ export async function PATCH(request: NextRequest) {
       }
     }
 
-    if (!status || !VALID_UPDATE_STATUSES.includes(status)) {
+    if (!status || !VALID_UPDATE_STATUSES.includes(status as "READ" | "REPLIED")) {
       return NextResponse.json({ error: 'Statut invalide (READ ou REPLIED requis)' }, { status: 400 })
     }
 
@@ -186,7 +186,7 @@ export async function PATCH(request: NextRequest) {
         shopId: shop.id,
       },
       data: {
-        status,
+        status: status as "READ" | "REPLIED",
         updatedAt: new Date(),
       },
     })

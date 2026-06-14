@@ -1102,13 +1102,13 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
                         {isNew && (
                           <TemplateBadge type="new" style={layout.badgeStyle}>
                             <Sparkles className="h-3 w-3" />
-                            {layout.badgeStyle === 'tag' ? 'NOUVEAU' : 'Nouveau'}
+                            Nouveau
                           </TemplateBadge>
                         )}
                         {isPromo && !isNew && (
                           <TemplateBadge type="promo" style={layout.badgeStyle}>
                             <Flame className="h-3 w-3" />
-                            {layout.badgeStyle === 'tag' ? 'PROMO' : 'Promo'}
+                            Promo
                           </TemplateBadge>
                         )}
                       </div>
@@ -1137,7 +1137,7 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
 
                         <div className="mt-2">
                           {qty === 0 ? (
-                            <TemplateCtaButton onClick={(e) => { e.stopPropagation(); handleAddToCart(product) }} style={layout.buttonStyle}>
+                            <TemplateCtaButton onClick={() => handleAddToCart(product)} style={layout.buttonStyle}>
                               <Plus className="h-3 w-3" />
                               Ajouter
                             </TemplateCtaButton>

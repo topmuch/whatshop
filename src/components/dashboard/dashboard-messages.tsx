@@ -476,7 +476,7 @@ export function DashboardMessages() {
                           variant="ghost"
                           size="sm"
                           className="h-7 text-xs text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 px-2"
-                          onClick={() => openWhatsAppReply(msg.phone, msg.name)}
+                          onClick={() => openWhatsAppReply(msg.phone!, msg.name)}
                         >
                           <MessageCircle className="h-3.5 w-3.5 mr-1" />
                           <span className="hidden sm:inline">Répondre sur WhatsApp</span>

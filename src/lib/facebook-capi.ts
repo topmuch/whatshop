@@ -41,7 +41,7 @@ if (!ENCRYPTION_KEY || ENCRYPTION_KEY.length < 16) {
  * Derive a 32-byte key from the configured secret.
  */
 function getKey(): Buffer {
-  return createHash('sha256').update(ENCRYPTION_KEY).digest()
+  return createHash('sha256').update(ENCRYPTION_KEY!).digest()
 }
 
 /**

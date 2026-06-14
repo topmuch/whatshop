@@ -96,9 +96,7 @@ export function ShopHeroCarousel({ slides, shopName, whatsapp, heroImages }: Sho
     : 'bg-gradient-to-r from-black/70 via-black/40 to-black/20'
 
   // Template-specific CTA style
-  const ctaStyle = template.layout.buttonStyle === 'pill'
-    ? 'rounded-full'
-    : template.layout.buttonStyle === 'rounded'
+  const ctaStyle = template.layout.buttonStyle === 'rounded'
     ? 'rounded-lg'
     : 'rounded-md'
 

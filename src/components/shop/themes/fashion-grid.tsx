@@ -115,7 +115,6 @@ function CircularCategoryButton({
         `}
         style={{
           background: active ? COLORS.accent : COLORS.bg,
-          ringColor: active ? COLORS.accent : undefined,
           boxShadow: active
             ? `0 4px 14px ${COLORS.accent}33`
             : `0 1px 4px rgba(0,0,0,0.06)`,

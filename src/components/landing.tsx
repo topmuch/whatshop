@@ -36,7 +36,7 @@ const fadeUp = {
   visible: (d: number) => ({
     opacity: 1,
     y: 0,
-    transition: { duration: 0.6, delay: d, ease: [0.22, 1, 0.36, 1] },
+    transition: { duration: 0.6, delay: d, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
   }),
 }
 const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.1 } } }
@@ -402,7 +402,7 @@ function Hero() {
           <motion.div
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }}
             className="order-1 lg:order-2 flex flex-col items-center gap-6"
           >
             <div className="relative">

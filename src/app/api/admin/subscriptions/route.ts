@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { verifyAdmin, adminUnauthorized } from '@/lib/admin-auth'
-import { upgradeSubscription, PLAN_CONFIGS, PlanType } from '@/lib/permissions'
+import { upgradeSubscription, PLAN_CONFIGS } from '@/lib/permissions'
+import { PlanType } from '@prisma/client'
 
 export async function GET(request: NextRequest) {
   try {

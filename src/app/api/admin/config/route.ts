@@ -40,10 +40,10 @@ export async function GET(request: NextRequest) {
     const admin = await verifyAdmin(request)
     if (!admin) return adminUnauthorized()
 
-    let config = await db.saasConfig.findFirst()
+    let config = await db.saaSConfig.findFirst()
 
     if (!config) {
-      config = await db.saasConfig.create({ data: {} })
+      config = await db.saaSConfig.create({ data: {} })
     }
 
     return NextResponse.json(configToJson(config))
@@ -59,7 +59,7 @@ async function updateConfig(request: NextRequest) {
 
   const body = await request.json()
 
-  let config = await db.saasConfig.findFirst()
+  let config = await db.saaSConfig.findFirst()
 
   const data: Record<string, unknown> = {}
   for (const field of CONFIG_FIELDS) {
@@ -69,9 +69,9 @@ async function updateConfig(request: NextRequest) {
   }
 
   if (!config) {
-    config = await db.saasConfig.create({ data })
+    config = await db.saaSConfig.create({ data })
   } else {
-    config = await db.saasConfig.update({ where: { id: config.id }, data })
+    config = await db.saaSConfig.update({ where: { id: config.id }, data })
   }
 
   return NextResponse.json(configToJson(config))

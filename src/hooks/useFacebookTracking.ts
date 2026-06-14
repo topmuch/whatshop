@@ -10,6 +10,7 @@ interface FacebookEventPayload {
   productName?: string
   price?: number
   currency?: string
+  contentName?: string
 }
 
 // ─── HOOK ─────────────────────────────────────────────────────────────────────

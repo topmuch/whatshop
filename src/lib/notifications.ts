@@ -51,7 +51,7 @@ export async function createNotification(
 
     // If this type has a config toggle, check it
     if (configField) {
-      const config = await db.saasConfig.findFirst({
+      const config = await db.saaSConfig.findFirst({
         select: { [configField]: true },
       })
 

@@ -43,7 +43,7 @@ const fadeInUp = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] },
+    transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
   },
 }
 
@@ -284,7 +284,7 @@ export function FAQPage() {
             <motion.aside
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }}
               className="lg:sticky lg:top-24 lg:self-start"
             >
               <div className="mb-4">

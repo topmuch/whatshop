@@ -68,7 +68,7 @@ function TemplatePreviewMini({ templateId }: { templateId: TemplateId }) {
       <div className="absolute bottom-0 left-0 right-0 h-4 flex items-center px-2 gap-1" style={{ background: c.cartBg, borderTop: `1px solid ${c.border}` }}>
         <div className="h-2 rounded-sm w-6" style={{ border: `1px solid ${c.border}` }} />
         <div className="h-1 rounded-full w-8 ml-auto" style={{ background: c.border }} />
-        <div className="h-2.5 rounded-sm w-10" style={{ background: getPreviewGradient(templateId, c), borderRadius: t.layout.buttonStyle === 'pill' ? '9999px' : '4px' }} />
+        <div className="h-2.5 rounded-sm w-10" style={{ background: getPreviewGradient(templateId, c), borderRadius: t.layout.buttonStyle === 'rounded' ? '9999px' : '4px' }} />
       </div>
     </div>
   )

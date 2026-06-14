@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
       },
       orderBy: { createdAt: 'desc' },
       include: {
-        shop: {
+        shops: {
           select: {
             id: true,
             name: true,
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
             _count: { select: { products: true, orders: true } },
           },
         },
-        _count: { select: { orders: true } },
+        _count: { select: { orders: true, shops: true } },
       },
     })
 
@@ -42,14 +42,15 @@ export async function GET(request: NextRequest) {
         name: u.name,
         email: u.email,
         createdAt: u.createdAt.toISOString(),
-        shop: u.shop ? {
-          id: u.shop.id,
-          name: u.shop.name,
-          plan: u.shop.plan,
-          isActive: u.shop.isActive,
-          productCount: u.shop._count.products,
-          orderCount: u.shop._count.orders,
+        shop: u.shops?.[0] ? {
+          id: u.shops[0].id,
+          name: u.shops[0].name,
+          plan: u.shops[0].plan,
+          isActive: u.shops[0].isActive,
+          productCount: u.shops[0]._count.products,
+          orderCount: u.shops[0]._count.orders,
         } : null,
+        shopCount: u._count.shops,
         orderCount: u._count.orders,
       })),
     })

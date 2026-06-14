@@ -552,7 +552,7 @@ export function DashboardOrders() {
                                       >
                                         {isActive ? (
                                           <span className="text-[10px]">
-                                            {React.cloneElement(sConfig.icon as React.ReactElement, {
+                                            {React.cloneElement(sConfig.icon as React.ReactElement<any>, {
                                               className: 'h-3 w-3',
                                             })}
                                           </span>

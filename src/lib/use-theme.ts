@@ -4,7 +4,7 @@ import { useCallback, useSyncExternalStore } from 'react'
 
 function subscribeToTheme(callback: () => void) {
   const observer = new MutationObserver(() => {
-    callback(document.documentElement.classList.contains('dark'))
+    callback()
   })
   observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
   return () => observer.disconnect()

@@ -83,7 +83,7 @@ export default function JsonLd({ shop, products = [], categories = [] }: JsonLdP
       address: shop.address
         ? { '@type': 'PostalAddress', streetAddress: shop.address }
         : undefined,
-      openingHours: (shop as Record<string, unknown>).businessHours || undefined,
+      openingHours: (shop as unknown as Record<string, unknown>).businessHours || undefined,
       priceRange: '$$',
       image: shop.banner || shop.logo || undefined,
       logo: shop.logo || undefined,

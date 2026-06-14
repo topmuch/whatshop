@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     const { productId, source } = body
 
     // Fire all DB writes in a single transaction — fast, atomic
-    const ops: Parameters<typeof db.$transaction>[0] = [
+    const ops: any[] = [
       db.shop.update({ where: { id: shopId }, data: { whatsappClicks: { increment: 1 } } }),
       db.analyticsEvent.create({
         data: {

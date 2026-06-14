@@ -1215,6 +1215,11 @@ function BusinessCardTab() {
       toast.error('Erreur lors du chargement du QR code')
       setGenerating(false)
     }
+    if (!qrImageUrl) {
+      toast.error('QR code non disponible')
+      setGenerating(false)
+      return
+    }
     qrImg.src = qrImageUrl
   }
 

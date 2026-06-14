@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
       const term = search.trim()
       where.OR = [
         { name: { contains: term } },
-        { email: { contains: term, mode: 'insensitive' } },
+        { email: { contains: term } },
       ]
     }
 

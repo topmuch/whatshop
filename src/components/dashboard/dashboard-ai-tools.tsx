@@ -556,7 +556,7 @@ function QrCodePoster() {
       </Card>
 
       {/* Generate QR */}
-      {!qrSvg && (
+      {!qrImage && (
         <div className="flex flex-col sm:flex-row gap-3">
           <Button onClick={generateQrCode} disabled={generating} className="gap-2 flex-1 sm:flex-none">
             {generating ? (

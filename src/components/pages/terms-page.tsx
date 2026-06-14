@@ -26,7 +26,7 @@ const AMBER = '#F59E0B'
 /* ──────────────────────────── ANIMATIONS ──────────────────────────── */
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] } },
 }
 
 const fadeIn = {
@@ -297,7 +297,7 @@ function TermsContent() {
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }}
               className="hidden lg:block"
             >
               <TableOfContents activeSection={activeSection} onNavigate={handleNavigate} />

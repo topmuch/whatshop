@@ -68,7 +68,7 @@ export function CosmikaServicesGrid({ products, config, onProductClick }: Cosmik
                       📋
                     </div>
                   )}
-                  {product.isNew && (
+                  {!!(product as unknown as Record<string, unknown>).isNew && (
                     <span
                       className="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold text-white"
                       style={{ backgroundColor: primary }}
@@ -85,7 +85,7 @@ export function CosmikaServicesGrid({ products, config, onProductClick }: Cosmik
                   </h3>
 
                   <p className="text-sm text-gray-600 mb-4 line-clamp-3 flex-grow">
-                    {product.description || product.shortDescription}
+                    {product.description}
                   </p>
 
                   {/* Price (if applicable) */}

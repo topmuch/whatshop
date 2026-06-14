@@ -2813,7 +2813,6 @@ function AdminConfig() {
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>Annuler</AlertDialogCancel>
                                   <AlertDialogAction
-                                    variant="destructive"
                                     onClick={() => deletePromoCode(promo.id)}
                                     className="bg-destructive text-white hover:bg-destructive/90"
                                   >
@@ -4056,7 +4055,6 @@ function AdminShops() {
                             <AlertDialogFooter>
                               <AlertDialogCancel>Annuler</AlertDialogCancel>
                               <AlertDialogAction
-                                variant="destructive"
                                 onClick={() => deleteShop(s.id, s.name)}
                                 className="bg-destructive text-white hover:bg-destructive/90"
                               >

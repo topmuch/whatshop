@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { requireAuth } from '@/lib/auth'
 import { createNotification } from '@/lib/notifications'
-import { getDefaultCategories, getTemplateForSector, SECTORS } from '@/lib/sector-config'
+import { getDefaultCategories, getTemplateForSector, SECTORS, type Sector } from '@/lib/sector-config'
 import { generateSlug } from '@/lib/utils'
 
 // ─── VALID SETS ─────────────────────────────────────────────────────────
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
     }
 
     // ── Validation: sector (if provided, must be a known sector) ──
-    if (sector && !VALID_SECTORS.has(sector)) {
+    if (sector && !VALID_SECTORS.has(sector as Sector)) {
       return badRequest(
         'Secteur non reconnu. Veuillez choisir un secteur valide.',
         'sector',

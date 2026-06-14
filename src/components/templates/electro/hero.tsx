@@ -38,7 +38,7 @@ const fadeVariants = {
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: 0.15 + i * 0.12, duration: 0.6, ease: 'easeOut' },
+    transition: { delay: 0.15 + i * 0.12, duration: 0.6, ease: 'easeOut' as const },
   }),
 }
 
@@ -252,7 +252,7 @@ export default function ElectroHero({
                   className="w-64 lg:w-80 h-64 lg:h-80 rounded-full overflow-hidden border-4 border-white/20 shadow-2xl"
                 >
                   <Image
-                    src={shop.consultantPhotoUrl}
+                    src={shop.consultantPhotoUrl ?? ''}
                     alt={shop.name ?? 'Consultant'}
                     width={320}
                     height={320}

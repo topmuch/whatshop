@@ -34,7 +34,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Paramètre shopId requis' }, { status: 400 })
     }
 
-    if (!status || !VALID_UPDATE_STATUSES.includes(status)) {
+    if (!status || !VALID_UPDATE_STATUSES.includes(status as "READ" | "REPLIED")) {
       return NextResponse.json({ error: 'Statut invalide (READ ou REPLIED requis)' }, { status: 400 })
     }
 
@@ -61,7 +61,7 @@ export async function PATCH(
     await db.contactMessage.update({
       where: { id: message.id },
       data: {
-        status,
+        status: status as "READ" | "REPLIED",
         updatedAt: new Date(),
       },
     })

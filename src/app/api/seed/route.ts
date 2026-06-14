@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
     }
 
-    const results = []
+    const results: string[] = []
 
     // Create admin
     const adminPassword = await hashPassword('admin123')

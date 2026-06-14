@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
     const userAgent = request.headers.get('user-agent') || null
 
     // Build transaction operations
-    const operations: Parameters<typeof db.$transaction>[0] = [
+    const operations: any[] = [
       // Always create the analytics event
       db.analyticsEvent.create({
         data: {

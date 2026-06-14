@@ -270,9 +270,9 @@ export function AuthLogin() {
             <div className="flex items-center justify-between">
               <label className="flex items-center gap-2 cursor-pointer">
                 <Checkbox id="remember-me" className="rounded" />
-                <span htmlFor="remember-me" className="text-sm text-muted-foreground select-none">
+                <label htmlFor="remember-me" className="text-sm text-muted-foreground select-none">
                   Se souvenir de moi
-                </span>
+                </label>
               </label>
               <button
                 type="button"

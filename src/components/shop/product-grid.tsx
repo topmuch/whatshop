@@ -134,7 +134,7 @@ export function ProductGrid({ products, categories, isLoading }: ProductGridProp
             <ProductCard
               key={product.id}
               product={product}
-              onAddToCart={addToCart}
+              onAddToCart={(product) => addToCart({ productId: product.id, name: product.name, price: product.price, image: product.images?.[0] || product.image, quantity: 1 })}
               cartQuantity={getCartQuantity(product.id)}
               onUpdateQuantity={updateCartQuantity}
             />

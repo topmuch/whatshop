@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth'
-import { getOrCreateSubscription, upgradeSubscription, PLAN_CONFIGS, PlanType } from '@/lib/permissions'
+import { getOrCreateSubscription, upgradeSubscription, PLAN_CONFIGS } from '@/lib/permissions'
+import { PlanType } from '@prisma/client'
 import { db } from '@/lib/db'
 
 const PLAN_ORDER: PlanType[] = ['STARTER', 'PRO', 'BUSINESS']

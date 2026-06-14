@@ -294,7 +294,7 @@ function SortBar({
 // ─── Cart Bar (bottom) ────────────────────────────────────────────────────────
 
 interface CartBarProps {
-  cart: ReturnType<typeof useAppStore>['cart']
+  cart: import('@/lib/store').CartItem[]
   expanded: boolean
   onToggle: () => void
   onClear: () => void

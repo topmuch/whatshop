@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     const tokenRes = await fetch(
       `${FB_GRAPH}/oauth/access_token?client_id=${FB_APP_ID}&client_secret=${FB_APP_SECRET}&redirect_uri=${redirectUri}&code=${code}`,
     )
-    const tokenData = await tokenRes.json<{ access_token?: string; error?: { message: string } }>()
+    const tokenData = await tokenRes.json() as { access_token?: string; error?: { message: string } }
 
     if (!tokenData.access_token) {
       console.error('[FB OAuth] Token exchange failed:', tokenData.error)
@@ -43,12 +43,12 @@ export async function GET(request: NextRequest) {
     const llRes = await fetch(
       `${FB_GRAPH}/oauth/access_token?grant_type=fb_exchange_token&client_id=${FB_APP_ID}&client_secret=${FB_APP_SECRET}&fb_exchange_token=${tokenData.access_token}`,
     )
-    const llData = await llRes.json<{ access_token?: string }>()
+    const llData = await llRes.json() as { access_token?: string }
     const longToken = llData.access_token || tokenData.access_token
 
     // 3. Fetch user's Facebook Pages
     const pagesRes = await fetch(`${FB_GRAPH}/me/accounts?access_token=${longToken}`)
-    const pagesData = await pagesRes.json<{ data?: Array<{ id: string; name: string; access_token?: string }> }>()
+    const pagesData = await pagesRes.json() as { data?: Array<{ id: string; name: string; access_token?: string }> }
     const page = pagesData.data?.[0]
 
     if (!page) {

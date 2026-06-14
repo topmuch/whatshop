@@ -106,7 +106,6 @@ const GROCERY_EMOJIS: Record<string, string> = {
   surgelé: '🧊',
   bebe: '🍼',
   bébé: '🍼',
-  bébé: '🍼',
 }
 
 const TRUST_BADGES = [
@@ -266,10 +265,7 @@ export function GroceryGrid({
                     activeCategory === null
                       ? GROCERY_COLORS.green
                       : '#f3f4f6',
-                  ringColor:
-                    activeCategory === null
-                      ? GROCERY_COLORS.green
-                      : '#d1d5db',
+
                 }}
               >
                 <span className={activeCategory === null ? 'text-white' : ''}>
@@ -315,9 +311,7 @@ export function GroceryGrid({
                       backgroundColor: isActive
                         ? GROCERY_COLORS.green
                         : '#f3f4f6',
-                      ringColor: isActive
-                        ? GROCERY_COLORS.green
-                        : '#d1d5db',
+
                     }}
                   >
                     <span className={isActive ? 'text-white' : ''}>

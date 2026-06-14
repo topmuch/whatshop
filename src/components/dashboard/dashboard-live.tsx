@@ -89,7 +89,7 @@ export function DashboardLive() {
     if (!shop) return
     async function fetchProducts() {
       try {
-        const res = await fetch(`/api/shops/${shop.slug}/products`)
+        const res = await fetch(`/api/shops/${shop!.slug}/products`)
         if (res.ok) {
           const data = await res.json()
           setProducts(data)
