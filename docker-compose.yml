@@ -1,0 +1,48 @@
+# ─────────────────────────────────────────────────────────────
+# Boutiko - Docker Compose (Coolify / Production)
+# ─────────────────────────────────────────────────────────────
+#
+# Volumes persistants :
+#   - boutiko-data  → Base SQLite (boutiko.db) — survive aux redéploiements
+#   - boutiko-uploads → Images uploadées (logos, produits) — survive aux redéploiements
+#
+# Usage Coolify :
+#   1. Branch this repo in Coolify
+#   2. Set environment variables (see .env.production.example)
+#   3. Coolify will use this docker-compose.yml automatically
+#
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.coolify
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+      - DATABASE_URL=file:/app/data/boutiko.db
+      - UPLOADS_DIR=/app/uploads
+      - NEXT_TELEMETRY_DISABLED=1
+      # Override these in Coolify's environment variables panel:
+      # - NEXT_PUBLIC_APP_URL=https://boutiko.pro
+      # - SUPER_ADMIN_EMAIL=admin@boutiko.pro
+      # - SUPER_ADMIN_PASSWORD=Admin123!
+    volumes:
+      - boutiko-data:/app/data
+      - boutiko-uploads:/app/uploads
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      start_period: 40s
+      retries: 3
+
+volumes:
+  boutiko-data:
+    driver: local
+  boutiko-uploads:
+    driver: local
