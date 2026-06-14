@@ -39,6 +39,7 @@ import { TemplateProvider } from './template-provider'
 import { LiveShopFeatures } from './live-shop-features'
 import { ElectroShopPage } from './themes/electro-grid'
 import { ElectroTemplate } from '@/components/templates/electro'
+import { CosmikaTemplate } from '@/components/templates/cosmika'
 import { CosmikaBeautyShopPage } from './themes/cosmika-beauty-grid'
 import { ShippingZoneSelector } from './shipping-zone-selector'
 import { ImageWithFallback } from '@/components/ui/image-with-fallback'
@@ -538,6 +539,9 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
     return <ElectroShopPage />
   }
   if (template.id === 'cosmika-beauty') {
+    if (publicShop?.sector) {
+      return <CosmikaTemplate />
+    }
     return <CosmikaBeautyShopPage />
   }
 
