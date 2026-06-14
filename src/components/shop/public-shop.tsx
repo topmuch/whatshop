@@ -38,6 +38,7 @@ import { ShopHeroCarousel } from './shop-hero-carousel'
 import { TemplateProvider } from './template-provider'
 import { LiveShopFeatures } from './live-shop-features'
 import { ElectroShopPage } from './themes/electro-grid'
+import { ElectroTemplate } from '@/components/templates/electro'
 import { CosmikaBeautyShopPage } from './themes/cosmika-beauty-grid'
 import { ShippingZoneSelector } from './shipping-zone-selector'
 import { ImageWithFallback } from '@/components/ui/image-with-fallback'
@@ -530,6 +531,10 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
   // ── Full-page custom templates render their own complete layout ──
   // Early returns after ALL hooks to satisfy React rules-of-hooks.
   if (template.id === 'xstore-electro') {
+    // Use new multi-sector Electro template when sector is set, legacy otherwise
+    if (publicShop?.sector) {
+      return <ElectroTemplate />
+    }
     return <ElectroShopPage />
   }
   if (template.id === 'cosmika-beauty') {

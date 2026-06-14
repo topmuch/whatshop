@@ -48,7 +48,7 @@ async function seedElectroShop() {
       phone: '221330000000',
       plan: 'STANDARD',
       sector: 'electronique',
-      template: 'electrodepot',
+      template: 'xstore-electro',
       isActive: true,
       ownerId: userId,
       logo: '/products/electro/logo-electro.png',

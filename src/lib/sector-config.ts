@@ -16,7 +16,7 @@
 export type BusinessType = 'ECOMMERCE' | 'SERVICE'
 export type TemplateEngine = 'cosmika-beauty' | 'xstore-electro'
 
-export type EcommerceSector = 'beaute' | 'mode' | 'electronique' | 'alimentation' | 'autre'
+export type EcommerceSector = 'beaute' | 'mode' | 'electronique' | 'alimentation' | 'autre' | 'auto-moto' | 'quincaillerie'
 export type ServiceSector = 'beaute-service' | 'restaurant' | 'consulting' | 'artisanat' | 'sante' | 'formation'
 export type Sector = EcommerceSector | ServiceSector
 
@@ -174,6 +174,58 @@ const ALIMENTATION_LABELS: SectorLabels = {
   showPrice: true,
   priceLabel: 'Prix (FCFA)',
   pricePlaceholder: 'Ex: 2500',
+  priceOptional: false,
+  ctaButton: 'Commander sur WhatsApp',
+  ctaWhatsAppMessage: "Bonjour, je souhaite commander : {productName} - {productPrice} FCFA",
+}
+
+const AUTO_MOTO_LABELS: SectorLabels = {
+  navProducts: 'Pièces & Accessoires',
+  navCategories: 'Catégories Pièces',
+  navOrders: 'Commandes',
+  productsTitle: 'Pièces & Accessoires',
+  productsAddButton: 'Ajouter une pièce',
+  productsEmpty: 'Aucune pièce disponible pour le moment',
+  productsSearch: 'Rechercher une pièce...',
+  categoriesTitle: 'Catégories',
+  categoriesAddButton: 'Ajouter une catégorie',
+  categoriesEmpty: 'Aucune catégorie pour le moment',
+  ordersTitle: 'Commandes',
+  ordersEmpty: 'Aucune commande pour le moment',
+  productLabel: 'Pièce',
+  productDescriptionPlaceholder: 'Décrivez la pièce (marque, compatibilité, référence)...',
+  categoryLabel: 'Catégorie',
+  statProducts: 'Pièces',
+  statOrders: 'Commandes',
+  showPrice: true,
+  priceLabel: 'Prix (FCFA)',
+  pricePlaceholder: 'Ex: 15000',
+  priceOptional: false,
+  ctaButton: 'Commander la pièce',
+  ctaWhatsAppMessage: "Bonjour, je souhaite commander cette pièce : {productName} - {productPrice} FCFA",
+}
+
+const QUINCAILLERIE_LABELS: SectorLabels = {
+  navProducts: 'Articles Bricolage',
+  navCategories: 'Rayons',
+  navOrders: 'Commandes',
+  productsTitle: 'Articles Bricolage',
+  productsAddButton: 'Ajouter un article',
+  productsEmpty: 'Aucun article disponible pour le moment',
+  productsSearch: 'Rechercher un article...',
+  categoriesTitle: 'Rayons',
+  categoriesAddButton: 'Ajouter un rayon',
+  categoriesEmpty: 'Aucun rayon pour le moment',
+  ordersTitle: 'Commandes',
+  ordersEmpty: 'Aucune commande pour le moment',
+  productLabel: 'Article',
+  productDescriptionPlaceholder: 'Décrivez l\'article (matériau, dimensions, usage)...',
+  categoryLabel: 'Rayon',
+  statProducts: 'Articles',
+  statOrders: 'Commandes',
+  showPrice: true,
+  priceLabel: 'Prix (FCFA)',
+  pricePlaceholder: 'Ex: 3500',
   priceOptional: false,
   ctaButton: 'Commander sur WhatsApp',
   ctaWhatsAppMessage: "Bonjour, je souhaite commander : {productName} - {productPrice} FCFA",
@@ -399,6 +451,28 @@ export const SECTORS: SectorDefinition[] = [
     accentColor: '#10B981',
     defaultCategories: ['Téléphones', 'Accessoires', 'Ordinateurs', 'Audio'],
     labels: ELECTRONIQUE_LABELS,
+  },
+  {
+    id: 'auto-moto',
+    businessType: 'ECOMMERCE',
+    emoji: '🚗',
+    name: 'Auto & Moto',
+    subtitle: 'Pièces détachées, accessoires, entretien',
+    template: 'xstore-electro',
+    accentColor: '#DC2626',
+    defaultCategories: ['Moteur', 'Carrosserie', 'Éclairage', 'Entretien', 'Accessoires'],
+    labels: AUTO_MOTO_LABELS,
+  },
+  {
+    id: 'quincaillerie',
+    businessType: 'ECOMMERCE',
+    emoji: '🔨',
+    name: 'Quincaillerie & Bricolage',
+    subtitle: 'Outils, matériaux, fixation',
+    template: 'xstore-electro',
+    accentColor: '#D97706',
+    defaultCategories: ['Outillage', 'Plomberie', 'Électricité', 'Visserie', 'Peinture'],
+    labels: QUINCAILLERIE_LABELS,
   },
   {
     id: 'alimentation',
