@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAppStore } from '@/lib/store'
 import { Button } from '@/components/ui/button'
@@ -25,6 +25,7 @@ interface OnboardingState {
   template: string | null
   name: string
   whatsapp: string
+  countryCode: string
   description: string
   logo: string | null
   plan: Plan | null
@@ -54,21 +55,61 @@ const slideVariants = {
 export default function OnboardingPage() {
   const { user, setShop, setShops, setView } = useAppStore()
 
-  const [step, setStep] = useState(1)
+  const [step, setStep] = useState(() => {
+    if (typeof window === 'undefined') return 1
+    try {
+      const saved = localStorage.getItem('boutiko-onboarding')
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        const s = parsed.step
+        if (typeof s === 'number' && s >= 1 && s <= TOTAL_STEPS) return s
+      }
+    } catch { /* ignore */ }
+    return 1
+  })
   const [direction, setDirection] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
 
-  const [form, setForm] = useState<OnboardingState>({
-    businessType: null,
-    sector: null,
-    template: null,
-    name: '',
-    whatsapp: '',
-    description: '',
-    logo: null,
-    plan: null,
+  const [form, setForm] = useState<OnboardingState>(() => {
+    if (typeof window === 'undefined') {
+      return {
+        businessType: null, sector: null, template: null,
+        name: '', whatsapp: '', countryCode: '+225',
+        description: '', logo: null, plan: null,
+      }
+    }
+    try {
+      const saved = localStorage.getItem('boutiko-onboarding')
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        return {
+          businessType: parsed.businessType ?? null,
+          sector: parsed.sector ?? null,
+          template: parsed.template ?? null,
+          name: parsed.name ?? '',
+          whatsapp: parsed.whatsapp ?? '',
+          countryCode: parsed.countryCode ?? '+225',
+          description: parsed.description ?? '',
+          logo: parsed.logo ?? null,
+          plan: parsed.plan ?? null,
+        }
+      }
+    } catch { /* ignore */ }
+    return {
+      businessType: null, sector: null, template: null,
+      name: '', whatsapp: '', countryCode: '+225',
+      description: '', logo: null, plan: null,
+    }
   })
+
+  /* ──────── localStorage persistence ──────── */
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('boutiko-onboarding', JSON.stringify({ step, form }))
+    } catch { /* ignore */ }
+  }, [step, form])
 
   /* ──────── Navigation ──────── */
 
@@ -139,7 +180,7 @@ export default function OnboardingPage() {
           businessType: form.businessType,
           sector: form.sector,
           name: form.name.trim(),
-          whatsapp: form.whatsapp.trim(),
+          whatsapp: `${form.countryCode}${form.whatsapp.trim()}`,
           description: form.description.trim() || undefined,
           logo: form.logo || undefined,
           plan: form.plan || 'TRIAL',
@@ -183,6 +224,7 @@ export default function OnboardingPage() {
       setShop(shop)
       setShops([shop])
       toast.success(`Boutique "${shop.name}" créée avec succès !`)
+      try { localStorage.removeItem('boutiko-onboarding') } catch { /* ignore */ }
       setView('dashboard')
       window.history.replaceState(null, '', '/dashboard')
     } catch (err) {
@@ -284,10 +326,12 @@ export default function OnboardingPage() {
                     <Step4Customization
                       name={form.name}
                       whatsapp={form.whatsapp}
+                      countryCode={form.countryCode}
                       description={form.description}
                       logo={form.logo}
                       onNameChange={(v) => setForm((p) => ({ ...p, name: v }))}
                       onWhatsappChange={(v) => setForm((p) => ({ ...p, whatsapp: v }))}
+                      onCountryCodeChange={(v) => setForm((p) => ({ ...p, countryCode: v }))}
                       onDescriptionChange={(v) => setForm((p) => ({ ...p, description: v }))}
                       onLogoChange={(v) => setForm((p) => ({ ...p, logo: v }))}
                       isValid={step4Valid}

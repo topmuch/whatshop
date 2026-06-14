@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import type { Shop, Product, Category } from '@/lib/store'
 
 interface JsonLdProps {
@@ -9,16 +9,24 @@ interface JsonLdProps {
   categories?: Category[]
 }
 
-/** Recursively remove keys with undefined or null values from an object */
+/**
+ * Recursively remove keys with undefined or null values from an object.
+ * Schema.org validators reject null/undefined fields.
+ */
 function stripNullish<T extends Record<string, unknown>>(obj: T): Record<string, unknown> {
   const clean: Record<string, unknown> = {}
   for (const [key, value] of Object.entries(obj)) {
     if (value === undefined || value === null) continue
     if (Array.isArray(value)) {
       const filtered = value
-        .map((item) => (typeof item === 'object' && item !== null ? stripNullish(item as Record<string, unknown>) : item))
+        .map((item) =>
+          typeof item === 'object' && item !== null
+            ? stripNullish(item as Record<string, unknown>)
+            : item,
+        )
         .filter((item) => {
-          if (typeof item === 'object' && item !== null) return Object.keys(item as Record<string, unknown>).length > 0
+          if (typeof item === 'object' && item !== null)
+            return Object.keys(item as Record<string, unknown>).length > 0
           return item !== undefined && item !== null
         })
       if (filtered.length > 0) clean[key] = filtered
@@ -30,17 +38,6 @@ function stripNullish<T extends Record<string, unknown>>(obj: T): Record<string,
     }
   }
   return clean
-}
-
-/** Helper to update or create a <meta> tag by attribute name/value */
-function updateOrCreateMeta(attrName: string, attrValue: string, content: string) {
-  let el = document.querySelector(`meta[${attrName}="${attrValue}"]`) as HTMLMetaElement | null
-  if (!el) {
-    el = document.createElement('meta')
-    el.setAttribute(attrName, attrValue)
-    document.head.appendChild(el)
-  }
-  el.setAttribute('content', content)
 }
 
 /** Map sector to schema.org @type */
@@ -61,11 +58,21 @@ function getSchemaType(sector?: string): string {
   }
 }
 
+/**
+ * SEO helper for shop pages.
+ *
+ * Renders JSON-LD as a <script> tag in JSX (cleaner than DOM manipulation).
+ * Updates document title and meta tags via useEffect.
+ *
+ * NOTE: True SEO requires server-side rendering of shop pages
+ * (create /boutique/[slug]/route.ts with generateMetadata).
+ * This component works for client-side navigation and social previews.
+ */
 export default function JsonLd({ shop, products = [], categories = [] }: JsonLdProps) {
-  useEffect(() => {
+  // Build JSON-LD data as a memoized object
+  const jsonLdData = useMemo(() => {
     const schemaType = getSchemaType(shop.sector)
 
-    // --- Build base JSON-LD ---
     const base: Record<string, unknown> = {
       '@context': 'https://schema.org',
       '@type': schemaType,
@@ -76,13 +83,12 @@ export default function JsonLd({ shop, products = [], categories = [] }: JsonLdP
       address: shop.address
         ? { '@type': 'PostalAddress', streetAddress: shop.address }
         : undefined,
-      openingHours: shop.businessHours || undefined,
+      openingHours: (shop as Record<string, unknown>).businessHours || undefined,
       priceRange: '$$',
       image: shop.banner || shop.logo || undefined,
       logo: shop.logo || undefined,
     }
 
-    // --- Offer catalog (e-commerce sectors) ---
     const isRestaurant = shop.sector === 'restaurant'
     const isService =
       shop.sector === 'beaute-service' ||
@@ -109,7 +115,6 @@ export default function JsonLd({ shop, products = [], categories = [] }: JsonLdP
       }
     }
 
-    // --- Restaurant menu ---
     if (isRestaurant && categories.length > 0) {
       base.servesCuisine = 'Africaine'
       base.hasMenu = {
@@ -132,73 +137,75 @@ export default function JsonLd({ shop, products = [], categories = [] }: JsonLdP
       }
     }
 
-    const cleaned = stripNullish(base)
-    const jsonLdScript = document.createElement('script')
-    jsonLdScript.type = 'application/ld+json'
-    jsonLdScript.id = 'boutiko-jsonld'
-    jsonLdScript.textContent = JSON.stringify(cleaned)
+    return stripNullish(base)
+  }, [shop, products, categories])
 
-    // Remove any previously injected JSON-LD
-    const existing = document.getElementById('boutiko-jsonld')
-    if (existing) existing.remove()
-    document.head.appendChild(jsonLdScript)
-
-    // --- Document title ---
+  // Update document head meta tags
+  useEffect(() => {
     const title = shop.seoTitle || `${shop.name} | Boutiko`
     document.title = title
 
-    // --- Meta description ---
+    // Meta description
     const descText = (
       shop.seoDescription ||
       `Découvrez ${shop.name} sur Boutiko. ${shop.description || ''}`
     ).slice(0, 160)
-    let metaDesc = document.querySelector('meta[name="description"]') as HTMLMetaElement | null
-    if (!metaDesc) {
-      metaDesc = document.createElement('meta')
-      metaDesc.setAttribute('name', 'description')
-      document.head.appendChild(metaDesc)
-    }
-    metaDesc.setAttribute('content', descText)
+    setMeta('name', 'description', descText)
 
-    // --- Open Graph tags ---
+    // Open Graph
     const ogDesc = (
       shop.seoDescription ||
       `${shop.name} - ${shop.description || 'Boutique en ligne'}`
     ).slice(0, 160)
 
-    updateOrCreateMeta('property', 'og:title', title)
-    updateOrCreateMeta('property', 'og:description', ogDesc)
-    updateOrCreateMeta('property', 'og:url', `https://boutiko.pro/${shop.slug}`)
+    setMeta('property', 'og:title', title)
+    setMeta('property', 'og:description', ogDesc)
+    setMeta('property', 'og:url', `https://boutiko.pro/${shop.slug}`)
     if (shop.banner || shop.logo) {
-      updateOrCreateMeta('property', 'og:image', shop.banner || shop.logo!)
+      setMeta('property', 'og:image', shop.banner || shop.logo!)
     }
-    updateOrCreateMeta('property', 'og:type', 'website')
-    updateOrCreateMeta('property', 'og:locale', 'fr_FR')
-    updateOrCreateMeta('property', 'og:site_name', 'Boutiko')
+    setMeta('property', 'og:type', 'website')
+    setMeta('property', 'og:locale', 'fr_FR')
+    setMeta('property', 'og:site_name', 'Boutiko')
 
-    // --- Twitter tags ---
-    updateOrCreateMeta('name', 'twitter:card', 'summary_large_image')
-    updateOrCreateMeta('name', 'twitter:title', title)
+    // Twitter
+    setMeta('name', 'twitter:card', 'summary_large_image')
+    setMeta('name', 'twitter:title', title)
     if (shop.banner || shop.logo) {
-      updateOrCreateMeta('name', 'twitter:image', shop.banner || shop.logo!)
+      setMeta('name', 'twitter:image', shop.banner || shop.logo!)
     }
 
-    // --- Canonical link ---
-    let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null
-    if (!canonical) {
-      canonical = document.createElement('link')
-      canonical.setAttribute('rel', 'canonical')
-      document.head.appendChild(canonical)
-    }
-    canonical.setAttribute('href', `https://boutiko.pro/${shop.slug}`)
+    // Canonical
+    setLink('canonical', `https://boutiko.pro/${shop.slug}`)
+  }, [shop])
 
-    // --- Cleanup on unmount ---
-    return () => {
-      const el = document.getElementById('boutiko-jsonld')
-      if (el) el.remove()
-    }
-  }, [shop, products, categories])
+  return (
+    <script
+      type="application/ld+json"
+      id="boutiko-jsonld"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdData) }}
+    />
+  )
+}
 
-  // This component renders nothing visible — it only injects head tags
-  return null
+// ─── Internal DOM helpers ─────────────────────────────────────────────────────
+
+function setMeta(attrName: string, attrValue: string, content: string) {
+  let el = document.querySelector(`meta[${attrName}="${attrValue}"]`) as HTMLMetaElement | null
+  if (!el) {
+    el = document.createElement('meta')
+    el.setAttribute(attrName, attrValue)
+    document.head.appendChild(el)
+  }
+  el.setAttribute('content', content)
+}
+
+function setLink(rel: string, href: string) {
+  let el = document.querySelector(`link[rel="${rel}"]`) as HTMLLinkElement | null
+  if (!el) {
+    el = document.createElement('link')
+    el.setAttribute('rel', rel)
+    document.head.appendChild(el)
+  }
+  el.setAttribute('href', href)
 }

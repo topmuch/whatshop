@@ -47,6 +47,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
+import { generateSlug } from '@/lib/utils'
 import {
   BarChart3,
   Users,
@@ -3791,14 +3792,6 @@ function AdminShops() {
   const [lastCredentials, setLastCredentials] = useState<{ email: string; password: string; shopUrl: string } | null>(null)
   const [sellerUsers, setSellerUsers] = useState<{ id: string; name: string; email: string }[]>([])
 
-  function generateSlug(name: string) {
-    return name
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '')
-  }
 
   const loadShops = useCallback(async (p: string, s: string) => {
     setLoading(true)

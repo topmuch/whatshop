@@ -8,7 +8,6 @@ import {
   DollarSign,
   Eye,
   TrendingUp,
-  TrendingDown,
   BarChart3,
 } from 'lucide-react'
 import {
@@ -21,6 +20,7 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import { formatPrice } from '@/lib/shared'
+import { StatCard } from './stat-card'
 
 interface OrdersByDay {
   date: string
@@ -43,43 +43,7 @@ interface AnalyticsData {
   recentGrowth: number
 }
 
-function StatCard({
-  icon,
-  label,
-  value,
-  sub,
-  iconBg,
-  iconColor,
-}: {
-  icon: React.ReactNode
-  label: string
-  value: string
-  sub?: string
-  iconBg: string
-  iconColor: string
-}) {
-  return (
-    <Card>
-      <CardContent className="p-4 sm:p-6">
-        <div className="flex items-center justify-between">
-          <div className="min-w-0">
-            <p className="text-xs sm:text-sm text-muted-foreground">{label}</p>
-            <p className="text-lg sm:text-2xl font-bold mt-1 truncate">{value}</p>
-            {sub && (
-              <p className={`text-xs mt-1 flex items-center gap-1 ${sub.startsWith('+') || sub.startsWith('0') ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}`}>
-                {sub.startsWith('+') || sub.startsWith('0') ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                {sub}
-              </p>
-            )}
-          </div>
-          <div className={`flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-xl ${iconBg} ${iconColor} shrink-0`}>
-            {icon}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
+
 
 function LoadingSkeleton() {
   return (

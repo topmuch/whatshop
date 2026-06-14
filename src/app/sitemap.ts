@@ -87,5 +87,37 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // DB not available yet (build time, first deploy) — serve static pages only
   }
 
-  return [...staticPages, ...shopPages]
+  let productPages: MetadataRoute.Sitemap = []
+  try {
+    const now = new Date()
+    const products = await db.product.findMany({
+      where: {
+        shop: {
+          isActive: true,
+          OR: [
+            { plan: { not: "TRIAL" } },
+            { trialEndDate: { gt: now } },
+          ],
+        },
+        isAvailable: true,
+      },
+      select: {
+        id: true,
+        slug: true,
+        updatedAt: true,
+        shop: { select: { slug: true } },
+      },
+      take: 5000, // safety limit
+    })
+    productPages = products.map((p) => ({
+      url: `${baseUrl}/${p.shop.slug}?product=${p.slug || p.id}`,
+      lastModified: p.updatedAt,
+      changeFrequency: "weekly" as const,
+      priority: 0.6,
+    }))
+  } catch {
+    // DB not available — serve static + shop pages only
+  }
+
+  return [...staticPages, ...shopPages, ...productPages]
 }

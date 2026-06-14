@@ -3,24 +3,13 @@ import { db } from '@/lib/db'
 import { requireAuth } from '@/lib/auth'
 import { createNotification } from '@/lib/notifications'
 import { getDefaultCategories, getTemplateForSector, SECTORS } from '@/lib/sector-config'
+import { generateSlug } from '@/lib/utils'
 
 // ─── VALID SETS ─────────────────────────────────────────────────────────
 
 const VALID_BUSINESS_TYPES = new Set(['ECOMMERCE', 'SERVICE'])
 const VALID_SECTORS = new Set(SECTORS.map((s) => s.id))
 const VALID_PLANS = new Set(['TRIAL', 'PRO'])
-
-// ─── SLUG GENERATION ─────────────────────────────────────────────────────
-
-function generateSlug(name: string): string {
-  return name
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 50)
-}
 
 // ─── WHATSAPP VALIDATION ─────────────────────────────────────────────────
 

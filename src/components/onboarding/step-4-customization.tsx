@@ -9,35 +9,46 @@ import { Card, CardContent } from '@/components/ui/card'
 import { ImageWithFallback } from '@/components/ui/image-with-fallback'
 import { Upload, Phone, ImageIcon, Loader2, Sparkles, Check } from 'lucide-react'
 import { toast } from 'sonner'
+import { generateSlug } from '@/lib/utils'
+
+const COUNTRY_CODES = [
+  { code: '+225', label: "Côte d'Ivoire" },
+  { code: '+228', label: 'Togo' },
+  { code: '+229', label: 'Bénin' },
+  { code: '+226', label: 'Burkina Faso' },
+  { code: '+221', label: 'Sénégal' },
+  { code: '+223', label: 'Mali' },
+  { code: '+237', label: 'Cameroun' },
+  { code: '+243', label: 'RDC' },
+  { code: '+233', label: 'Ghana' },
+  { code: '+33', label: 'France' },
+  { code: '+1', label: 'USA/Canada' },
+  { code: '+44', label: 'Royaume-Uni' },
+] as const
 
 interface Step4Props {
   name: string
   whatsapp: string
+  countryCode: string
   description: string
   logo: string | null
   onNameChange: (v: string) => void
   onWhatsappChange: (v: string) => void
+  onCountryCodeChange: (v: string) => void
   onDescriptionChange: (v: string) => void
   onLogoChange: (url: string | null) => void
   isValid: boolean
 }
 
-function generateSlug(text: string): string {
-  return text
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-}
-
 export function Step4Customization({
   name,
   whatsapp,
+  countryCode,
   description,
   logo,
   onNameChange,
   onWhatsappChange,
+  onCountryCodeChange,
   onDescriptionChange,
   onLogoChange,
   isValid,
@@ -126,9 +137,17 @@ export function Step4Customization({
             </span>
           </Label>
           <div className="flex items-center">
-            <span className="inline-flex items-center justify-center h-12 px-4 bg-gray-100 border border-r-0 border-gray-300 rounded-l-xl text-sm font-medium text-gray-600">
-              +225
-            </span>
+            <select
+              value={countryCode}
+              onChange={(e) => onCountryCodeChange(e.target.value)}
+              className="inline-flex items-center justify-center h-12 px-3 bg-gray-100 border border-r-0 border-gray-300 rounded-l-xl text-sm font-medium text-gray-600 appearance-none pr-7 cursor-pointer focus:outline-none focus:border-rose-500"
+            >
+              {COUNTRY_CODES.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.code} {c.label}
+                </option>
+              ))}
+            </select>
             <Input
               id="whatsapp-number"
               type="tel"

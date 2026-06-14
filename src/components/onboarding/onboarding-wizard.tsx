@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback, type FormEvent } from 'react'
+import { useState, useEffect, useRef, useCallback, type FormEvent } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAppStore } from '@/lib/store'
 import { Button } from '@/components/ui/button'
@@ -10,6 +10,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
 import { ImageWithFallback } from '@/components/ui/image-with-fallback'
+import { generateSlug } from '@/lib/utils'
 import {
   ArrowRight,
   ArrowLeft,
@@ -46,6 +47,7 @@ interface OnboardingFormData {
   template: TemplateId | null
   name: string
   whatsapp: string
+  countryCode: string
   description: string
   logo: string | null
   plan: Plan | null
@@ -114,14 +116,20 @@ const TOTAL_STEPS = 5
 
 /* ──────────────────────── HELPERS ──────────────────────── */
 
-function generateSlug(text: string): string {
-  return text
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-}
+const COUNTRY_CODES = [
+  { code: '+225', label: 'Côte d\'Ivoire' },
+  { code: '+228', label: 'Togo' },
+  { code: '+229', label: 'Bénin' },
+  { code: '+226', label: 'Burkina Faso' },
+  { code: '+221', label: 'Sénégal' },
+  { code: '+223', label: 'Mali' },
+  { code: '+237', label: 'Cameroun' },
+  { code: '+243', label: 'RDC' },
+  { code: '+233', label: 'Ghana' },
+  { code: '+33', label: 'France' },
+  { code: '+1', label: 'USA/Canada' },
+  { code: '+44', label: 'Royaume-Uni' },
+] as const
 
 const slideVariants = {
   enter: (direction: number) => ({
@@ -143,21 +151,80 @@ const slideVariants = {
 export function OnboardingWizard() {
   const { user, setShop, setPublicShop, setShops, setView } = useAppStore()
 
-  const [step, setStep] = useState(1)
   const [direction, setDirection] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
 
-  const [form, setForm] = useState<OnboardingFormData>({
-    businessType: null,
-    sector: null,
-    template: null,
-    name: '',
-    whatsapp: '',
-    description: '',
-    logo: null,
-    plan: null,
+  const [form, setForm] = useState<OnboardingFormData>(() => {
+    if (typeof window === 'undefined') {
+      return {
+        businessType: null,
+        sector: null,
+        template: null,
+        name: '',
+        whatsapp: '',
+        countryCode: '+225',
+        description: '',
+        logo: null,
+        plan: null,
+      }
+    }
+    try {
+      const saved = localStorage.getItem('boutiko-onboarding')
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        return {
+          businessType: parsed.businessType ?? null,
+          sector: parsed.sector ?? null,
+          template: parsed.template ?? null,
+          name: parsed.name ?? '',
+          whatsapp: parsed.whatsapp ?? '',
+          countryCode: parsed.countryCode ?? '+225',
+          description: parsed.description ?? '',
+          logo: parsed.logo ?? null,
+          plan: parsed.plan ?? null,
+        }
+      }
+    } catch {
+      // Ignore parse errors
+    }
+    return {
+      businessType: null,
+      sector: null,
+      template: null,
+      name: '',
+      whatsapp: '',
+      countryCode: '+225',
+      description: '',
+      logo: null,
+      plan: null,
+    }
   })
+
+  const [step, setStep] = useState(() => {
+    if (typeof window === 'undefined') return 1
+    try {
+      const saved = localStorage.getItem('boutiko-onboarding')
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        const s = parsed.step
+        if (typeof s === 'number' && s >= 1 && s <= TOTAL_STEPS) return s
+      }
+    } catch {
+      // Ignore parse errors
+    }
+    return 1
+  })
+
+  /* ──────── localStorage persistence ──────── */
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('boutiko-onboarding', JSON.stringify({ step, form }))
+    } catch {
+      // Ignore storage errors
+    }
+  }, [step, form])
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -261,7 +328,7 @@ export function OnboardingWizard() {
           sector: form.sector,
           template: form.template,
           name: form.name.trim(),
-          whatsapp: form.whatsapp.trim(),
+          whatsapp: `${form.countryCode}${form.whatsapp.trim()}`,
           description: form.description.trim() || undefined,
           logo: form.logo || undefined,
           plan: form.plan,
@@ -297,6 +364,9 @@ export function OnboardingWizard() {
         }
 
         toast.success('Votre boutique a été créée avec succès ! 🎉')
+
+        // Clear onboarding data from localStorage
+        try { localStorage.removeItem('boutiko-onboarding') } catch { /* ignore */ }
 
         // Redirect to dashboard
         setView('dashboard')
@@ -727,9 +797,17 @@ export function OnboardingWizard() {
               </span>
             </Label>
             <div className="flex items-center">
-              <span className="inline-flex items-center justify-center h-12 px-4 bg-gray-100 border border-r-0 border-gray-300 rounded-l-xl text-sm font-medium text-gray-600">
-                +225
-              </span>
+              <select
+                value={form.countryCode}
+                onChange={(e) => setForm((prev) => ({ ...prev, countryCode: e.target.value }))}
+                className="h-12 px-3 bg-gray-100 border border-r-0 border-gray-300 rounded-l-xl text-sm font-medium text-gray-600 appearance-none pr-7 cursor-pointer focus:outline-none focus:border-rose-500"
+              >
+                {COUNTRY_CODES.map((c) => (
+                  <option key={c.code} value={c.code}>
+                    {c.code} {c.label}
+                  </option>
+                ))}
+              </select>
               <Input
                 id="whatsapp"
                 type="tel"

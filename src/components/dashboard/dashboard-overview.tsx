@@ -32,6 +32,8 @@ import {
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatPrice } from '@/lib/shared'
+import { formatDate } from '@/lib/utils'
+import { StatCard } from './stat-card'
 
 interface Stats {
   products: number
@@ -48,48 +50,7 @@ interface Order {
   items: string
 }
 
-function StatCard({
-  icon,
-  label,
-  value,
-  badge,
-  badgeColor,
-  iconBg,
-  iconColor,
-  borderAccent,
-  cardBg,
-}: {
-  icon: React.ReactNode
-  label: string
-  value: number | string
-  badge?: string
-  badgeColor?: string
-  iconBg?: string
-  iconColor?: string
-  borderAccent?: string
-  cardBg?: string
-}) {
-  return (
-    <Card className={`overflow-hidden ${cardBg || ''} ${borderAccent || ''}`}>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className={`text-sm ${cardBg ? 'text-white/80' : 'text-muted-foreground'}`}>{label}</p>
-            <p className={`text-2xl font-bold mt-1 ${cardBg ? 'text-white' : ''}`}>{value}</p>
-            {badge && (
-              <Badge variant="secondary" className={`mt-2 ${badgeColor}`}>
-                {badge}
-              </Badge>
-            )}
-          </div>
-          <div className={`flex items-center justify-center w-12 h-12 rounded-xl ${cardBg ? 'bg-white/20 text-white' : `${iconBg || 'bg-primary/10'} ${iconColor || 'text-primary'}`} `}>
-            {icon}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
+
 
 function getPlanBadge(plan: string) {
   switch (plan) {
@@ -115,15 +76,6 @@ function getStatusBadge(status: string) {
     default:
       return <Badge variant="secondary">{status}</Badge>
   }
-}
-
-function formatDate(dateStr: string) {
-  const date = new Date(dateStr)
-  return date.toLocaleDateString('fr-FR', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
 }
 
 export function DashboardOverview() {

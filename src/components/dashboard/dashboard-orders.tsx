@@ -45,6 +45,7 @@ import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
 import { formatPrice } from '@/lib/shared'
 import { getBusinessLabels } from '@/lib/business-labels'
+import { formatDateTime } from '@/lib/utils'
 
 interface OrderItem {
   productId: string
@@ -113,16 +114,7 @@ const newStatusOptions: Record<string, string[]> = {
   CANCELLED: ['PENDING'],
 }
 
-function formatDate(dateStr: string) {
-  const date = new Date(dateStr)
-  return date.toLocaleDateString('fr-FR', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
+
 
 function formatRelativeDate(dateStr: string) {
   const date = new Date(dateStr)
@@ -136,7 +128,7 @@ function formatRelativeDate(dateStr: string) {
   if (diffMins < 60) return `Il y a ${diffMins} min`
   if (diffHours < 24) return `Il y a ${diffHours}h`
   if (diffDays < 7) return `Il y a ${diffDays}j`
-  return formatDate(dateStr)
+  return formatDateTime(dateStr)
 }
 
 function parseItems(itemsStr: string): OrderItem[] {
@@ -669,7 +661,7 @@ export function DashboardOrders() {
                             <div className="flex items-center justify-between flex-wrap gap-3">
                               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                 <Clock className="h-3.5 w-3.5" />
-                                <span>Créée le {formatDate(order.createdAt)}</span>
+                                <span>Créée le {formatDateTime(order.createdAt)}</span>
                               </div>
                               {order.customerPhone && (
                                 <Button

@@ -31,6 +31,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { toast } from 'sonner'
+import { formatDate } from '@/lib/utils'
 import {
   Users,
   Settings,
@@ -134,20 +135,6 @@ function generatePassword(length = 14): string {
     password += chars.charAt(Math.floor(Math.random() * chars.length))
   }
   return password
-}
-
-// ── Helper: format date ──────────────────────────────────────────────────────
-
-function formatDate(dateStr: string): string {
-  try {
-    return new Date(dateStr).toLocaleDateString('fr-FR', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    })
-  } catch {
-    return dateStr
-  }
 }
 
 // ── Helper: format currency ──────────────────────────────────────────────────

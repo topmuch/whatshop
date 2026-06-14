@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { requireAuth, isValidSlug } from '@/lib/auth'
 import { createNotification } from '@/lib/notifications'
+import { generateSlug } from '@/lib/utils'
 
 // Sector → Template mapping
 const sectorTemplateMap: Record<string, string> = {
@@ -33,16 +34,6 @@ const sectorCategoriesMap: Record<string, string[]> = {
   sante: ['Consultations', 'Coaching', 'Soins', 'Programmes'],
 }
 
-// Slug generation: convert name to URL-friendly slug
-function generateSlug(name: string): string {
-  return name
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '') // Remove accents
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 50)
-}
 
 export async function POST(request: NextRequest) {
   try {
