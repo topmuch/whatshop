@@ -49,6 +49,11 @@ import { CosmikaTrustBadges } from './trust-badges'
 import { CosmikaFooter } from './footer'
 import { CosmikaTestimonials, type TestimonialItem } from './testimonials'
 import { CosmikaExpertises } from './expertises'
+import { CosmikaWhyChooseUs } from './why-choose-us'
+import { CosmikaApproach } from './approach'
+import { CosmikaServicesGrid } from './services-grid'
+import { CosmikaAbout } from './about'
+import { CosmikaContact } from './contact'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -699,21 +704,31 @@ export function CosmikaTemplate() {
               <CosmikaHero config={config} shop={publicShop} />
 
               {/* ═══ CATEGORIES / EXPERTISES ═══ */}
-              {config.hero.showConsultantPhoto ? (
-                <CosmikaExpertises
-                  categories={publicCategories}
-                  config={config}
-                  activeCategoryId={activeCategory}
-                  onCategoryClick={handleCategoryClick}
-                />
-              ) : (
-                <CosmikaCategories
-                  categories={publicCategories}
-                  config={config}
-                  activeCategoryId={activeCategory}
-                  onCategoryClick={handleCategoryClick}
-                />
-              )}
+              {(() => {
+                const isConsulting = !!config.hero.showConsultantPhoto
+                return (
+                  <>
+                    {isConsulting ? (
+                      <CosmikaExpertises
+                        categories={publicCategories}
+                        config={config}
+                        activeCategoryId={activeCategory}
+                        onCategoryClick={handleCategoryClick}
+                      />
+                    ) : (
+                      <CosmikaCategories
+                        categories={publicCategories}
+                        config={config}
+                        activeCategoryId={activeCategory}
+                        onCategoryClick={handleCategoryClick}
+                      />
+                    )}
+
+                    {/* ═══ APPROACH (consulting only) ═══ */}
+                    {isConsulting && <CosmikaApproach config={config} />}
+                  </>
+                )
+              })()}
 
               {/* ═══ PRODUCTS SECTION ═══ */}
               <section id="products" className="py-16 md:py-20 px-4 bg-white">
@@ -887,6 +902,15 @@ export function CosmikaTemplate() {
                   </AnimatePresence>
                 </div>
               </section>
+
+              {/* ═══ CONSULTING-ONLY SECTIONS ═══ */}
+              {config.hero.showConsultantPhoto && (
+                <>
+                  <CosmikaWhyChooseUs config={config} />
+                  <CosmikaAbout config={config} shop={publicShop} />
+                  <CosmikaContact config={config} shop={publicShop} />
+                </>
+              )}
 
               {/* ═══ TESTIMONIALS ═══ */}
               {/* NOTE: Testimonials come from shop-specific data.
