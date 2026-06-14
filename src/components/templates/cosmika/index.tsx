@@ -17,14 +17,12 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import Image from 'next/image'
 import {
   X,
   Plus,
   Minus,
-  Trash2,
   Package,
   ShoppingCart,
   MessageCircle,
@@ -40,6 +38,7 @@ import {
 } from '@/lib/theme-config'
 import { getCtaButton, getCtaWhatsAppMessage, getSectorLabels } from '@/lib/sector-config'
 import { LiveShopFeatures } from '@/components/shop/live-shop-features'
+import { ThemedCartDrawer } from '@/components/shop/themed-cart-drawer'
 
 // ─── Modular Cosmika Components ──────────────────────────────────────────────
 import { CosmikaHeader } from './header'
@@ -272,169 +271,6 @@ function ProductDetail({
         </div>
       </div>
     </div>
-  )
-}
-
-// ─── Cart Drawer (e-commerce only) ───────────────────────────────────────────
-
-interface CartItem {
-  productId: string
-  name: string
-  price: number
-  image?: string
-  quantity: number
-}
-
-interface CartDrawerProps {
-  cart: CartItem[]
-  expanded: boolean
-  onToggle: () => void
-  onClear: () => void
-  onCheckout: () => void
-  total: number
-  itemCount: number
-  colors: ThemeConfig['colors']
-  shop: Shop | null
-  updateCartQuantity: (productId: string, qty: number) => void
-  removeFromCart: (productId: string) => void
-}
-
-function CartDrawer({
-  cart,
-  expanded,
-  onToggle,
-  onClear,
-  onCheckout,
-  total,
-  itemCount,
-  colors,
-  shop,
-  updateCartQuantity,
-  removeFromCart,
-}: CartDrawerProps) {
-  return (
-    <>
-      {/* Fixed bottom bar */}
-      <div
-        className="fixed bottom-0 left-0 right-0 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.12)]"
-        style={{ background: colors.ctaBg }}
-      >
-        <button
-          onClick={onToggle}
-          className="w-full flex items-center justify-between px-4 md:px-6 h-[60px] text-white font-semibold"
-          aria-label={`Panier: ${itemCount} articles, total ${total.toLocaleString('fr-FR')} FCFA`}
-          aria-expanded={expanded}
-        >
-          <span className="flex items-center gap-3">
-            <ShoppingCart className="size-5" />
-            <span>{itemCount} article{itemCount > 1 ? 's' : ''}</span>
-          </span>
-          <span className="flex items-center gap-2">
-            <span>{total.toLocaleString('fr-FR')} FCFA</span>
-            <svg
-              className={`size-4 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-            </svg>
-          </span>
-        </button>
-
-        {/* Expanded cart items */}
-        <AnimatePresence>
-          {expanded && (
-            <motion.div
-              initial={{ height: 0 }}
-              animate={{ height: 'auto', maxHeight: '60vh' }}
-              exit={{ height: 0 }}
-              transition={{ duration: 0.25, ease: 'easeInOut' }}
-              className="overflow-hidden bg-white"
-            >
-              <ScrollArea className="max-h-[55vh]">
-                <div className="p-4 space-y-3">
-                  {cart.map((item) => (
-                    <div
-                      key={item.productId}
-                      className="flex items-center gap-3 p-3 rounded-xl border border-gray-100"
-                    >
-                      {item.image ? (
-                        <div className="relative w-14 h-14 rounded-lg overflow-hidden shrink-0">
-                          <Image
-                            src={item.image}
-                            alt={item.name}
-                            fill
-                            className="object-cover"
-                            sizes="56px"
-                          />
-                        </div>
-                      ) : (
-                        <div
-                          className="w-14 h-14 rounded-lg flex items-center justify-center shrink-0"
-                          style={{ background: colors.primaryBg }}
-                        >
-                          <Package className="size-5" style={{ color: colors.primary }} />
-                        </div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold truncate" style={{ color: colors.text }}>
-                          {item.name}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {(item.price * item.quantity).toLocaleString('fr-FR')} FCFA
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <button
-                          className="h-7 w-7 rounded-md flex items-center justify-center border hover:bg-gray-50"
-                          onClick={() => item.quantity > 1 && updateCartQuantity(item.productId, item.quantity - 1)}
-                          aria-label="Diminuer"
-                        >
-                          <Minus className="size-3" />
-                        </button>
-                        <span className="w-8 text-center text-xs font-semibold">{item.quantity}</span>
-                        <button
-                          className="h-7 w-7 rounded-md flex items-center justify-center border hover:bg-gray-50"
-                          onClick={() => updateCartQuantity(item.productId, item.quantity + 1)}
-                          aria-label="Augmenter"
-                        >
-                          <Plus className="size-3" />
-                        </button>
-                        <button
-                          className="h-7 w-7 rounded-md flex items-center justify-center ml-1 hover:bg-red-50"
-                          onClick={() => removeFromCart(item.productId)}
-                          aria-label="Supprimer"
-                        >
-                          <Trash2 className="size-3 text-red-500" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
-              <div className="border-t p-4 flex gap-3">
-                <Button
-                  variant="outline"
-                  className="flex-1 rounded-xl"
-                  onClick={onClear}
-                  style={{ borderColor: colors.primary, color: colors.primary }}
-                >
-                  Vider
-                </Button>
-                <Button
-                  className="flex-1 rounded-xl font-semibold text-white"
-                  onClick={onCheckout}
-                  style={{ background: colors.primary }}
-                >
-                  Commander sur WhatsApp
-                </Button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </>
   )
 }
 
@@ -932,7 +768,7 @@ export function CosmikaTemplate() {
       {!isServiceMode && (
         <AnimatePresence>
           {cart.length > 0 && (
-            <CartDrawer
+            <ThemedCartDrawer
               cart={cart}
               expanded={cartExpanded}
               onToggle={() => setCartExpanded(!cartExpanded)}
@@ -940,10 +776,23 @@ export function CosmikaTemplate() {
               onCheckout={handleWhatsAppCheckout}
               total={total}
               itemCount={itemCount}
-              colors={colors}
-              shop={publicShop}
               updateCartQuantity={updateCartQuantity}
               removeFromCart={removeFromCart}
+              theme={{
+                text: colors.text,
+                textMuted: colors.text,
+                price: colors.primary,
+                bg: colors.ctaBg,
+                bgExpanded: '#ffffff',
+                border: colors.primaryLight,
+                primary: colors.primary,
+                primaryLight: colors.primaryLight,
+                whatsapp: colors.primary,
+                whatsappFg: '#ffffff',
+                shadow: '0 -4px 20px rgba(0,0,0,0.12)',
+                roundedItem: 'rounded-xl',
+                roundedBtn: 'rounded-xl',
+              }}
             />
           )}
         </AnimatePresence>

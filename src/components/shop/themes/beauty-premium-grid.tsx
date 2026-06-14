@@ -22,9 +22,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import {
   Search,
@@ -44,8 +42,6 @@ import {
   Shield,
   Sparkles,
   RotateCcw,
-  ChevronUp,
-  ChevronDown,
   ChevronRight,
   Phone,
   MapPin,
@@ -60,6 +56,7 @@ import { formatPrice, openWhatsApp } from '@/lib/shared'
 import { LiveShopFeatures } from '../live-shop-features'
 import { ShippingZoneSelector } from '../shipping-zone-selector'
 import { ImageWithFallback } from '@/components/ui/image-with-fallback'
+import { ThemedCartDrawer } from '@/components/shop/themed-cart-drawer'
 
 // ─── Rose Gold Beauty Palette ───
 const ROSE = {
@@ -1166,154 +1163,8 @@ function BeautyProductDetail({
 }
 
 // ═══════════════════════════════════════════════════════════════
-// 9. CART DRAWER — Clean white slide-up
+// 9. CART DRAWER — (delegated to shared ThemedCartDrawer)
 // ═══════════════════════════════════════════════════════════════
-
-function BeautyCartDrawer({
-  expanded,
-  onToggle,
-  onClear,
-  onCheckout,
-  total,
-  itemCount,
-  cart,
-  updateCartQuantity,
-}: {
-  expanded: boolean
-  onToggle: () => void
-  onClear: () => void
-  onCheckout: () => void
-  total: number
-  itemCount: number
-  cart: { id: string; productId: string; name: string; price: number; image?: string; quantity: number }[]
-  updateCartQuantity: (id: string, qty: number) => void
-}) {
-  return (
-    <motion.div
-      initial={{ y: 100 }}
-      animate={{ y: 0 }}
-      exit={{ y: 100 }}
-      transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-      className="fixed bottom-0 left-0 right-0 z-50"
-      style={{
-        boxShadow: '0 -4px 20px rgba(183,110,121,0.12)',
-      }}
-    >
-      {/* Expanded cart */}
-      <AnimatePresence>
-        {expanded && (
-          <motion.div
-            initial={{ height: 0 }}
-            animate={{ height: 'auto' }}
-            exit={{ height: 0 }}
-            transition={{ duration: 0.25 }}
-            className="overflow-hidden border-t"
-            style={{ borderColor: ROSE.border, background: ROSE.white }}
-          >
-            <ScrollArea className="max-h-64">
-              <div className="max-w-[1200px] mx-auto p-4 space-y-3">
-                <div className="flex items-center justify-between mb-2">
-                  <h3
-                    className="font-semibold text-sm"
-                    style={{ color: ROSE.text, fontFamily: 'Georgia, serif' }}
-                  >
-                    Votre panier ({itemCount} article{itemCount !== 1 ? 's' : ''})
-                  </h3>
-                  <Button variant="ghost" size="sm" className="text-red-400 h-7 text-xs" onClick={onClear}>
-                    <Trash2 className="size-3 mr-1" />
-                    Tout supprimer
-                  </Button>
-                </div>
-                {cart.map((item) => (
-                  <div key={item.id} className="flex items-center gap-3">
-                    <div
-                      className="w-12 h-12 rounded-xl shrink-0 overflow-hidden"
-                      style={{ background: `${ROSE.primaryLight}40` }}
-                    >
-                      <ImageWithFallback
-                        src={item.image}
-                        alt={item.name}
-                        fill
-                        className="w-full h-full object-cover"
-                        fallbackIcon="package"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium line-clamp-1" style={{ color: ROSE.text }}>{item.name}</p>
-                      <p className="text-xs font-bold" style={{ color: ROSE.price }}>{formatPrice(item.price)}</p>
-                    </div>
-                    <div className="flex items-center rounded-lg" style={{ background: `${ROSE.primaryLight}30` }}>
-                      <button className="h-7 w-7 flex items-center justify-center" onClick={() => updateCartQuantity(item.productId, item.quantity - 1)}>
-                        {item.quantity === 1 ? <Trash2 className="size-3 text-red-400" /> : <Minus className="size-3" style={{ color: ROSE.primary }} />}
-                      </button>
-                      <span className="text-sm font-semibold min-w-[24px] text-center" style={{ color: ROSE.text }}>{item.quantity}</span>
-                      <button className="h-7 w-7 flex items-center justify-center" onClick={() => updateCartQuantity(item.productId, item.quantity + 1)}>
-                        <Plus className="size-3" style={{ color: ROSE.primary }} />
-                      </button>
-                    </div>
-                    <span className="text-sm font-bold w-24 text-right" style={{ color: ROSE.price }}>
-                      {formatPrice(item.price * item.quantity)}
-                    </span>
-                  </div>
-                ))}
-                <Separator style={{ background: ROSE.border }} />
-                <div className="flex items-center justify-between font-bold" style={{ color: ROSE.text }}>
-                  <span>Total</span>
-                  <span style={{ color: ROSE.price, fontFamily: 'Georgia, serif' }}>{formatPrice(total)}</span>
-                </div>
-              </div>
-            </ScrollArea>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Cart bar */}
-      <div className="px-4 py-3 border-t" style={{ borderColor: ROSE.border, background: ROSE.white }}>
-        <div className="max-w-[1200px] mx-auto flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-10 gap-1.5 shrink-0 rounded-xl"
-            style={{ color: ROSE.text }}
-            onClick={onToggle}
-          >
-            {expanded ? <ChevronDown className="size-4" /> : <ChevronUp className="size-4" />}
-            <span
-              className="px-1.5 h-5 text-xs text-white rounded-md flex items-center font-bold"
-              style={{ background: ROSE.primary }}
-            >
-              {itemCount}
-            </span>
-            <span className="hidden sm:inline text-sm font-medium">panier</span>
-          </Button>
-
-          <div className="flex-1">
-            <p className="text-xs" style={{ color: ROSE.muted }}>Total</p>
-            <p
-              className="font-bold text-sm"
-              style={{ color: ROSE.price, fontFamily: 'Georgia, serif' }}
-            >
-              {formatPrice(total)}
-            </p>
-          </div>
-
-          <Button
-            className="h-10 gap-2 font-semibold text-sm rounded-xl px-6"
-            style={{
-              background: ROSE.whatsapp,
-              color: ROSE.whatsappFg,
-            }}
-            onClick={onCheckout}
-          >
-            <MessageCircle className="size-4" />
-            <span className="hidden sm:inline">Commander via WhatsApp</span>
-            <span className="sm:hidden">Commander</span>
-          </Button>
-        </div>
-      </div>
-    </motion.div>
-  )
-}
 
 // ═══════════════════════════════════════════════════════════════
 // 10. FOOTER — Rose gold accents
@@ -1967,7 +1818,7 @@ export function BeautyPremiumShopPage() {
       {/* ═══ 9. CART DRAWER ═══ */}
       <AnimatePresence>
         {cart.length > 0 && (
-          <BeautyCartDrawer
+          <ThemedCartDrawer
             expanded={cartExpanded}
             onToggle={() => setCartExpanded(!cartExpanded)}
             onClear={clearCart}
@@ -1976,6 +1827,22 @@ export function BeautyPremiumShopPage() {
             itemCount={itemCount}
             cart={cart}
             updateCartQuantity={updateCartQuantity}
+            theme={{
+              text: ROSE.text,
+              textMuted: ROSE.muted,
+              price: ROSE.price,
+              bg: ROSE.white,
+              border: ROSE.border,
+              primary: ROSE.primary,
+              primaryLight: ROSE.primaryLight,
+              whatsapp: ROSE.whatsapp,
+              whatsappFg: ROSE.whatsappFg,
+              shadow: '0 -4px 20px rgba(183,110,121,0.12)',
+              fontFamily: 'Georgia, serif',
+              roundedItem: 'rounded-xl',
+              roundedBtn: 'rounded-xl',
+              maxWidth: 'max-w-[1200px]',
+            }}
           />
         )}
       </AnimatePresence>

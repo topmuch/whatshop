@@ -25,7 +25,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import {
   Search,
@@ -44,8 +43,6 @@ import {
   Sparkles,
   Heart,
   Quote,
-  ChevronUp,
-  ChevronDown,
   Gem,
 } from 'lucide-react'
 import { useAppStore, type Product, type Category } from '@/lib/store'
@@ -53,6 +50,7 @@ import { formatPrice, openWhatsApp } from '@/lib/shared'
 import { LiveShopFeatures } from '../live-shop-features'
 import { ShippingZoneSelector } from '../shipping-zone-selector'
 import { ImageWithFallback } from '@/components/ui/image-with-fallback'
+import { ThemedCartDrawer } from '@/components/shop/themed-cart-drawer'
 
 // ─── Color Palette: CHAMPAGNE GOLD LUXE ───
 const GOLD = {
@@ -979,134 +977,8 @@ function LuxeTestimonials() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// CART DRAWER — Slide-up glassmorphism
+// CART DRAWER — (delegated to shared ThemedCartDrawer)
 // ═══════════════════════════════════════════════════════════════
-
-function LuxeCartDrawer({
-  expanded,
-  onToggle,
-  onClear,
-  onCheckout,
-  total,
-  itemCount,
-  cart,
-  updateCartQuantity,
-}: {
-  expanded: boolean
-  onToggle: () => void
-  onClear: () => void
-  onCheckout: () => void
-  total: number
-  itemCount: number
-  cart: { id: string; productId: string; name: string; price: number; image?: string; quantity: number }[]
-  updateCartQuantity: (id: string, qty: number) => void
-}) {
-  return (
-    <motion.div
-      initial={{ y: 100 }}
-      animate={{ y: 0 }}
-      exit={{ y: 100 }}
-      transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-      className="fixed bottom-0 left-0 right-0 z-50 shadow-[0_-4px_30px_rgba(0,0,0,0.1)]"
-    >
-      {/* Expanded cart */}
-      <AnimatePresence>
-        {expanded && (
-          <motion.div
-            initial={{ height: 0 }}
-            animate={{ height: 'auto' }}
-            exit={{ height: 0 }}
-            transition={{ duration: 0.25 }}
-            className="overflow-hidden backdrop-blur-xl border-t"
-            style={{ background: 'rgba(255,255,255,0.85)', borderColor: THEME.glassBorder }}
-          >
-            <ScrollArea className="max-h-64">
-              <div className="max-w-[1400px] mx-auto p-4 space-y-3">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-serif font-bold text-sm" style={{ color: THEME.text }}>
-                    Votre panier ({itemCount} article{itemCount !== 1 ? 's' : ''})
-                  </h3>
-                  <Button variant="ghost" size="sm" className="text-red-500 h-7 text-xs" onClick={onClear}>
-                    <Trash2 className="size-3 mr-1" />
-                    Tout supprimer
-                  </Button>
-                </div>
-                {cart.map((item) => (
-                  <div key={item.id} className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl shrink-0 overflow-hidden" style={{ background: `${THEME.goldLight}60` }}>
-                      <ImageWithFallback
-                        src={item.image}
-                        alt={item.name}
-                        fill
-                        className="w-full h-full object-cover"
-                        fallbackIcon="package"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium line-clamp-1" style={{ color: THEME.text }}>{item.name}</p>
-                      <p className="text-xs font-bold font-serif" style={{ color: THEME.goldDark }}>{formatPrice(item.price)}</p>
-                    </div>
-                    <div className="flex items-center rounded-full" style={{ background: `${THEME.gold}15` }}>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => updateCartQuantity(item.productId, item.quantity - 1)}>
-                        {item.quantity === 1 ? <Trash2 className="size-3 text-red-500" /> : <Minus className="size-3" />}
-                      </Button>
-                      <span className="text-sm font-semibold min-w-[24px] text-center">{item.quantity}</span>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => updateCartQuantity(item.productId, item.quantity + 1)}>
-                        <Plus className="size-3" />
-                      </Button>
-                    </div>
-                    <span className="text-sm font-bold w-24 text-right font-serif" style={{ color: THEME.goldDark }}>
-                      {formatPrice(item.price * item.quantity)}
-                    </span>
-                  </div>
-                ))}
-                <Separator />
-                <div className="flex items-center justify-between font-bold font-serif" style={{ color: THEME.text }}>
-                  <span>Total</span>
-                  <span style={{ color: THEME.goldDark }}>{formatPrice(total)}</span>
-                </div>
-              </div>
-            </ScrollArea>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Cart bar */}
-      <div className="backdrop-blur-xl border-t px-4 py-3" style={{ background: 'rgba(255,255,255,0.90)', borderColor: THEME.glassBorder }}>
-        <div className="max-w-[1400px] mx-auto flex items-center gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-10 gap-1.5 shrink-0 rounded-full"
-            style={{ borderColor: THEME.glassBorder, color: THEME.text }}
-            onClick={onToggle}
-          >
-            {expanded ? <ChevronDown className="size-4" /> : <ChevronUp className="size-4" />}
-            <Badge className="px-1.5 h-5 text-xs text-white rounded-full" style={{ background: THEME.gold }}>
-              {itemCount}
-            </Badge>
-            <span className="hidden sm:inline text-sm">panier</span>
-          </Button>
-
-          <div className="flex-1">
-            <p className="text-xs" style={{ color: THEME.textMuted }}>Total</p>
-            <p className="font-bold text-sm font-serif" style={{ color: THEME.goldDark }}>{formatPrice(total)}</p>
-          </div>
-
-          <Button
-            className="h-10 gap-2 font-semibold text-sm rounded-full px-6 transition-all duration-300 hover:shadow-lg"
-            style={{ background: THEME.whatsapp, color: THEME.whatsappFg }}
-            onClick={onCheckout}
-          >
-            <MessageCircle className="size-4" />
-            <span className="hidden sm:inline">Commander via WhatsApp</span>
-            <span className="sm:hidden">Commander</span>
-          </Button>
-        </div>
-      </div>
-    </motion.div>
-  )
-}
 
 // ═══════════════════════════════════════════════════════════════
 // FOOTER — Minimal dark with gold accents
@@ -1687,7 +1559,7 @@ export function LuxeFashionShopPage() {
       {/* ═══ CART DRAWER ═══ */}
       <AnimatePresence>
         {cart.length > 0 && (
-          <LuxeCartDrawer
+          <ThemedCartDrawer
             expanded={cartExpanded}
             onToggle={() => setCartExpanded(!cartExpanded)}
             onClear={clearCart}
@@ -1696,6 +1568,28 @@ export function LuxeFashionShopPage() {
             itemCount={itemCount}
             cart={cart}
             updateCartQuantity={updateCartQuantity}
+            theme={{
+              text: THEME.text,
+              textMuted: THEME.textMuted,
+              price: THEME.goldDark,
+              bg: 'rgba(255,255,255,0.90)',
+              bgExpanded: 'rgba(255,255,255,0.85)',
+              border: THEME.glassBorder,
+              primary: THEME.gold,
+              primaryLight: THEME.goldLight,
+              whatsapp: THEME.whatsapp,
+              whatsappFg: THEME.whatsappFg,
+              toggleBorder: THEME.glassBorder,
+              shadow: '0 -4px 30px rgba(0,0,0,0.1)',
+              imageBg: `${THEME.goldLight}60`,
+              qtyBg: `${THEME.gold}15`,
+              countBg: THEME.gold,
+              fontFamily: 'serif',
+              backdropBlur: true,
+              roundedItem: 'rounded-xl',
+              roundedBtn: 'rounded-full',
+              maxWidth: 'max-w-[1400px]',
+            }}
           />
         )}
       </AnimatePresence>

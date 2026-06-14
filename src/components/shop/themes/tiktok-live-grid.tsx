@@ -20,7 +20,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import {
   Search,
@@ -35,7 +34,6 @@ import {
   ArrowLeft,
   Phone,
   MapPin,
-  ChevronUp,
   ChevronDown,
   Zap,
   Eye,
@@ -45,6 +43,7 @@ import { formatPrice, openWhatsApp } from '@/lib/shared'
 import { LiveShopFeatures } from '../live-shop-features'
 import { ShippingZoneSelector } from '../shipping-zone-selector'
 import { ImageWithFallback } from '@/components/ui/image-with-fallback'
+import { ThemedCartDrawer } from '@/components/shop/themed-cart-drawer'
 
 // ─── Couleurs du template TIKTOK LIVE ───
 const TT = {
@@ -912,178 +911,8 @@ function TikTokProductDetail({
 }
 
 // ═══════════════════════════════════════════════════════════════
-// SECTION 9 : CART DRAWER (dark slide-up)
+// SECTION 9 : CART DRAWER (delegated to shared ThemedCartDrawer)
 // ═══════════════════════════════════════════════════════════════
-
-function TikTokCartDrawer({
-  expanded,
-  onToggle,
-  onClear,
-  onCheckout,
-  total,
-  itemCount,
-  cart,
-  updateCartQuantity,
-}: {
-  expanded: boolean
-  onToggle: () => void
-  onClear: () => void
-  onCheckout: () => void
-  total: number
-  itemCount: number
-  cart: { id: string; productId: string; name: string; price: number; image?: string; quantity: number }[]
-  updateCartQuantity: (id: string, qty: number) => void
-}) {
-  return (
-    <motion.div
-      initial={{ y: 100 }}
-      animate={{ y: 0 }}
-      exit={{ y: 100 }}
-      transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-      className="fixed bottom-0 left-0 right-0 z-50"
-      style={{
-        boxShadow: '0 -4px 20px rgba(0,0,0,0.5)',
-      }}
-    >
-      {/* Expanded cart */}
-      <AnimatePresence>
-        {expanded && (
-          <motion.div
-            initial={{ height: 0 }}
-            animate={{ height: 'auto' }}
-            exit={{ height: 0 }}
-            transition={{ duration: 0.25 }}
-            className="overflow-hidden border-t"
-            style={{ background: TT.cardBg, borderColor: TT.border }}
-          >
-            <ScrollArea className="max-h-64">
-              <div className="max-w-[1400px] mx-auto p-4 space-y-3">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-semibold text-sm" style={{ color: TT.text }}>
-                    Votre panier ({itemCount} article{itemCount !== 1 ? 's' : ''})
-                  </h3>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-red-400 h-7 text-xs"
-                    onClick={onClear}
-                  >
-                    <Trash2 className="size-3 mr-1" />
-                    Tout supprimer
-                  </Button>
-                </div>
-                {cart.map((item) => (
-                  <div key={item.id} className="flex items-center gap-3">
-                    <div
-                      className="w-12 h-12 rounded-lg shrink-0 overflow-hidden"
-                      style={{ background: '#111' }}
-                    >
-                      <ImageWithFallback
-                        src={item.image}
-                        alt={item.name}
-                        fill
-                        className="w-full h-full object-cover"
-                        fallbackIcon="package"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium line-clamp-1" style={{ color: TT.text }}>
-                        {item.name}
-                      </p>
-                      <p className="text-xs font-bold" style={{ color: TT.redOrange }}>
-                        {formatPrice(item.price)}
-                      </p>
-                    </div>
-                    <div
-                      className="flex items-center rounded-lg"
-                      style={{ background: TT.darkBg }}
-                    >
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        style={{ color: TT.textMuted }}
-                        onClick={() => updateCartQuantity(item.productId, item.quantity - 1)}
-                      >
-                        {item.quantity === 1 ? (
-                          <Trash2 className="size-3 text-red-400" />
-                        ) : (
-                          <Minus className="size-3" />
-                        )}
-                      </Button>
-                      <span className="text-sm font-semibold min-w-[24px] text-center" style={{ color: TT.text }}>
-                        {item.quantity}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        style={{ color: TT.textMuted }}
-                        onClick={() => updateCartQuantity(item.productId, item.quantity + 1)}
-                      >
-                        <Plus className="size-3" />
-                      </Button>
-                    </div>
-                    <span className="text-sm font-bold w-24 text-right" style={{ color: TT.redOrange }}>
-                      {formatPrice(item.price * item.quantity)}
-                    </span>
-                  </div>
-                ))}
-                <Separator className="bg-white/10" />
-                <div className="flex items-center justify-between font-bold" style={{ color: TT.text }}>
-                  <span>Total</span>
-                  <span style={{ color: TT.redOrange }}>{formatPrice(total)}</span>
-                </div>
-              </div>
-            </ScrollArea>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Cart bar */}
-      <div
-        className="border-t px-4 py-3"
-        style={{ background: TT.cardBg, borderColor: TT.border }}
-      >
-        <div className="max-w-[1400px] mx-auto flex items-center gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-10 gap-1.5 shrink-0 rounded-lg"
-            style={{ borderColor: TT.border, color: TT.text, background: TT.darkBg }}
-            onClick={onToggle}
-          >
-            {expanded ? <ChevronDown className="size-4" /> : <ChevronUp className="size-4" />}
-            <Badge
-              className="px-1.5 h-5 text-xs text-white rounded-md"
-              style={{ background: TT.redOrange }}
-            >
-              {itemCount}
-            </Badge>
-            <span className="hidden sm:inline text-sm">panier</span>
-          </Button>
-
-          <div className="flex-1">
-            <p className="text-xs" style={{ color: TT.textMuted }}>Total</p>
-            <p className="font-bold text-sm" style={{ color: TT.redOrange }}>{formatPrice(total)}</p>
-          </div>
-
-          <Button
-            className="h-10 gap-2 font-semibold text-sm rounded-lg px-6 text-white"
-            style={{
-              background: `linear-gradient(135deg, ${TT.whatsapp}, ${TT.whatsappDark})`,
-            }}
-            onClick={onCheckout}
-          >
-            <MessageCircle className="size-4" />
-            <span className="hidden sm:inline">Commander via WhatsApp</span>
-            <span className="sm:hidden">Commander</span>
-          </Button>
-        </div>
-      </div>
-    </motion.div>
-  )
-}
 
 // ═══════════════════════════════════════════════════════════════
 // SECTION 10 : SEARCH BAR (dark input, red accent)
@@ -1704,7 +1533,7 @@ export function TikTokLiveShopPage() {
       {/* ═══ CART DRAWER ═══ */}
       <AnimatePresence>
         {cart.length > 0 && (
-          <TikTokCartDrawer
+          <ThemedCartDrawer
             expanded={cartExpanded}
             onToggle={() => setCartExpanded(!cartExpanded)}
             onClear={clearCart}
@@ -1713,6 +1542,28 @@ export function TikTokLiveShopPage() {
             itemCount={itemCount}
             cart={cart}
             updateCartQuantity={updateCartQuantity}
+            theme={{
+              text: TT.text,
+              textMuted: TT.textMuted,
+              price: TT.redOrange,
+              bg: TT.cardBg,
+              border: TT.border,
+              primary: TT.redOrange,
+              primaryLight: TT.darkBg,
+              whatsapp: TT.whatsapp,
+              whatsappFg: '#FFFFFF',
+              whatsappDark: TT.whatsappDark,
+              toggleBg: TT.darkBg,
+              toggleBorder: TT.border,
+              shadow: '0 -4px 20px rgba(0,0,0,0.5)',
+              imageBg: '#111',
+              qtyBg: TT.darkBg,
+              countBg: TT.redOrange,
+              separatorClass: 'bg-white/10',
+              roundedItem: 'rounded-lg',
+              roundedBtn: 'rounded-lg',
+              maxWidth: 'max-w-[1400px]',
+            }}
           />
         )}
       </AnimatePresence>
