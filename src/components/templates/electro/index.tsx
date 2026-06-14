@@ -801,7 +801,7 @@ export function ElectroTemplate() {
     () => getThemeWithCustomColors(sector, 'electro', publicShop?.customColors),
     [sector, publicShop?.customColors]
   )
-  const { colors, hero: heroConfig, cardMode, navLabels, showSearch, productsSectionTitle } = themeConfig
+  const { colors, hero: heroConfig, cardMode, navLabels, showSearch, productsSectionTitle, approachSteps, whyChooseUs } = themeConfig
   const heroCtaText = themeConfig.heroCtaText
   const ctaButtonText = getCtaButton(sector)
   const whatsappMsg = getCtaWhatsAppMessage(sector)
@@ -1061,6 +1061,8 @@ export function ElectroTemplate() {
                 hero={heroConfig}
                 shop={publicShop}
                 ctaText={heroCtaText}
+                isServiceMode={isServiceMode}
+                showConsultantPhoto={heroConfig.showConsultantPhoto}
                 onCtaClick={handleHeroCta}
                 onCatalogClick={handleHeroCatalog}
               />
@@ -1209,6 +1211,83 @@ export function ElectroTemplate() {
                   </AnimatePresence>
                 </div>
               </section>
+
+              {/* ═══ APPROACH STEPS (artisanat/BTP only) ═══ */}
+              {approachSteps && approachSteps.length > 0 && (
+                <section className="w-full py-12 md:py-16 bg-white">
+                  <div className="max-w-5xl mx-auto px-4 lg:px-6">
+                    <div className="flex items-center gap-3 mb-10">
+                      <div className="w-1 h-6 rounded-full" style={{ background: colors.primary }} />
+                      <h2 className="text-lg md:text-xl font-bold" style={{ color: colors.text }}>
+                        Comment ça marche
+                      </h2>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+                      {/* Connecting line (desktop) */}
+                      <div className="hidden md:block absolute top-10 left-[16.67%] right-[16.67%] h-0.5" style={{ backgroundColor: colors.primaryBg }} />
+                      {approachSteps.map((step, idx) => (
+                        <motion.div
+                          key={step.number}
+                          initial={{ opacity: 0, y: 20 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          viewport={{ once: true, margin: '-50px' }}
+                          transition={{ delay: idx * 0.15, duration: 0.5 }}
+                          className="flex flex-col items-center text-center"
+                        >
+                          <div
+                            className="w-16 h-16 rounded-full flex items-center justify-center text-2xl mb-4 relative z-10"
+                            style={{ backgroundColor: colors.primaryBg }}
+                          >
+                            {step.icon}
+                          </div>
+                          <span
+                            className="text-xs font-bold uppercase tracking-wider mb-2"
+                            style={{ color: colors.primary }}
+                          >
+                            Étape {step.number}
+                          </span>
+                          <h3 className="font-bold text-sm md:text-base mb-2" style={{ color: colors.text }}>
+                            {step.title}
+                          </h3>
+                          <p className="text-xs md:text-sm text-gray-500 max-w-xs">
+                            {step.description}
+                          </p>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                </section>
+              )}
+
+              {/* ═══ WHY CHOOSE US (artisanat/BTP only) ═══ */}
+              {whyChooseUs && whyChooseUs.length > 0 && (
+                <section className="w-full py-12 md:py-16" style={{ background: colors.background }}>
+                  <div className="max-w-5xl mx-auto px-4 lg:px-6">
+                    <div className="flex items-center gap-3 mb-10">
+                      <div className="w-1 h-6 rounded-full" style={{ background: colors.primary }} />
+                      <h2 className="text-lg md:text-xl font-bold" style={{ color: colors.text }}>
+                        Pourquoi nous choisir
+                      </h2>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                      {whyChooseUs.map((item, idx) => (
+                        <motion.div
+                          key={item.title}
+                          initial={{ opacity: 0, y: 16 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          viewport={{ once: true, margin: '-30px' }}
+                          transition={{ delay: idx * 0.1, duration: 0.4 }}
+                          className="bg-white rounded-xl p-5 text-center shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
+                        >
+                          <span className="text-3xl block mb-3">{item.icon}</span>
+                          <h3 className="font-bold text-sm mb-2" style={{ color: colors.text }}>{item.title}</h3>
+                          <p className="text-xs text-gray-500 leading-relaxed">{item.description}</p>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                </section>
+              )}
 
               {/* ═══ TRUST BADGES ═══ */}
               <ElectroTrustBadges badges={trustBadges} colors={colors} />

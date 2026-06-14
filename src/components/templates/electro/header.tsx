@@ -62,6 +62,16 @@ export function ElectroHeader({
 
   return (
     <>
+      {/* ── Announcement bar ── */}
+      <div
+        className="text-center py-2 text-xs md:text-sm font-medium"
+        style={{ backgroundColor: colors.primary, color: '#ffffff' }}
+      >
+        {isServiceMode
+          ? 'Devis gratuit sous 24h | Support 7j/7'
+          : 'Livraison gratuite à partir de 50 000 FCFA | Support 7j/7'}
+      </div>
+
       <header
         className="sticky top-0 z-50 bg-white shadow-md"
         role="banner"

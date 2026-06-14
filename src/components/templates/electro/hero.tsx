@@ -5,12 +5,15 @@ import Image from 'next/image'
 import { motion } from 'framer-motion'
 import type { ThemeColors, ThemeHero } from '@/lib/theme-config'
 import type { Shop } from '@/lib/store'
+import { MessageCircle } from 'lucide-react'
 
 interface ElectroHeroProps {
   colors: ThemeColors
   hero: ThemeHero
   shop: Shop | null
   ctaText: string
+  isServiceMode?: boolean
+  showConsultantPhoto?: boolean
   onCtaClick: () => void
   onCatalogClick: () => void
 }
@@ -39,11 +42,20 @@ const fadeVariants = {
   }),
 }
 
+/** Hero stats — shown for e-commerce sectors */
+const HERO_STATS = [
+  { value: '500+', label: 'Produits' },
+  { value: '1000+', label: 'Clients' },
+  { value: '24h', label: 'Livraison' },
+]
+
 export default function ElectroHero({
   colors,
   hero,
   shop,
   ctaText,
+  isServiceMode = false,
+  showConsultantPhoto = false,
   onCtaClick,
   onCatalogClick,
 }: ElectroHeroProps) {
@@ -83,6 +95,8 @@ export default function ElectroHero({
     }, SLIDE_INTERVAL_MS)
     return () => clearInterval(timer)
   }, [allImages.length])
+
+  const consultantPhoto = showConsultantPhoto && shop?.consultantPhotoUrl
 
   return (
     <section
@@ -140,65 +154,119 @@ export default function ElectroHero({
 
       {/* Content */}
       <div className="relative z-[2] w-full px-6 md:px-16 lg:px-24 py-20 md:py-24">
-        <div className="max-w-3xl">
-          <motion.p
-            custom={0}
-            variants={fadeVariants}
-            initial="hidden"
-            animate="visible"
-            className="text-xs md:text-sm uppercase tracking-[0.3em] font-medium text-white opacity-80"
-            style={{ textShadow: '0 1px 3px rgba(0,0,0,0.4)' }}
-          >
-            {tagline}
-          </motion.p>
-
-          <motion.h1
-            custom={1}
-            variants={fadeVariants}
-            initial="hidden"
-            animate="visible"
-            className="text-4xl md:text-5xl lg:text-7xl font-bold text-white mt-4 leading-tight"
-            style={{ textShadow: '0 2px 8px rgba(0,0,0,0.45)' }}
-          >
-            {title}
-          </motion.h1>
-
-          <motion.p
-            custom={2}
-            variants={fadeVariants}
-            initial="hidden"
-            animate="visible"
-            className="text-base md:text-lg lg:text-xl max-w-2xl text-white opacity-90 mt-4 leading-relaxed"
-            style={{ textShadow: '0 1px 4px rgba(0,0,0,0.35)' }}
-          >
-            {subtitle}
-          </motion.p>
-
-          <motion.div
-            custom={3}
-            variants={fadeVariants}
-            initial="hidden"
-            animate="visible"
-            className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mt-8"
-          >
-            <button
-              onClick={onCtaClick}
-              className="px-8 py-3.5 rounded-lg text-sm font-semibold transition-all duration-200 hover:scale-[1.03] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
-              style={{
-                backgroundColor: colors.ctaBg,
-                color: colors.ctaText,
-              }}
+        <div className={`max-w-7xl mx-auto ${consultantPhoto ? 'flex flex-col md:flex-row items-center gap-12' : ''}`}>
+          {/* Left: Text content */}
+          <div className={`${consultantPhoto ? 'flex-1' : 'max-w-3xl'}`}>
+            <motion.p
+              custom={0}
+              variants={fadeVariants}
+              initial="hidden"
+              animate="visible"
+              className="text-xs md:text-sm uppercase tracking-[0.3em] font-medium text-white opacity-80"
+              style={{ textShadow: '0 1px 3px rgba(0,0,0,0.4)' }}
             >
-              {ctaText}
-            </button>
+              {tagline}
+            </motion.p>
 
-            <button
-              onClick={onCatalogClick}
-              className="px-8 py-3.5 rounded-lg text-sm font-semibold text-white border border-white/25 hover:bg-white/10 transition-all duration-200 hover:scale-[1.03] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+            <motion.h1
+              custom={1}
+              variants={fadeVariants}
+              initial="hidden"
+              animate="visible"
+              className="text-4xl md:text-5xl lg:text-7xl font-bold text-white mt-4 leading-tight"
+              style={{ textShadow: '0 2px 8px rgba(0,0,0,0.45)' }}
             >
-              Voir le catalogue
-            </button>
-          </motion.div>
+              {title}
+            </motion.h1>
+
+            <motion.p
+              custom={2}
+              variants={fadeVariants}
+              initial="hidden"
+              animate="visible"
+              className="text-base md:text-lg lg:text-xl max-w-2xl text-white opacity-90 mt-4 leading-relaxed"
+              style={{ textShadow: '0 1px 4px rgba(0,0,0,0.35)' }}
+            >
+              {subtitle}
+            </motion.p>
+
+            <motion.div
+              custom={3}
+              variants={fadeVariants}
+              initial="hidden"
+              animate="visible"
+              className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mt-8"
+            >
+              <button
+                onClick={onCtaClick}
+                className="px-8 py-3.5 rounded-lg text-sm font-semibold transition-all duration-200 hover:scale-[1.03] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
+                style={{
+                  backgroundColor: colors.ctaBg,
+                  color: colors.ctaText,
+                }}
+              >
+                {ctaText}
+              </button>
+
+              <a
+                href={shop?.whatsapp ? `https://wa.me/${shop.whatsapp.replace(/\D/g, '')}` : '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-8 py-3.5 rounded-lg text-sm font-semibold text-white border border-white/25 hover:bg-white/10 transition-all duration-200 hover:scale-[1.03] active:scale-[0.98]"
+              >
+                <MessageCircle className="w-4 h-4" />
+                WhatsApp
+              </a>
+            </motion.div>
+
+            {/* Stats bar — e-commerce only */}
+            {!isServiceMode && (
+              <motion.div
+                custom={4}
+                variants={fadeVariants}
+                initial="hidden"
+                animate="visible"
+                className="grid grid-cols-3 gap-8 mt-12 pt-8 border-t border-white/20 max-w-2xl"
+              >
+                {HERO_STATS.map((stat) => (
+                  <div key={stat.label}>
+                    <div className="text-3xl md:text-4xl font-bold text-white">{stat.value}</div>
+                    <div className="text-sm text-white/70">{stat.label}</div>
+                  </div>
+                ))}
+              </motion.div>
+            )}
+          </div>
+
+          {/* Right: Consultant photo (artisanat/BTP) */}
+          {consultantPhoto && (
+            <motion.div
+              custom={2}
+              variants={fadeVariants}
+              initial="hidden"
+              animate="visible"
+              className="hidden md:flex flex-col items-center"
+            >
+              <div className="relative">
+                <div
+                  className="w-64 lg:w-80 h-64 lg:h-80 rounded-full overflow-hidden border-4 border-white/20 shadow-2xl"
+                >
+                  <Image
+                    src={shop.consultantPhotoUrl}
+                    alt={shop.name ?? 'Consultant'}
+                    width={320}
+                    height={320}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                {/* Glow effect */}
+                <div
+                  className="absolute -inset-6 rounded-full opacity-15 blur-3xl -z-10"
+                  style={{ backgroundColor: colors.primary }}
+                />
+              </div>
+            </motion.div>
+          )}
         </div>
       </div>
     </section>
