@@ -3,76 +3,73 @@ import { readFile, stat } from 'fs/promises'
 import path from 'path'
 import { UPLOADS_DIR } from '@/lib/storage'
 
-// Prevent Next.js from caching this route at the server level.
-// Without this, a 404 response gets cached and served even after the file is created.
 export const dynamic = 'force-dynamic'
 
-// MIME type map
-const MIME_MAP: Record<string, string> = {
-  jpg: 'image/jpeg',
-  jpeg: 'image/jpeg',
-  png: 'image/png',
-  gif: 'image/gif',
-  webp: 'image/webp',
-  svg: 'image/svg+xml',
-  ico: 'image/x-icon',
+// Common MIME types for uploaded images
+const MIME_TYPES: Record<string, string> = {
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.png': 'image/png',
+  '.gif': 'image/gif',
+  '.webp': 'image/webp',
+  '.svg': 'image/svg+xml',
+  '.ico': 'image/x-icon',
 }
 
-// GET /api/uploads/[...path] — serve uploaded files
+/**
+ * Serves uploaded files from UPLOADS_DIR.
+ *
+ * Route: /api/uploads/[...path]  (rewritten from /uploads/[...path])
+ *
+ * Security: path traversal is prevented by resolving and checking
+ * that the requested file stays within UPLOADS_DIR.
+ */
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ path: string[] }> },
 ) {
   try {
-    const { path: segments } = await params
-    const relativePath = segments.join('/')
+    const { path: pathSegments } = await params
 
-    if (!relativePath) {
-      return NextResponse.json({ error: 'Fichier introuvable' }, { status: 404 })
+    if (!pathSegments || pathSegments.length === 0) {
+      return NextResponse.json({ error: 'Chemin manquant' }, { status: 400 })
     }
 
-    // ─── Path traversal protection (strict) ──────────────────────
-    // Reject any path containing .. or absolute paths
-    if (relativePath.includes('..') || path.isAbsolute(relativePath)) {
-      return NextResponse.json({ error: 'Fichier introuvable' }, { status: 404 })
+    // Build the file path safely
+    const relativePath = pathSegments.join('/')
+    const absolutePath = path.resolve(UPLOADS_DIR, relativePath)
+    const resolvedUploadsDir = path.resolve(UPLOADS_DIR)
+
+    // Prevent path traversal attacks
+    if (!absolutePath.startsWith(resolvedUploadsDir + path.sep) && absolutePath !== resolvedUploadsDir) {
+      return NextResponse.json({ error: 'Accès non autorisé' }, { status: 403 })
     }
 
-    const resolved = path.resolve(UPLOADS_DIR, relativePath)
-    const normalizedUploadsDir = path.resolve(UPLOADS_DIR)
-
-    if (!resolved.startsWith(normalizedUploadsDir + path.sep) && resolved !== normalizedUploadsDir) {
-      return NextResponse.json({ error: 'Fichier introuvable' }, { status: 404 })
-    }
-
-    // ─── Check file exists ──────────────────────────────────────
-    const fileStat = await stat(resolved).catch(() => null)
+    // Check file exists and is a file (not a directory)
+    const fileStat = await stat(absolutePath).catch(() => null)
     if (!fileStat || !fileStat.isFile()) {
-      return NextResponse.json({ error: 'Fichier introuvable' }, { status: 404 })
+      return NextResponse.json({ error: 'Fichier non trouvé' }, { status: 404 })
     }
 
-    const buffer = await readFile(resolved)
-    const ext = resolved.split('.').pop()?.toLowerCase() ?? ''
-    const contentType = MIME_MAP[ext] || 'application/octet-stream'
+    // Read the file
+    const buffer = await readFile(absolutePath)
 
-    // ─── Cache headers ──────────────────────────────────────────
-    // Use ETag based on file size + mtime for cache validation
-    // NOT immutable — allows revalidation if needed
-    const etag = `"${fileStat.size}-${fileStat.mtimeMs}"`
+    // Determine content type from extension
+    const ext = path.extname(absolutePath).toLowerCase()
+    const contentType = MIME_TYPES[ext] || 'application/octet-stream'
 
+    // Return with caching headers (1 day, stale-while-revalidate 7 days)
     return new NextResponse(buffer, {
       status: 200,
       headers: {
         'Content-Type': contentType,
-        'Content-Length': String(fileStat.size),
-        // 1 day cache with 7 day stale-while-revalidate
-        // Browser caches for 1 day, then revalidates in background for 7 days
+        'Content-Length': String(buffer.length),
         'Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800',
-        'ETag': etag,
-        'Content-Disposition': `inline; filename="${path.basename(resolved)}"`,
+        'ETag': `"${fileStat.size}-${fileStat.mtimeMs}"`,
       },
     })
   } catch (error) {
-    console.error('Serve upload error:', error)
-    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
+    console.error('[uploads] Error serving file:', error)
+    return NextResponse.json({ error: 'Erreur interne' }, { status: 500 })
   }
 }
