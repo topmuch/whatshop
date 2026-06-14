@@ -53,6 +53,7 @@ export interface Shop {
   heroSubtitle?: string
   heroTagline?: string
   heroImageUrl?: string
+  consultantPhotoUrl?: string
   productsTitle?: string
   productsTagline?: string
   categoriesTitle?: string

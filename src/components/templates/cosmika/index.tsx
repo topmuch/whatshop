@@ -48,6 +48,7 @@ import { CosmikaProductCard } from './product-card'
 import { CosmikaTrustBadges } from './trust-badges'
 import { CosmikaFooter } from './footer'
 import { CosmikaTestimonials, type TestimonialItem } from './testimonials'
+import { CosmikaExpertises } from './expertises'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -697,13 +698,22 @@ export function CosmikaTemplate() {
               {/* ═══ HERO ═══ */}
               <CosmikaHero config={config} shop={publicShop} />
 
-              {/* ═══ CATEGORIES ═══ */}
-              <CosmikaCategories
-                categories={publicCategories}
-                config={config}
-                activeCategoryId={activeCategory}
-                onCategoryClick={handleCategoryClick}
-              />
+              {/* ═══ CATEGORIES / EXPERTISES ═══ */}
+              {config.hero.showConsultantPhoto ? (
+                <CosmikaExpertises
+                  categories={publicCategories}
+                  config={config}
+                  activeCategoryId={activeCategory}
+                  onCategoryClick={handleCategoryClick}
+                />
+              ) : (
+                <CosmikaCategories
+                  categories={publicCategories}
+                  config={config}
+                  activeCategoryId={activeCategory}
+                  onCategoryClick={handleCategoryClick}
+                />
+              )}
 
               {/* ═══ PRODUCTS SECTION ═══ */}
               <section id="products" className="py-16 md:py-20 px-4 bg-white">

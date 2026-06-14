@@ -41,12 +41,27 @@ export interface ThemeColors {
   heroOverlay: string
 }
 
+export interface ApproachStep {
+  number: string
+  title: string
+  description: string
+  icon: string
+}
+
+export interface WhyChooseUs {
+  icon: string
+  title: string
+  description: string
+}
+
 export interface ThemeHero {
   defaultTitle: string
   defaultSubtitle: string
   defaultTagline: string
   /** Whether the hero uses a dark overlay (dark bg) or light bg */
   darkMode: boolean
+  /** Show a consultant photo on the right side of the hero (consulting sector) */
+  showConsultantPhoto?: boolean
 }
 
 export interface ThemeTrustBadge {
@@ -93,6 +108,10 @@ export interface ThemeConfig {
   showSearch: boolean
   /** (Electro only) Section heading for the products/services grid */
   productsSectionTitle: string
+  /** (Cosmika Consulting) Approach steps — Diagnostic, Stratégie, Accompagnement */
+  approachSteps?: ApproachStep[]
+  /** (Cosmika Consulting) Why choose us — key differentiators */
+  whyChooseUs?: WhyChooseUs[]
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -314,11 +333,11 @@ const CONSULTING_THEME: ThemeConfig = {
   businessType: 'SERVICE',
   engine: 'cosmika',
   colors: {
-    primary: '#4F46E5',
-    primaryDark: '#4338CA',
-    primaryLight: '#A5B4FC',
-    primaryBg: '#EEF2FF',
-    secondary: '#64748B',
+    primary: '#1e40af',
+    primaryDark: '#1e3a8a',
+    primaryLight: '#93C5FD',
+    primaryBg: '#EFF6FF',
+    secondary: '#64748b',
     ctaBg: '#000000',
     ctaText: '#FFFFFF',
     text: '#1F2937',
@@ -330,6 +349,7 @@ const CONSULTING_THEME: ThemeConfig = {
     defaultSubtitle: 'Accompagnement professionnel pour booster votre activité',
     defaultTagline: 'PERFORMANCE & RÉSULTATS',
     darkMode: true,
+    showConsultantPhoto: true,
   },
   defaultTrustBadges: [
     { emoji: '🏆', title: "10 ans d'Expérience", subtitle: 'Expertise reconnue', order: 0 },
@@ -339,9 +359,51 @@ const CONSULTING_THEME: ThemeConfig = {
   ],
   cardMode: 'price',
   navLabels: { catalog: 'Services', categories: 'Expertises' },
-  heroCtaText: 'Nous contacter',
+  heroCtaText: 'Demander un devis',
   showSearch: false,
   productsSectionTitle: 'Nos Services',
+  approachSteps: [
+    {
+      number: '01',
+      title: 'Diagnostic',
+      description: 'Analyse complète de votre situation actuelle et identification des enjeux.',
+      icon: '🔍',
+    },
+    {
+      number: '02',
+      title: 'Stratégie',
+      description: "Élaboration d'un plan d'action sur mesure avec objectifs mesurables.",
+      icon: '📋',
+    },
+    {
+      number: '03',
+      title: 'Accompagnement',
+      description: 'Mise en œuvre et suivi régulier pour garantir les résultats.',
+      icon: '🚀',
+    },
+  ],
+  whyChooseUs: [
+    {
+      icon: '✅',
+      title: 'Expertise Reconnue',
+      description: "Plus de 10 ans d'expérience dans le conseil aux entreprises.",
+    },
+    {
+      icon: '🎯',
+      title: 'Résultats Concrets',
+      description: 'Méthodologie éprouvée avec des KPIs mesurables à chaque étape.',
+    },
+    {
+      icon: '🤝',
+      title: 'Approche Personnalisée',
+      description: 'Chaque mission est adaptée à vos enjeux spécifiques.',
+    },
+    {
+      icon: '⚡',
+      title: 'Réactivité',
+      description: 'Réponse sous 24h et disponibilité pour vos urgences.',
+    },
+  ],
 }
 
 const SANTE_THEME: ThemeConfig = {

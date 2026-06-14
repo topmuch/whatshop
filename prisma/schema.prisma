@@ -152,6 +152,7 @@ model Shop {
   heroSubtitle          String?
   heroTagline           String?
   heroImageUrl          String?
+  consultantPhotoUrl    String?   // Consulting: photo du consultant affichée dans le hero
   productsTitle         String?
   productsTagline       String?
   categoriesTitle       String?
