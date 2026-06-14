@@ -59,6 +59,9 @@ import { ElectroHeader } from './header'
 import ElectroHero from './hero'
 import ElectroProductCard from './product-card'
 import ElectroTrustBadges from './trust-badges'
+import ElectroApproach from './approach'
+import ElectroWhyChooseUs from './why-choose-us'
+import ElectroFooter from './footer'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -452,87 +455,7 @@ function CartBar({
   )
 }
 
-// ─── Footer ───────────────────────────────────────────────────────────────────
-
-interface ElectroFooterProps {
-  shop: Shop
-  colors: ThemeConfig['colors']
-}
-
-function ElectroFooter({ shop, colors }: ElectroFooterProps) {
-  return (
-    <footer
-      className="w-full py-10 px-4"
-      style={{ background: colors.secondary, color: '#FFFFFF' }}
-    >
-      <div className="max-w-[1400px] mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Brand */}
-          <div>
-            <h3 className="text-lg font-bold mb-3">{shop.name}</h3>
-            {shop.description && (
-              <p className="text-sm opacity-70 leading-relaxed max-w-sm">
-                {shop.description}
-              </p>
-            )}
-          </div>
-
-          {/* Contact */}
-          <div>
-            <h4 className="text-sm font-semibold uppercase tracking-wider mb-3 opacity-60">
-              Contact
-            </h4>
-            <div className="space-y-2 text-sm opacity-80">
-              {shop.phone && (
-                <a
-                  href={`tel:${shop.phone.replace(/\D/g, '')}`}
-                  className="flex items-center gap-2 hover:opacity-100 transition-opacity min-h-[44px]"
-                >
-                  <Phone className="size-4 shrink-0" />
-                  <span>{shop.phone}</span>
-                </a>
-              )}
-              {shop.whatsapp && (
-                <a
-                  href={`https://wa.me/${shop.whatsapp.replace(/\D/g, '')}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 hover:opacity-100 transition-opacity min-h-[44px]"
-                >
-                  <MessageCircle className="size-4 shrink-0" />
-                  <span>WhatsApp</span>
-                </a>
-              )}
-              {shop.address && (
-                <div className="flex items-start gap-2 min-h-[44px]">
-                  <MapPin className="size-4 shrink-0 mt-0.5" />
-                  <span>{shop.address}</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Platform */}
-          <div>
-            <h4 className="text-sm font-semibold uppercase tracking-wider mb-3 opacity-60">
-              Plateforme
-            </h4>
-            <p className="text-sm opacity-70">
-              Créé avec <span className="font-semibold">Boutiko</span> —
-              Créez votre boutique en ligne en quelques minutes.
-            </p>
-          </div>
-        </div>
-
-        <Separator className="my-6 bg-white/10" />
-
-        <p className="text-center text-xs opacity-50">
-          © {new Date().getFullYear()} {shop.name}. Tous droits réservés.
-        </p>
-      </div>
-    </footer>
-  )
-}
+// ─── Footer is now imported from ./footer ────────────────────────────────────
 
 // ─── Product Detail View ─────────────────────────────────────────────────────
 
@@ -1214,79 +1137,12 @@ export function ElectroTemplate() {
 
               {/* ═══ APPROACH STEPS (artisanat/BTP only) ═══ */}
               {approachSteps && approachSteps.length > 0 && (
-                <section className="w-full py-12 md:py-16 bg-white">
-                  <div className="max-w-5xl mx-auto px-4 lg:px-6">
-                    <div className="flex items-center gap-3 mb-10">
-                      <div className="w-1 h-6 rounded-full" style={{ background: colors.primary }} />
-                      <h2 className="text-lg md:text-xl font-bold" style={{ color: colors.text }}>
-                        Comment ça marche
-                      </h2>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
-                      {/* Connecting line (desktop) */}
-                      <div className="hidden md:block absolute top-10 left-[16.67%] right-[16.67%] h-0.5" style={{ backgroundColor: colors.primaryBg }} />
-                      {approachSteps.map((step, idx) => (
-                        <motion.div
-                          key={step.number}
-                          initial={{ opacity: 0, y: 20 }}
-                          whileInView={{ opacity: 1, y: 0 }}
-                          viewport={{ once: true, margin: '-50px' }}
-                          transition={{ delay: idx * 0.15, duration: 0.5 }}
-                          className="flex flex-col items-center text-center"
-                        >
-                          <div
-                            className="w-16 h-16 rounded-full flex items-center justify-center text-2xl mb-4 relative z-10"
-                            style={{ backgroundColor: colors.primaryBg }}
-                          >
-                            {step.icon}
-                          </div>
-                          <span
-                            className="text-xs font-bold uppercase tracking-wider mb-2"
-                            style={{ color: colors.primary }}
-                          >
-                            Étape {step.number}
-                          </span>
-                          <h3 className="font-bold text-sm md:text-base mb-2" style={{ color: colors.text }}>
-                            {step.title}
-                          </h3>
-                          <p className="text-xs md:text-sm text-gray-500 max-w-xs">
-                            {step.description}
-                          </p>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </div>
-                </section>
+                <ElectroApproach steps={approachSteps} theme={themeConfig} />
               )}
 
               {/* ═══ WHY CHOOSE US (artisanat/BTP only) ═══ */}
               {whyChooseUs && whyChooseUs.length > 0 && (
-                <section className="w-full py-12 md:py-16" style={{ background: colors.background }}>
-                  <div className="max-w-5xl mx-auto px-4 lg:px-6">
-                    <div className="flex items-center gap-3 mb-10">
-                      <div className="w-1 h-6 rounded-full" style={{ background: colors.primary }} />
-                      <h2 className="text-lg md:text-xl font-bold" style={{ color: colors.text }}>
-                        Pourquoi nous choisir
-                      </h2>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                      {whyChooseUs.map((item, idx) => (
-                        <motion.div
-                          key={item.title}
-                          initial={{ opacity: 0, y: 16 }}
-                          whileInView={{ opacity: 1, y: 0 }}
-                          viewport={{ once: true, margin: '-30px' }}
-                          transition={{ delay: idx * 0.1, duration: 0.4 }}
-                          className="bg-white rounded-xl p-5 text-center shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
-                        >
-                          <span className="text-3xl block mb-3">{item.icon}</span>
-                          <h3 className="font-bold text-sm mb-2" style={{ color: colors.text }}>{item.title}</h3>
-                          <p className="text-xs text-gray-500 leading-relaxed">{item.description}</p>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </div>
-                </section>
+                <ElectroWhyChooseUs items={whyChooseUs} theme={themeConfig} />
               )}
 
               {/* ═══ TRUST BADGES ═══ */}
@@ -1297,7 +1153,7 @@ export function ElectroTemplate() {
       </main>
 
       {/* ═══ FOOTER ═══ */}
-      <ElectroFooter shop={publicShop} colors={colors} />
+      <ElectroFooter shop={publicShop} theme={themeConfig} />
 
       {/* ═══ CART BAR (e-commerce only) ═══ */}
       {!isServiceMode && (
