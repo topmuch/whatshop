@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { getSectorConfig } from '@/lib/sector-config'
+import { getTemplateDisplayInfo } from '@/lib/template-display'
 
 /* ──────────────────────── TYPES ──────────────────────── */
 
@@ -84,7 +85,7 @@ export default function Step5Offer({
 }: Step5Props) {
   const sectorConfig = getSectorConfig(sector)
   const previewSlug = generatePreviewSlug(shopName)
-  const templateDisplayName = template === 'cosmika-beauty' ? 'Cosmika Beauty' : 'XStore Electro'
+  const templateDisplayName = `Template ${getTemplateDisplayInfo(template).displayName}`
   const sectorDisplayName = sectorConfig ? `${sectorConfig.emoji} ${sectorConfig.name}` : sector
 
   return (

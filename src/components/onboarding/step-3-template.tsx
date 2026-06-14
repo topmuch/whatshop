@@ -3,6 +3,7 @@
 import { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { getSectorConfig, getTemplateForSector, type BusinessType } from '@/lib/sector-config'
+import { getTemplateDisplayInfo } from '@/lib/template-display'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -15,67 +16,42 @@ interface Step3Props {
   onConfirm: () => void
 }
 
-const COSMIKA_FEATURES = [
-  'Design élégant & moderne',
-  'Compatible mobile & desktop',
-  'Intégration WhatsApp native',
-  'Chargement ultra-rapide',
-]
-
-const ELECTRO_FEATURES = [
-  'Design tech & épuré',
-  'Compatible mobile & desktop',
-  'Intégration WhatsApp native',
-  'Catalogue produits avancé',
-]
-
 export function Step3Template({ sector, businessType, template, onConfirm }: Step3Props) {
   const sectorConfig = getSectorConfig(sector)
   const sectorName = sectorConfig?.name ?? sector
   const determinedTemplate = getTemplateForSector(sector)
 
+  const displayInfo = useMemo(
+    () => getTemplateDisplayInfo(determinedTemplate),
+    [determinedTemplate],
+  )
+
   const isCosmika = determinedTemplate === 'cosmika-beauty'
+
+  // Gradient classes derived from displayInfo color
   const isElectro = determinedTemplate === 'xstore-electro'
+  const accentFrom = isElectro ? 'from-emerald-500' : 'from-rose-500'
+  const accentTo = isElectro ? 'to-teal-500' : 'to-pink-500'
+  const accentBg = isElectro ? 'bg-emerald-50' : 'bg-rose-50'
+  const accentText = isElectro ? 'text-emerald-600' : 'text-rose-600'
+  const accentBorder = isElectro ? 'border-emerald-200' : 'border-rose-200'
+  const mockupBg = isElectro
+    ? 'bg-gradient-to-br from-emerald-400 via-teal-400 to-cyan-400'
+    : 'bg-gradient-to-br from-rose-400 via-pink-400 to-fuchsia-400'
 
-  const templateInfo = useMemo(() => {
-    if (isCosmika) {
-      return {
-        emoji: '✨',
-        title: 'Template Cosmika',
-        accentFrom: 'from-rose-500',
-        accentTo: 'to-pink-500',
-        accentBg: 'bg-rose-50',
-        accentText: 'text-rose-600',
-        accentBorder: 'border-rose-200',
-        mockupBg: 'bg-gradient-to-br from-rose-400 via-pink-400 to-fuchsia-400',
-        features: COSMIKA_FEATURES.map((f) =>
-          f === 'Design élégant & moderne'
-            ? `Design élégant & moderne — optimisé pour ${sectorName}`
-            : f,
-        ),
-      }
-    }
-    if (isElectro) {
-      return {
-        emoji: '⚡',
-        title: 'Template Electro',
-        accentFrom: 'from-emerald-500',
-        accentTo: 'to-teal-500',
-        accentBg: 'bg-emerald-50',
-        accentText: 'text-emerald-600',
-        accentBorder: 'border-emerald-200',
-        mockupBg: 'bg-gradient-to-br from-emerald-400 via-teal-400 to-cyan-400',
-        features: ELECTRO_FEATURES.map((f) =>
-          f === 'Design tech & épuré'
-            ? `Design tech & épuré — optimisé pour ${sectorName}`
-            : f,
-        ),
-      }
-    }
-    return null
-  }, [isCosmika, isElectro, sectorName])
-
-  if (!templateInfo) return null
+  const features = useMemo(
+    () =>
+      displayInfo.features.map((f) => {
+        if (isCosmika && f === displayInfo.features[0]) {
+          return `${f} — optimisé pour ${sectorName}`
+        }
+        if (!isCosmika && f === displayInfo.features[0]) {
+          return `${f} — optimisé pour ${sectorName}`
+        }
+        return f
+      }),
+    [displayInfo.features, isCosmika, sectorName],
+  )
 
   return (
     <motion.div
@@ -102,38 +78,45 @@ export function Step3Template({ sector, businessType, template, onConfirm }: Ste
             {/* Left: Info */}
             <div className="flex-1 p-6 sm:p-8 flex flex-col justify-between">
               <div className="space-y-6">
-                {/* Template identity */}
+                {/* Template identity — now uses marketing display name */}
                 <div className="flex items-center gap-4">
-                  <span className="text-5xl">{templateInfo.emoji}</span>
+                  <span className="text-5xl">{displayInfo.style.emoji}</span>
                   <div>
                     <h3 className="text-xl sm:text-2xl font-bold text-gray-900">
-                      {templateInfo.title}
+                      Template {displayInfo.displayName}
                     </h3>
-                    <Badge
-                      variant="secondary"
-                      className={`mt-1.5 ${templateInfo.accentBg} ${templateInfo.accentText} border ${templateInfo.accentBorder}`}
-                    >
-                      {businessType === 'SERVICE' ? 'Mode Services' : 'Mode E-commerce'}
-                    </Badge>
+                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                      <Badge
+                        variant="secondary"
+                        className={`${accentBg} ${accentText} border ${accentBorder}`}
+                      >
+                        {displayInfo.style.badge}
+                      </Badge>
+                      <Badge variant="outline" className="text-xs">
+                        {businessType === 'SERVICE' ? 'Mode Services' : 'Mode E-commerce'}
+                      </Badge>
+                    </div>
+                    <p className="text-sm font-medium mt-1" style={{ color: displayInfo.style.primaryColor }}>
+                      {displayInfo.tagline}
+                    </p>
                   </div>
                 </div>
 
                 {/* Optimized for sector callout */}
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Ce template est automatiquement configuré et optimisé pour le secteur{' '}
-                  <span className="font-semibold text-gray-800">{sectorName}</span>.
-                  Il offre la meilleure expérience pour vos clients.
+                  {displayInfo.description}
                 </p>
 
                 {/* Features list */}
                 <ul className="space-y-3">
-                  {templateInfo.features.map((feature, index) => (
+                  {features.map((feature, index) => (
                     <li
                       key={index}
                       className="flex items-start gap-3 text-sm text-gray-700"
                     >
                       <div
-                        className={`mt-0.5 w-5 h-5 rounded-full bg-gradient-to-r ${templateInfo.accentFrom} ${templateInfo.accentTo} flex items-center justify-center shrink-0`}
+                        className="mt-0.5 w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-white"
+                        style={{ backgroundColor: displayInfo.style.primaryColor }}
                       >
                         <Check className="w-3 h-3 text-white" />
                       </div>
@@ -148,7 +131,8 @@ export function Step3Template({ sector, businessType, template, onConfirm }: Ste
                 <Button
                   onClick={onConfirm}
                   size="lg"
-                  className={`w-full sm:w-auto bg-gradient-to-r ${templateInfo.accentFrom} ${templateInfo.accentTo} hover:opacity-90 text-white rounded-xl px-8 font-semibold h-12`}
+                  className="w-full sm:w-auto text-white rounded-xl px-8 font-semibold h-12 transition hover:opacity-90"
+                  style={{ backgroundColor: displayInfo.style.primaryColor }}
                 >
                   Continuer avec ce template →
                 </Button>
@@ -166,7 +150,8 @@ export function Step3Template({ sector, businessType, template, onConfirm }: Ste
 
                     {/* Screen content */}
                     <div
-                      className={`w-full h-full ${templateInfo.mockupBg} flex flex-col items-center justify-center p-6 text-white`}
+                      className="w-full h-full flex flex-col items-center justify-center p-6 text-white"
+                      style={{ background: `linear-gradient(135deg, ${displayInfo.style.primaryColor}80, ${displayInfo.style.primaryColor}50)` }}
                     >
                       {/* Mock header */}
                       <div className="w-full mb-6">
@@ -198,15 +183,24 @@ export function Step3Template({ sector, businessType, template, onConfirm }: Ste
                   </div>
                 </div>
 
-                {/* Reflection / glow effect */}
+                {/* Glow effect */}
                 <div
-                  className={`absolute -inset-4 ${templateInfo.mockupBg} opacity-10 blur-3xl rounded-full -z-10`}
+                  className={`absolute -inset-4 ${mockupBg} opacity-10 blur-3xl rounded-full -z-10`}
                 />
               </div>
             </div>
           </div>
         </CardContent>
       </Card>
+
+      {/* Info note */}
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-800">
+        <p className="font-semibold mb-1">💡 Bon à savoir</p>
+        <p>
+          Vous pourrez personnaliser les couleurs, le logo et le contenu de ce template
+          après l&apos;inscription, directement depuis votre tableau de bord.
+        </p>
+      </div>
     </motion.div>
   )
 }

@@ -2,7 +2,8 @@
 
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { templates, type TemplateId } from '@/lib/templates'
+import { templates, type TemplateId, type ShopTemplate } from '@/lib/templates'
+import { getTemplateDisplayInfo } from '@/lib/template-display'
 import { motion } from 'framer-motion'
 import { Check } from 'lucide-react'
 
@@ -11,7 +12,7 @@ interface TemplateSelectorProps {
   onSelect: (template: TemplateId) => void
 }
 
-function getPreviewGradient(templateId: string, colors: typeof templates.classic.colors): string {
+function getPreviewGradient(_templateId: string, colors: ShopTemplate['colors']): string {
   if (colors.primary.startsWith('linear')) return colors.primary
   return `linear-gradient(135deg, ${colors.primary}, ${colors.accent})`
 }
@@ -19,7 +20,6 @@ function getPreviewGradient(templateId: string, colors: typeof templates.classic
 function TemplatePreviewMini({ templateId }: { templateId: TemplateId }) {
   const t = templates[templateId]
   const c = t.colors
-  const isGradient = c.ctaBg.startsWith('linear') || c.filterActive.startsWith('linear')
 
   return (
     <div className="relative w-full aspect-[4/3] overflow-hidden" style={{ borderRadius: t.cardStyle.rounded, background: c.bg }}>
@@ -44,10 +44,10 @@ function TemplatePreviewMini({ templateId }: { templateId: TemplateId }) {
       <div className="flex gap-1 px-2 py-1.5">
         <div
           className="h-2.5 rounded-full px-2 w-8"
-          style={{ background: c.primary.startsWith('linear') ? '#A855F7' : c.primary, borderRadius: t.layout.categoryStyle === 'button' ? '4px' : '9999px' }}
+          style={{ background: c.primary.startsWith('linear') ? '#A855F7' : c.primary, borderRadius: '9999px' }}
         />
-        <div className="h-2.5 rounded-full px-2 w-6" style={{ background: c.border, borderRadius: t.layout.categoryStyle === 'button' ? '4px' : '9999px' }} />
-        <div className="h-2.5 rounded-full px-2 w-5" style={{ background: c.border, borderRadius: t.layout.categoryStyle === 'button' ? '4px' : '9999px' }} />
+        <div className="h-2.5 rounded-full px-2 w-6" style={{ background: c.border, borderRadius: '9999px' }} />
+        <div className="h-2.5 rounded-full px-2 w-5" style={{ background: c.border, borderRadius: '9999px' }} />
       </div>
 
       {/* Mini product grid */}
@@ -76,9 +76,11 @@ function TemplatePreviewMini({ templateId }: { templateId: TemplateId }) {
 
 export function TemplateSelector({ currentTemplate, onSelect }: TemplateSelectorProps) {
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {Object.values(templates).map((t) => {
         const isActive = currentTemplate === t.id
+        const display = getTemplateDisplayInfo(t.id)
+
         return (
           <motion.div
             key={t.id}
@@ -89,44 +91,36 @@ export function TemplateSelector({ currentTemplate, onSelect }: TemplateSelector
               className={`cursor-pointer transition-all duration-300 overflow-hidden ${
                 isActive ? 'ring-2 shadow-lg' : 'hover:shadow-md'
               }`}
-              style={isActive ? { '--tw-ring-color': t.colors.primary.startsWith('linear') ? '#A855F7' : t.colors.primary } as React.CSSProperties : undefined}
-              onClick={() => {
-                onSelect(t.id)
-              }}
+              style={isActive ? { '--tw-ring-color': display.style.primaryColor } as React.CSSProperties : undefined}
+              onClick={() => onSelect(t.id)}
             >
               {/* Template preview */}
               <div className="p-3">
                 <TemplatePreviewMini templateId={t.id} />
               </div>
 
-              {/* Template info */}
-              <div className="px-4 pb-4 pt-2 space-y-1">
+              {/* Template info — uses marketing display name */}
+              <div className="px-4 pb-4 pt-2 space-y-1.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-lg">{t.emoji}</span>
-                    <span className="font-semibold text-sm">{t.name}</span>
+                    <span className="text-lg">{display.style.emoji}</span>
+                    <span className="font-semibold text-sm">Template {display.displayName}</span>
                   </div>
-                  {isActive && (
-                    <div
-                      className="flex items-center justify-center w-5 h-5 rounded-full"
-                      style={{ background: t.colors.primary.startsWith('linear') ? '#A855F7' : t.colors.primary }}
+                  {isActive ? (
+                    <Badge
+                      className="text-[10px] px-2 py-0.5 text-white border-0"
+                      style={{ backgroundColor: display.style.primaryColor }}
                     >
-                      <Check className="h-3 w-3 text-white" />
-                    </div>
+                      Actif
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-[10px] px-2 py-0.5">
+                      {display.style.badge}
+                    </Badge>
                   )}
                 </div>
-                <p className="text-[11px] text-muted-foreground leading-tight">{t.description}</p>
-
-                {/* Color dots */}
-                <div className="flex items-center gap-1.5 pt-1">
-                  {[t.colors.primary, t.colors.accent, t.colors.bg, t.colors.text].map((color, i) => (
-                    <div
-                      key={i}
-                      className="h-4 w-4 rounded-full border border-border/50 flex-shrink-0"
-                      style={{ backgroundColor: color.startsWith('linear') ? (i === 0 ? '#A855F7' : '#06B6D4') : color }}
-                    />
-                  ))}
-                </div>
+                <p className="text-xs text-muted-foreground leading-tight">{display.tagline}</p>
+                <p className="text-[11px] text-muted-foreground/80 leading-tight line-clamp-2">{display.description}</p>
               </div>
             </Card>
           </motion.div>

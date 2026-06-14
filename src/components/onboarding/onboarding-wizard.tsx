@@ -93,7 +93,7 @@ const TEMPLATES: TemplateInfo[] = [
   {
     id: 'cosmika-beauty',
     emoji: '✨',
-    name: 'Cosmika Beauty',
+    name: 'Élégance',
     features: {
       ecommerce: ['Panier WhatsApp intégré', 'Gestion des stocks en temps réel', 'Design élégant & moderne'],
       service: ['Bouton Demander un devis', 'Formulaire de réservation', 'Design élégant & moderne'],
@@ -102,7 +102,7 @@ const TEMPLATES: TemplateInfo[] = [
   {
     id: 'xstore-electro',
     emoji: '⚡',
-    name: 'Electro Store',
+    name: 'Moderne',
     features: {
       ecommerce: ['Catalogue produits avancé', 'Gestion des stocks en temps réel', 'Design tech & épuré'],
       service: ['Bouton Demander un devis', 'Formulaire de réservation', 'Design tech & épuré'],

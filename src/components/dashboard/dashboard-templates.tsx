@@ -127,7 +127,7 @@ export function DashboardTemplates() {
         </Card>
       )}
 
-      {/* Template-specific customization (e.g. Cosmika Beauty) */}
+      {/* Template-specific customization */}
       <TemplateCustomization shopSlug={shop.slug} />
     </div>
   )

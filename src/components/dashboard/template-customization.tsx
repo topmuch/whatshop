@@ -344,7 +344,7 @@ export function TemplateCustomization({ shopSlug }: TemplateCustomizationProps) 
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-rose-600" />
-            Personnalisation du template Cosmika Beauty
+            Personnalisation du template
           </CardTitle>
           <CardDescription>
             Configurez les textes, badges de confiance, témoignages et liens du footer de votre boutique.
