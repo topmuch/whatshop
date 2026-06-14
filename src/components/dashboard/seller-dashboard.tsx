@@ -41,6 +41,7 @@ import {
   Megaphone,
   TrendingUp,
   Mail,
+  Plug,
 } from 'lucide-react'
 import { useThemeMode } from '@/lib/use-theme'
 import { getBusinessLabels } from '@/lib/business-labels'
@@ -55,6 +56,7 @@ import { DashboardSettings } from './dashboard-settings'
 import { DashboardLive } from './dashboard-live'
 import { DashboardTemplates } from './dashboard-templates'
 import { MarketingKit } from './marketing-kit'
+import { DashboardIntegrations } from './dashboard-integrations'
 import { NotificationBell } from './notification-bell'
 import { toast } from 'sonner'
 
@@ -112,6 +114,7 @@ function getNavItems(businessType?: string | null, sector?: string | null): { id
     { id: 'orders', label: labels.navOrders, icon: <ShoppingCart className="h-5 w-5" /> },
     { id: 'live', label: 'Live TikTok', icon: <Radio className="h-5 w-5" /> },
     { id: 'marketing-kit', label: 'Kit Marketing', icon: <Megaphone className="h-5 w-5" /> },
+    { id: 'integrations', label: 'Intégrations', icon: <Plug className="h-5 w-5" /> },
     { id: 'templates', label: 'Templates', icon: <Palette className="h-5 w-5" /> },
     { id: 'settings', label: 'Paramètres', icon: <Settings className="h-5 w-5" /> },
   ]
@@ -498,6 +501,8 @@ function DashboardContent({ consolidatedStats }: { consolidatedStats: Consolidat
       return <DashboardSettings />
     case 'marketing-kit':
       return <MarketingKit />
+    case 'integrations':
+      return <DashboardIntegrations />
     case 'templates':
       return <DashboardTemplates />
     default:

@@ -35,6 +35,36 @@ const AUTH_ROUTES = new Set([
   'register',
 ])
 
+// Facebook browser cookie names
+const FB_COOKIE_NAMES = ['_fbp', '_fbc']
+
+/**
+ * Enrich a NextResponse with visitor IP/UA cookies for Facebook CAPI matching
+ * and forward Facebook browser cookies as headers to API routes.
+ */
+function withVisitorCookies(request: NextRequest, response: NextResponse): NextResponse {
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || request.headers.get('x-real-ip')
+    || ''
+  const ua = request.headers.get('user-agent') || ''
+
+  // Set 1-hour cookies for CAPI matching
+  if (ip) {
+    response.cookies.set('x-visitor-ip', ip, { maxAge: 3600, path: '/', httpOnly: true, sameSite: 'lax' })
+  }
+  if (ua) {
+    response.cookies.set('x-visitor-ua', ua, { maxAge: 3600, path: '/', httpOnly: true, sameSite: 'lax' })
+  }
+
+  // Forward Facebook cookies as headers for CAPI
+  for (const name of FB_COOKIE_NAMES) {
+    const val = request.cookies.get(name)?.value
+    if (val) response.headers.set(`x-${name}`, val)
+  }
+
+  return response
+}
+
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
@@ -46,7 +76,7 @@ export function proxy(request: NextRequest) {
     pathname === '/' ||
     pathname.includes('.') // static files
   ) {
-    return NextResponse.next()
+    return withVisitorCookies(request, NextResponse.next())
   }
 
   const slug = pathname.slice(1).toLowerCase()
@@ -69,7 +99,7 @@ export function proxy(request: NextRequest) {
 
   // Let Next.js handle known app routes (they have their own page.tsx)
   if (APP_ROUTES.has(slug)) {
-    return NextResponse.next()
+    return withVisitorCookies(request, NextResponse.next())
   }
 
   // Product URL pattern: /shop-slug/p/product-slug

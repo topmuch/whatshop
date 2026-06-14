@@ -48,6 +48,11 @@ export interface AuthShop {
   testimonialsTagline?: string
   trustBadges?: string
   footerLinks?: string
+  facebookPixelId?: string
+  facebookCatalogId?: string
+  trackPageViews?: boolean
+  trackProductViews?: boolean
+  trackWhatsAppClicks?: boolean
 }
 
 /** User type returned from auth functions — includes `shops` array + `shop` (first/primary). */
@@ -275,5 +280,10 @@ export function mapShopToAuthShop(shop: Record<string, unknown>): AuthShop {
     primaryColor: (shop.primaryColor as string) ?? '#EC4899',
     secondaryColor: (shop.secondaryColor as string) ?? null,
     customColors: (shop.customColors as string) ?? '{}',
+    facebookPixelId: (shop.facebookPixelId as string) ?? undefined,
+    facebookCatalogId: (shop.facebookCatalogId as string) ?? undefined,
+    trackPageViews: shop.trackPageViews ?? true,
+    trackProductViews: shop.trackProductViews ?? true,
+    trackWhatsAppClicks: shop.trackWhatsAppClicks ?? true,
   }
 }

@@ -6,6 +6,7 @@ import type { Product, Shop } from '@/lib/store'
 import { formatPrice, openWhatsApp } from '@/lib/shared'
 import { getCtaButton, getCtaWhatsAppMessage } from '@/lib/sector-config'
 import { useTracking } from '@/hooks/useTracking'
+import { useFacebookTracking } from '@/hooks/useFacebookTracking'
 
 interface CosmikaProductCardProps {
   product: Product
@@ -63,11 +64,13 @@ export function CosmikaProductCard({
 
   // ── Tracking ──
   const { trackWhatsAppClick } = useTracking(shop?.id)
+  const { trackContact } = useFacebookTracking(shop?.id)
 
   // ── WhatsApp link with sector-specific message ──
   const handleCTA = () => {
     if (!shop?.whatsapp) return
     trackWhatsAppClick(product.id, product.name)
+    trackContact('whatsapp', product.price)
     openWhatsApp(product, shop.whatsapp)
   }
 

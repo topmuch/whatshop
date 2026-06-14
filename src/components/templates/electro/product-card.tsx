@@ -7,6 +7,7 @@ import type { Product } from '@/lib/shared'
 import { formatPrice, openWhatsApp, PLATFORM_CONFIG } from '@/lib/shared'
 import type { ElectroCardMode, ThemeColors } from '@/lib/theme-config'
 import { useTracking } from '@/hooks/useTracking'
+import { useFacebookTracking } from '@/hooks/useFacebookTracking'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -100,6 +101,7 @@ export default function ElectroProductCard({
   const isService = cardMode === 'service'
   const showBadges = cardMode !== 'service'
   const { trackWhatsAppClick } = useTracking(shopId)
+  const { trackContact, trackViewContent } = useFacebookTracking(shopId)
 
   const specs = cardMode === 'specs' ? parseSpecs(product.description) : []
   const comparePrice = cardMode === 'specs' ? extractComparePrice(product.description) : null
@@ -120,6 +122,7 @@ export default function ElectroProductCard({
     if (!whatsappNumber) return
 
     trackWhatsAppClick(product.id, product.name)
+    trackContact('whatsapp', product.price)
     const msg = buildWhatsAppMessage(whatsappMessage, product)
     const phone = whatsappNumber.replace(/\D/g, '')
     const encoded = encodeURIComponent(msg)

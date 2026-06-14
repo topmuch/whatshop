@@ -48,6 +48,11 @@ export async function GET(
         testimonialsTagline: true,
         trustBadges: true,
         footerLinks: true,
+        facebookPixelId: true,
+        facebookCatalogId: true,
+        trackPageViews: true,
+        trackProductViews: true,
+        trackWhatsAppClicks: true,
       },
     })
 

@@ -176,6 +176,16 @@ model Shop {
   contactFormSubmits    Int       @default(0)
   pageViews             Int       @default(0)
 
+  // Facebook Integrations
+  facebookPixelId       String?
+  facebookAccessToken   String?   // Encrypted - for Conversions API
+  facebookCatalogId     String?   // Facebook Commerce Manager catalog ID
+
+  // Tracking configuration
+  trackPageViews        Boolean   @default(true)
+  trackProductViews     Boolean   @default(true)
+  trackWhatsAppClicks   Boolean   @default(true)
+
   // Moderation
   isFlagged              Boolean   @default(false)
   flaggedReason          String?
@@ -198,6 +208,7 @@ model Shop {
   testimonials   Testimonial[]
   contactMessages ContactMessage[]
   analyticsEvents AnalyticsEvent[]
+  facebookEvents   FacebookEvent[]
 }
 
 // ─── CATEGORY ──────────────────────────────────────────────────────────────────
@@ -538,4 +549,22 @@ model PushSubscription {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+// ─── FACEBOOK EVENT (Pixel + Conversions API) ────────────────────────────────
+
+model FacebookEvent {
+  id        String   @id @default(cuid())
+  shopId    String
+  eventName String   // PageView, ViewContent, Contact, Lead
+  eventData String   // JSON string: { productId?, value?, currency?, contentName? }
+  eventId   String   @unique // For deduplication between Pixel and CAPI
+  source    String   @default("PIXEL") // PIXEL, CAPI, BOTH
+  createdAt DateTime @default(now())
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@index([shopId])
+  @@index([eventName])
+  @@index([createdAt])
 }

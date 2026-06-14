@@ -44,6 +44,7 @@ import JsonLd from '@/components/seo/json-ld'
 import { CosmikaBeautyShopPage } from './themes/cosmika-beauty-grid'
 import { ShippingZoneSelector } from './shipping-zone-selector'
 import { ImageWithFallback } from '@/components/ui/image-with-fallback'
+import { FacebookPixel } from '@/components/integrations/facebook-pixel'
 
 type SortOption = 'recent' | 'price-asc' | 'price-desc'
 
@@ -1355,6 +1356,11 @@ export function PublicShop({ initialProductSlug }: { initialProductSlug?: string
 
   return (
     <TemplateProvider templateId={templateId}>
+      {/* Facebook Pixel — injected globally for the public shop */}
+      <FacebookPixel
+        pixelId={publicShop?.facebookPixelId}
+        trackPageViews={publicShop?.trackPageViews ?? true}
+      />
       <ShopContent initialProductSlug={initialProductSlug} />
     </TemplateProvider>
   )
