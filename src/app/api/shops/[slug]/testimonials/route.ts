@@ -69,7 +69,7 @@ export async function POST(
     if (!user || !user.shop) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
 
     const body = await request.json()
-    const { clientName, clientAvatar, comment, rating } = body
+    const { clientName, clientAvatar, clientRole, comment, rating } = body
 
     // Validate required fields
     if (!clientName || typeof clientName !== 'string' || clientName.trim().length === 0) {
@@ -91,6 +91,7 @@ export async function POST(
         shopId: user.shop.id,
         clientName: clientName.trim(),
         clientAvatar: clientAvatar || null,
+        clientRole: clientRole || null,
         comment: comment.trim(),
         rating: validatedRating,
         isDisplayed: true,

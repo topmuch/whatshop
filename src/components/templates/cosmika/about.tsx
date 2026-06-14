@@ -19,7 +19,8 @@ export function CosmikaAbout({ config, shop }: CosmikaAboutProps) {
 
   if (!shop) return null
 
-  const aboutText = shop.description
+  const aboutText = shop.aboutText
+    || shop.description
     || `${shop.name} est un cabinet de conseil spécialisé dans l'accompagnement des entreprises et des dirigeants. Notre mission : vous aider à atteindre vos objectifs avec des solutions concrètes et mesurables.`
 
   return (

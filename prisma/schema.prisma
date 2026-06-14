@@ -153,6 +153,10 @@ model Shop {
   heroTagline           String?
   heroImageUrl          String?
   consultantPhotoUrl    String?   // Consulting: photo du consultant affichée dans le hero
+  aboutText             String?   // Consulting: description longue "Qui sommes-nous"
+  contactEmail          String?   // Email de contact
+  businessHours         String?   // Horaires d'ouverture
+  googleMapsUrl         String?   // URL d'intégration Google Maps
   productsTitle         String?
   productsTagline       String?
   categoriesTitle       String?
@@ -210,6 +214,7 @@ model Testimonial {
   shopId       String
   clientName   String
   clientAvatar String?
+  clientRole   String?   // Poste du client: "CEO, StartupXYZ"
   comment      String
   rating       Int      @default(5)
   isDisplayed  Boolean  @default(true)
@@ -227,6 +232,7 @@ model Product {
   id          String   @id @default(cuid())
   name        String
   slug        String?
+  shortDescription String?
   description String?
   price       Float
   image       String?

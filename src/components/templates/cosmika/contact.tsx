@@ -36,7 +36,8 @@ export function CosmikaContact({ config, shop }: CosmikaContactProps) {
   const contactItems: Array<{ icon: React.ReactNode; label: string; value?: string }> = [
     { icon: <MapPin className="size-5" />, label: 'Adresse', value: shop.address },
     { icon: <Phone className="size-5" />, label: 'Téléphone', value: shop.phone },
-    { icon: <Mail className="size-5" />, label: 'WhatsApp', value: shop.whatsapp ? `+${whatsappNumber}` : undefined },
+    { icon: <Mail className="size-5" />, label: 'Email', value: shop.contactEmail },
+    ...(shop.businessHours ? [{ icon: <Clock className="size-5" />, label: 'Horaires', value: shop.businessHours }] : []),
   ]
 
   return (

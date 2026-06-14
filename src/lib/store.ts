@@ -54,6 +54,10 @@ export interface Shop {
   heroTagline?: string
   heroImageUrl?: string
   consultantPhotoUrl?: string
+  aboutText?: string
+  contactEmail?: string
+  businessHours?: string
+  googleMapsUrl?: string
   productsTitle?: string
   productsTagline?: string
   categoriesTitle?: string
@@ -68,6 +72,7 @@ export interface Testimonial {
   id: string
   clientName: string
   clientAvatar?: string
+  clientRole?: string
   comment: string
   rating: number
   createdAt: string
