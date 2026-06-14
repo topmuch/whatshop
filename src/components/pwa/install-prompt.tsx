@@ -13,7 +13,6 @@ interface BeforeInstallPromptEvent extends Event {
 type Platform = "android" | "ios" | "desktop" | "unknown";
 
 function detectPlatform(): Platform {
-  if (typeof window === "undefined") return "unknown";
   const ua = navigator.userAgent;
   if (/iPad|iPhone|iPod/.test(ua)) return "ios";
   if (/android/i.test(ua)) return "android";
@@ -25,18 +24,23 @@ const SHOW_DELAY_MS = 30_000;
 
 export function InstallPrompt() {
   const [showBanner, setShowBanner] = useState(false);
-  const [isInstalled, setIsInstalled] = useState(false);
-  const [platform, setPlatform] = useState<Platform>("unknown");
+  // Lazy initializers avoid setState-in-effect lint errors
+  const [isInstalled, setIsInstalled] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(display-mode: standalone)').matches
+  );
+  const [platform] = useState<Platform>(
+    () => typeof window !== 'undefined' ? detectPlatform() : 'unknown'
+  );
   const deferredPromptRef = useRef<BeforeInstallPromptEvent | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Initialize platform detection and check if already installed
-  const installed = typeof window !== "undefined" && window.matchMedia("(display-mode: standalone)").matches;
-  const p = typeof window !== "undefined" ? detectPlatform() : "unknown";
-
-  // Sync initial state without useEffect
-  if (isInstalled !== installed) setIsInstalled(installed);
-  if (platform === "unknown" && p !== "unknown") setPlatform(p);
+  // Keep isInstalled in sync with media query changes (subscription pattern)
+  useEffect(() => {
+    const mql = window.matchMedia('(display-mode: standalone)');
+    const handleChange = (e: MediaQueryListEvent) => setIsInstalled(e.matches);
+    mql.addEventListener('change', handleChange);
+    return () => mql.removeEventListener('change', handleChange);
+  }, []);
 
   // Set up the banner show timer
   useEffect(() => {

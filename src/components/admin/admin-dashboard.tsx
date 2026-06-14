@@ -418,10 +418,7 @@ function AdminSidebarContent() {
         return
       }
     } catch { /* ignore */ }
-    // Fallback: clear cookies client-side and redirect to /login
-    document.cookie = 'boutiko-user=; path=/; max-age=0'
-    document.cookie = 'boutiko-god-mode=; path=/; max-age=0'
-    document.cookie = 'boutiko-god-mode-user=; path=/; max-age=0'
+    // Fallback: redirect to /login (server-side session clearing will happen on next request)
     setUser(null)
     setShop(null)
     setView('login')
@@ -882,15 +879,16 @@ export function AdminDashboard() {
   }, [])
 
   useEffect(() => {
-    if (typeof document !== 'undefined' && document.cookie.includes('boutiko-god-mode')) {
-      const match = document.cookie.match(/boutiko-god-mode-user=([^;]+)/)
-      setGodModeUser(match ? decodeURIComponent(match[1]) : 'Utilisateur')
+    if (typeof document !== 'undefined' && document.cookie.includes('boutiko-session')) {
+      // God mode is now stored in the iron-session, checked via session API
+      // The session API returns godModeOriginalUserId when in god mode
     }
   }, [])
 
   async function exitGodMode() {
     try {
       await fetch('/api/admin/god-mode', { method: 'DELETE' })
+      setGodModeUser(null)
       window.location.reload()
     } catch {
       window.location.reload()
@@ -915,6 +913,10 @@ export function AdminDashboard() {
           const data = await res.json()
           if (data.user) {
             setUser(data.user)
+            // Detect god mode from session API
+            if (data.godModeOriginalUserId) {
+              setGodModeUser('Utilisateur impersonné')
+            }
             if (data.user.role !== 'ADMIN' && data.user.role !== 'SUPER_ADMIN') {
               setView('dashboard')
               return

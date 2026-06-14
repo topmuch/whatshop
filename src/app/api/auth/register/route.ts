@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { hashPassword, setSessionCookie } from '@/lib/auth'
+import { hashPassword, createSession } from '@/lib/auth'
 import { rateLimit, getClientIp, RATE_LIMITS } from '@/lib/rate-limit'
 import { createNotification } from '@/lib/notifications'
 import { logger } from '@/lib/logger'
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
       user: { id: user.id, email: user.email, name: user.name, role: user.role },
     }, { status: 201 })
 
-    setSessionCookie(response, user.email)
+    await createSession(user.id)
     return response
   } catch (error) {
     logger.error('Registration failed', 'RegisterAPI', error)

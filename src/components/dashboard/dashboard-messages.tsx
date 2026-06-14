@@ -471,15 +471,15 @@ export function DashboardMessages() {
                           <span className="sm:hidden">Lu</span>
                         </Button>
                       )}
-                      {shop?.whatsapp && (
+                      {msg.phone && (
                         <Button
                           variant="ghost"
                           size="sm"
                           className="h-7 text-xs text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 px-2"
-                          onClick={() => openWhatsAppReply(shop.whatsapp, msg.name)}
+                          onClick={() => openWhatsAppReply(msg.phone, msg.name)}
                         >
                           <MessageCircle className="h-3.5 w-3.5 mr-1" />
-                          <span className="hidden sm:inline">Ouvrir WhatsApp</span>
+                          <span className="hidden sm:inline">Répondre sur WhatsApp</span>
                           <span className="sm:hidden">WhatsApp</span>
                         </Button>
                       )}

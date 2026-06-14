@@ -30,7 +30,12 @@ export function hashData(data: string | undefined | null): string {
 // ─── TOKEN ENCRYPTION ─────────────────────────────────────────────────────────
 
 const ALGORITHM = 'aes-256-gcm'
-const ENCRYPTION_KEY = process.env.FACEBOOK_TOKEN_ENCRYPTION_KEY || 'boutiko-default-fb-token-key-32b!'
+const ENCRYPTION_KEY = process.env.FACEBOOK_TOKEN_ENCRYPTION_KEY
+if (!ENCRYPTION_KEY || ENCRYPTION_KEY.length < 16) {
+  throw new Error(
+    'FACEBOOK_TOKEN_ENCRYPTION_KEY environment variable is required and must be at least 16 characters.'
+  )
+}
 
 /**
  * Derive a 32-byte key from the configured secret.

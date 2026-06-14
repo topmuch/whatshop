@@ -43,9 +43,8 @@ export function BottomNavigation() {
 
   const getActiveIndex = useCallback((): number => {
     if (!pathname.startsWith("/dashboard")) return -1;
-    // Check query param from URL
-    const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
-    const tab = searchParams?.get("tab") || "";
+    const searchParams = new URLSearchParams(window.location.search);
+    const tab = searchParams.get("tab") || "";
     if (tab === "products") return 1;
     if (tab === "orders") return 2;
     if (tab === "live") return 3;
@@ -54,22 +53,25 @@ export function BottomNavigation() {
 
   const [visible, setVisible] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
 
-  // Sync visibility and active index
-  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
-  const isActive = pathname.startsWith("/dashboard");
-  const idx = getActiveIndex();
-
-  if (visible !== (isActive && isMobile)) setVisible(isActive && isMobile);
-  if (activeIndex !== idx) setActiveIndex(idx);
-
+  // Track mobile breakpoint via resize listener
   useEffect(() => {
-    const handleResize = () => {
-      setVisible(pathname.startsWith("/dashboard") && window.innerWidth < 768);
-    };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [pathname]);
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    onResize(); // Initial check via callback (not direct setState in effect body)
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  // Sync active index when pathname changes
+  useEffect(() => {
+    setActiveIndex(getActiveIndex());
+  }, [getActiveIndex]);
+
+  // Derive visibility from pathname + mobile state
+  useEffect(() => {
+    setVisible(pathname.startsWith("/dashboard") && isMobile);
+  }, [pathname, isMobile]);
 
   const handleNav = useCallback(
     (item: NavItem, index: number) => {

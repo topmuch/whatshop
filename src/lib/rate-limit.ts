@@ -71,15 +71,23 @@ export function rateLimit(ip: string, options: RateLimitOptions): RateLimitResul
 
 /**
  * Extract client IP from NextRequest.
- * Checks X-Forwarded-For (reverse proxy), then X-Real-IP, then falls back to connection IP.
+ * Prefers X-Real-IP (set by trusted reverse proxy, not client-spoofable),
+ * then falls back to the rightmost X-Forwarded-For entry (closest to proxy).
  */
 export function getClientIp(request: Request): string {
-  const forwarded = request.headers.get('x-forwarded-for')
-  if (forwarded) {
-    return forwarded.split(',')[0].trim()
-  }
+  // Prefer X-Real-IP — set by our trusted reverse proxy (Caddy)
   const realIp = request.headers.get('x-real-ip')
   if (realIp) return realIp.trim()
+
+  // Fallback: X-Forwarded-For — use the RIGHTMOST entry (set by our proxy),
+  // not the leftmost (which is client-spoofable)
+  const forwarded = request.headers.get('x-forwarded-for')
+  if (forwarded) {
+    const entries = forwarded.split(',').map(s => s.trim())
+    const trustedEntry = entries[entries.length - 1]
+    if (trustedEntry) return trustedEntry
+  }
+
   return 'unknown'
 }
 
@@ -98,9 +106,9 @@ export function isCsrfSafe(request: Request): boolean {
   const origin = request.headers.get('origin')
   const referer = request.headers.get('referer')
 
-  // If both origin and referer are missing, it's likely a server-to-server or curl request
-  // Allow it through (could be from Docker healthcheck, seed script, etc.)
-  if (!origin && !referer) return true
+  // If both origin and referer are missing, reject mutations from non-browser clients
+  // (allow GET/HEAD/OPTIONS — handled above — but block POST/PUT/DELETE without headers)
+  if (!origin && !referer) return false
 
   // Check origin against allowed hosts
   const allowedHosts = getAllowedHosts()

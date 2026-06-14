@@ -20,7 +20,7 @@ export function WhatsAppFab({ onClick }: WhatsAppFabProps) {
       transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.3 }}
       onClick={onClick}
       className="fixed bottom-4 right-4 z-40 flex size-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg transition-transform hover:scale-105 hover:bg-[#128C7E] active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#25D366]/50 focus:ring-offset-2"
-      aria-label="Ouvrir le panier"
+      aria-label="Contacter sur WhatsApp"
     >
       {/* Pulse ring when cart has items */}
       {itemCount > 0 && (

@@ -1,28 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { getAuthUser } from '@/lib/auth'
 
 /**
  * Verify that the requesting user is an ADMIN or SUPER_ADMIN.
- * Reads the `boutiko-user` cookie, looks up the user in the DB,
+ * Uses the iron-session to get the userId, looks up the user in the DB,
  * and checks that user.role is ADMIN or SUPER_ADMIN.
  * Returns the user object on success, or null on failure.
  */
-export async function verifyAdmin(request: NextRequest) {
-  const userEmail = request.cookies.get('boutiko-user')?.value
+export async function verifyAdmin(_request: NextRequest) {
+  try {
+    const user = await getAuthUser()
 
-  if (!userEmail) {
+    if (!user) return null
+
+    // Re-fetch from DB to get fresh role (god-mode changes the session user)
+    const freshUser = await db.user.findUnique({
+      where: { id: user.godModeOriginalUserId || user.id },
+    })
+
+    if (!freshUser || (freshUser.role !== 'ADMIN' && freshUser.role !== 'SUPER_ADMIN')) {
+      return null
+    }
+
+    return freshUser
+  } catch (error) {
+    console.error('verifyAdmin failed:', error)
     return null
   }
-
-  const user = await db.user.findUnique({
-    where: { email: userEmail },
-  })
-
-  if (!user || (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN')) {
-    return null
-  }
-
-  return user
 }
 
 /**

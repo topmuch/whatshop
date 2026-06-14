@@ -337,10 +337,7 @@ function SidebarContent({
         return
       }
     } catch { /* ignore */ }
-    // Fallback: clear cookies client-side and redirect to /login
-    document.cookie = 'boutiko-user=; path=/; max-age=0'
-    document.cookie = 'boutiko-god-mode=; path=/; max-age=0'
-    document.cookie = 'boutiko-god-mode-user=; path=/; max-age=0'
+    // Fallback: redirect to /login (server-side session clearing will happen on next request)
     setUser(null)
     setShop(null)
     setShops([])

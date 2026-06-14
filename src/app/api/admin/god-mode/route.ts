@@ -1,7 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { verifyAdmin, adminUnauthorized } from '@/lib/admin-auth'
-import { setSessionCookie, mapShopToAuthShop } from '@/lib/auth'
+import { enterGodMode, exitGodModeSession, getGodModeState, mapShopToAuthShop } from '@/lib/auth'
+import { logger } from '@/lib/logger'
+
+function buildUserResponse(user: { id: string; email: string; name: string; role: string; shops: unknown[]; subscription?: unknown | null; resellerProfile?: unknown | null }) {
+  const shops = user.shops as Array<Record<string, unknown>>
+  const primaryShop = shops.length > 0 ? shops[0] : null
+  const sub = user.subscription as Record<string, unknown> | null
+  const reseller = user.resellerProfile as Record<string, unknown> | null
+
+  return {
+    user: { id: user.id, email: user.email, name: user.name, role: user.role },
+    shops: shops.map(s => mapShopToAuthShop(s)),
+    shop: primaryShop ? mapShopToAuthShop(primaryShop) : null,
+    subscription: sub ? {
+      id: sub.id,
+      planType: sub.planType,
+      status: sub.status,
+      maxShops: sub.maxShops,
+      startDate: (sub.startDate as Date).toISOString(),
+      endDate: sub.endDate ? (sub.endDate as Date).toISOString() : null,
+    } : null,
+    reseller: reseller ? {
+      id: reseller.id,
+      companyName: reseller.companyName,
+      logoUrl: reseller.logoUrl,
+      primaryColor: reseller.primaryColor,
+      commission: reseller.commission,
+      isActive: reseller.isActive,
+    } : null,
+  }
+}
 
 // POST /api/admin/god-mode — Start God Mode (impersonate a user)
 export async function POST(request: NextRequest) {
@@ -9,7 +39,6 @@ export async function POST(request: NextRequest) {
     const admin = await verifyAdmin(request)
     if (!admin) return adminUnauthorized()
 
-    // Only SUPER_ADMIN can use God Mode
     if (admin.role !== 'SUPER_ADMIN') {
       return NextResponse.json(
         { error: 'Seul un SUPER_ADMIN peut utiliser le mode Dieu' },
@@ -24,83 +53,47 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'userId requis' }, { status: 400 })
     }
 
-    // Look up the target user
     const target = await db.user.findUnique({
       where: { id: userId },
-      include: {
-        shops: true,
-        subscription: true,
-        resellerProfile: true,
-      },
+      include: { shops: true, subscription: true, resellerProfile: true },
     })
 
     if (!target) {
       return NextResponse.json({ error: 'Utilisateur cible non trouvé' }, { status: 404 })
     }
 
-    const primaryShop = target.shops.length > 0 ? target.shops[0] : null
-    const response = NextResponse.json({
-      user: { id: target.id, email: target.email, name: target.name, role: target.role },
-      shops: target.shops.map(s => mapShopToAuthShop(s as unknown as Record<string, unknown>)),
-      shop: primaryShop ? mapShopToAuthShop(primaryShop as unknown as Record<string, unknown>) : null,
-      subscription: target.subscription ? {
-        id: target.subscription.id,
-        planType: target.subscription.planType,
-        status: target.subscription.status,
-        maxShops: target.subscription.maxShops,
-        startDate: target.subscription.startDate.toISOString(),
-        endDate: target.subscription.endDate?.toISOString() ?? null,
-      } : null,
-      reseller: target.resellerProfile ? {
-        id: target.resellerProfile.id,
-        companyName: target.resellerProfile.companyName,
-        logoUrl: target.resellerProfile.logoUrl,
-        primaryColor: target.resellerProfile.primaryColor,
-        commission: target.resellerProfile.commission,
-        isActive: target.resellerProfile.isActive,
-      } : null,
+    logger.warn('GOD_MODE_ACTIVATED', 'AdminAPI', {
+      adminId: admin.id,
+      adminEmail: admin.email,
+      targetUserId: target.id,
+      targetEmail: target.email,
     })
 
-    // Store the original admin's email in a god-mode cookie
-    const isSecure = process.env.COOKIE_SECURE === 'true'
-    response.cookies.set('boutiko-god-mode', admin.email, {
-      httpOnly: true,
-      secure: isSecure,
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 30, // 30 days
-      path: '/',
-    })
+    await enterGodMode(target.id, admin.id)
 
-    // Switch the session cookie to the target user's email
-    setSessionCookie(response, target.email)
-
-    return response
+    return NextResponse.json(buildUserResponse(target))
   } catch (error) {
-    console.error('God mode start error:', error)
+    logger.error('God mode start error', 'AdminAPI', error)
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
   }
 }
 
 // DELETE /api/admin/god-mode — Exit God Mode (restore admin session)
-export async function DELETE(request: NextRequest) {
+export async function DELETE(_request: NextRequest) {
   try {
-    const godModeEmail = request.cookies.get('boutiko-god-mode')?.value
-
-    if (!godModeEmail) {
+    // When in god-mode, the session userId is the target (non-admin) user.
+    // Read the godModeOriginalUserId from the session directly.
+    const godState = await getGodModeState()
+    if (!godState.godModeOriginalUserId) {
       return NextResponse.json(
         { error: 'Aucune session mode Dieu active' },
         { status: 400 }
       )
     }
 
-    // Verify the original admin still exists and is still a SUPER_ADMIN
     const admin = await db.user.findUnique({
-      where: { email: godModeEmail },
-      include: {
-        shops: true,
-        subscription: true,
-        resellerProfile: true,
-      },
+      where: { id: godState.godModeOriginalUserId },
+      include: { shops: true, subscription: true, resellerProfile: true },
     })
 
     if (!admin || admin.role !== 'SUPER_ADMIN') {
@@ -110,45 +103,16 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    const primaryShop = admin.shops.length > 0 ? admin.shops[0] : null
-    const response = NextResponse.json({
-      user: { id: admin.id, email: admin.email, name: admin.name, role: admin.role },
-      shops: admin.shops.map(s => mapShopToAuthShop(s as unknown as Record<string, unknown>)),
-      shop: primaryShop ? mapShopToAuthShop(primaryShop as unknown as Record<string, unknown>) : null,
-      subscription: admin.subscription ? {
-        id: admin.subscription.id,
-        planType: admin.subscription.planType,
-        status: admin.subscription.status,
-        maxShops: admin.subscription.maxShops,
-        startDate: admin.subscription.startDate.toISOString(),
-        endDate: admin.subscription.endDate?.toISOString() ?? null,
-      } : null,
-      reseller: admin.resellerProfile ? {
-        id: admin.resellerProfile.id,
-        companyName: admin.resellerProfile.companyName,
-        logoUrl: admin.resellerProfile.logoUrl,
-        primaryColor: admin.resellerProfile.primaryColor,
-        commission: admin.resellerProfile.commission,
-        isActive: admin.resellerProfile.isActive,
-      } : null,
+    logger.warn('GOD_MODE_EXITED', 'AdminAPI', {
+      adminId: admin.id,
+      adminEmail: admin.email,
     })
 
-    // Restore the session cookie to the admin's email
-    setSessionCookie(response, admin.email)
+    await exitGodModeSession(admin.id)
 
-    // Clear the god-mode cookie
-    const isSecure = process.env.COOKIE_SECURE === 'true'
-    response.cookies.set('boutiko-god-mode', '', {
-      httpOnly: true,
-      secure: isSecure,
-      sameSite: 'lax',
-      maxAge: 0,
-      path: '/',
-    })
-
-    return response
+    return NextResponse.json(buildUserResponse(admin))
   } catch (error) {
-    console.error('God mode exit error:', error)
+    logger.error('God mode exit error', 'AdminAPI', error)
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
   }
 }

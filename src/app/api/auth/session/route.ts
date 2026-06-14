@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { clearSessionCookie, mapShopToAuthShop } from '@/lib/auth'
+import { getAuthUser, destroySession, mapShopToAuthShop } from '@/lib/auth'
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
-    const userEmail = request.cookies.get('boutiko-user')?.value
+    const user = await getAuthUser()
 
-    if (!userEmail) {
+    if (!user) {
       return NextResponse.json({ user: null, shop: null, shops: [] })
     }
 
-    const user = await db.user.findUnique({
-      where: { email: userEmail },
+    // Re-fetch with subscription and reseller data
+    const fullUser = await db.user.findUnique({
+      where: { id: user.id },
       include: {
         shops: true,
         subscription: true,
@@ -19,32 +20,33 @@ export async function GET(request: NextRequest) {
       },
     })
 
-    if (!user) {
+    if (!fullUser) {
       return NextResponse.json({ user: null, shop: null, shops: [] })
     }
 
-    const primaryShop = user.shops.length > 0 ? user.shops[0] : null
+    const primaryShop = fullUser.shops.length > 0 ? fullUser.shops[0] : null
 
     return NextResponse.json({
-      user: { id: user.id, email: user.email, name: user.name, role: user.role },
-      shops: user.shops.map(s => mapShopToAuthShop(s as unknown as Record<string, unknown>)),
+      user: { id: fullUser.id, email: fullUser.email, name: fullUser.name, role: fullUser.role },
+      shops: fullUser.shops.map(s => mapShopToAuthShop(s as unknown as Record<string, unknown>)),
       shop: primaryShop ? mapShopToAuthShop(primaryShop as unknown as Record<string, unknown>) : null,
-      subscription: user.subscription ? {
-        id: user.subscription.id,
-        planType: user.subscription.planType,
-        status: user.subscription.status,
-        maxShops: user.subscription.maxShops,
-        startDate: user.subscription.startDate.toISOString(),
-        endDate: user.subscription.endDate?.toISOString() ?? null,
+      subscription: fullUser.subscription ? {
+        id: fullUser.subscription.id,
+        planType: fullUser.subscription.planType,
+        status: fullUser.subscription.status,
+        maxShops: fullUser.subscription.maxShops,
+        startDate: fullUser.subscription.startDate.toISOString(),
+        endDate: fullUser.subscription.endDate?.toISOString() ?? null,
       } : null,
-      reseller: user.resellerProfile ? {
-        id: user.resellerProfile.id,
-        companyName: user.resellerProfile.companyName,
-        logoUrl: user.resellerProfile.logoUrl,
-        primaryColor: user.resellerProfile.primaryColor,
-        commission: user.resellerProfile.commission,
-        isActive: user.resellerProfile.isActive,
+      reseller: fullUser.resellerProfile ? {
+        id: fullUser.resellerProfile.id,
+        companyName: fullUser.resellerProfile.companyName,
+        logoUrl: fullUser.resellerProfile.logoUrl,
+        primaryColor: fullUser.resellerProfile.primaryColor,
+        commission: fullUser.resellerProfile.commission,
+        isActive: fullUser.resellerProfile.isActive,
       } : null,
+      godModeOriginalUserId: user.godModeOriginalUserId || null,
     })
   } catch (error) {
     console.error('Session error:', error)
@@ -53,25 +55,6 @@ export async function GET(request: NextRequest) {
 }
 
 export async function DELETE() {
-  const response = NextResponse.json({ success: true })
-  clearSessionCookie(response)
-
-  // Also clear god-mode cookies so a super admin fully logs out
-  const isSecure = process.env.COOKIE_SECURE === 'true'
-  response.cookies.set('boutiko-god-mode', '', {
-    httpOnly: true,
-    secure: isSecure,
-    sameSite: 'lax',
-    maxAge: 0,
-    path: '/',
-  })
-  response.cookies.set('boutiko-god-mode-user', '', {
-    httpOnly: false,
-    secure: isSecure,
-    sameSite: 'lax',
-    maxAge: 0,
-    path: '/',
-  })
-
-  return response
+  await destroySession()
+  return NextResponse.json({ success: true })
 }

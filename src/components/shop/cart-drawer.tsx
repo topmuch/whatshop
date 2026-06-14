@@ -150,10 +150,11 @@ Téléphone :`
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="size-7 flex-shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          className="size-9 flex-shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10"
                           onClick={() => removeFromCart(item.productId)}
+                          aria-label="Supprimer l'article"
                         >
-                          <Trash2 className="size-3.5" />
+                          <Trash2 className="size-4" />
                         </Button>
                       </div>
 
@@ -166,12 +167,13 @@ Téléphone :`
                         <Button
                           variant="outline"
                           size="icon"
-                          className="size-7"
+                          className="size-9"
                           onClick={() =>
                             updateCartQuantity(item.productId, item.quantity - 1)
                           }
+                          aria-label="Diminuer la quantité"
                         >
-                          <Minus className="size-3" />
+                          <Minus className="size-4" />
                         </Button>
                         <span className="min-w-[1.5rem] text-center text-sm font-medium">
                           {item.quantity}
@@ -179,12 +181,13 @@ Téléphone :`
                         <Button
                           variant="outline"
                           size="icon"
-                          className="size-7"
+                          className="size-9"
                           onClick={() =>
                             updateCartQuantity(item.productId, item.quantity + 1)
                           }
+                          aria-label="Augmenter la quantité"
                         >
-                          <Plus className="size-3" />
+                          <Plus className="size-4" />
                         </Button>
                       </div>
                     </div>

@@ -1,8 +1,102 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getIronSession } from 'iron-session'
+import { cookies } from 'next/headers'
 import { db } from '@/lib/db'
 import bcrypt from 'bcryptjs'
 
 const SALT_ROUNDS = 10
+
+// ─── IRON SESSION ─────────────────────────────────────────────────────────────
+
+export interface SessionData {
+  userId?: string
+  godModeOriginalUserId?: string
+}
+
+const SESSION_SECRET = process.env.SESSION_SECRET
+if (!SESSION_SECRET || SESSION_SECRET.length < 32) {
+  throw new Error(
+    'SESSION_SECRET environment variable is required and must be at least 32 characters. ' +
+    'Generate one with: openssl rand -base64 48'
+  )
+}
+
+export const sessionOptions = {
+  password: SESSION_SECRET,
+  cookieName: 'boutiko-session' as const,
+  cookieOptions: {
+    httpOnly: true,
+    secure: process.env.COOKIE_SECURE === 'true',
+    sameSite: 'lax' as const,
+    maxAge: 60 * 60 * 24 * 30, // 30 days
+    path: '/',
+  },
+}
+
+/**
+ * Get the iron-session for route handlers (uses cookies() from next/headers).
+ */
+async function getSessionForHandler(): Promise<ReturnType<typeof getIronSession<SessionData>>> {
+  const cookieStore = await cookies()
+  return getIronSession<SessionData>(cookieStore, sessionOptions)
+}
+
+/**
+ * Get the iron-session for middleware (uses request + response).
+ */
+export async function getSessionForMiddleware(
+  request: NextRequest,
+  response: NextResponse
+): Promise<ReturnType<typeof getIronSession<SessionData>>> {
+  return getIronSession<SessionData>(request, response, sessionOptions)
+}
+
+/**
+ * Create a new session for a user (used on login).
+ */
+export async function createSession(userId: string) {
+  const session = await getSessionForHandler()
+  session.userId = userId
+  session.godModeOriginalUserId = undefined
+  await session.save()
+}
+
+/**
+ * Destroy the current session (used on logout).
+ */
+export async function destroySession() {
+  const session = await getSessionForHandler()
+  session.destroy()
+}
+
+/**
+ * Enter god mode: switch session to target user, remember admin.
+ */
+export async function enterGodMode(targetUserId: string, adminUserId: string) {
+  const session = await getSessionForHandler()
+  session.userId = targetUserId
+  session.godModeOriginalUserId = adminUserId
+  await session.save()
+}
+
+/**
+ * Exit god mode: restore session to admin user.
+ */
+export async function exitGodModeSession(adminUserId: string) {
+  const session = await getSessionForHandler()
+  session.userId = adminUserId
+  session.godModeOriginalUserId = undefined
+  await session.save()
+}
+
+/**
+ * Read the current god-mode state from the session.
+ */
+export async function getGodModeState(): Promise<{ isAdmin: boolean; godModeOriginalUserId?: string }> {
+  const session = await getSessionForHandler()
+  if (!session.godModeOriginalUserId) return { isAdmin: false }
+  return { isAdmin: true, godModeOriginalUserId: session.godModeOriginalUserId }
+}
 
 // ─── TYPES ─────────────────────────────────────────────────────────────────────
 
@@ -68,6 +162,7 @@ export interface AuthUser {
   role: string
   shops: AuthShop[]
   shop: AuthShop | null   // backward compat: primary shop (shops[0])
+  godModeOriginalUserId?: string
 }
 
 // ─── PASSWORD UTILITIES ───────────────────────────────────────────────────────
@@ -134,21 +229,26 @@ export async function authenticateUser(
 }
 
 /**
- * Get the authenticated user from the session cookie.
+ * Get the authenticated user from the iron-session.
  * Returns the user object (with shops array + primary shop) on success, null on failure.
  */
-export async function getAuthUser(request: NextRequest): Promise<AuthUser | null> {
-  const userEmail = request.cookies.get('boutiko-user')?.value
-  if (!userEmail) return null
+export async function getAuthUser(_request?: NextRequest): Promise<AuthUser | null> {
+  const session = await getSessionForHandler()
+
+  if (!session.userId) return null
 
   const user = await db.user.findUnique({
-    where: { email: userEmail },
+    where: { id: session.userId },
     include: { shops: true },
   })
 
   if (!user) return null
 
-  return mapUserWithShops(user)
+  const mapped = mapUserWithShops(user)
+  if (session.godModeOriginalUserId) {
+    mapped.godModeOriginalUserId = session.godModeOriginalUserId
+  }
+  return mapped
 }
 
 /**
@@ -205,37 +305,25 @@ export function isValidSlug(slug: string): boolean {
   return !reserved.includes(slug.toLowerCase())
 }
 
-// ─── COOKIE MANAGEMENT ────────────────────────────────────────────────────────
+// ─── DEPRECATED: Legacy cookie helpers (kept for backward compat, no-ops) ───
+// These are no longer needed with iron-session but kept so imports don't break.
+// They will be removed in a future cleanup.
 
 /**
- * Set the session cookie on a response.
+ * @deprecated Use createSession(userId) instead.
  */
-export function setSessionCookie(response: NextResponse, email: string) {
-  const isSecure = process.env.COOKIE_SECURE === 'true'
-  response.cookies.set('boutiko-user', email, {
-    httpOnly: true,
-    secure: isSecure,
-    sameSite: 'lax',
-    maxAge: 60 * 60 * 24 * 30, // 30 days
-    path: '/',
-  })
+export function setSessionCookie(_response: NextResponse, _email: string) {
+  // No-op: session is managed by iron-session
 }
 
 /**
- * Clear the session cookie.
+ * @deprecated Use destroySession() instead.
  */
-export function clearSessionCookie(response: NextResponse) {
-  const isSecure = process.env.COOKIE_SECURE === 'true'
-  response.cookies.set('boutiko-user', '', {
-    httpOnly: true,
-    secure: isSecure,
-    sameSite: 'lax',
-    maxAge: 0,
-    path: '/',
-  })
+export function clearSessionCookie(_response: NextResponse) {
+  // No-op: session is managed by iron-session
 }
 
-// ─── INTERNAL HELPERS ──────────────────────────────────────────────────────────
+// ─── INTERNAL HELPERS ─────────────────────────────────────────────────────────
 
 /**
  * Map a Prisma user (with shops array) to AuthUser shape with `shop` (primary) computed.

@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
     unoptimized: true,
   },
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   reactStrictMode: false,
   // Rewrite legacy /uploads/xxx URLs to /api/uploads/xxx

@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getIronSession } from 'iron-session'
+import { sessionOptions, type SessionData } from '@/lib/auth'
 
 // Routes that have their own page.tsx — let Next.js handle them directly
 const APP_ROUTES = new Set([
@@ -43,8 +45,8 @@ const FB_COOKIE_NAMES = ['_fbp', '_fbc']
  * and forward Facebook browser cookies as headers to API routes.
  */
 function withVisitorCookies(request: NextRequest, response: NextResponse): NextResponse {
-  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-    || request.headers.get('x-real-ip')
+  const ip = request.headers.get('x-real-ip')
+    || request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
     || ''
   const ua = request.headers.get('user-agent') || ''
 
@@ -65,7 +67,7 @@ function withVisitorCookies(request: NextRequest, response: NextResponse): NextR
   return response
 }
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Skip API routes, static files, and Next.js internals
@@ -76,13 +78,21 @@ export function proxy(request: NextRequest) {
     pathname === '/' ||
     pathname.includes('.') // static files
   ) {
-    return withVisitorCookies(request, NextResponse.next())
+    const response = NextResponse.next()
+    return withVisitorCookies(request, response)
   }
 
   const slug = pathname.slice(1).toLowerCase()
 
-  // ─── Route Protection ────────────────────────────────────────────
-  const isAuthenticated = !!request.cookies.get('boutiko-user')?.value
+  // ─── Route Protection (uses iron-session) ────────────────────────────
+  const response = NextResponse.next()
+  let isAuthenticated = false
+  try {
+    const session = await getIronSession<SessionData>(request, response, sessionOptions)
+    isAuthenticated = !!session.userId
+  } catch {
+    // Session unreadable — treat as unauthenticated
+  }
 
   // Unauthenticated user accessing a protected route → redirect to /login
   if (!isAuthenticated && PROTECTED_ROUTES.has(slug)) {
@@ -99,11 +109,10 @@ export function proxy(request: NextRequest) {
 
   // Let Next.js handle known app routes (they have their own page.tsx)
   if (APP_ROUTES.has(slug)) {
-    return withVisitorCookies(request, NextResponse.next())
+    return withVisitorCookies(request, response)
   }
 
   // Product URL pattern: /shop-slug/p/product-slug
-  // e.g., /ma-boutique/p/écouteur-bluetooth-pro
   const productMatch = slug.match(/^([a-z0-9][a-z0-9-]*)\/p\/([a-z0-9][a-z0-9-]*)$/)
   if (productMatch) {
     const [, shopSlug, productSlug] = productMatch
@@ -111,21 +120,21 @@ export function proxy(request: NextRequest) {
     url.pathname = '/'
     url.searchParams.set('shop', shopSlug)
     url.searchParams.set('product', productSlug)
-    return NextResponse.rewrite(url)
+    return withVisitorCookies(request, NextResponse.rewrite(url))
   }
 
-  // If the path looks like a shop slug (single segment, no slashes, alphanumeric with hyphens)
+  // If the path looks like a shop slug
   if (/^[a-zA-Z0-9][a-zA-Z0-9-]*$/.test(slug)) {
     const url = request.nextUrl.clone()
     url.pathname = '/'
     url.searchParams.set('shop', slug)
-    return NextResponse.rewrite(url)
+    return withVisitorCookies(request, NextResponse.rewrite(url))
   }
 
-  // For any other unknown path, rewrite to / so the SPA fallback handles it
+  // For any other unknown path, rewrite to /
   const url = request.nextUrl.clone()
   url.pathname = '/'
-  return NextResponse.rewrite(url)
+  return withVisitorCookies(request, NextResponse.rewrite(url))
 }
 
 export const config = {

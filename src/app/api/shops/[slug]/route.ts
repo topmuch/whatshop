@@ -48,13 +48,9 @@ export async function GET(
         testimonialsTagline: true,
         trustBadges: true,
         footerLinks: true,
-        facebookPixelId: true,
-        facebookCatalogId: true,
-        catalogEnabled: true,
-        catalogProductCount: true,
-        trackPageViews: true,
-        trackProductViews: true,
-        trackWhatsAppClicks: true,
+        // Internal fields removed from public API:
+        // facebookPixelId, facebookCatalogId, catalogEnabled,
+        // catalogProductCount, trackPageViews, trackProductViews, trackWhatsAppClicks
       },
     })
 
