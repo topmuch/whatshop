@@ -96,16 +96,14 @@ export function ElectroHeader({
               ) : (
                 <div className="flex items-center gap-2.5">
                   <div
-                    className="flex items-center justify-center w-10 h-10 rounded-xl shrink-0"
-                    style={{ background: colors.primary, color: colors.ctaText }}
+                    className="flex items-center justify-center w-10 h-10 rounded-xl shrink-0 bg-black text-white"
                   >
                     <span className="text-lg font-bold">
                       {(shop?.name ?? 'B').charAt(0).toUpperCase()}
                     </span>
                   </div>
                   <span
-                    className="text-base font-bold leading-tight max-w-[160px] truncate"
-                    style={{ color: colors.text }}
+                    className="text-base font-bold leading-tight max-w-[160px] truncate text-black"
                   >
                     {shop?.name ?? 'Boutiko'}
                   </span>
@@ -122,15 +120,12 @@ export function ElectroHeader({
                 <button
                   key={item.label}
                   onClick={() => handleNavClick(item.onClick)}
-                  className="px-4 py-2 text-sm font-semibold rounded-lg transition-colors duration-200 min-h-[44px] flex items-center"
-                  style={{ color: colors.text }}
+                  className="px-4 py-2 text-sm font-semibold rounded-lg transition-colors duration-200 min-h-[44px] flex items-center text-black"
                   onMouseEnter={(e) => {
                     e.currentTarget.style.background = colors.primaryBg
-                    e.currentTarget.style.color = colors.primary
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.background = 'transparent'
-                    e.currentTarget.style.color = colors.text
                   }}
                 >
                   {item.label}
@@ -144,8 +139,7 @@ export function ElectroHeader({
               {showSearch && (
                 <div className="hidden md:flex items-center relative">
                   <Search
-                    className="absolute left-3 size-4 pointer-events-none"
-                    style={{ color: colors.text }}
+                    className="absolute left-3 size-4 pointer-events-none text-black"
                     aria-hidden="true"
                   />
                   <Input
@@ -172,7 +166,7 @@ export function ElectroHeader({
                 onClick={onCartClick}
                 aria-label={`Panier${cartItemCount > 0 ? `, ${cartItemCount} article${cartItemCount > 1 ? 's' : ''}` : ''}`}
               >
-                <ShoppingCart className="size-5" style={{ color: colors.text }} />
+                <ShoppingCart className="size-5 text-black" />
                 {cartItemCount > 0 && (
                   <Badge
                     className="absolute -top-1 -right-1 h-5 min-w-[20px] flex items-center justify-center text-[10px] font-bold px-1 rounded-full border-2 border-white"
@@ -196,7 +190,7 @@ export function ElectroHeader({
                   onClick={() => setMobileSearchOpen((prev) => !prev)}
                   aria-label="Rechercher"
                 >
-                  <Search className="size-5" style={{ color: colors.text }} />
+                  <Search className="size-5 text-black" />
                 </Button>
               )}
 
@@ -211,9 +205,9 @@ export function ElectroHeader({
                 aria-controls="electro-mobile-menu"
               >
                 {mobileMenuOpen ? (
-                  <X className="size-5" style={{ color: colors.text }} />
+                  <X className="size-5 text-black" />
                 ) : (
-                  <Menu className="size-5" style={{ color: colors.text }} />
+                  <Menu className="size-5 text-black" />
                 )}
               </Button>
             </div>
@@ -231,8 +225,7 @@ export function ElectroHeader({
               >
                 <div className="pb-3 relative">
                   <Search
-                    className="absolute left-3 top-1/2 -translate-y-1/2 size-4 pointer-events-none"
-                    style={{ color: colors.text }}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 size-4 pointer-events-none text-black"
                     aria-hidden="true"
                   />
                   <Input
@@ -288,8 +281,7 @@ export function ElectroHeader({
                 style={{ borderColor: colors.primaryLight }}
               >
                 <span
-                  className="text-base font-bold"
-                  style={{ color: colors.text }}
+                  className="text-base font-bold text-black"
                 >
                   Menu
                 </span>
@@ -300,7 +292,7 @@ export function ElectroHeader({
                   onClick={closeMobileMenu}
                   aria-label="Fermer le menu"
                 >
-                  <X className="size-5" style={{ color: colors.text }} />
+                  <X className="size-5 text-black" />
                 </Button>
               </div>
 
@@ -314,23 +306,18 @@ export function ElectroHeader({
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.05 * index, duration: 0.2 }}
                       onClick={() => handleNavClick(item.onClick)}
-                      className="flex items-center w-full px-4 py-3.5 text-sm font-semibold rounded-lg transition-colors duration-200 min-h-[44px]"
-                      style={{ color: colors.text }}
+                      className="flex items-center w-full px-4 py-3.5 text-sm font-semibold rounded-lg transition-colors duration-200 min-h-[44px] text-black"
                       onTouchStart={(e) => {
                         e.currentTarget.style.background = colors.primaryBg
-                        e.currentTarget.style.color = colors.primary
                       }}
                       onTouchEnd={(e) => {
                         e.currentTarget.style.background = 'transparent'
-                        e.currentTarget.style.color = colors.text
                       }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.background = colors.primaryBg
-                        e.currentTarget.style.color = colors.primary
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.background = 'transparent'
-                        e.currentTarget.style.color = colors.text
                       }}
                     >
                       {item.label}
@@ -347,16 +334,13 @@ export function ElectroHeader({
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.2, duration: 0.2 }}
                         href={`tel:${shop.phone.replace(/\D/g, '')}`}
-                        className="flex items-center gap-3 w-full px-4 py-3.5 text-sm font-semibold rounded-lg transition-colors duration-200 min-h-[44px]"
-                        style={{ color: colors.text }}
+                        className="flex items-center gap-3 w-full px-4 py-3.5 text-sm font-semibold rounded-lg transition-colors duration-200 min-h-[44px] text-black"
                         onClick={closeMobileMenu}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.background = colors.primaryBg
-                          e.currentTarget.style.color = colors.primary
                         }}
                         onMouseLeave={(e) => {
                           e.currentTarget.style.background = 'transparent'
-                          e.currentTarget.style.color = colors.text
                         }}
                       >
                         <Phone className="size-4 shrink-0" aria-hidden="true" />
@@ -371,16 +355,13 @@ export function ElectroHeader({
                         href={`https://wa.me/${shop.whatsapp.replace(/\D/g, '')}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-3 w-full px-4 py-3.5 text-sm font-semibold rounded-lg transition-colors duration-200 min-h-[44px]"
-                        style={{ color: colors.text }}
+                        className="flex items-center gap-3 w-full px-4 py-3.5 text-sm font-semibold rounded-lg transition-colors duration-200 min-h-[44px] text-black"
                         onClick={closeMobileMenu}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.background = colors.primaryBg
-                          e.currentTarget.style.color = colors.primary
                         }}
                         onMouseLeave={(e) => {
                           e.currentTarget.style.background = 'transparent'
-                          e.currentTarget.style.color = colors.text
                         }}
                       >
                         <MessageCircle className="size-4 shrink-0" aria-hidden="true" />
