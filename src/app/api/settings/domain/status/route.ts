@@ -1,29 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireShopOwner } from '@/lib/auth'
 
 // GET /api/settings/domain/status — Get current domain request status
 export async function GET(request: NextRequest) {
   try {
-    // Read user email from cookie
-    const userEmail = request.cookies.get('boutiko-user')?.value
-
-    if (!userEmail) {
-      return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
-    }
-
-    // Find user with their shop
-    const user = await db.user.findUnique({
-      where: { email: userEmail },
-      include: { shops: true },
-    })
-
-    if (!user || !user.shops?.[0]) {
+    const { user, response: errorResponse } = await requireShopOwner(request)
+    if (errorResponse) return errorResponse
+    if (!user || !user.shop) {
       return NextResponse.json({ error: 'Boutique introuvable' }, { status: 404 })
     }
 
     // Find domain request for this shop
     const domainRequest = await db.domainRequest.findUnique({
-      where: { shopId: user.shops[0].id },
+      where: { shopId: user.shop.id },
     })
 
     if (!domainRequest) {

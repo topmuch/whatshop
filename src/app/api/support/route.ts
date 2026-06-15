@@ -1,24 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireShopOwner } from '@/lib/auth'
 import { createNotification } from '@/lib/notifications'
 
 // POST /api/support — Create a support ticket
 export async function POST(request: NextRequest) {
   try {
-    // Read user email from cookie
-    const userEmail = request.cookies.get('boutiko-user')?.value
-
-    if (!userEmail) {
-      return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
-    }
-
-    // Find user with their shop
-    const user = await db.user.findUnique({
-      where: { email: userEmail },
-      include: { shops: true },
-    })
-
-    if (!user || !user.shops?.[0]) {
+    const { user, response: errorResponse } = await requireShopOwner(request)
+    if (errorResponse) return errorResponse
+    if (!user || !user.shop) {
       return NextResponse.json({ error: 'Boutique introuvable' }, { status: 404 })
     }
 
@@ -31,7 +21,7 @@ export async function POST(request: NextRequest) {
 
     const ticket = await db.supportTicket.create({
       data: {
-        shopId: user.shops[0].id,
+        shopId: user.shop.id,
         message: message.trim(),
         status: 'OPEN',
       },
@@ -42,8 +32,8 @@ export async function POST(request: NextRequest) {
       await createNotification(
         'SUPPORT_TICKET',
         'Nouveau ticket support',
-        `Nouveau ticket de la boutique "${user.shops[0].name}".`,
-        { ticketId: ticket.id, shopId: user.shops[0].id, shopName: user.shops[0].name }
+        `Nouveau ticket de la boutique "${user.shop.name}".`,
+        { ticketId: ticket.id, shopId: user.shop.id, shopName: user.shop.name }
       )
     } catch (_notifyError) {
       // Notification failure must not break ticket creation

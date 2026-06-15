@@ -1,33 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireAuth, requireShopOwner } from '@/lib/auth'
 
 // GET /api/settings — Get seller shop settings (SEO, appearance)
 export async function GET(request: NextRequest) {
   try {
-    const userEmail = request.cookies.get('boutiko-user')?.value
-
-    if (!userEmail) {
-      return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
-    }
-
-    const user = await db.user.findUnique({
-      where: { email: userEmail },
-      include: { shops: true },
-    })
-
-    if (!user || !user.shops?.[0]) {
+    const { user, response: errorResponse } = await requireShopOwner(request)
+    if (errorResponse) return errorResponse
+    if (!user || !user.shop) {
       return NextResponse.json({ error: 'Boutique introuvable' }, { status: 404 })
     }
 
-    return NextResponse.json({
-      seoTitle: user.shops[0].seoTitle,
-      seoDescription: user.shops[0].seoDescription,
-      seoKeywords: user.shops[0].seoKeywords,
-      ogImage: user.shops[0].ogImage,
-      coverImageUrl: user.shops[0].coverImageUrl,
-      notificationPreferences: user.shops[0].notificationPreferences,
-      notificationEmail: user.shops[0].notificationEmail,
+    const shop = await db.shop.findUnique({
+      where: { id: user.shop.id },
+      select: {
+        seoTitle: true,
+        seoDescription: true,
+        seoKeywords: true,
+        ogImage: true,
+        coverImageUrl: true,
+        notificationPreferences: true,
+        notificationEmail: true,
+      },
     })
+
+    if (!shop) {
+      return NextResponse.json({ error: 'Boutique introuvable' }, { status: 404 })
+    }
+
+    return NextResponse.json(shop)
   } catch (error) {
     console.error('Settings GET error:', error)
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
@@ -37,20 +38,9 @@ export async function GET(request: NextRequest) {
 // PUT /api/settings — Update seller shop settings (SEO, appearance)
 export async function PUT(request: NextRequest) {
   try {
-    // Read user email from cookie
-    const userEmail = request.cookies.get('boutiko-user')?.value
-
-    if (!userEmail) {
-      return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
-    }
-
-    // Find user with their shop
-    const user = await db.user.findUnique({
-      where: { email: userEmail },
-      include: { shops: true },
-    })
-
-    if (!user || !user.shops?.[0]) {
+    const { user, response: errorResponse } = await requireShopOwner(request)
+    if (errorResponse) return errorResponse
+    if (!user || !user.shop) {
       return NextResponse.json({ error: 'Boutique introuvable' }, { status: 404 })
     }
 
@@ -70,7 +60,7 @@ export async function PUT(request: NextRequest) {
     if (notificationEmail !== undefined) data.notificationEmail = notificationEmail || null
 
     const updatedShop = await db.shop.update({
-      where: { id: user.shops[0].id },
+      where: { id: user.shop.id },
       data,
       select: {
         id: true, name: true, slug: true, seoTitle: true, seoDescription: true,

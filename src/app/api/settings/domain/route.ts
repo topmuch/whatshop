@@ -1,23 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireShopOwner } from '@/lib/auth'
 
 // POST /api/settings/domain — Submit a custom domain request
 export async function POST(request: NextRequest) {
   try {
-    // Read user email from cookie
-    const userEmail = request.cookies.get('boutiko-user')?.value
-
-    if (!userEmail) {
-      return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
-    }
-
-    // Find user with their shop
-    const user = await db.user.findUnique({
-      where: { email: userEmail },
-      include: { shops: true },
-    })
-
-    if (!user || !user.shops?.[0]) {
+    const { user, response: errorResponse } = await requireShopOwner(request)
+    if (errorResponse) return errorResponse
+    if (!user || !user.shop) {
       return NextResponse.json({ error: 'Boutique introuvable' }, { status: 404 })
     }
 
@@ -34,15 +24,15 @@ export async function POST(request: NextRequest) {
     const existingDomain = await db.domainRequest.findUnique({
       where: { domain: trimmedDomain },
     })
-    if (existingDomain && existingDomain.shopId !== user.shops[0].id) {
+    if (existingDomain && existingDomain.shopId !== user.shop.id) {
       return NextResponse.json({ error: 'Ce domaine est déjà pris' }, { status: 409 })
     }
 
     // Upsert domain request for this shop
     await db.domainRequest.upsert({
-      where: { shopId: user.shops[0].id },
+      where: { shopId: user.shop.id },
       create: {
-        shopId: user.shops[0].id,
+        shopId: user.shop.id,
         domain: trimmedDomain,
         status: 'PENDING',
       },
@@ -57,7 +47,7 @@ export async function POST(request: NextRequest) {
 
     // Update shop with pending domain status
     await db.shop.update({
-      where: { id: user.shops[0].id },
+      where: { id: user.shop.id },
       data: {
         customDomain: trimmedDomain,
         customDomainStatus: 'PENDING',

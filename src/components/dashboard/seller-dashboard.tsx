@@ -532,7 +532,7 @@ export function SellerDashboard() {
       const res = await originalFetch(input, init)
       if (res.status === 401) {
         // Only redirect if we're in the dashboard (not on login/register)
-        const url = typeof input === 'string' ? input : input?.url || ''
+        const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input?.url || ''
         const isApiCall = url.includes('/api/')
         if (isApiCall && !sessionExpired) {
           setSessionExpired(true)
@@ -609,6 +609,25 @@ export function SellerDashboard() {
       fetchMyStats()
     }
   }, [loading, user, sessionExpired, fetchMyShops, fetchMyStats])
+
+  async function handleLogout() {
+    try {
+      const res = await fetch('/api/auth/logout', { method: 'POST' })
+      if (res.ok) {
+        setUser(null)
+        setShop(null)
+        setShops([])
+        setView('login')
+        window.location.replace('/login')
+        return
+      }
+    } catch { /* ignore */ }
+    setUser(null)
+    setShop(null)
+    setShops([])
+    setView('login')
+    window.location.replace('/login')
+  }
 
   // If user has no shop after session fetch, onboarding redirect should have kicked in
   // Session expired banner

@@ -177,7 +177,7 @@ function ResellerSidebarContent({
     } catch {
       /* ignore */
     }
-    document.cookie = 'boutiko-user=; path=/; max-age=0'
+    // Legacy cookie cleanup (no-op with iron-session, kept for safety)
     setUser(null)
     setShop(null)
     setView('landing')
