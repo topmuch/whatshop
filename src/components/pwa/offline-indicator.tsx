@@ -67,7 +67,7 @@ export function OfflineIndicator() {
       return;
     }
     const start = performance.now();
-    fetch("/api/route", { method: "HEAD", cache: "no-store" })
+    fetch("/api/health", { method: "HEAD", cache: "no-store" })
       .then(() => {
         const ms = performance.now() - start;
         dispatch({ type: "MEASURE_RESULT", latency: Math.round(ms) });

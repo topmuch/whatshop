@@ -12,38 +12,50 @@ import { BackgroundSyncPlugin } from "workbox-background-sync";
 import { NavigationRoute, enableNavigationPreload } from "workbox-navigation-preload";
 
 // Inject the precache manifest (populated by the plugin at build time)
+// This handles ALL versioned Next.js static files (/_next/static/*)
+// with content-hashed filenames — they are automatically updated on each deploy.
 precacheAndRoute(self.__WB_MANIFEST);
 
 // Clean up old precache entries from previous versions
 cleanupOutdatedCaches();
 
-// Skip waiting and activate immediately
+// Skip waiting and activate immediately — ensures new SW takes over
 self.skipWaiting();
 self.addEventListener("activate", (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    // Delete ALL old runtime caches on activate to prevent stale content
+    caches.keys().then((names) =>
+      Promise.all(
+        names
+          .filter((name) => name.startsWith("boutiko-"))
+          .map((name) => caches.delete(name))
+      )
+    ).then(() => self.clients.claim())
+  );
 });
 
 /* ============================================================
    CACHING STRATEGIES
    ============================================================ */
 
-// 1. Static assets (JS, CSS, Fonts) — Cache First, 30 days
+// 1. Static font files (woff2, ttf, etc.) — Cache First, 30 days
+//    These are stable assets with hashed filenames from Next.js/Google Fonts
 registerRoute(
-  ({ request, url }) => {
-    const isNextStatic = url.pathname.startsWith("/_next/static/");
-    const isStaticFile = /\.(?:js|css|woff2?|ttf|eot|otf)$/i.test(url.pathname);
-    return isNextStatic || isStaticFile;
-  },
+  ({ url }) => /\.(?:woff2?|ttf|eot|otf)$/i.test(url.pathname),
   new CacheFirst({
-    cacheName: "boutiko-static-v1",
+    cacheName: "boutiko-fonts-v2",
     plugins: [
       new ExpirationPlugin({
-        maxEntries: 80,
-        maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+        maxEntries: 30,
+        maxAgeSeconds: 365 * 24 * 60 * 60,
       }),
     ],
   })
 );
+
+// NOTE: /_next/static/ JS/CSS files are handled by precacheAndRoute above.
+// Do NOT add a custom CacheFirst rule for them — it would conflict with
+// the precache manifest and serve stale files after a deploy.
 
 // 2a. Uploaded images (/uploads/) — Network First, 1 day cache fallback
 //    IMPORTANT: Uploaded images MUST use NetworkFirst so that if the file
@@ -53,7 +65,7 @@ registerRoute(
 registerRoute(
   ({ url }) => url.pathname.startsWith("/uploads/"),
   new NetworkFirst({
-    cacheName: "boutiko-uploaded-images-v1",
+    cacheName: "boutiko-uploaded-images-v2",
     networkTimeoutSeconds: 3,
     plugins: [
       new ExpirationPlugin({
@@ -77,7 +89,7 @@ registerRoute(
     );
   },
   new StaleWhileRevalidate({
-    cacheName: "boutiko-static-images-v1",
+    cacheName: "boutiko-static-images-v2",
     plugins: [
       new ExpirationPlugin({
         maxEntries: 100,
@@ -88,7 +100,7 @@ registerRoute(
 );
 
 // 3. API calls — Network First, 5 min cache fallback
-const apiCacheName = "boutiko-api-v1";
+const apiCacheName = "boutiko-api-v2";
 
 registerRoute(
   ({ url }) => url.pathname.startsWith("/api/shops/") && url.pathname.endsWith("/products"),
@@ -125,7 +137,7 @@ registerRoute(
     return cdnHosts.some((host) => url.hostname === host);
   },
   new CacheFirst({
-    cacheName: "boutiko-cdn-v1",
+    cacheName: "boutiko-cdn-v2",
     plugins: [
       new ExpirationPlugin({
         maxEntries: 20,
@@ -179,7 +191,7 @@ enableNavigationPreload();
 registerRoute(
   new NavigationRoute(
     new NetworkFirst({
-      cacheName: "boutiko-pages-v1",
+      cacheName: "boutiko-pages-v2",
       networkTimeoutSeconds: 5,
       plugins: [
         new ExpirationPlugin({

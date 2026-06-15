@@ -116,6 +116,24 @@ export default function RootLayout({
             }
           } catch(e) {}
         `}} />
+        {/* Service Worker auto-update: force new SW to activate on every page load */}
+        <script dangerouslySetInnerHTML={{ __html: `
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').then(function(reg) {
+              reg.addEventListener('updatefound', function() {
+                var newWorker = reg.installing;
+                if (!newWorker) return;
+                newWorker.addEventListener('statechange', function() {
+                  if (newWorker.state === 'activated') {
+                    window.location.reload();
+                  }
+                });
+              });
+              // Force check for updates on every page load
+              reg.update();
+            }).catch(function() {});
+          }
+        `}} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
