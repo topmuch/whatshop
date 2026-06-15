@@ -175,22 +175,22 @@ export function ShippingZonesManager() {
   // ─── FETCH ZONES ────────────────────────────────────────────────────────────
 
   const fetchZones = useCallback(async () => {
-    if (!shopId) return
+    if (!shopId || !shopSlug) return
     try {
       const res = await fetch(`/api/shops/${shopSlug}/shipping-zones`)
       if (!res.ok) {
-        const data = await res.json()
+        const data = await res.json().catch(() => ({ error: 'Erreur serveur' }))
         throw new Error(data.error || 'Erreur de chargement')
       }
       const data = await res.json()
       setZones(data.zones)
     } catch (err) {
       console.error('Failed to fetch shipping zones:', err)
-      toast.error('Erreur lors du chargement des zones de livraison')
+      toast.error(err instanceof Error ? err.message : 'Erreur lors du chargement des zones de livraison')
     } finally {
       setLoading(false)
     }
-  }, [shopId])
+  }, [shopId, shopSlug])
 
   useEffect(() => {
     setLoading(true)

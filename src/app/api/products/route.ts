@@ -3,6 +3,8 @@ import { db } from '@/lib/db'
 import { requireShopOwner } from '@/lib/auth'
 import { slugify } from '@/lib/slugify'
 
+export const dynamic = 'force-dynamic'
+
 // Helper: parse JSON images field into string[]
 function parseImages(imagesRaw: unknown): string[] {
   if (!imagesRaw) return []
@@ -36,15 +38,15 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(parseInt(searchParams.get('limit') || String(PRODUCTS_PER_PAGE), 10), 100)
     const includeAll = searchParams.get('all') === 'true'
 
-    // SECURITY: require auth to see hidden/unavailable products
-    if (includeAll) {
-      const { user, response: authErr } = await requireShopOwner(request)
-      if (authErr) return authErr
-      if (!user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
-    }
-
     if (!shopId) {
       return NextResponse.json({ error: 'shopId requis' }, { status: 400 })
+    }
+
+    // SECURITY: require auth to see hidden/unavailable products
+    if (includeAll) {
+      const { user, response: authErr } = await requireShopOwner(request, shopId)
+      if (authErr) return authErr
+      if (!user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
     }
 
     const where: Record<string, unknown> = { shopId }

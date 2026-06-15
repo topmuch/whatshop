@@ -517,12 +517,31 @@ function DashboardContent({ consolidatedStats }: { consolidatedStats: Consolidat
 /* ------------------------------------------------------------------ */
 
 export function SellerDashboard() {
-  const { user, shop, setUser, setView, setShop } = useAppStore()
+  const { user, shop, setUser, setView, setShop, setShops } = useAppStore()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [myShops, setMyShops] = useState<MyShop[]>([])
   const [consolidatedStats, setConsolidatedStats] = useState<ConsolidatedStats | null>(null)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [sessionExpired, setSessionExpired] = useState(false)
+
+  // Global 401 interceptor: detect expired sessions across all dashboard API calls
+  useEffect(() => {
+    const originalFetch = window.fetch
+    window.fetch = async (input, init) => {
+      const res = await originalFetch(input, init)
+      if (res.status === 401) {
+        // Only redirect if we're in the dashboard (not on login/register)
+        const url = typeof input === 'string' ? input : input?.url || ''
+        const isApiCall = url.includes('/api/')
+        if (isApiCall && !sessionExpired) {
+          setSessionExpired(true)
+        }
+      }
+      return res
+    }
+    return () => { window.fetch = originalFetch }
+  }, [sessionExpired])
 
   const fetchMyShops = useCallback(async () => {
     try {
@@ -585,13 +604,35 @@ export function SellerDashboard() {
 
   // Fetch shops & stats once session is ready
   useEffect(() => {
-    if (!loading && user) {
+    if (!loading && user && !sessionExpired) {
       fetchMyShops()
       fetchMyStats()
     }
-  }, [loading, user, fetchMyShops, fetchMyStats])
+  }, [loading, user, sessionExpired, fetchMyShops, fetchMyStats])
 
   // If user has no shop after session fetch, onboarding redirect should have kicked in
+  // Session expired banner
+  if (sessionExpired) {
+    return (
+      <div className="flex-1 flex items-center justify-center p-8">
+        <Card className="max-w-md w-full">
+          <CardContent className="flex flex-col items-center py-12 gap-4">
+            <div className="h-12 w-12 rounded-full bg-amber-100 flex items-center justify-center">
+              <LogOut className="h-6 w-6 text-amber-600" />
+            </div>
+            <h3 className="text-lg font-semibold">Session expirée</h3>
+            <p className="text-sm text-muted-foreground text-center">
+              Votre session a expiré. Veuillez vous reconnecter pour continuer.
+            </p>
+            <Button onClick={handleLogout} className="mt-2">
+              Se reconnecter
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   if (user && !shop) {
     setView('onboarding')
     window.history.replaceState(null, '', '/onboarding')

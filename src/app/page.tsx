@@ -146,9 +146,25 @@ function PageSkeleton() {
   )
 }
 
+// Views that are safe to render during SSR/hydration (client-only auth views)
+const IMMEDIATE_VIEWS: AppView[] = ['login', 'register', 'dashboard', 'admin', 'reseller', 'onboarding']
+
+/**
+ * Returns true only on the client after hydration.
+ * Uses useSyncExternalStore to avoid the setState-in-effect lint rule.
+ */
+function useIsMounted() {
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  )
+}
+
 export default function Home() {
   const { view, setView, setUser, setShop, setShops, shopSlug, setShopSlug, publicShop } = useAppStore()
   const pathname = useClientPathname()
+  const mounted = useIsMounted()
 
   // Synchronously resolve view from the actual URL
   const urlView = resolveViewFromPath(pathname)
@@ -156,6 +172,11 @@ export default function Home() {
   // Use the URL-derived view immediately (no flash)
   // Once mounted + session checked, the store view takes over
   const effectiveView = view !== 'landing' ? view : urlView.view
+
+  // Before mount: only render known auth routes (they're client-only anyway).
+  // For everything else (landing, shop, public pages), show a skeleton to
+  // prevent the flash of the landing page when the real URL is a shop slug.
+  const safeToRender = mounted || IMMEDIATE_VIEWS.includes(effectiveView)
 
   // Sync shop slug from URL into store
   useEffect(() => {
@@ -227,7 +248,16 @@ export default function Home() {
     }
   }, [urlView.view])
 
-  const showWhatsApp = ['landing', 'about', 'pricing', 'contact', 'faq', 'privacy', 'terms'].includes(effectiveView)
+  const showWhatsApp = mounted && ['landing', 'about', 'pricing', 'contact', 'faq', 'privacy', 'terms'].includes(effectiveView)
+
+  // Before mount, show skeleton for non-immediate views (landing, shop, public pages)
+  if (!safeToRender) {
+    return (
+      <ErrorBoundary>
+        <PageSkeleton />
+      </ErrorBoundary>
+    )
+  }
 
   return (
     <ErrorBoundary>

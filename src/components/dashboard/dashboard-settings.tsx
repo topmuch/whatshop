@@ -2,6 +2,7 @@
 
 import { useAppStore } from '@/lib/store'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Skeleton } from '@/components/ui/skeleton'
 import { ShippingZonesManager } from './shipping-zones-manager'
 import { SubscriptionSection } from './settings/subscription-section'
 import { ShopInfoForm } from './settings/shop-info-form'
@@ -11,6 +12,17 @@ import { NotificationTab } from './settings/notification-tab'
 
 export function DashboardSettings() {
   const { shop } = useAppStore()
+
+  // Show skeleton while shop data is loading
+  if (!shop) {
+    return (
+      <div className="space-y-6 max-w-3xl">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-10 w-full max-w-md" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6 max-w-3xl">

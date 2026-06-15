@@ -175,9 +175,12 @@ export function DashboardProducts() {
         // API returns { products: [...], pagination: {...} } or plain array
         const productsArray = Array.isArray(data) ? data : (data.products || [])
         setProducts(productsArray)
+      } else {
+        const errData = await res.json().catch(() => ({ error: 'Erreur serveur' }))
+        toast.error(errData.error || 'Erreur de chargement des produits')
       }
     } catch {
-      toast.error('Erreur de chargement des produits')
+      toast.error('Erreur de connexion')
     }
   }, [shop, search, categoryFilter])
 

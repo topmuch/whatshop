@@ -3,6 +3,8 @@ import { db } from '@/lib/db'
 import { requireAuth, isValidSlug } from '@/lib/auth'
 import { checkShopLimit, getOrCreateSubscription } from '@/lib/permissions'
 
+export const dynamic = 'force-dynamic'
+
 // GET /api/shops?id=xxx or /api/shops?slug=xxx
 export async function GET(request: NextRequest) {
   try {

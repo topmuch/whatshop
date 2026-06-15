@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Button } from '@/components/ui/button'
 import {
   ShoppingCart,
   DollarSign,
@@ -91,31 +92,52 @@ function ProductTooltip({ active, payload }: { active?: boolean; payload?: Array
 export function DashboardAnalytics() {
   const [data, setData] = useState<AnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    async function fetchAnalytics() {
-      try {
-        const res = await fetch('/api/shops/my-analytics')
-        if (res.ok) {
-          setData(await res.json())
-        }
-      } catch {
-        // Error fetching analytics
-      } finally {
-        setLoading(false)
+  const fetchAnalytics = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/shops/my-analytics')
+      if (res.ok) {
+        setData(await res.json())
+      } else if (res.status === 401) {
+        setError('Session expirée — reconnectez-vous')
+      } else {
+        const errData = await res.json().catch(() => ({ error: 'Erreur serveur' }))
+        setError(errData.error || `Erreur ${res.status}`)
       }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur de connexion')
+    } finally {
+      setLoading(false)
     }
-    fetchAnalytics()
   }, [])
+
+  useEffect(() => { fetchAnalytics() }, [fetchAnalytics])
 
   if (loading) return <LoadingSkeleton />
 
   if (!data) {
+    const isAuthError = error?.toLowerCase().includes('session') || error?.toLowerCase().includes('authentifié')
     return (
       <Card>
         <CardContent className="flex flex-col items-center justify-center py-12">
           <BarChart3 className="h-10 w-10 text-muted-foreground/40 mb-3" />
-          <p className="text-muted-foreground">Impossible de charger les analytics</p>
+          <p className="text-muted-foreground font-medium">Données non disponibles</p>
+          {error && (
+            <p className={`text-xs mt-2 max-w-md text-center ${isAuthError ? 'text-amber-600' : 'text-destructive'}`}>
+              {error}
+            </p>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-4"
+            onClick={fetchAnalytics}
+          >
+            Réessayer
+          </Button>
         </CardContent>
       </Card>
     )

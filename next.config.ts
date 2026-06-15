@@ -70,9 +70,9 @@ const nextConfig: NextConfig = {
   },
 };
 
-// PWA plugin options include runtimeCaching, swSrc, register which are valid at
-// runtime but not fully typed in @ducanh2912/next-pwa v5 type definitions.
-const pwaOptions = {
+// next-pwa options: register, swSrc, runtimeCaching are valid runtime options
+// but not fully typed in @ducanh2912/next-pwa v5 type definitions.
+const pwaConfig = {
   dest: "public",
   disable: process.env.NODE_ENV === "development",
   register: true,
@@ -96,6 +96,6 @@ const pwaOptions = {
       },
     },
   ],
-} as Parameters<typeof withPWA>[0];
+};
 
-export default withPWA(pwaOptions)(nextConfig);
+export default withPWA(pwaConfig as never)(nextConfig);
