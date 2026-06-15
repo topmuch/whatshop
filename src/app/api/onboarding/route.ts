@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { requireAuth, isValidSlug } from '@/lib/auth'
 import { createNotification } from '@/lib/notifications'
 import { generateSlug } from '@/lib/utils'
+import { dispatchWelcomeEmail, dispatchAdminNewShopEmail } from '@/lib/email-dispatch'
 
 // Sector → Template mapping
 const sectorTemplateMap: Record<string, string> = {
@@ -149,8 +150,28 @@ export async function POST(request: NextRequest) {
         `La boutique "${shop.name}" (${businessType}) a été créée par ${user.name}.`,
         { shopId: shop.id, shopName: shop.name, ownerId: user.id, ownerName: user.name }
       )
+
+      // Fire-and-forget emails: welcome + admin notification
+      const shopUrl = `https://boutiko.pro/${shop.slug}`
+      dispatchWelcomeEmail({
+        userId: user.id,
+        userName: user.name,
+        shopName: shop.name,
+        shopSlug: shop.slug,
+        shopUrl,
+        plan: finalPlan,
+        isPaidPlan,
+      })
+      dispatchAdminNewShopEmail({
+        shopName: shop.name,
+        ownerName: user.name,
+        ownerEmail: user.email,
+        plan: finalPlan,
+        sector,
+        businessType,
+      })
     } catch {
-      // Notification failure must not break onboarding
+      // Notification/email failure must not break onboarding
     }
 
     // If paid plan: create upgrade request + notify admin + notify user

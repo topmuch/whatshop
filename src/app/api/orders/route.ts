@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { requireShopOwner } from '@/lib/auth'
 import { createNotification } from '@/lib/notifications'
 import { rateLimit, getClientIp, RATE_LIMITS } from '@/lib/rate-limit'
+import { dispatchNewOrderEmail, dispatchAdminNewOrderEmail } from '@/lib/email-dispatch'
 
 // POST /api/orders (public order creation — no auth required)
 export async function POST(request: NextRequest) {
@@ -91,8 +92,23 @@ export async function POST(request: NextRequest) {
         { orderId: order.id, shopId: shop.id, shopName: shop.name, total },
         shop.ownerId,
       )
+
+      // Fire-and-forget emails
+      const parsedItems = typeof items === 'string' ? JSON.parse(items) : items
+      dispatchNewOrderEmail(shop.id, shop.ownerId, {
+        customerName,
+        customerPhone,
+        total,
+        items: parsedItems,
+      })
+      dispatchAdminNewOrderEmail({
+        shopName: shop.name,
+        ownerName: shop.ownerId ? (await db.user.findUnique({ where: { id: shop.ownerId }, select: { name: true } }))?.name || '' : '',
+        total,
+        customerName,
+      })
     } catch {
-      // Notification failure must not break order creation
+      // Notification/email failure must not break order creation
     }
 
     return NextResponse.json(order, { status: 201 })

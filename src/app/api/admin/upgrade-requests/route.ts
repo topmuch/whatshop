@@ -4,6 +4,7 @@ import { upgradeSubscription, PLAN_CONFIGS } from '@/lib/permissions'
 import { db } from '@/lib/db'
 import { hasMinimumRole } from '@/lib/permissions'
 import { createNotification } from '@/lib/notifications'
+import { dispatchShopActivatedEmail } from '@/lib/email-dispatch'
 
 // GET /api/admin/upgrade-requests — List all upgrade requests
 export async function GET(request: NextRequest) {
@@ -128,6 +129,18 @@ export async function PATCH(request: NextRequest) {
               metadata: JSON.stringify({ action: 'APPROVE', requestedPlan: upgradeReq.requestedPlan }),
             },
           })
+
+          // Send activation email
+          const activatedShop = shops[0]
+          if (activatedShop) {
+            dispatchShopActivatedEmail({
+              userId: upgradeReq.userId,
+              userName: (await db.user.findUnique({ where: { id: upgradeReq.userId }, select: { name: true } }))?.name || '',
+              shopName: activatedShop.name,
+              shopUrl: `https://boutiko.pro/${activatedShop.slug}`,
+              plan: PLAN_CONFIGS[upgradeReq.requestedPlan]?.label || upgradeReq.requestedPlan,
+            })
+          }
         } catch {
           // Non-critical
         }

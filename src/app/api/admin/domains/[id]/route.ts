@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { verifyAdmin, adminUnauthorized } from '@/lib/admin-auth'
+import { dispatchDomainApprovedEmail, dispatchDomainRejectedEmail } from '@/lib/email-dispatch'
 
 export async function PATCH(
   request: NextRequest,
@@ -51,6 +52,20 @@ export async function PATCH(
         }),
       ])
 
+      // Fire-and-forget: email to seller
+      try {
+        const owner = await db.user.findUnique({ where: { id: domainRequest.shop.ownerId }, select: { name: true } })
+        if (owner) {
+          dispatchDomainApprovedEmail({
+            shopOwnerName: owner.name,
+            domain: domainRequest.domain,
+            shopName: domainRequest.shop.name,
+            dnsInstructions: domainRequest.dnsInstructions,
+            ownerId: domainRequest.shop.ownerId,
+          })
+        }
+      } catch { /* non-critical */ }
+
       const updated = await db.domainRequest.findUnique({
         where: { id },
         include: {
@@ -87,6 +102,20 @@ export async function PATCH(
         },
       }),
     ])
+
+    // Fire-and-forget: email to seller
+    try {
+      const owner = await db.user.findUnique({ where: { id: domainRequest.shop.ownerId }, select: { name: true } })
+      if (owner) {
+        dispatchDomainRejectedEmail({
+          shopOwnerName: owner.name,
+          domain: domainRequest.domain,
+          shopName: domainRequest.shop.name,
+          reason: reason || 'Demande rejetée',
+          ownerId: domainRequest.shop.ownerId,
+        })
+      }
+    } catch { /* non-critical */ }
 
     const updated = await db.domainRequest.findUnique({
       where: { id },

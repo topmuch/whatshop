@@ -132,11 +132,21 @@ export function DashboardOverview() {
       if (res.ok) {
         const data = await res.json()
         setQrDataUrl(data.dataUrl)
+        return
       }
-    } catch {
-      // Silently fail for QR code
+      // If server-side QR fails, use fallback image API
+      console.warn('QR server API returned', res.status, '— using fallback')
+    } catch (err) {
+      console.warn('QR server API error, using fallback:', err)
     } finally {
       setQrLoading(false)
+    }
+    // Fallback: use a public QR code API (no auth needed, works offline-resistant)
+    try {
+      const shopUrl = encodeURIComponent(`https://boutiko.pro/${shop.slug}`)
+      setQrDataUrl(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${shopUrl}&format=png&margin=10&color=1a1a2e`)
+    } catch {
+      // Ultimate fallback: no QR shown
     }
   }
 
