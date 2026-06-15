@@ -30,18 +30,22 @@ export function hashData(data: string | undefined | null): string {
 // ─── TOKEN ENCRYPTION ─────────────────────────────────────────────────────────
 
 const ALGORITHM = 'aes-256-gcm'
-const ENCRYPTION_KEY = process.env.FACEBOOK_TOKEN_ENCRYPTION_KEY
-if (!ENCRYPTION_KEY || ENCRYPTION_KEY.length < 16) {
-  throw new Error(
-    'FACEBOOK_TOKEN_ENCRYPTION_KEY environment variable is required and must be at least 16 characters.'
-  )
+
+function getEncryptionKey(): string {
+  const key = process.env.FACEBOOK_TOKEN_ENCRYPTION_KEY
+  if (!key || key.length < 16) {
+    throw new Error(
+      'FACEBOOK_TOKEN_ENCRYPTION_KEY environment variable is required and must be at least 16 characters.'
+    )
+  }
+  return key
 }
 
 /**
  * Derive a 32-byte key from the configured secret.
  */
 function getKey(): Buffer {
-  return createHash('sha256').update(ENCRYPTION_KEY!).digest()
+  return createHash('sha256').update(getEncryptionKey()).digest()
 }
 
 /**

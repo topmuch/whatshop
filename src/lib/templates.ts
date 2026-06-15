@@ -47,7 +47,7 @@ export interface ShopTemplate {
     imageSize: string
     badgePosition: 'top-left' | 'top-right'
     badgeStyle: 'pill' | 'rounded'
-    categoryStyle: 'pill' | 'circle-image'
+    categoryStyle: 'pill' | 'circle-image' | 'rectangle-card'
     heroStyle: 'contained' | 'full-image'
     priceStyle: 'electro-highlight' | 'beauty-elegant'
     buttonStyle: 'filled' | 'rounded'

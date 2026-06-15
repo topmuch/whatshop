@@ -13,24 +13,29 @@ export interface SessionData {
   godModeOriginalUserId?: string
 }
 
-const SESSION_SECRET = process.env.SESSION_SECRET
-if (!SESSION_SECRET || SESSION_SECRET.length < 32) {
-  throw new Error(
-    'SESSION_SECRET environment variable is required and must be at least 32 characters. ' +
-    'Generate one with: openssl rand -base64 48'
-  )
+function getSessionSecret(): string {
+  const secret = process.env.SESSION_SECRET
+  if (!secret || secret.length < 32) {
+    throw new Error(
+      'SESSION_SECRET environment variable is required and must be at least 32 characters. ' +
+      'Generate one with: openssl rand -base64 48'
+    )
+  }
+  return secret
 }
 
-export const sessionOptions = {
-  password: SESSION_SECRET,
-  cookieName: 'boutiko-session' as const,
-  cookieOptions: {
-    httpOnly: true,
-    secure: process.env.COOKIE_SECURE === 'true',
-    sameSite: 'lax' as const,
-    maxAge: 60 * 60 * 24 * 30, // 30 days
-    path: '/',
-  },
+export function getSessionOptions() {
+  return {
+    password: getSessionSecret(),
+    cookieName: 'boutiko-session' as const,
+    cookieOptions: {
+      httpOnly: true,
+      secure: process.env.COOKIE_SECURE === 'true',
+      sameSite: 'lax' as const,
+      maxAge: 60 * 60 * 24 * 30, // 30 days
+      path: '/',
+    },
+  }
 }
 
 /**
@@ -38,7 +43,7 @@ export const sessionOptions = {
  */
 async function getSessionForHandler(): Promise<ReturnType<typeof getIronSession<SessionData>>> {
   const cookieStore = await cookies()
-  return getIronSession<SessionData>(cookieStore, sessionOptions)
+  return getIronSession<SessionData>(cookieStore, getSessionOptions())
 }
 
 /**
@@ -48,7 +53,7 @@ export async function getSessionForMiddleware(
   request: NextRequest,
   response: NextResponse
 ): Promise<ReturnType<typeof getIronSession<SessionData>>> {
-  return getIronSession<SessionData>(request, response, sessionOptions)
+  return getIronSession<SessionData>(request, response, getSessionOptions())
 }
 
 /**

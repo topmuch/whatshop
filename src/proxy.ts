@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getIronSession } from 'iron-session'
-import { sessionOptions, type SessionData } from '@/lib/auth'
+import { getSessionOptions, type SessionData } from '@/lib/auth'
 
 // Routes that have their own page.tsx — let Next.js handle them directly
 const APP_ROUTES = new Set([
@@ -88,7 +88,7 @@ export async function proxy(request: NextRequest) {
   const response = NextResponse.next()
   let isAuthenticated = false
   try {
-    const session = await getIronSession<SessionData>(request, response, sessionOptions)
+    const session = await getIronSession<SessionData>(request, response, getSessionOptions())
     isAuthenticated = !!session.userId
   } catch {
     // Session unreadable — treat as unauthenticated
