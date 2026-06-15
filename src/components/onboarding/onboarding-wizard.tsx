@@ -943,6 +943,10 @@ export function OnboardingWizard() {
   }
 
   function renderStep5() {
+    const selectPlan = (plan: 'TRIAL' | 'PRO') => {
+      setForm((prev) => ({ ...prev, plan }))
+    }
+
     return (
       <motion.div
         key="step5"
@@ -954,14 +958,9 @@ export function OnboardingWizard() {
         transition={{ duration: 0.3, ease: 'easeInOut' }}
       >
         <div className="text-center mb-8">
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.4 }}
-            className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-rose-100 mb-4"
-          >
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-rose-100 mb-4">
             <Sparkles className="w-8 h-8 text-rose-600" />
-          </motion.div>
+          </div>
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
             Votre site est prêt ! Choisissez votre formule
           </h2>
@@ -1006,19 +1005,26 @@ export function OnboardingWizard() {
         {/* Plan Cards */}
         <div className="grid gap-4 sm:grid-cols-2">
           {/* Trial Plan */}
-          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => selectPlan('TRIAL')}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') selectPlan('TRIAL') }}
+          >
             <Card
               className={`cursor-pointer transition-all duration-200 hover:shadow-xl h-full ${
                 form.plan === 'TRIAL'
                   ? 'ring-2 ring-rose-600 shadow-lg bg-rose-50/50'
                   : 'hover:border-rose-300'
               }`}
-              onClick={() => setForm((prev) => ({ ...prev, plan: 'TRIAL' }))}
             >
               <CardContent className="p-6 flex flex-col h-full">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-2xl">🟢</span>
                   <h3 className="font-bold text-lg text-gray-900">ESSAI GRATUIT</h3>
+                  {form.plan === 'TRIAL' && (
+                    <span className="ml-auto text-xs font-semibold text-rose-600 bg-rose-100 px-2 py-0.5 rounded-full">Sélectionné</span>
+                  )}
                 </div>
                 <div className="mb-4">
                   <span className="text-3xl font-bold text-gray-900">0</span>
@@ -1039,10 +1045,8 @@ export function OnboardingWizard() {
                   ))}
                 </ul>
                 <Button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setForm((prev) => ({ ...prev, plan: 'TRIAL' }))
-                  }}
+                  type="button"
+                  onClick={() => selectPlan('TRIAL')}
                   className={`w-full mt-5 rounded-xl font-semibold ${
                     form.plan === 'TRIAL'
                       ? 'bg-gradient-to-r from-rose-600 to-pink-600 text-white hover:from-rose-700 hover:to-pink-700'
@@ -1054,20 +1058,24 @@ export function OnboardingWizard() {
                 </Button>
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
 
           {/* Pro Plan */}
-          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => selectPlan('PRO')}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') selectPlan('PRO') }}
+          >
             <Card
               className={`cursor-pointer transition-all duration-200 hover:shadow-xl h-full relative ${
                 form.plan === 'PRO'
                   ? 'ring-2 ring-gray-900 shadow-lg bg-gray-50'
                   : 'hover:border-gray-400'
               }`}
-              onClick={() => setForm((prev) => ({ ...prev, plan: 'PRO' }))}
             >
               {form.plan !== 'PRO' && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
                   <span className="bg-gray-900 text-white text-xs font-semibold px-3 py-1 rounded-full">
                     Recommandé
                   </span>
@@ -1080,6 +1088,9 @@ export function OnboardingWizard() {
                   <span className="text-xs bg-rose-100 text-rose-600 px-2 py-0.5 rounded-full font-medium">
                     Recommandé
                   </span>
+                  {form.plan === 'PRO' && (
+                    <span className="ml-auto text-xs font-semibold text-gray-900 bg-gray-200 px-2 py-0.5 rounded-full">Sélectionné</span>
+                  )}
                 </div>
                 <div className="mb-4">
                   <span className="text-3xl font-bold text-gray-900">5 000</span>
@@ -1100,22 +1111,16 @@ export function OnboardingWizard() {
                   ))}
                 </ul>
                 <Button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setForm((prev) => ({ ...prev, plan: 'PRO' }))
-                  }}
-                  className={`w-full mt-5 rounded-xl font-semibold ${
-                    form.plan === 'PRO'
-                      ? 'bg-gray-900 text-white hover:bg-gray-800 ring-2 ring-gray-900'
-                      : 'bg-gray-900 text-white hover:bg-gray-800'
-                  }`}
+                  type="button"
+                  onClick={() => selectPlan('PRO')}
+                  className="w-full mt-5 rounded-xl font-semibold bg-gray-900 text-white hover:bg-gray-800"
                   size="lg"
                 >
                   Choisir Pro →
                 </Button>
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
         </div>
 
         <div className="mt-8 flex justify-between">
@@ -1129,15 +1134,27 @@ export function OnboardingWizard() {
             Retour
           </Button>
           <Button
+            type="button"
             onClick={() => handleSubmit()}
             disabled={!form.plan || isSubmitting}
-            className="bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white rounded-xl px-8 font-semibold"
+            className={`rounded-xl px-8 font-semibold transition-all duration-200 ${
+              !form.plan
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : form.plan === 'PRO'
+                  ? 'bg-gray-900 text-white hover:bg-gray-800'
+                  : 'bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white'
+            }`}
             size="lg"
           >
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 w-4 h-4 animate-spin" />
                 Création en cours...
+              </>
+            ) : form.plan === 'PRO' ? (
+              <>
+                Demander le plan Pro
+                <ArrowRight className="ml-2 w-4 h-4" />
               </>
             ) : (
               <>
