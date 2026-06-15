@@ -34,6 +34,12 @@ const sectorCategoriesMap: Record<string, string[]> = {
   sante: ['Consultations', 'Coaching', 'Soins', 'Programmes'],
 }
 
+// Onboarding PRO plan maps to STARTER subscription (user can upgrade later)
+const PLAN_TO_SUBSCRIPTION: Record<string, 'STARTER' | 'PRO' | 'BUSINESS'> = {
+  TRIAL: 'STARTER',
+  PRO: 'PRO',
+}
+
 
 export async function POST(request: NextRequest) {
   try {
@@ -83,12 +89,15 @@ export async function POST(request: NextRequest) {
       slug = `${slug}-${Date.now().toString(36)}`
     }
 
+    const finalPlan = plan || 'TRIAL'
+    const isPaidPlan = finalPlan === 'PRO'
+
     // Calculate trial end date if TRIAL plan
-    const trialEndDate = plan === 'TRIAL'
+    const trialEndDate = finalPlan === 'TRIAL'
       ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
       : null
 
-    // Create the shop
+    // Create the shop — inactive if paid plan (needs admin validation)
     const shop = await db.shop.create({
       data: {
         name,
@@ -96,13 +105,14 @@ export async function POST(request: NextRequest) {
         whatsapp: whatsapp.trim(),
         description: description || null,
         logo: logo || null,
-        plan: plan || 'TRIAL',
+        plan: finalPlan,
         trialEndDate,
         businessType,
         sector: sector || null,
         template,
         ownerId: user.id,
-        isActive: true,
+        isActive: !isPaidPlan,
+        subscriptionStatus: isPaidPlan ? 'PENDING_ACTIVATION' : 'TRIAL',
       },
     })
 
@@ -115,7 +125,23 @@ export async function POST(request: NextRequest) {
       })),
     })
 
-    // Fire-and-forget notification
+    // Create or update subscription for the user
+    const subPlanType = PLAN_TO_SUBSCRIPTION[finalPlan] || 'STARTER'
+    await db.subscription.upsert({
+      where: { userId: user.id },
+      create: {
+        userId: user.id,
+        planType: subPlanType,
+        status: isPaidPlan ? 'TRIAL' : 'TRIAL',
+        maxShops: subPlanType === 'PRO' ? 3 : 1,
+      },
+      update: {
+        planType: subPlanType,
+        maxShops: subPlanType === 'PRO' ? 3 : 1,
+      },
+    })
+
+    // Fire-and-forget notification: new shop
     try {
       await createNotification(
         'NEW_SHOP',
@@ -127,7 +153,53 @@ export async function POST(request: NextRequest) {
       // Notification failure must not break onboarding
     }
 
-    return NextResponse.json(shop)
+    // If paid plan: create upgrade request + notify admin + notify user
+    if (isPaidPlan) {
+      // Create upgrade request for admin validation
+      try {
+        await db.upgradeRequest.create({
+          data: {
+            userId: user.id,
+            requestedPlan: subPlanType,
+            status: 'PENDING',
+          },
+        })
+      } catch {
+        // Non-critical
+      }
+
+      // Notify admin about paid plan request
+      try {
+        await createNotification(
+          'UPGRADE_REQUEST',
+          'Nouvelle demande de plan Pro',
+          `${user.name} a choisi le plan Pro pour la boutique "${shop.name}". Validation requise.`,
+          { shopId: shop.id, shopName: shop.name, ownerId: user.id, ownerName: user.name, requestedPlan: subPlanType }
+        )
+      } catch {
+        // Non-critical
+      }
+
+      // Notify user that their request is being processed
+      try {
+        await db.notification.create({
+          data: {
+            type: 'SHOP_LIVE',
+            title: 'Demande de plan Pro en cours',
+            message: 'Votre demande de plan Pro a été transmise à nos services. Votre site sera activé sous 1H après validation.',
+            userId: user.id,
+            metadata: JSON.stringify({ shopId: shop.id, shopName: shop.name, requestedPlan: subPlanType }),
+          },
+        })
+      } catch {
+        // Non-critical
+      }
+    }
+
+    return NextResponse.json({
+      ...shop,
+      _pendingActivation: isPaidPlan,
+    })
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Erreur serveur'
     return NextResponse.json({ error: message }, { status: 500 })

@@ -363,10 +363,17 @@ export function OnboardingWizard() {
           // Non-critical: shops list will be refreshed later
         }
 
-        toast.success('Votre boutique a été créée avec succès ! 🎉')
-
         // Clear onboarding data from localStorage
         try { localStorage.removeItem('boutiko-onboarding') } catch { /* ignore */ }
+
+        // Show appropriate success message
+        if (form.plan === 'PRO') {
+          toast.success('Votre demande est transmise à nos services pour traitement sous 1H. Vous recevrez une notification une fois votre site activé. 🚀', {
+            duration: 8000,
+          })
+        } else {
+          toast.success('Votre boutique a été créée avec succès ! 🎉')
+        }
 
         // Redirect to dashboard
         setView('dashboard')
@@ -1057,7 +1064,7 @@ export function OnboardingWizard() {
                   ? 'ring-2 ring-gray-900 shadow-lg bg-gray-50'
                   : 'hover:border-gray-400'
               }`}
-              onClick={() => setForm((prev) => ({ ...prev, plan: 'TRIAL' }))}
+              onClick={() => setForm((prev) => ({ ...prev, plan: 'PRO' }))}
             >
               {form.plan !== 'PRO' && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
@@ -1095,13 +1102,16 @@ export function OnboardingWizard() {
                 <Button
                   onClick={(e) => {
                     e.stopPropagation()
-                    toast.info('Le paiement Pro sera bientôt disponible ! Création en essai gratuit.')
-                    setForm((prev) => ({ ...prev, plan: 'TRIAL' }))
+                    setForm((prev) => ({ ...prev, plan: 'PRO' }))
                   }}
-                  className="w-full mt-5 rounded-xl font-semibold bg-gray-900 text-white hover:bg-gray-800"
+                  className={`w-full mt-5 rounded-xl font-semibold ${
+                    form.plan === 'PRO'
+                      ? 'bg-gray-900 text-white hover:bg-gray-800 ring-2 ring-gray-900'
+                      : 'bg-gray-900 text-white hover:bg-gray-800'
+                  }`}
                   size="lg"
                 >
-                  Passer Pro →
+                  Choisir Pro →
                 </Button>
               </CardContent>
             </Card>

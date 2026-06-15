@@ -3,6 +3,7 @@ import { requireAuth } from '@/lib/auth'
 import { upgradeSubscription, PLAN_CONFIGS } from '@/lib/permissions'
 import { db } from '@/lib/db'
 import { hasMinimumRole } from '@/lib/permissions'
+import { createNotification } from '@/lib/notifications'
 
 // GET /api/admin/upgrade-requests — List all upgrade requests
 export async function GET(request: NextRequest) {
@@ -106,6 +107,32 @@ export async function PATCH(request: NextRequest) {
         },
       })
 
+      // Activate all inactive shops for this user + notify them
+      const shops = await db.shop.findMany({
+        where: { ownerId: upgradeReq.userId, isActive: false },
+      })
+      if (shops.length > 0) {
+        await db.shop.updateMany({
+          where: { ownerId: upgradeReq.userId, isActive: false },
+          data: { isActive: true, subscriptionStatus: 'ACTIVE' },
+        })
+
+        // Notify the user that their shop is live
+        try {
+          await db.notification.create({
+            data: {
+              type: 'SHOP_LIVE',
+              title: 'Votre site est maintenant actif ! 🎉',
+              message: `Votre demande de plan ${PLAN_CONFIGS[upgradeReq.requestedPlan]?.label || upgradeReq.requestedPlan} a été validée. Votre site est en ligne.`,
+              userId: upgradeReq.userId,
+              metadata: JSON.stringify({ action: 'APPROVE', requestedPlan: upgradeReq.requestedPlan }),
+            },
+          })
+        } catch {
+          // Non-critical
+        }
+      }
+
       return NextResponse.json({ message: 'Demande approuvée et forfait mis à jour' })
     }
 
@@ -119,6 +146,21 @@ export async function PATCH(request: NextRequest) {
           rejectionReason: reason || null,
         },
       })
+
+      // Notify the user about rejection
+      try {
+        await db.notification.create({
+          data: {
+            type: 'SHOP_LIVE',
+            title: 'Demande de forfait refusée',
+            message: `Votre demande de plan ${PLAN_CONFIGS[upgradeReq.requestedPlan]?.label || upgradeReq.requestedPlan} a été refusée.${reason ? ` Raison : ${reason}` : ''} Contactez le support pour plus d'informations.`,
+            userId: upgradeReq.userId,
+            metadata: JSON.stringify({ action: 'REJECT', requestedPlan: upgradeReq.requestedPlan }),
+          },
+        })
+      } catch {
+        // Non-critical
+      }
 
       return NextResponse.json({ message: 'Demande refusée' })
     }
