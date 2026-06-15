@@ -14,7 +14,7 @@
 // ─── ENUMS ────────────────────────────────────────────────────────────────────
 
 export type BusinessType = 'ECOMMERCE' | 'SERVICE'
-export type TemplateEngine = 'cosmika-beauty' | 'xstore-electro'
+export type TemplateEngine = 'cosmika-beauty' | 'xstore-electro' | 'elegance-plus'
 
 export type EcommerceSector = 'beaute' | 'mode' | 'electronique' | 'alimentation' | 'autre' | 'auto-moto' | 'quincaillerie'
 export type ServiceSector = 'beaute-service' | 'restaurant' | 'consulting' | 'artisanat' | 'sante' | 'formation'

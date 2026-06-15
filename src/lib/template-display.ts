@@ -20,7 +20,7 @@ export interface TemplateDisplayInfo {
   }
 }
 
-export const TEMPLATE_DISPLAY: Record<TemplateEngine, TemplateDisplayInfo> = {
+export const TEMPLATE_DISPLAY: Record<string, TemplateDisplayInfo> = {
   'cosmika-beauty': {
     displayName: 'Élégance',
     tagline: 'Design raffiné et professionnel',
@@ -37,6 +37,29 @@ export const TEMPLATE_DISPLAY: Record<TemplateEngine, TemplateDisplayInfo> = {
       primaryColor: '#e11d48',
       badge: 'Populaire',
       emoji: '✨',
+    },
+  },
+  'elegance-plus': {
+    displayName: 'Elegance Plus',
+    tagline: 'Design premium enrichi avec sections marketing avancées',
+    description:
+      "L'expérience ultime : barre d'annonces promo, catégories en cartes rectangulaires, bannières promotionnelles, newsletter, section nouveautés, bouton scroll-to-top et animations avancées. Le meilleur du e-commerce premium.",
+    features: [
+      'Barre d\'annonces promo rotative',
+      'Catégories en cartes rectangulaires modernes',
+      'Bannière promotionnelle mid-page',
+      'Section Newsletter avec inscription',
+      'Produits avec badges Promo, Nouveau, Best Seller',
+      'Section Nouveautés dédiée',
+      'Bouton Scroll-to-top animé',
+      'Header deux niveaux avec barre utilitaire',
+      'Footer enrichi multi-colonnes',
+      'Animations parallax et reveal-on-scroll',
+    ],
+    style: {
+      primaryColor: '#9333ea',
+      badge: 'Premium',
+      emoji: '👑',
     },
   },
   'xstore-electro': {
@@ -66,6 +89,5 @@ export const TEMPLATE_DISPLAY: Record<TemplateEngine, TemplateDisplayInfo> = {
 export function getTemplateDisplayInfo(
   templateId: string | undefined | null,
 ): TemplateDisplayInfo {
-  const key = templateId as TemplateEngine
-  return TEMPLATE_DISPLAY[key] ?? TEMPLATE_DISPLAY['cosmika-beauty']
+  return TEMPLATE_DISPLAY[templateId ?? ''] ?? TEMPLATE_DISPLAY['cosmika-beauty']
 }

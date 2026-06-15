@@ -198,7 +198,9 @@ export function Step3Template({ sector, businessType, template, onConfirm }: Ste
         <p className="font-semibold mb-1">💡 Bon à savoir</p>
         <p>
           Vous pourrez personnaliser les couleurs, le logo et le contenu de ce template
-          après l&apos;inscription, directement depuis votre tableau de bord.
+          après l&apos;inscription, directement depuis votre tableau de bord. Le template
+          premium &quot;Elegance Plus&quot; avec sections marketing avancées est également
+          disponible depuis les paramètres.
         </p>
       </div>
     </motion.div>
