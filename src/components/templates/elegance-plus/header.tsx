@@ -62,10 +62,10 @@ export function EleganceHeader({
     <>
       {/* ── Top Utility Bar ── */}
       <div className="hidden lg:block border-b border-gray-100" style={{ backgroundColor: '#f9fafb' }}>
-        <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-9 text-xs text-gray-500">
+        <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-9 text-xs text-black">
           <div className="flex items-center gap-4">
             {shop?.phone && (
-              <a href={`tel:${shop.phone}`} className="hover:text-gray-900 transition-colors flex items-center gap-1">
+              <a href={`tel:${shop.phone}`} className="hover:text-black/70 transition-colors flex items-center gap-1">
                 <Phone className="size-3" />
                 {shop.phone}
               </a>
@@ -102,8 +102,7 @@ export function EleganceHeader({
               />
             ) : (
               <h1
-                className="font-serif text-xl lg:text-2xl font-bold"
-                style={{ color: colors.primary }}
+                className="font-serif text-xl lg:text-2xl font-bold text-black"
               >
                 {shop?.name ?? 'Boutiko'}
               </h1>
@@ -119,7 +118,7 @@ export function EleganceHeader({
               <button
                 key={item.label}
                 onClick={() => handleNavClick(item.href)}
-                className="relative px-3 py-2 text-gray-600 hover:text-gray-900 transition-colors duration-200 min-h-[44px] flex items-center group"
+                className="relative px-3 py-2 text-black hover:text-black/80 transition-colors duration-200 min-h-[44px] flex items-center group"
               >
                 {item.label}
                 <span
@@ -138,7 +137,7 @@ export function EleganceHeader({
               className="hidden md:flex w-10 h-10 items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
               aria-label="Rechercher"
             >
-              <Search className="size-5 text-gray-600" />
+              <Search className="size-5 text-black" />
             </button>
 
             {/* Cart */}
@@ -148,7 +147,7 @@ export function EleganceHeader({
                 className="hidden md:flex relative w-10 h-10 items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
                 aria-label={`Panier (${cartCount} articles)`}
               >
-                <ShoppingBag className="size-5 text-gray-600" />
+                <ShoppingBag className="size-5 text-black" />
                 {cartCount > 0 && (
                   <span
                     className="absolute -top-0.5 -right-0.5 w-5 h-5 rounded-full text-white text-[10px] font-bold flex items-center justify-center"
@@ -195,9 +194,9 @@ export function EleganceHeader({
               aria-controls="elegance-mobile-menu"
             >
               {mobileMenuOpen ? (
-                <X className="size-5" style={{ color: colors.text }} />
+                <X className="size-5 text-black" />
               ) : (
-                <Menu className="size-5" style={{ color: colors.text }} />
+                <Menu className="size-5 text-black" />
               )}
             </button>
           </div>
@@ -233,7 +232,7 @@ export function EleganceHeader({
                 className="flex items-center justify-between px-5 h-16 shrink-0 border-b"
                 style={{ borderColor: colors.primaryLight }}
               >
-                <span className="text-base font-bold" style={{ color: colors.text }}>
+                <span className="text-base font-bold text-black">
                   Menu
                 </span>
                 <button
@@ -241,7 +240,7 @@ export function EleganceHeader({
                   className="h-11 w-11 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
                   aria-label="Fermer le menu"
                 >
-                  <X className="size-5" style={{ color: colors.text }} />
+                  <X className="size-5 text-black" />
                 </button>
               </div>
 
@@ -255,15 +254,12 @@ export function EleganceHeader({
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.05 * index, duration: 0.2 }}
                       onClick={() => handleNavClick(item.href)}
-                      className="flex items-center w-full px-4 py-3.5 text-sm font-semibold rounded-xl transition-colors duration-200 min-h-[44px]"
-                      style={{ color: colors.text }}
+                      className="flex items-center w-full px-4 py-3.5 text-sm font-semibold rounded-xl transition-colors duration-200 min-h-[44px] text-black"
                       onMouseEnter={(e) => {
                         e.currentTarget.style.background = colors.primaryBg
-                        e.currentTarget.style.color = colors.primary
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.background = 'transparent'
-                        e.currentTarget.style.color = colors.text
                       }}
                     >
                       {item.label}
@@ -283,16 +279,13 @@ export function EleganceHeader({
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.35, duration: 0.2 }}
                         href={`tel:${shop.phone.replace(/\D/g, '')}`}
-                        className="flex items-center gap-3 w-full px-4 py-3.5 text-sm font-semibold rounded-xl transition-colors duration-200 min-h-[44px]"
-                        style={{ color: colors.text }}
+                        className="flex items-center gap-3 w-full px-4 py-3.5 text-sm font-semibold rounded-xl transition-colors duration-200 min-h-[44px] text-black"
                         onClick={closeMobileMenu}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.background = colors.primaryBg
-                          e.currentTarget.style.color = colors.primary
                         }}
                         onMouseLeave={(e) => {
                           e.currentTarget.style.background = 'transparent'
-                          e.currentTarget.style.color = colors.text
                         }}
                       >
                         <Phone className="size-4 shrink-0" aria-hidden="true" />
@@ -307,16 +300,13 @@ export function EleganceHeader({
                         href={`https://wa.me/${shop.whatsapp.replace(/\D/g, '')}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-3 w-full px-4 py-3.5 text-sm font-semibold rounded-xl transition-colors duration-200 min-h-[44px]"
-                        style={{ color: colors.text }}
+                        className="flex items-center gap-3 w-full px-4 py-3.5 text-sm font-semibold rounded-xl transition-colors duration-200 min-h-[44px] text-black"
                         onClick={closeMobileMenu}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.background = colors.primaryBg
-                          e.currentTarget.style.color = colors.primary
                         }}
                         onMouseLeave={(e) => {
                           e.currentTarget.style.background = 'transparent'
-                          e.currentTarget.style.color = colors.text
                         }}
                       >
                         <MessageCircle className="size-4 shrink-0" aria-hidden="true" />

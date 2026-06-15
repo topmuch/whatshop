@@ -52,8 +52,7 @@ export function CosmikaHeader({ config, shop }: CosmikaHeaderProps) {
               />
             ) : (
               <h1
-                className="font-serif text-xl md:text-2xl font-bold"
-                style={{ color: colors.primary }}
+                className="font-serif text-xl md:text-2xl font-bold text-black"
               >
                 {shop?.name ?? 'Boutiko'}
               </h1>
@@ -69,7 +68,7 @@ export function CosmikaHeader({ config, shop }: CosmikaHeaderProps) {
               <button
                 key={item.label}
                 onClick={() => handleNavClick(item.href)}
-                className="text-gray-700 hover:text-gray-900 transition-colors duration-200 min-h-[44px] flex items-center"
+                className="text-black hover:text-black/80 transition-colors duration-200 min-h-[44px] flex items-center"
               >
                 {item.label}
               </button>
@@ -110,9 +109,9 @@ export function CosmikaHeader({ config, shop }: CosmikaHeaderProps) {
             aria-controls="cosmika-mobile-menu"
           >
             {mobileMenuOpen ? (
-              <X className="size-5" style={{ color: colors.text }} />
+              <X className="size-5 text-black" />
             ) : (
-              <Menu className="size-5" style={{ color: colors.text }} />
+              <Menu className="size-5 text-black" />
             )}
           </Button>
         </div>
@@ -148,8 +147,7 @@ export function CosmikaHeader({ config, shop }: CosmikaHeaderProps) {
                 style={{ borderColor: colors.primaryLight }}
               >
                 <span
-                  className="text-base font-bold"
-                  style={{ color: colors.text }}
+                  className="text-base font-bold text-black"
                 >
                   Menu
                 </span>
@@ -160,7 +158,7 @@ export function CosmikaHeader({ config, shop }: CosmikaHeaderProps) {
                   onClick={closeMobileMenu}
                   aria-label="Fermer le menu"
                 >
-                  <X className="size-5" style={{ color: colors.text }} />
+                  <X className="size-5 text-black" />
                 </Button>
               </div>
 
@@ -174,15 +172,12 @@ export function CosmikaHeader({ config, shop }: CosmikaHeaderProps) {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.05 * index, duration: 0.2 }}
                       onClick={() => handleNavClick(item.href)}
-                      className="flex items-center w-full px-4 py-3.5 text-sm font-semibold rounded-lg transition-colors duration-200 min-h-[44px]"
-                      style={{ color: colors.text }}
+                      className="flex items-center w-full px-4 py-3.5 text-sm font-semibold rounded-lg transition-colors duration-200 min-h-[44px] text-black"
                       onMouseEnter={(e) => {
                         e.currentTarget.style.background = colors.primaryBg
-                        e.currentTarget.style.color = colors.primary
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.background = 'transparent'
-                        e.currentTarget.style.color = colors.text
                       }}
                     >
                       {item.label}
@@ -202,16 +197,13 @@ export function CosmikaHeader({ config, shop }: CosmikaHeaderProps) {
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.25, duration: 0.2 }}
                         href={`tel:${shop.phone.replace(/\D/g, '')}`}
-                        className="flex items-center gap-3 w-full px-4 py-3.5 text-sm font-semibold rounded-lg transition-colors duration-200 min-h-[44px]"
-                        style={{ color: colors.text }}
+                        className="flex items-center gap-3 w-full px-4 py-3.5 text-sm font-semibold rounded-lg transition-colors duration-200 min-h-[44px] text-black"
                         onClick={closeMobileMenu}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.background = colors.primaryBg
-                          e.currentTarget.style.color = colors.primary
                         }}
                         onMouseLeave={(e) => {
                           e.currentTarget.style.background = 'transparent'
-                          e.currentTarget.style.color = colors.text
                         }}
                       >
                         <Phone className="size-4 shrink-0" aria-hidden="true" />
@@ -226,16 +218,13 @@ export function CosmikaHeader({ config, shop }: CosmikaHeaderProps) {
                         href={`https://wa.me/${shop.whatsapp.replace(/\D/g, '')}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-3 w-full px-4 py-3.5 text-sm font-semibold rounded-lg transition-colors duration-200 min-h-[44px]"
-                        style={{ color: colors.text }}
+                        className="flex items-center gap-3 w-full px-4 py-3.5 text-sm font-semibold rounded-lg transition-colors duration-200 min-h-[44px] text-black"
                         onClick={closeMobileMenu}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.background = colors.primaryBg
-                          e.currentTarget.style.color = colors.primary
                         }}
                         onMouseLeave={(e) => {
                           e.currentTarget.style.background = 'transparent'
-                          e.currentTarget.style.color = colors.text
                         }}
                       >
                         <MessageCircle className="size-4 shrink-0" aria-hidden="true" />
