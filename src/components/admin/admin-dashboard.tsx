@@ -193,10 +193,22 @@ interface AdminSubscription {
 
 interface AdminDomain {
   id: string
-  shopName: string
+  shopId: string
   domain: string
   status: string
+  rejectionReason: string | null
+  dnsInstructions: string | null
+  reviewedAt: string | null
   createdAt: string
+  shop: {
+    id: string
+    name: string
+    slug: string
+    customDomain: string | null
+    customDomainStatus: string | null
+    owner: { id: string; name: string; email: string }
+  }
+  reviewer: { id: string; name: string; email: string } | null
 }
 
 interface PromoCode {
@@ -1766,13 +1778,14 @@ function AdminDomains() {
       const res = await fetch(`/api/admin/domains/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'APPROVED' }),
+        body: JSON.stringify({ action: 'approve' }),
       })
       if (res.ok) {
-        toast.success('Domaine validé')
+        toast.success('Domaine validé et configuré')
         loadDomains(statusFilter)
       } else {
-        toast.error('Erreur lors de la validation')
+        const err = await res.json().catch(() => ({}))
+        toast.error(err.error || 'Erreur lors de la validation')
       }
     } catch {
       toast.error('Erreur lors de la validation')
@@ -1791,7 +1804,7 @@ function AdminDomains() {
       const res = await fetch(`/api/admin/domains/${rejectDialog.domainId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'REJECTED', reason: rejectDialog.reason }),
+        body: JSON.stringify({ action: 'reject', reason: rejectDialog.reason }),
       })
       if (res.ok) {
         toast.success('Domaine rejeté')
@@ -1849,6 +1862,7 @@ function AdminDomains() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Boutique</TableHead>
+                  <TableHead>Vendeur</TableHead>
                   <TableHead>Domaine</TableHead>
                   <TableHead>Statut</TableHead>
                   <TableHead>Date</TableHead>
@@ -1858,12 +1872,46 @@ function AdminDomains() {
               <TableBody>
                 {domains.map((d) => (
                   <TableRow key={d.id}>
-                    <TableCell className="font-medium">{d.shopName}</TableCell>
-                    <TableCell className="text-muted-foreground">{d.domain}</TableCell>
-                    <TableCell>{domainStatusBadge(d.status)}</TableCell>
-                    <TableCell className="text-muted-foreground">{formatDate(d.createdAt)}</TableCell>
                     <TableCell>
-                      {d.status === 'PENDING' && (
+                      <div>
+                        <div className="font-medium">{d.shop.name}</div>
+                        <div className="text-xs text-muted-foreground">/{d.shop.slug}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <div className="text-sm">{d.shop.owner.name}</div>
+                        <div className="text-xs text-muted-foreground">{d.shop.owner.email}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <div className="font-mono text-sm">{d.domain}</div>
+                        {d.dnsInstructions && (
+                          <div className="text-xs text-muted-foreground mt-1 max-w-[200px] truncate" title={d.dnsInstructions}>
+                            DNS: {d.dnsInstructions}
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        {domainStatusBadge(d.status)}
+                        {d.status === 'REJECTED' && d.rejectionReason && (
+                          <div className="text-xs text-red-600 max-w-[180px] truncate" title={d.rejectionReason}>
+                            {d.rejectionReason}
+                          </div>
+                        )}
+                        {d.reviewer && (
+                          <div className="text-xs text-muted-foreground">
+                            par {d.reviewer.name}
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-sm">{formatDate(d.createdAt)}</TableCell>
+                    <TableCell>
+                      {d.status === 'PENDING' ? (
                         <div className="flex items-center gap-1">
                           <Button
                             variant="ghost"
@@ -1885,6 +1933,8 @@ function AdminDomains() {
                             Rejeter
                           </Button>
                         </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">Traité</span>
                       )}
                     </TableCell>
                   </TableRow>
