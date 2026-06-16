@@ -2256,6 +2256,8 @@ function AdminConfig() {
   const [loadingConfig, setLoadingConfig] = useState(true)
   const [savingNotif, setSavingNotif] = useState(false)
   const [testingSmtp, setTestingSmtp] = useState(false)
+  const [sendingTestEmail, setSendingTestEmail] = useState(false)
+  const [testEmailTo, setTestEmailTo] = useState('')
   const [smtpTestResult, setSmtpTestResult] = useState<{ success: boolean; message: string } | null>(null)
 
   // Promo codes state
@@ -2745,33 +2747,78 @@ function AdminConfig() {
                         </div>
 
                         {/* SMTP Test */}
-                        <div className="flex items-center gap-3">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={async () => {
-                              setTestingSmtp(true)
-                              setSmtpTestResult(null)
-                              try {
-                                const res = await fetch('/api/admin/config/test-smtp', { method: 'POST' })
-                                const data = await res.json()
-                                setSmtpTestResult({ success: data.success, message: data.message })
-                              } catch {
-                                setSmtpTestResult({ success: false, message: 'Erreur de connexion' })
-                              } finally {
-                                setTestingSmtp(false)
-                              }
-                            }}
-                            disabled={testingSmtp || !config.smtpHost || !config.smtpUser}
-                            className="gap-2"
-                          >
-                            {testingSmtp ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Server className="h-4 w-4" />
-                            )}
-                            Tester la connexion
-                          </Button>
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-3">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={async () => {
+                                setTestingSmtp(true)
+                                setSmtpTestResult(null)
+                                try {
+                                  const res = await fetch('/api/admin/config/test-smtp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) })
+                                  const data = await res.json()
+                                  setSmtpTestResult({ success: data.success, message: data.message })
+                                } catch {
+                                  setSmtpTestResult({ success: false, message: 'Erreur de connexion' })
+                                } finally {
+                                  setTestingSmtp(false)
+                                }
+                              }}
+                              disabled={testingSmtp || !config.smtpHost || !config.smtpUser}
+                              className="gap-2"
+                            >
+                              {testingSmtp ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Server className="h-4 w-4" />
+                              )}
+                              Tester la connexion
+                            </Button>
+                          </div>
+
+                          {/* Send test email */}
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="email"
+                              placeholder="votre@email.com"
+                              value={testEmailTo}
+                              onChange={(e) => setTestEmailTo(e.target.value)}
+                              className="h-9 max-w-[240px]"
+                            />
+                            <Button
+                              variant="default"
+                              size="sm"
+                              onClick={async () => {
+                                if (!testEmailTo) return
+                                setSendingTestEmail(true)
+                                setSmtpTestResult(null)
+                                try {
+                                  const res = await fetch('/api/admin/config/test-smtp', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ mode: 'send', testEmailTo }),
+                                  })
+                                  const data = await res.json()
+                                  setSmtpTestResult({ success: data.success, message: data.message })
+                                } catch {
+                                  setSmtpTestResult({ success: false, message: 'Erreur de connexion' })
+                                } finally {
+                                  setSendingTestEmail(false)
+                                }
+                              }}
+                              disabled={sendingTestEmail || !testEmailTo || !config.smtpHost || !config.smtpUser}
+                              className="gap-2"
+                            >
+                              {sendingTestEmail ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Mail className="h-4 w-4" />
+                              )}
+                              Envoyer un email de test
+                            </Button>
+                          </div>
+
                           {smtpTestResult && (
                             <span className={`text-xs font-medium ${smtpTestResult.success ? 'text-green-600' : 'text-red-600'}`}>
                               {smtpTestResult.success ? '✓' : '✗'} {smtpTestResult.message}
