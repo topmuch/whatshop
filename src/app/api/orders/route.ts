@@ -96,14 +96,16 @@ export async function POST(request: NextRequest) {
       // Fire-and-forget emails
       const parsedItems = typeof items === 'string' ? JSON.parse(items) : items
       dispatchNewOrderEmail(shop.id, shop.ownerId, {
+        shopName: shop.name,
         customerName,
         customerPhone,
         total,
         items: parsedItems,
       })
+      const ownerName = shop.ownerId ? (await db.user.findUnique({ where: { id: shop.ownerId }, select: { name: true } }))?.name || '' : ''
       dispatchAdminNewOrderEmail({
         shopName: shop.name,
-        ownerName: shop.ownerId ? (await db.user.findUnique({ where: { id: shop.ownerId }, select: { name: true } }))?.name || '' : '',
+        ownerName,
         total,
         customerName,
       })

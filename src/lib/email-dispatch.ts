@@ -56,15 +56,14 @@ async function getSaaSConfigFlags(): Promise<Record<string, boolean>> {
 
 /**
  * Get seller's notification email address.
- * Uses notificationEmail if set, otherwise falls back to user.email.
  */
 async function getSellerEmail(userId: string): Promise<string | null> {
   const user = await db.user.findUnique({
     where: { id: userId },
-    select: { email: true, notificationEmail: true },
+    select: { email: true },
   })
   if (!user) return null
-  return user.notificationEmail || user.email
+  return user.email
 }
 
 /**
