@@ -2755,7 +2755,18 @@ function AdminConfig() {
                                 setTestingSmtp(true)
                                 setSmtpTestResult(null)
                                 try {
-                                  const res = await fetch('/api/admin/config/test-smtp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) })
+                                  const res = await fetch('/api/admin/config/test-smtp', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                      smtpHost: config.smtpHost,
+                                      smtpPort: config.smtpPort,
+                                      smtpUser: config.smtpUser,
+                                      smtpPass: config.smtpPass,
+                                      emailFrom: config.emailFrom,
+                                      emailFromName: config.emailFromName,
+                                    }),
+                                  })
                                   const data = await res.json()
                                   setSmtpTestResult({ success: data.success, message: data.message })
                                 } catch {
@@ -2764,7 +2775,7 @@ function AdminConfig() {
                                   setTestingSmtp(false)
                                 }
                               }}
-                              disabled={testingSmtp || !config.smtpHost || !config.smtpUser}
+                              disabled={testingSmtp || !config.smtpHost || !config.smtpUser || !config.smtpPass}
                               className="gap-2"
                             >
                               {testingSmtp ? (
@@ -2796,7 +2807,16 @@ function AdminConfig() {
                                   const res = await fetch('/api/admin/config/test-smtp', {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ mode: 'send', testEmailTo }),
+                                    body: JSON.stringify({
+                                      mode: 'send',
+                                      testEmailTo,
+                                      smtpHost: config.smtpHost,
+                                      smtpPort: config.smtpPort,
+                                      smtpUser: config.smtpUser,
+                                      smtpPass: config.smtpPass,
+                                      emailFrom: config.emailFrom,
+                                      emailFromName: config.emailFromName,
+                                    }),
                                   })
                                   const data = await res.json()
                                   setSmtpTestResult({ success: data.success, message: data.message })
@@ -2806,7 +2826,7 @@ function AdminConfig() {
                                   setSendingTestEmail(false)
                                 }
                               }}
-                              disabled={sendingTestEmail || !testEmailTo || !config.smtpHost || !config.smtpUser}
+                              disabled={sendingTestEmail || !testEmailTo || !config.smtpHost || !config.smtpUser || !config.smtpPass}
                               className="gap-2"
                             >
                               {sendingTestEmail ? (
