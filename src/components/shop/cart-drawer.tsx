@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useAppStore } from '@/lib/store'
 import {
   Sheet,
@@ -12,9 +13,10 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
-import { ShoppingCart, Trash2, Minus, Plus, ShoppingBag, MessageCircle } from 'lucide-react'
+import { ShoppingCart, Trash2, Minus, Plus, ShoppingBag, MessageCircle, CreditCard } from 'lucide-react'
 import { ImageWithFallback } from '@/components/ui/image-with-fallback'
 import { ShippingZoneSelector } from '@/components/shop/shipping-zone-selector'
+import { CheckoutForm } from '@/components/shop/checkout-form'
 
 interface CartDrawerProps {
   open: boolean
@@ -32,6 +34,8 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
     getCartTotal,
     selectedShippingZone,
   } = useAppStore()
+
+  const [checkoutOpen, setCheckoutOpen] = useState(false)
 
   const total = getCartTotal()
   const deliveryFee = selectedShippingZone?.price ?? 0
@@ -94,6 +98,7 @@ Téléphone :`
   }
 
   return (
+    <>
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-md flex flex-col">
         {/* Header */}
@@ -237,7 +242,7 @@ Téléphone :`
                 </div>
               </div>
 
-              {/* Order Button */}
+              {/* Order Buttons */}
               <Button
                 size="lg"
                 className="w-full gap-2 bg-[#25D366] text-white hover:bg-[#128C7E] text-base font-semibold"
@@ -245,6 +250,16 @@ Téléphone :`
               >
                 <MessageCircle className="size-5" />
                 Commander sur WhatsApp
+              </Button>
+
+              <Button
+                size="lg"
+                variant="outline"
+                className="w-full gap-2 text-base font-semibold"
+                onClick={() => setCheckoutOpen(true)}
+              >
+                <CreditCard className="size-5" />
+                Commander sur le site
               </Button>
 
               {/* Clear Cart */}
@@ -262,5 +277,18 @@ Téléphone :`
         )}
       </SheetContent>
     </Sheet>
+
+    {/* Checkout Form Sheet (opens on top of cart) */}
+    <CheckoutForm
+        open={checkoutOpen}
+        onOpenChange={(nextOpen) => {
+          setCheckoutOpen(nextOpen)
+          if (!nextOpen) onOpenChange(true) // re-open cart when checkout closes
+        }}
+        onSuccess={() => {
+          onOpenChange(false) // close cart on successful order
+        }}
+      />
+    </>
   )
 }

@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { requireShopOwner } from '@/lib/auth'
 import { createNotification } from '@/lib/notifications'
 import { rateLimit, getClientIp, RATE_LIMITS } from '@/lib/rate-limit'
 import { dispatchNewOrderEmail, dispatchAdminNewOrderEmail } from '@/lib/email-dispatch'
+import { createOrderSchema, type CreateOrderInput } from '@/lib/order-schemas'
+import { requireShopOwner } from '@/lib/auth'
 
 // POST /api/orders (public order creation — no auth required)
 export async function POST(request: NextRequest) {
@@ -11,78 +12,146 @@ export async function POST(request: NextRequest) {
   const ip = getClientIp(request)
   const rl = rateLimit(ip, RATE_LIMITS.default)
   if (!rl.success) {
-    return NextResponse.json({ error: 'Trop de requêtes. Réessayez plus tard.' }, { status: 429 })
+    return NextResponse.json(
+      { error: 'Trop de requêtes. Réessayez plus tard.' },
+      { status: 429 }
+    )
   }
 
   try {
-    const body = await request.json()
-    const { shopId, items, total, customerName, customerPhone, customerAddress } = body
+    // ─── 1. Parse & Validate with Zod ─────────────────────────────────
+    const rawBody = await request.json()
+    const parsed = createOrderSchema.safeParse(rawBody)
 
-    // Validate required fields
-    if (!shopId || !items || !total) {
+    if (!parsed.success) {
+      const fieldErrors: Record<string, string> = {}
+      for (const issue of parsed.error.issues) {
+        const key = issue.path.join('.') || 'global'
+        if (!fieldErrors[key]) fieldErrors[key] = issue.message
+      }
       return NextResponse.json(
-        { error: 'Champs requis manquants (shopId, items, total)' },
+        { error: 'Données invalides', details: fieldErrors },
         { status: 400 }
       )
     }
 
-    // Validate items is an array with at least one item
-    if (!Array.isArray(items) || items.length === 0) {
-      return NextResponse.json(
-        { error: 'La commande doit contenir au moins un article' },
-        { status: 400 }
-      )
+    const data: CreateOrderInput = parsed.data
+    const { shopId, items, customer, shippingZoneId, shippingZoneName, shippingFee, subtotal, total } = data
+
+    // ─── 2. Verify shop exists and is active ──────────────────────────
+    const shop = await db.shop.findUnique({
+      where: { id: shopId, isActive: true },
+      select: {
+        id: true,
+        name: true,
+        whatsapp: true,
+        ownerId: true,
+      },
+    })
+    if (!shop) {
+      return NextResponse.json({ error: 'Boutique introuvable' }, { status: 404 })
     }
 
-    // Validate items structure
+    // ─── 3. Verify all products exist, are available, and check stock ─
+    const productIds = items.map((i) => i.productId)
+    const products = await db.product.findMany({
+      where: { id: { in: productIds }, shopId },
+      select: { id: true, name: true, price: true, stock: true, isAvailable: true },
+    })
+
+    const productMap = new Map(products.map((p) => [p.id, p]))
+
+    // Check for missing / unavailable products
     for (const item of items) {
-      if (!item.name || typeof item.price !== 'number' || item.price < 0 || !item.quantity || item.quantity < 1) {
+      const product = productMap.get(item.productId)
+      if (!product) {
         return NextResponse.json(
-          { error: 'Format d\'article invalide (name, price, quantity requis)' },
+          { error: `Produit "${item.name}" introuvable`, details: { productId: item.productId } },
+          { status: 400 }
+        )
+      }
+      if (!product.isAvailable) {
+        return NextResponse.json(
+          { error: `Le produit "${product.name}" n'est plus disponible` },
           { status: 400 }
         )
       }
     }
 
-    // Validate total
-    if (typeof total !== 'number' || total <= 0) {
-      return NextResponse.json({ error: 'Le total doit être un nombre positif' }, { status: 400 })
-    }
+    // ─── 4. Check & reserve stock (atomic with transaction) ───────────
+    const order = await db.$transaction(async (tx) => {
+      // Re-fetch products inside transaction for accurate stock read
+      const freshProducts = await tx.product.findMany({
+        where: { id: { in: productIds }, shopId },
+        select: { id: true, name: true, stock: true, isAvailable: true },
+      })
+      const freshMap = new Map(freshProducts.map((p) => [p.id, p]))
 
-    // Verify the shop exists and is active
-    const shop = await db.shop.findUnique({ where: { id: shopId, isActive: true } })
-    if (!shop) {
-      return NextResponse.json({ error: 'Boutique introuvable' }, { status: 404 })
-    }
+      // Validate stock for each item
+      for (const item of items) {
+        const product = freshMap.get(item.productId)
+        if (!product || !product.isAvailable) {
+          throw new Error(`STOCK_UNAVAILABLE:${item.name}`)
+        }
+        if (product.stock !== null && product.stock < item.quantity) {
+          throw new Error(
+            `STOCK_INSUFFICIENT:${item.name}:${product.stock}`
+          )
+        }
+      }
 
-    // Validate customer fields length
-    if (customerName && customerName.length > 200) {
-      return NextResponse.json({ error: 'Nom trop long' }, { status: 400 })
-    }
-    if (customerPhone && customerPhone.length > 30) {
-      return NextResponse.json({ error: 'Numéro de téléphone invalide' }, { status: 400 })
-    }
-    if (customerAddress && customerAddress.length > 500) {
-      return NextResponse.json({ error: 'Adresse trop longue' }, { status: 400 })
-    }
+      // Decrement stock for items that have stock tracking
+      for (const item of items) {
+        const product = freshMap.get(item.productId)
+        if (product && product.stock !== null) {
+          await tx.product.update({
+            where: { id: item.productId },
+            data: { stock: { decrement: item.quantity } },
+          })
+        }
+      }
 
-    const order = await db.order.create({
-      data: {
-        shopId,
-        items: JSON.stringify(items),
-        total,
-        customerName: customerName?.slice(0, 200) || null,
-        customerPhone: customerPhone?.slice(0, 30) || null,
-        customerAddress: customerAddress?.slice(0, 500) || null,
-      },
+      // Build legacy items JSON (backward compat with existing dashboards)
+      const legacyItems = items.map((i) => ({
+        productId: i.productId,
+        name: i.name,
+        price: i.price,
+        quantity: i.quantity,
+      }))
+
+      // Create order
+      const newOrder = await tx.order.create({
+        data: {
+          shopId,
+          items: JSON.stringify(legacyItems),
+          total,
+          customerName: `${customer.firstName} ${customer.lastName}`,
+          customerPhone: customer.phone,
+          customerAddress: customer.address,
+          customerCity: customer.city,
+        },
+      })
+
+      // Create order items (relational)
+      await tx.orderItem.createMany({
+        data: items.map((item) => ({
+          orderId: newOrder.id,
+          productId: item.productId,
+          productName: item.name,
+          price: item.price,
+          quantity: item.quantity,
+        })),
+      })
+
+      return newOrder
     })
 
-    // Fire-and-forget notification (admin + seller)
+    // ─── 5. Fire-and-forget notifications ────────────────────────────
     try {
       await createNotification(
         'NEW_ORDER',
         'Nouvelle commande',
-        `Commande de ${total.toLocaleString('fr-FR')} FCFA sur la boutique "${shop.name}".`,
+        `Commande de ${total.toLocaleString('fr-FR')} FCFA sur "${shop.name}".`,
         { orderId: order.id, shopId: shop.id, shopName: shop.name, total }
       )
       await createNotification(
@@ -93,29 +162,76 @@ export async function POST(request: NextRequest) {
         shop.ownerId,
       )
 
-      // Fire-and-forget emails
-      const parsedItems = typeof items === 'string' ? JSON.parse(items) : items
+      // Email notifications
+      const orderItems = items.map((i) => ({
+        name: i.name,
+        quantity: i.quantity,
+        price: i.price,
+      }))
+
       dispatchNewOrderEmail(shop.id, shop.ownerId, {
         shopName: shop.name,
-        customerName,
-        customerPhone,
+        customerName: `${customer.firstName} ${customer.lastName}`,
+        customerPhone: customer.phone,
+        customerCity: customer.city,
+        customerAddress: customer.address,
         total,
-        items: parsedItems,
+        items: orderItems,
       })
-      const ownerName = shop.ownerId ? (await db.user.findUnique({ where: { id: shop.ownerId }, select: { name: true } }))?.name || '' : ''
+
+      const ownerName = (
+        await db.user.findUnique({
+          where: { id: shop.ownerId },
+          select: { name: true },
+        })
+      )?.name || ''
+
       dispatchAdminNewOrderEmail({
         shopName: shop.name,
         ownerName,
         total,
-        customerName,
+        customerName: `${customer.firstName} ${customer.lastName}`,
       })
     } catch {
       // Notification/email failure must not break order creation
     }
 
-    return NextResponse.json(order, { status: 201 })
+    return NextResponse.json(
+      {
+        id: order.id,
+        status: order.status,
+        total: order.total,
+        message: 'Commande créée avec succès !',
+      },
+      { status: 201 }
+    )
   } catch (error) {
     console.error('Orders POST error:', error)
+
+    // Handle known transaction errors
+    if (error instanceof Error) {
+      const msg = error.message
+      if (msg.startsWith('STOCK_UNAVAILABLE:')) {
+        const name = msg.split(':')[1]
+        return NextResponse.json(
+          { error: `Le produit "${name}" n'est plus disponible` },
+          { status: 400 }
+        )
+      }
+      if (msg.startsWith('STOCK_INSUFFICIENT:')) {
+        const parts = msg.split(':')
+        const name = parts[1]
+        const available = parts[2]
+        return NextResponse.json(
+          {
+            error: `Stock insuffisant pour "${name}" (disponible: ${available})`,
+            details: { product: name, availableStock: Number(available) },
+          },
+          { status: 400 }
+        )
+      }
+    }
+
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
   }
 }
@@ -141,6 +257,16 @@ export async function GET(request: NextRequest) {
         orderBy: { createdAt: 'desc' },
         take: limit,
         skip: (page - 1) * limit,
+        include: {
+          orderItems: {
+            select: {
+              id: true,
+              productName: true,
+              price: true,
+              quantity: true,
+            },
+          },
+        },
       }),
       db.order.count({ where }),
     ])
@@ -179,12 +305,27 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Statut invalide' }, { status: 400 })
     }
 
-    // Verify the order belongs to this shop
     const existingOrder = await db.order.findFirst({
       where: { id, shopId: user.shop.id },
     })
     if (!existingOrder) {
       return NextResponse.json({ error: 'Commande introuvable' }, { status: 404 })
+    }
+
+    // If cancelling, restore stock
+    if (status === 'CANCELLED' && existingOrder.status !== 'CANCELLED') {
+      const orderItems = await db.orderItem.findMany({
+        where: { orderId: id },
+        select: { productId: true, quantity: true },
+      })
+      for (const item of orderItems) {
+        if (item.productId) {
+          await db.product.update({
+            where: { id: item.productId },
+            data: { stock: { increment: item.quantity } },
+          })
+        }
+      }
     }
 
     const order = await db.order.update({

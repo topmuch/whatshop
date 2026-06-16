@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
+import { CheckoutForm } from '@/components/shop/checkout-form'
 import {
   ArrowLeft,
   ShoppingCart,
@@ -354,6 +355,7 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [sortBy, setSortBy] = useState<SortOption>('recent')
   const [cartExpanded, setCartExpanded] = useState(false)
+  const [checkoutOpen, setCheckoutOpen] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [detailQty, setDetailQty] = useState(1)
   const [detailImageIndex, setDetailImageIndex] = useState(0)
@@ -1347,7 +1349,17 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
                     onClick={handleWhatsAppCheckout}
                   >
                     <MessageCircle className="h-4 w-4" />
-                    <span className="hidden sm:inline">Commander sur WhatsApp</span>
+                    <span className="hidden sm:inline">WhatsApp</span>
+                    <span className="sm:hidden">WA</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="h-10 gap-2 shrink-0 border-current"
+                    style={{ color: 'var(--tpl-cta-fg)', borderColor: 'var(--tpl-cta-fg)' }}
+                    onClick={() => setCheckoutOpen(true)}
+                  >
+                    <ShoppingCart className="h-4 w-4" />
+                    <span className="hidden sm:inline">Commander sur le site</span>
                     <span className="sm:hidden">Commander</span>
                   </Button>
                 </div>
@@ -1356,6 +1368,15 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Checkout Form */}
+      <CheckoutForm
+        open={checkoutOpen}
+        onOpenChange={setCheckoutOpen}
+        onSuccess={() => {
+          setCartExpanded(false)
+        }}
+      />
     </motion.div>
   )
 }

@@ -304,6 +304,7 @@ model Product {
   shop     Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
   category Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   socialPosts SocialPost[]
+  orderItems OrderItem[]
 }
 
 // ─── ORDER ─────────────────────────────────────────────────────────────────────
@@ -311,17 +312,36 @@ model Product {
 model Order {
   id              String   @id @default(cuid())
   shopId          String
-  items           String   // JSON array of {productId, name, price, quantity}
+  items           String   // JSON array of {productId, name, price, quantity} (legacy compat)
   total           Float
   customerName    String?
   customerPhone   String?
   customerAddress String?
+  customerCity    String?
   status          String   @default("PENDING") // PENDING | CONFIRMED | DELIVERED | CANCELLED
   createdAt       DateTime @default(now())
 
   shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
   user User? @relation(fields: [userId], references: [id])
   userId String?
+  orderItems      OrderItem[]
+}
+
+// ─── ORDER ITEM (relational) ───────────────────────────────────────────────
+
+model OrderItem {
+  id          String  @id @default(cuid())
+  orderId     String
+  productId   String?
+  productName  String
+  price       Float
+  quantity    Int
+  createdAt   DateTime @default(now())
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
 }
 
 // ─── VISIT ─────────────────────────────────────────────────────────────────────

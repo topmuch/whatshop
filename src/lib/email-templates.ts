@@ -104,6 +104,8 @@ export interface NewOrderEmailData {
   shopName: string
   customerName: string | null
   customerPhone: string | null
+  customerCity?: string | null
+  customerAddress?: string | null
   total: number
   items: { name: string; quantity: number; price: number }[]
   shopDashboardUrl: string
@@ -111,8 +113,10 @@ export interface NewOrderEmailData {
 
 export function newOrderEmail(data: NewOrderEmailData): string {
   const itemsHtml = data.items
-    .map(item => `<tr><td style="padding:6px 8px; border-bottom:1px solid #f3f4f6; font-size:14px;">${esc(item.name)}</td><td style="padding:6px 8px; border-bottom:1px solid #f3f4f6; font-size:14px; text-align:center;">${item.quantity}</td><td style="padding:6px 8px; border-bottom:1px solid #f3f4f6; font-size:14px; text-align:right;">${item.price.toLocaleString('fr-FR')} FCFA</td></tr>`)
+    .map(item => `<tr><td style="padding:6px 8px; border-bottom:1px solid #f3f4f6; font-size:14px;">${esc(item.name)}</td><td style="padding:6px 8px; border-bottom:1px solid #f3f4f6; font-size:14px; text-align:center;">${item.quantity}</td><td style="padding:6px 8px; border-bottom:1px solid #f3f4f6; font-size:14px; text-align:right;">${item.price.toLocaleString('fr-FR')} FCFA</td><td style="padding:6px 8px; border-bottom:1px solid #f3f4f6; font-size:14px; text-align:right;">${(item.price * item.quantity).toLocaleString('fr-FR')} FCFA</td></tr>`)
     .join('')
+
+  const itemsTotal = data.items.reduce((s, i) => s + i.price * i.quantity, 0)
 
   return wrap(
     'Nouvelle commande ! 📦',
@@ -124,6 +128,8 @@ export function newOrderEmail(data: NewOrderEmailData): string {
         <table>
           <tr><td>Client</td><td>${esc(data.customerName || 'Non renseigné')}</td></tr>
           <tr><td>Téléphone</td><td>${esc(data.customerPhone || 'Non renseigné')}</td></tr>
+          ${data.customerCity ? `<tr><td>Ville</td><td>${esc(data.customerCity)}</td></tr>` : ''}
+          ${data.customerAddress ? `<tr><td>Adresse</td><td>${esc(data.customerAddress)}</td></tr>` : ''}
           <tr><td>Total</td><td><strong>${data.total.toLocaleString('fr-FR')} FCFA</strong></td></tr>
         </table>
       </div>
@@ -132,12 +138,19 @@ export function newOrderEmail(data: NewOrderEmailData): string {
           <tr style="background:#f9fafb;">
             <th style="padding:10px 8px; text-align:left; font-size:13px; color:#6b7280; font-weight:600;">Produit</th>
             <th style="padding:10px 8px; text-align:center; font-size:13px; color:#6b7280; font-weight:600;">Qté</th>
-            <th style="padding:10px 8px; text-align:right; font-size:13px; color:#6b7280; font-weight:600;">Prix</th>
+            <th style="padding:10px 8px; text-align:right; font-size:13px; color:#6b7280; font-weight:600;">Prix unit.</th>
+            <th style="padding:10px 8px; text-align:right; font-size:13px; color:#6b7280; font-weight:600;">Sous-total</th>
           </tr>
         </thead>
         <tbody>
           ${itemsHtml}
         </tbody>
+        <tfoot>
+          <tr style="background:#f0fdf4;">
+            <td colspan="3" style="padding:10px 8px; text-align:right; font-size:14px; font-weight:700;">Total</td>
+            <td style="padding:10px 8px; text-align:right; font-size:14px; font-weight:700; color:#166534;">${itemsTotal.toLocaleString('fr-FR')} FCFA</td>
+          </tr>
+        </tfoot>
       </table>
       <p style="text-align:center; margin-top:20px;">
         <a href="${esc(data.shopDashboardUrl)}" class="button">Voir les commandes</a>
