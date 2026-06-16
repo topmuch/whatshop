@@ -2682,11 +2682,10 @@ function AdminConfig() {
                       />
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Activez pour utiliser les paramètres SMTP de la base de données au lieu des variables d&apos;environnement.
+                      Activez le toggle puis remplissez les champs ci-dessous. Si désactivé, les variables d&apos;environnement seront utilisées.
                     </p>
 
-                    {config.smtpConfigured && (
-                      <div className="space-y-3">
+                    <div className="space-y-3">
                         <div className="grid sm:grid-cols-2 gap-3">
                           <div className="space-y-1.5">
                             <Label htmlFor="smtp-host" className="text-xs">Hôte SMTP</Label>
@@ -2826,7 +2825,6 @@ function AdminConfig() {
                           )}
                         </div>
                       </div>
-                    )}
                   </div>
 
                   <div className="flex items-center justify-between py-2">
