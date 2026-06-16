@@ -127,8 +127,10 @@ export async function POST(request: NextRequest) {
           total,
           customerName: `${customer.firstName} ${customer.lastName}`,
           customerPhone: customer.phone,
+          customerEmail: customer.email && customer.email.trim() ? customer.email.trim() : null,
           customerAddress: customer.address,
           customerCity: customer.city,
+          customerNotes: customer.notes && customer.notes.trim() ? customer.notes.trim() : null,
         },
       })
 
@@ -192,6 +194,29 @@ export async function POST(request: NextRequest) {
         total,
         customerName: `${customer.firstName} ${customer.lastName}`,
       })
+
+      // WhatsApp notification to seller
+      if (shop.whatsapp) {
+        const itemsText = items
+          .map((i) => `• ${i.name} × ${i.quantity} = ${(i.price * i.quantity).toLocaleString('fr-FR')} FCFA`)
+          .join('\n')
+        const notesText = customer.notes?.trim() ? `\n\n📝 Notes : ${customer.notes.trim()}` : ''
+        const waMessage =
+          `🛒 *Nouvelle commande*\n\n` +
+          `👤 ${customer.firstName} ${customer.lastName}\n` +
+          `📞 ${customer.phone}\n` +
+          (customer.email?.trim() ? `📧 ${customer.email.trim()}\n` : '') +
+          `📍 ${customer.address}, ${customer.city}\n` +
+          notesText +
+          `\n\n📋 *Articles :*\n${itemsText}\n\n` +
+          `💰 *Total : ${total.toLocaleString('fr-FR')} FCFA*\n\n` +
+          `ID : ${order.id}`
+
+        const cleanPhone = shop.whatsapp.replace(/[^\d+]/g, '')
+        const waUrl = `https://wa.me/${cleanPhone.replace(/^\+/, '')}?text=${encodeURIComponent(waMessage)}`
+        // Fire-and-forget: we don't await this fetch on purpose
+        fetch(waUrl).catch(() => { /* ignore */ })
+      }
     } catch {
       // Notification/email failure must not break order creation
     }

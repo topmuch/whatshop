@@ -21,8 +21,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Badge } from '@/components/ui/badge'
-import { Loader2, CheckCircle2, ArrowLeft, ShoppingBag, MapPin, User, Phone, Home, Building2 } from 'lucide-react'
+import { Loader2, CheckCircle2, ArrowLeft, ShoppingBag, MapPin, User, Phone, Mail, MessageSquare } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface CheckoutFormProps {
@@ -65,6 +64,8 @@ export function CheckoutForm({ open, onOpenChange, onSuccess }: CheckoutFormProp
       phone: '',
       address: '',
       city: '',
+      email: '',
+      notes: '',
     },
   })
 
@@ -280,6 +281,27 @@ export function CheckoutForm({ open, onOpenChange, onSuccess }: CheckoutFormProp
                     </div>
                   </div>
 
+                  {/* ─── Email (optional) ─── */}
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
+                      <Mail className="w-4 h-4" />
+                      Email <span className="font-normal text-xs text-muted-foreground">(optionnel)</span>
+                    </h3>
+                    <div className="space-y-1.5">
+                      <Input
+                        id="checkout-email"
+                        type="email"
+                        placeholder="votre@email.com"
+                        autoComplete="email"
+                        {...register('email')}
+                        aria-invalid={!!errors.email}
+                      />
+                      {errors.email && (
+                        <p className="text-xs text-red-500">{errors.email.message}</p>
+                      )}
+                    </div>
+                  </div>
+
                   {/* ─── Delivery Address ─── */}
                   <div className="space-y-3">
                     <h3 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
@@ -314,6 +336,26 @@ export function CheckoutForm({ open, onOpenChange, onSuccess }: CheckoutFormProp
                       />
                       {errors.city && (
                         <p className="text-xs text-red-500">{errors.city.message}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* ─── Notes (optional) ─── */}
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
+                      <MessageSquare className="w-4 h-4" />
+                      Notes <span className="font-normal text-xs text-muted-foreground">(optionnel)</span>
+                    </h3>
+                    <div className="space-y-1.5">
+                      <textarea
+                        id="checkout-notes"
+                        placeholder="Instructions spéciales, allergies, préférences de livraison..."
+                        rows={3}
+                        className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+                        {...register('notes')}
+                      />
+                      {errors.notes && (
+                        <p className="text-xs text-red-500">{errors.notes.message}</p>
                       )}
                     </div>
                   </div>

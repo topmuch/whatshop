@@ -3,6 +3,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useAppStore } from '@/lib/store'
+import { CheckoutForm } from '@/components/shop/checkout-form'
+import { toast } from 'sonner'
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -47,7 +50,7 @@ interface MenuData {
   categories: MenuCategory[]
 }
 
-interface CartItem {
+interface LocalCartItem {
   product: MenuProduct
   quantity: number
 }
@@ -68,9 +71,17 @@ export function MenuPageClient({ shopSlug }: { shopSlug: string }) {
   const [data, setData] = useState<MenuData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [cart, setCart] = useState<CartItem[]>([])
+  const [cart, setCart] = useState<LocalCartItem[]>([])
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [showCart, setShowCart] = useState(false)
+  const [showCheckout, setShowCheckout] = useState(false)
+
+  // Zustand store (for checkout form bridge)
+  const {
+    setPublicShop,
+    addToCart: zustandAddToCart,
+    clearCart: zustandClearCart,
+  } = useAppStore()
 
   const categoryRefs = useRef<Record<string, HTMLDivElement | null>>({})
   const isScrolling = useRef(false)
@@ -100,7 +111,7 @@ export function MenuPageClient({ shopSlug }: { shopSlug: string }) {
     return () => { cancelled = true }
   }, [shopSlug])
 
-  // Cart operations
+  // Cart operations (local state)
   const addToCart = useCallback((product: MenuProduct) => {
     setCart((prev) => {
       const existing = prev.find((c) => c.product.id === product.id)
@@ -134,7 +145,7 @@ export function MenuPageClient({ shopSlug }: { shopSlug: string }) {
   const totalItems = cart.reduce((sum, c) => sum + c.quantity, 0)
   const totalPrice = cart.reduce((sum, c) => sum + c.product.price * c.quantity, 0)
 
-  // WhatsApp order
+  // WhatsApp order (keeps existing flow)
   const sendWhatsAppOrder = useCallback(() => {
     if (!data || cart.length === 0) return
     const phone = data.shop.whatsapp.replace(/\D/g, '')
@@ -146,6 +157,51 @@ export function MenuPageClient({ shopSlug }: { shopSlug: string }) {
     const encoded = encodeURIComponent(msg)
     window.open(`https://wa.me/${phone}?text=${encoded}`, '_blank')
   }, [data, cart, totalPrice])
+
+  // Bridge: sync local cart → Zustand store → open checkout
+  const openCheckout = useCallback(() => {
+    if (!data || cart.length === 0) return
+
+    // Set the public shop so CheckoutForm can read shopId
+    setPublicShop({
+      id: data.shop.id,
+      name: data.shop.name,
+      slug: data.shop.slug,
+      whatsapp: data.shop.whatsapp,
+      phone: data.shop.phone || undefined,
+      address: data.shop.address || undefined,
+      isRestaurant: data.shop.isRestaurant,
+      accentColor: data.shop.accentColor || undefined,
+      primaryColor: data.shop.primaryColor || undefined,
+      logo: data.shop.logo || undefined,
+      isActive: true,
+      plan: '',
+      template: '',
+      description: data.shop.description || undefined,
+    })
+
+    // Clear Zustand cart first, then add all items from local cart
+    zustandClearCart()
+    for (const item of cart) {
+      zustandAddToCart({
+        productId: item.product.id,
+        name: item.product.name,
+        price: item.product.price,
+        image: item.product.image,
+        quantity: item.quantity,
+      })
+    }
+
+    // Close cart drawer, open checkout sheet
+    setShowCart(false)
+    setShowCheckout(true)
+  }, [data, cart, setPublicShop, zustandClearCart, zustandAddToCart])
+
+  // After successful checkout: clear local cart
+  const handleCheckoutSuccess = useCallback(() => {
+    setCart([])
+    toast.success('Commande confirmée ! Le vendeur a été notifié.')
+  }, [])
 
   // Sticky category scroll with intersection observer
   useEffect(() => {
@@ -258,60 +314,66 @@ export function MenuPageClient({ shopSlug }: { shopSlug: string }) {
   const accent = data.shop.accentColor || '#10B981'
   const primary = data.shop.primaryColor || '#EC4899'
 
+  // Collect all products for lookup
+  const allProducts = data.categories.flatMap((c) => c.products)
+  const uncategorized = allProducts.length > 0
+    ? allProducts.filter((p) => !data.categories.some((c) => c.products.some((cp) => cp.id === p.id)))
+    : []
+
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col" style={{ '--menu-accent': accent } as React.CSSProperties}>
-      {/* ═══ HEADER ═══ */}
-      <header className="bg-white border-b sticky top-0 z-30">
-        <div className="px-4 py-3">
-          <div className="flex items-center gap-3">
-            {data.shop.logo ? (
-              <Image
-                src={data.shop.logo}
-                alt={data.shop.name}
-                width={48}
-                height={48}
-                className="w-12 h-12 rounded-full object-cover border border-gray-100"
-                unoptimized
-              />
-            ) : (
-              <div
-                className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg shrink-0"
-                style={{ backgroundColor: accent }}
-              >
-                {data.shop.name.charAt(0).toUpperCase()}
-              </div>
-            )}
-            <div className="min-w-0 flex-1">
-              <h1 className="text-lg font-bold text-gray-900 truncate">{data.shop.name}</h1>
-              <p className="text-xs text-gray-500 truncate">
-                {data.shop.businessHours || data.shop.address || 'Menu digital'}
-              </p>
+    <div className="min-h-screen bg-gray-50 flex flex-col" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+      {/* ═══ STICKY HEADER ═══ */}
+      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b shadow-sm">
+        <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
+          {data.shop.logo ? (
+            <Image
+              src={data.shop.logo}
+              alt={data.shop.name}
+              width={44}
+              height={44}
+              className="w-11 h-11 rounded-full object-cover border"
+              unoptimized
+            />
+          ) : (
+            <div
+              className="w-11 h-11 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0"
+              style={{ backgroundColor: accent }}
+            >
+              {data.shop.name.charAt(0).toUpperCase()}
             </div>
-            {totalItems > 0 && (
-              <button
-                onClick={() => setShowCart(true)}
-                className="relative w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-                style={{ backgroundColor: accent }}
-              >
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
-                </svg>
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
-                  {totalItems}
-                </span>
-              </button>
+          )}
+          <div className="flex-1 min-w-0">
+            <h1 className="text-base font-bold text-gray-900 truncate">{data.shop.name}</h1>
+            {data.shop.businessHours && (
+              <p className="text-xs text-gray-500 truncate">{data.shop.businessHours}</p>
             )}
           </div>
+          {totalItems > 0 && (
+            <button
+              onClick={() => setShowCart(true)}
+              className="relative w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center"
+            >
+              <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
+              </svg>
+              <span
+                className="absolute -top-1 -right-1 w-5 h-5 rounded-full text-white text-xs font-bold flex items-center justify-center"
+                style={{ backgroundColor: accent }}
+              >
+                {totalItems}
+              </span>
+            </button>
+          )}
         </div>
 
-        {/* ═══ STICKY CATEGORY PILLS ═══ */}
+        {/* ═══ CATEGORY PILLS ═══ */}
         {data.categories.length > 1 && (
-          <div className="px-4 pb-2 flex gap-2 overflow-x-auto scrollbar-hide">
+          <div className="px-4 pb-3 flex gap-2 overflow-x-auto scrollbar-hide">
             {data.categories.map((cat) => (
               <button
                 key={cat.id}
                 onClick={() => scrollToCategory(cat.id)}
-                className="px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap shrink-0 transition-colors"
+                className="shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium transition-colors"
                 style={{
                   backgroundColor: activeCategory === cat.id ? accent : '#f3f4f6',
                   color: activeCategory === cat.id ? '#ffffff' : '#374151',
@@ -324,131 +386,90 @@ export function MenuPageClient({ shopSlug }: { shopSlug: string }) {
         )}
       </header>
 
-      {/* ═══ MENU CONTENT ═══ */}
-      <main className="flex-1 pb-28">
-        {/* Shop description */}
-        {data.shop.description && (
-          <div className="px-4 pt-4">
-            <p className="text-sm text-gray-600 leading-relaxed">{data.shop.description}</p>
-          </div>
-        )}
-
-        {/* Empty state */}
-        {data.categories.length === 0 && (
-          <div className="flex items-center justify-center py-20 px-4 text-center">
-            <div className="space-y-3">
-              <div className="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center">
-                <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-              </div>
-              <p className="text-sm text-gray-500">Aucun plat disponible pour le moment.</p>
-            </div>
-          </div>
-        )}
-
-        {/* Categories & Products */}
+      {/* ═══ PRODUCTS LIST ═══ */}
+      <main className="flex-1 max-w-lg mx-auto w-full px-4 py-4 space-y-8 pb-28">
         {data.categories.map((category) => (
-          <div
-            key={category.id}
-            ref={(el) => { categoryRefs.current[category.id] = el }}
-            className="scroll-mt-32"
-          >
-            {/* Category Header */}
-            <div className="px-4 pt-6 pb-2">
-              <h2 className="text-base font-bold text-gray-900">{category.name}</h2>
-              {category.description && (
-                <p className="text-xs text-gray-500 mt-0.5">{category.description}</p>
-              )}
-            </div>
-
-            {/* Products */}
-            <div className="px-4 space-y-2">
-              {category.products.map((product) => {
-                const inCart = cart.find((c) => c.product.id === product.id)
-                return (
-                  <div
-                    key={product.id}
-                    className="bg-white rounded-xl border border-gray-100 overflow-hidden flex"
-                  >
-                    {/* Product Image */}
-                    {product.image ? (
-                      <div className="relative w-24 h-24 sm:w-28 sm:h-28 shrink-0">
+          <div key={category.id} ref={(el) => { categoryRefs.current[category.id] = el }}>
+            <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-3">
+              {category.name}
+            </h2>
+            {category.products.length === 0 ? (
+              <p className="text-sm text-gray-400 italic">Aucun produit dans cette catégorie.</p>
+            ) : (
+              <div className="space-y-3">
+                {category.products.map((product) => {
+                  const inCart = cart.find((c) => c.product.id === product.id)
+                  return (
+                    <div key={product.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-3 flex gap-3">
+                      {product.image ? (
                         <Image
                           src={product.image}
                           alt={product.name}
-                          fill
-                          className="object-cover"
-                          sizes="112px"
+                          width={80}
+                          height={80}
+                          className="w-20 h-20 rounded-xl object-cover shrink-0"
                           unoptimized
                         />
-                      </div>
-                    ) : (
-                      <div
-                        className="w-24 h-24 sm:w-28 sm:h-28 shrink-0 flex items-center justify-center"
-                        style={{ backgroundColor: `${accent}10` }}
-                      >
-                        <svg className="w-8 h-8" style={{ color: accent }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                      </div>
-                    )}
+                      ) : (
+                        <div className="w-20 h-20 rounded-xl bg-gray-100 shrink-0 flex items-center justify-center">
+                          <span className="text-2xl">🍽️</span>
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div>
+                          <h3 className="text-sm font-semibold text-gray-900 leading-tight">
+                            {product.name}
+                          </h3>
+                          {product.shortDescription && (
+                            <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">
+                              {product.shortDescription}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex items-center justify-between mt-2">
+                          <span className="text-sm font-bold" style={{ color: accent }}>
+                            {formatPrice(product.price)}
+                          </span>
 
-                    {/* Product Info */}
-                    <div className="flex-1 min-w-0 p-3 flex flex-col justify-between">
-                      <div>
-                        <h3 className="text-sm font-semibold text-gray-900 leading-tight">
-                          {product.name}
-                        </h3>
-                        {product.shortDescription && (
-                          <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">
-                            {product.shortDescription}
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex items-center justify-between mt-2">
-                        <span className="text-sm font-bold" style={{ color: accent }}>
-                          {formatPrice(product.price)}
-                        </span>
-
-                        {inCart ? (
-                          <div className="flex items-center gap-1">
+                          {inCart ? (
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => updateQuantity(product.id, -1)}
+                                className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 active:bg-gray-200"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                                </svg>
+                              </button>
+                              <span className="w-6 text-center text-sm font-semibold text-gray-900">
+                                {inCart.quantity}
+                              </span>
+                              <button
+                                onClick={() => updateQuantity(product.id, 1)}
+                                className="w-7 h-7 rounded-full flex items-center justify-center text-white active:opacity-80"
+                                style={{ backgroundColor: accent }}
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                </svg>
+                              </button>
+                            </div>
+                          ) : (
                             <button
-                              onClick={() => updateQuantity(product.id, -1)}
-                              className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 active:bg-gray-200"
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
-                              </svg>
-                            </button>
-                            <span className="w-6 text-center text-sm font-semibold text-gray-900">
-                              {inCart.quantity}
-                            </span>
-                            <button
-                              onClick={() => updateQuantity(product.id, 1)}
-                              className="w-7 h-7 rounded-full flex items-center justify-center text-white active:opacity-80"
+                              onClick={() => addToCart(product)}
+                              className="px-3 py-1.5 rounded-full text-xs font-semibold text-white active:opacity-80 transition-transform active:scale-95"
                               style={{ backgroundColor: accent }}
                             >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                              </svg>
+                              Ajouter
                             </button>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => addToCart(product)}
-                            className="px-3 py-1.5 rounded-full text-xs font-semibold text-white active:opacity-80 transition-transform active:scale-95"
-                            style={{ backgroundColor: accent }}
-                          >
-                            Ajouter
-                          </button>
-                        )}
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )
-              })}
-            </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
         ))}
       </main>
@@ -559,7 +580,7 @@ export function MenuPageClient({ shopSlug }: { shopSlug: string }) {
               )}
             </div>
 
-            {/* Total + CTA */}
+            {/* Total + CTA Buttons */}
             {cart.length > 0 && (
               <div className="border-t px-5 py-4 space-y-3 bg-white">
                 <div className="flex items-center justify-between">
@@ -568,12 +589,23 @@ export function MenuPageClient({ shopSlug }: { shopSlug: string }) {
                     {formatPrice(totalPrice)}
                   </span>
                 </div>
+                {/* Primary: Passer la commande (checkout form) */}
+                <button
+                  onClick={openCheckout}
+                  className="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl text-white font-semibold text-sm active:scale-[0.98] transition-transform"
+                  style={{ backgroundColor: accent }}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Passer la commande
+                </button>
+                {/* Secondary: WhatsApp */}
                 <button
                   onClick={sendWhatsAppOrder}
-                  className="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl text-white font-semibold text-sm active:scale-[0.98] transition-transform"
-                  style={{ backgroundColor: '#25D366' }}
+                  className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-2xl font-semibold text-sm active:scale-[0.98] transition-transform border-2 text-gray-700 border-gray-200 bg-white hover:bg-gray-50"
                 >
-                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                  <svg className="w-4.5 h-4.5" viewBox="0 0 24 24" fill="#25D366">
                     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
                   </svg>
                   Commander via WhatsApp
@@ -583,6 +615,13 @@ export function MenuPageClient({ shopSlug }: { shopSlug: string }) {
           </div>
         </div>
       )}
+
+      {/* ═══ CHECKOUT FORM SHEET ═══ */}
+      <CheckoutForm
+        open={showCheckout}
+        onOpenChange={setShowCheckout}
+        onSuccess={handleCheckoutSuccess}
+      />
 
       {/* ═══ INLINE STYLES FOR ANIMATION ═══ */}
       <style jsx global>{`

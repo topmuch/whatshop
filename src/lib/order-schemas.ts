@@ -40,6 +40,17 @@ export const customerSchema = z.object({
     .string()
     .min(2, 'La ville est requise')
     .max(100, 'Ville invalide'),
+  email: z
+    .string()
+    .email('Email invalide')
+    .max(200, 'Email trop long')
+    .optional()
+    .or(z.literal('')),
+  notes: z
+    .string()
+    .max(1000, 'Les notes ne doivent pas dépasser 1000 caractères')
+    .optional()
+    .or(z.literal('')),
 })
 
 export type CustomerInput = z.infer<typeof customerSchema>

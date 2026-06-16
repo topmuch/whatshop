@@ -321,8 +321,10 @@ model Order {
   total           Float
   customerName    String?
   customerPhone   String?
+  customerEmail   String?
   customerAddress String?
   customerCity    String?
+  customerNotes   String?
   status          String   @default("PENDING") // PENDING | CONFIRMED | DELIVERED | CANCELLED
   createdAt       DateTime @default(now())
 

@@ -1391,8 +1391,11 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
           setCartExpanded(false)
         }}
       />
+      </>
+    )}
     </motion.div>
   )
+}
 
 /* ─── Exported PublicShop (wraps with TemplateProvider) ─── */
 export function PublicShop({ initialProductSlug }: { initialProductSlug?: string }) {
