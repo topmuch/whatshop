@@ -54,7 +54,9 @@ import {
   Sparkles,
   X,
   Upload,
+  Wand2,
 } from 'lucide-react'
+import { ProductWizard } from './product-wizard'
 import { toast } from 'sonner'
 import { formatPrice } from '@/lib/shared'
 import { getBusinessLabels } from '@/lib/business-labels'
@@ -118,6 +120,9 @@ export function DashboardProducts() {
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [deletingProduct, setDeletingProduct] = useState<Product | null>(null)
   const [deleting, setDeleting] = useState(false)
+
+  // Wizard mode
+  const [wizardOpen, setWizardOpen] = useState(false)
 
   // Image upload
   const [imageUploading, setImageUploading] = useState(false)
@@ -327,10 +332,22 @@ export function DashboardProducts() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold">{labels.productsTitle}</h1>
-        <Button onClick={openAddDialog} className="gap-2">
-          <Plus className="h-4 w-4" />
-          {labels.productsAddButton}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => {
+            if (shop?.plan === 'FREE' && products.length >= 10) {
+              toast.error('Limite atteinte ! Passez au plan Standard.', { duration: 5000 })
+              return
+            }
+            setWizardOpen(true)
+          }} className="gap-2">
+            <Wand2 className="h-4 w-4" />
+            <span className="hidden sm:inline">Wizard</span>
+          </Button>
+          <Button onClick={openAddDialog} className="gap-2">
+            <Plus className="h-4 w-4" />
+            {labels.productsAddButton}
+          </Button>
+        </div>
       </div>
 
       {/* Plan limit warning */}
@@ -808,6 +825,29 @@ export function DashboardProducts() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Wizard Dialog */}
+      <Dialog open={wizardOpen} onOpenChange={setWizardOpen}>
+        <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Wand2 className="h-5 w-5 text-primary" />
+              Créer un {labels.productLabel.toLowerCase()} — Wizard
+            </DialogTitle>
+          </DialogHeader>
+          <ProductWizard
+            shopId={shop!.id}
+            categories={categories}
+            businessType={shop?.businessType}
+            sector={shop?.sector}
+            onSuccess={() => {
+              setWizardOpen(false)
+              fetchProducts()
+            }}
+            onCancel={() => setWizardOpen(false)}
+          />
         </DialogContent>
       </Dialog>
 
