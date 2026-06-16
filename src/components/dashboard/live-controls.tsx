@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Radio, Check, Loader2, Eye, Package, X } from 'lucide-react'
+import { Radio, Check, Loader2, Eye, Package, ExternalLink, Clock } from 'lucide-react'
 import { toast } from 'sonner'
 
 export function LiveControls() {
@@ -33,19 +33,27 @@ export function LiveControls() {
     setLiveProductId(shop.liveProductId || '')
   }, [shop])
 
-  // Fetch products
+  // Fetch products list
   useEffect(() => {
     if (!shop) return
     setLoading(true)
     fetch(`/api/shops/${shop.slug}/products`)
       .then((r) => r.json())
-      .then(setProducts)
+      .then((data) => {
+        if (Array.isArray(data)) setProducts(data)
+        else if (Array.isArray(data.products)) setProducts(data.products)
+      })
       .catch(() => toast.error('Erreur de chargement des produits'))
       .finally(() => setLoading(false))
   }, [shop])
 
   // Get the live product name
   const liveProduct = products.find((p) => p.id === liveProductId)
+
+  // Format live duration
+  const liveDuration = shop?.liveStartedAt
+    ? Math.floor((Date.now() - new Date(shop.liveStartedAt).getTime()) / 1000)
+    : 0
 
   // Toggle live mode
   const handleToggle = useCallback(async () => {
@@ -56,7 +64,6 @@ export function LiveControls() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          shopId: shop.id,
           isActive: !isLiveMode,
         }),
       })
@@ -65,12 +72,18 @@ export function LiveControls() {
         toast.error(data.error || 'Erreur')
         return
       }
-      setIsLiveMode(data.shop.isLiveMode)
-      if (!data.shop.isLiveMode) {
+      const newIsLive = data.shop.isLiveMode
+      setIsLiveMode(newIsLive)
+      if (!newIsLive) {
         setLiveProductId('')
       }
-      setShop({ ...shop, isLiveMode: data.shop.isLiveMode, liveProductId: data.shop.liveProductId || '' })
-      toast.success(data.shop.isLiveMode ? '🔴 Mode Live activé !' : 'Mode Live désactivé')
+      setShop({
+        ...shop,
+        isLiveMode: newIsLive,
+        liveProductId: data.shop.liveProductId || '',
+        liveStartedAt: data.shop.liveStartedAt || undefined,
+      })
+      toast.success(newIsLive ? '🔴 Mode Live activé !' : '⏹️ Mode Live désactivé')
     } catch {
       toast.error('Erreur de connexion')
     } finally {
@@ -81,14 +94,14 @@ export function LiveControls() {
   // Set live product
   const handleSetProduct = useCallback(async (productId: string) => {
     if (!shop) return
+    const val = productId === '__none__' ? '' : productId
     setSettingProduct(true)
     try {
       const res = await fetch('/api/live/set-product', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          shopId: shop.id,
-          productId: productId || null,
+          productId: val || null,
         }),
       })
       const data = await res.json()
@@ -97,18 +110,35 @@ export function LiveControls() {
         return
       }
       setLiveProductId(data.shop.liveProductId || '')
-      setShop({ ...shop, liveProductId: data.shop.liveProductId || '' })
-      toast.success(productId ? `Produit en avant : ${liveProduct?.name || 'inconnu'}` : 'Aucun produit sélectionné')
+      setShop({
+        ...shop,
+        liveProductId: data.shop.liveProductId || '',
+      })
+      if (val) {
+        const found = products.find((p) => p.id === val)
+        toast.success(`Produit en avant : ${found?.name || 'mis à jour'}`)
+      } else {
+        toast.success('Aucun produit sélectionné')
+      }
     } catch {
       toast.error('Erreur de connexion')
     } finally {
       setSettingProduct(false)
     }
-  }, [shop, liveProduct, setShop])
+  }, [shop, products, setShop])
 
   if (!shop) return null
 
   const liveProducts = products.filter((p) => p.isAvailable)
+
+  // Format seconds → HH:MM:SS
+  function formatDuration(s: number): string {
+    const h = Math.floor(s / 3600)
+    const m = Math.floor((s % 3600) / 60)
+    const sec = s % 60
+    if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
+    return `${m}:${String(sec).padStart(2, '0')}`
+  }
 
   return (
     <Card className="border-2 border-dashed border-red-200 dark:border-red-900 bg-gradient-to-br from-white via-white to-red-50 dark:from-gray-900 dark:via-gray-950 dark:to-red-950/20">
@@ -154,20 +184,28 @@ export function LiveControls() {
           </button>
         </div>
 
+        {/* Live Duration */}
+        {isLiveMode && shop.liveStartedAt && (
+          <div className="flex items-center gap-2 text-sm text-red-600 dark:text-red-400 px-1">
+            <Clock className="h-4 w-4" />
+            <span className="font-medium">En direct depuis {formatDuration(liveDuration)}</span>
+          </div>
+        )}
+
         {/* Product Selector — only visible when live */}
         {isLiveMode && (
           <div className="space-y-2 rounded-lg border p-4">
             <Label className="text-sm font-medium">Produit à mettre en avant</Label>
             {loading ? (
               <div className="space-y-2">
-                <div className="h-9 w-full bg-gray-100 rounded animate-pulse" />
-                <div className="h-9 w-full bg-gray-100 rounded animate-pulse" />
+                <div className="h-9 w-full bg-gray-100 dark:bg-gray-800 rounded animate-pulse" />
+                <div className="h-9 w-full bg-gray-100 dark:bg-gray-800 rounded animate-pulse" />
               </div>
             ) : (
               <>
                 <Select
                   value={liveProductId || '__none__'}
-                  onValueChange={(val) => handleSetProduct(val === '__none__' ? '' : val)}
+                  onValueChange={handleSetProduct}
                   disabled={settingProduct}
                 >
                   <SelectTrigger className="w-full">
@@ -177,7 +215,7 @@ export function LiveControls() {
                     <SelectItem value="__none__">
                       <span className="flex items-center gap-2">
                         <Package className="h-4 w-4 text-muted-foreground" />
-                        Aucun produit (catalogue normal)
+                        Aucun produit (en attente)
                       </span>
                     </SelectItem>
                     {liveProducts.map((p) => (
@@ -204,9 +242,20 @@ export function LiveControls() {
         {/* Preview of what viewers see */}
         {isLiveMode && liveProduct && (
           <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-950/30 p-4 space-y-3">
-            <div className="flex items-center gap-2 text-sm font-medium text-red-700 dark:text-red-400">
-              <Eye className="h-4 w-4" />
-              Aperçu vue client
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm font-medium text-red-700 dark:text-red-400">
+                <Eye className="h-4 w-4" />
+                Aperçu vue client
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs gap-1"
+                onClick={() => window.open(`/${shop.slug}`, '_blank')}
+              >
+                <ExternalLink className="h-3 w-3" />
+                Ouvrir
+              </Button>
             </div>
             <div className="rounded-lg bg-white dark:bg-gray-900 p-3 space-y-2 border">
               <div className="flex items-center gap-2">
@@ -216,12 +265,20 @@ export function LiveControls() {
                 </span>
                 <span className="text-sm font-bold text-red-600">🔴 EN DIRECT</span>
               </div>
+              {liveProduct.image && (
+                <img
+                  src={liveProduct.image}
+                  alt={liveProduct.name}
+                  className="w-full aspect-video object-cover rounded-lg"
+                />
+              )}
               <div className="text-sm font-semibold">{liveProduct.name}</div>
               <div className="text-sm text-muted-foreground">
                 {liveProduct.price?.toLocaleString('fr-FR')} FCFA
               </div>
               <div className="text-xs text-muted-foreground mt-1">
-                URL : <code className="text-xs bg-gray-100 dark:bg-gray-800 px-1 rounded">
+                URL :{' '}
+                <code className="text-xs bg-gray-100 dark:bg-gray-800 px-1 rounded">
                   {typeof window !== 'undefined' ? window.location.origin : 'https://boutiko.pro'}/{shop.slug}
                 </code>
               </div>

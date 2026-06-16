@@ -60,6 +60,7 @@ export async function GET(
       id: p.id,
       name: p.name,
       slug: p.slug,
+      shortDescription: p.shortDescription,
       description: p.description,
       price: p.price,
       image: p.image,

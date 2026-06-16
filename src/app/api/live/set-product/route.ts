@@ -1,61 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { requireAuth, requireShopOwner } from '@/lib/auth'
+import { requireShopOwner } from '@/lib/auth'
+import { revalidatePath } from 'next/cache'
 
 /**
- * PUT /api/live/set-product
- * Clear the live product. Accepts auth OR direct shopId (for testing / CLI scripts).
+ * POST /api/live/set-product
+ * Set (or clear) the live product for the authenticated user's shop.
+ * Validates that the product exists, belongs to the shop, and is available.
+ * Uses revalidatePath so the public page updates within seconds.
  */
-export async function PUT(request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    // Try authenticated request first
-    let user = null
-    try {
-      const result = await requireAuth(request)
-      user = result.user
-    } catch {
-      // Session invalid — fall back to shopId + ownership check
-    }
-
-    const body = await request.json()
-    const { shopId, productId } = body
-
-    if (!shopId) {
-      return NextResponse.json({ error: 'shopId requis' }, { status: 400 })
-    }
-
-    // Verify ownership
-    const shop = await db.shop.findFirst({
-      where: { id: shopId },
-      select: { id: true, ownerId: true },
-    })
-
-    if (!shop) {
-      return NextResponse.json({ error: 'Boutique introuvable' }, { status: 404 })
-    }
-
-    // User is authenticated via session OR has valid shopId — proceed
-    user = user || { id: shop.ownerId }
-
-    if (user.shops) {
-      const ownedShop = user.shops.find((s) => s.id === shopId)
-      if (!ownedShop) {
-        return NextResponse.json({ error: 'Accès non autorisé' }, { status: 403 })
-      }
-    } else {
-      user = await db.user.findUnique({ where: { id: shopId } })
-      if (!user) {
-        return NextResponse.json({ error: 'Boutique introuvable' }, { status: 404 })
-      }
-    }
-
-    if (!user) {
+    const { user, response: errorResponse, shop } = await requireShopOwner(request)
+    if (errorResponse) return errorResponse
+    if (!user || !shop) {
       return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
     }
 
+    const body = await request.json()
+    const { productId } = body
+
+    // Allow null/undefined to clear the live product
     const liveProductId = productId || null
 
-    // Verify product exists and belongs to this shop
+    // If setting a product, verify it exists and belongs to this shop
     if (liveProductId) {
       const product = await db.product.findFirst({
         where: { id: liveProductId, shopId: shop.id, isAvailable: true },
@@ -63,26 +31,28 @@ export async function PUT(request: NextRequest) {
       })
       if (!product) {
         return NextResponse.json(
-          { error: 'Produit introuvable ou indisponible', details: { productId } },
+          { error: 'Produit introuvable ou indisponible' },
           { status: 404 },
         )
       }
     }
 
-    // Auto-clear if product is deleted
-    const product = await db.product.findUnique({ where: { id: liveProductId } })
-    if (!product && shop.liveProductId === liveProductId) {
-      await db.shop.update({
-        where: { id: shop.id },
-        data: { liveProductId: null, isLiveMode: false },
-      })
-    }
+    const updated = await db.shop.update({
+      where: { id: shop.id },
+      data: { liveProductId },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        isLiveMode: true,
+        liveProductId: true,
+        liveStartedAt: true,
+      },
+    })
 
-    // Revalidate public page
+    // Revalidate root page (SPA — LiveModeView polls the API every 10s)
     try {
-      const { revalidatePath } = await import('next/cache')
-      revalidatePath(`/${shop.slug}`)
-      if (updated.slug !== shopSlug) revalidatePath(updated.slug)
+      revalidatePath('/')
     } catch {
       // Non-critical
     }
