@@ -12,6 +12,8 @@ type NotificationType =
   | 'UPGRADE_REQUEST'
   | 'SUSPENDED_USER'
   | 'SHOP_LIVE'
+  | 'SOCIAL_POST_PUBLISHED'
+  | 'SOCIAL_POST_FAILED'
 
 /**
  * Mapping of notification types to their SaaSConfig toggle fields.

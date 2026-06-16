@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Bell, ShoppingCart, Radio, Store, Package, AlertTriangle, Settings, UserPlus, X } from 'lucide-react'
+import { Bell, ShoppingCart, Radio, Store, Package, AlertTriangle, AlertCircle, Settings, UserPlus, X, Share2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -54,6 +54,10 @@ function getNotificationIcon(type: string) {
       return <Settings className="h-4 w-4 text-violet-500" />
     case 'NEW_SELLER':
       return <UserPlus className="h-4 w-4 text-sky-500" />
+    case 'SOCIAL_POST_PUBLISHED':
+      return <Share2 className="h-4 w-4 text-blue-500" />
+    case 'SOCIAL_POST_FAILED':
+      return <AlertCircle className="h-4 w-4 text-red-500" />
     default:
       return <AlertTriangle className="h-4 w-4 text-muted-foreground" />
   }

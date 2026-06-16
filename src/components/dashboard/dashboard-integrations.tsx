@@ -22,6 +22,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { FacebookStatus } from '@/components/integrations/facebook-status'
+import { SocialPublish } from './social-publish'
 import {
   Facebook,
   BarChart3,
@@ -46,7 +47,7 @@ import { toast } from 'sonner'
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
 
-type View = 'hub' | 'wizard' | 'catalog'
+type View = 'hub' | 'wizard' | 'catalog' | 'social'
 
 interface CatalogProduct {
   id: string
@@ -195,7 +196,7 @@ function HubView({ onOpen }: { onOpen: (id: string) => void }) {
 /*  3-STEP WIZARD VIEW                                                */
 /* ================================================================== */
 
-function WizardView({ onBack }: { onBack: () => void }) {
+function WizardView({ onBack, onOpenSocial }: { onBack: () => void; onOpenSocial: () => void }) {
   const shop = useAppStore((s) => s.shop)
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
@@ -535,6 +536,13 @@ function WizardView({ onBack }: { onBack: () => void }) {
                 {syncing ? <Loader2 className="size-4 mr-2 animate-spin" /> : <RefreshCw className="size-4 mr-2" />}
                 Forcer une synchro
               </Button>
+              <Button
+                className="flex-1 h-10"
+                onClick={onOpenSocial}
+              >
+                <ShoppingBag className="size-4 mr-2" />
+                Publier
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -691,7 +699,6 @@ function StatusCard({ label, value, good }: { label: string; value: string; good
 export function DashboardIntegrations() {
   const [view, setView] = useState<View>('hub')
 
-  // If already connected, and user opens facebook, go straight to wizard step 2
   const shop = useAppStore((s) => s.shop)
   const handleOpen = useCallback((id: string) => {
     if (id === 'facebook') {
@@ -699,7 +706,26 @@ export function DashboardIntegrations() {
     }
   }, [shop?.facebookConnected])
 
-  if (view === 'wizard') return <WizardView onBack={() => setView('hub')} />
+  const openSocial = useCallback(() => setView('social'), [])
+
+  if (view === 'social' && shop) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="sm" onClick={() => setView('wizard')}>
+            <ArrowLeft className="size-4 mr-1" /> Retour
+          </Button>
+        </div>
+        <SocialPublish
+          shopId={shop.id}
+          shopSlug={shop.slug}
+          facebookConnected={shop.facebookConnected ?? false}
+          facebookPageName={shop.facebookPageName ?? null}
+        />
+      </div>
+    )
+  }
+  if (view === 'wizard') return <WizardView onBack={() => setView('hub')} onOpenSocial={openSocial} />
   if (view === 'catalog') return <CatalogStatusView onBack={() => setView('hub')} />
 
   return <HubView onOpen={handleOpen} />

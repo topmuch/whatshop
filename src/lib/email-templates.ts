@@ -286,6 +286,92 @@ export function adminNewOrderEmail(data: AdminNewOrderEmailData): string {
   )
 }
 
+// ─── DAILY RECAP EMAIL ───────────────────────────────────────────────
+
+export interface DailyRecapData {
+  shopName: string
+  shopOwnerName: string
+  date: string
+  newOrders: number
+  totalRevenue: number
+  newViews: number
+  whatsappClicks: number
+  socialPosts: number
+  topProducts: { name: string; views: number; orders: number }[]
+  lowStockProducts: { name: string; stock: number }[]
+  dashboardUrl: string
+}
+
+export function dailyRecapEmail(data: DailyRecapData): string {
+  const productRows = data.topProducts.length > 0
+    ? `<table style="width:100%;border-collapse:collapse;margin:12px 0;">
+        <tr style="background:#f9fafb;">
+          <td style="padding:8px 10px;font-size:13px;font-weight:600;color:#111827;border-bottom:1px solid #e5e7eb;">Produit</td>
+          <td style="padding:8px 10px;font-size:13px;font-weight:600;color:#111827;border-bottom:1px solid #e5e7eb;text-align:center;">Vues</td>
+          <td style="padding:8px 10px;font-size:13px;font-weight:600;color:#111827;border-bottom:1px solid #e5e7eb;text-align:center;">Commandes</td>
+        </tr>
+        ${data.topProducts.map((p, i) => `
+        <tr style="${i % 2 === 0 ? '' : 'background:#f9fafb;'}">
+          <td style="padding:8px 10px;font-size:13px;color:#374151;border-bottom:1px solid #f3f4f6;">${esc(p.name)}</td>
+          <td style="padding:8px 10px;font-size:13px;color:#374151;border-bottom:1px solid #f3f4f6;text-align:center;">${p.views}</td>
+          <td style="padding:8px 10px;font-size:13px;color:#374151;border-bottom:1px solid #f3f4f6;text-align:center;">${p.orders}</td>
+        </tr>`).join('')}
+      </table>`
+    : '<p style="color:#6b7280;font-size:14px;">Aucune donnée produit disponible.</p>'
+
+  const lowStockHtml = data.lowStockProducts.length > 0
+    ? `<div class="warning">
+        <p style="margin:0 0 8px;font-weight:600;">Produits en stock faible :</p>
+        ${data.lowStockProducts.map(p => `<p style="margin:2px 0;font-size:13px;">• ${esc(p.name)} — <strong>${p.stock} en stock</strong></p>`).join('')}
+      </div>`
+    : ''
+
+  const statsHtml = `
+    <table style="width:100%;border-collapse:collapse;margin:16px 0;">
+      <tr>
+        <td style="width:50%;vertical-align:top;padding:12px;background:#f0fdf4;border-radius:8px 0 8px 0;">
+          <div style="font-size:24px;font-weight:700;color:#166534;">${data.newOrders}</div>
+          <div style="font-size:13px;color:#374151;">Nouvelles commandes</div>
+        </td>
+        <td style="width:50%;vertical-align:top;padding:12px;background:#f0fdf4;border-radius:0 8px 0 8px;">
+          <div style="font-size:24px;font-weight:700;color:#166534;">${data.totalRevenue.toLocaleString('fr-FR')} FCFA</div>
+          <div style="font-size:13px;color:#374151;">Chiffre d'affaires</div>
+        </td>
+      </tr>
+      <tr>
+        <td style="width:50%;vertical-align:top;padding:12px;">
+          <div style="font-size:20px;font-weight:600;color:#111827;">${data.newViews}</div>
+          <div style="font-size:13px;color:#6b7280;">Vues aujourd'hui</div>
+        </td>
+        <td style="width:50%;vertical-align:top;padding:12px;">
+          <div style="font-size:20px;font-weight:600;color:#111827;">${data.whatsappClicks}</div>
+          <div style="font-size:13px;color:#6b7280;">Clics WhatsApp</div>
+        </td>
+      </tr>
+      <tr>
+        <td style="width:50%;vertical-align:top;padding:12px;">
+          <div style="font-size:20px;font-weight:600;color:#111827;">${data.socialPosts}</div>
+          <div style="font-size:13px;color:#6b7280;">Publications RS</div>
+        </td>
+        <td style="width:50%;vertical-align:top;padding:12px;"></td>
+      </tr>
+    </table>`
+
+  const body = `
+    <p>Bonjour <strong>${esc(data.shopOwnerName)}</strong>,</p>
+    <p>Voici votre récapitulatif quotidien pour <strong>${esc(data.shopName)}</strong> du ${esc(data.date)}.</p>
+    ${statsHtml}
+    <h2>Produits les plus consultés</h2>
+    ${productRows}
+    ${lowStockHtml}
+    <div style="text-align:center;margin:24px 0 8px;">
+      <a href="${esc(data.dashboardUrl)}" class="button">Voir mon dashboard</a>
+    </div>
+  `
+
+  return wrap('Récapitulatif quotidien', data.shopName, body)
+}
+
 // ─── HELPERS ────────────────────────────────────────────────────────────
 
 function esc(str: string): string {

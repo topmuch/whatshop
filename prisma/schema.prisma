@@ -217,6 +217,7 @@ model Shop {
   contactMessages ContactMessage[]
   analyticsEvents AnalyticsEvent[]
   facebookEvents   FacebookEvent[]
+  socialPosts     SocialPost[]
 }
 
 // ─── CATEGORY ──────────────────────────────────────────────────────────────────
@@ -286,6 +287,7 @@ model Product {
   images      String   @default("[]") // JSON array of image URLs
   stock       Int?
   isAvailable Boolean  @default(true)
+  isFeatured  Boolean  @default(false) // Used by Smart Link /go/[slug]
   shopId      String
   categoryId  String?
 
@@ -299,6 +301,7 @@ model Product {
 
   shop     Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
   category Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  socialPosts SocialPost[]
 }
 
 // ─── ORDER ─────────────────────────────────────────────────────────────────────
@@ -582,5 +585,31 @@ model FacebookEvent {
 
   @@index([shopId])
   @@index([eventName])
+  @@index([createdAt])
+}
+
+// ─── SOCIAL POST (Facebook Publishing) ────────────────────────────────────
+
+model SocialPost {
+  id              String   @id @default(cuid())
+  shopId          String
+  platform        String   @default("FACEBOOK") // FACEBOOK | INSTAGRAM
+  productId       String?  // Product that was published
+  content         String   // Post text/message
+  imageUrl        String?  // Image attached
+  facebookPostId  String?  // ID returned by Graph API
+  status          String   @default("PUBLISHED") // PUBLISHED | FAILED
+  errorMessage    String?
+  likes           Int      @default(0)
+  comments        Int      @default(0)
+  shares          Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  shop    Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([shopId])
+  @@index([platform])
   @@index([createdAt])
 }
