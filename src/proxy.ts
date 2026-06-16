@@ -70,6 +70,22 @@ function withVisitorCookies(request: NextRequest, response: NextResponse): NextR
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
+  // ─── CUSTOM DOMAIN ROUTING ──────────────────────────────────────────
+  // If the host is not boutiko.pro (or localhost), it might be a custom domain
+  const host = request.headers.get('host')?.split(':')[0] || ''
+  const appHost = process.env.NEXT_PUBLIC_APP_URL
+    ? new URL(process.env.NEXT_PUBLIC_APP_URL).hostname
+    : 'boutiko.pro'
+
+  if (host !== appHost && host !== 'localhost' && host !== '127.0.0.1') {
+    // Custom domain → rewrite to server-side resolver page
+    const response = NextResponse.rewrite(
+      new URL(`/custom-domain/${host}${pathname}${request.nextUrl.search}`, request.url)
+    )
+    response.headers.set('x-custom-domain', host)
+    return withVisitorCookies(request, response)
+  }
+
   // Skip API routes, static files, and Next.js internals
   if (
     pathname.startsWith('/api') ||

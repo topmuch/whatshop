@@ -98,6 +98,7 @@ import {
   ArrowUpCircle,
   ShieldAlert,
   CheckCheck,
+  Server,
 } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { formatDistanceToNow } from 'date-fns'
@@ -246,6 +247,13 @@ interface PlatformConfig {
   businessPrice: number
   supportEmail: string
   senderName: string
+  smtpHost: string
+  smtpPort: number
+  smtpUser: string
+  smtpPass: string
+  emailFrom: string
+  emailFromName: string
+  smtpConfigured: boolean
   autoWelcomeEmail: boolean
   notifyNewSeller: boolean
   notifyNewOrder: boolean
@@ -2229,6 +2237,13 @@ function AdminConfig() {
     businessPrice: 0,
     supportEmail: 'contact@boutiko.pro',
     senderName: 'Boutiko',
+    smtpHost: '',
+    smtpPort: 587,
+    smtpUser: '',
+    smtpPass: '',
+    emailFrom: '',
+    emailFromName: 'Boutiko',
+    smtpConfigured: false,
     autoWelcomeEmail: true,
     notifyNewSeller: true,
     notifyNewOrder: true,
@@ -2240,6 +2255,8 @@ function AdminConfig() {
   const [savingConfig, setSavingConfig] = useState(false)
   const [loadingConfig, setLoadingConfig] = useState(true)
   const [savingNotif, setSavingNotif] = useState(false)
+  const [testingSmtp, setTestingSmtp] = useState(false)
+  const [smtpTestResult, setSmtpTestResult] = useState<{ success: boolean; message: string } | null>(null)
 
   // Promo codes state
   const [promoCodes, setPromoCodes] = useState<PromoCode[]>([])
@@ -2268,6 +2285,13 @@ function AdminConfig() {
             businessPrice: data.businessPrice ?? prev.businessPrice,
             supportEmail: data.supportEmail ?? prev.supportEmail,
             senderName: data.senderName ?? prev.senderName,
+            smtpHost: data.smtpHost ?? prev.smtpHost,
+            smtpPort: data.smtpPort ?? prev.smtpPort,
+            smtpUser: data.smtpUser ?? prev.smtpUser,
+            smtpPass: data.smtpPass ?? prev.smtpPass,
+            emailFrom: data.emailFrom ?? prev.emailFrom,
+            emailFromName: data.emailFromName ?? prev.emailFromName,
+            smtpConfigured: data.smtpConfigured ?? prev.smtpConfigured,
             autoWelcomeEmail: data.autoWelcomeEmail ?? prev.autoWelcomeEmail,
             notifyNewSeller: data.notifyNewSeller ?? prev.notifyNewSeller,
             notifyNewOrder: data.notifyNewOrder ?? prev.notifyNewOrder,
@@ -2363,6 +2387,13 @@ function AdminConfig() {
         body: JSON.stringify({
           supportEmail: config.supportEmail,
           senderName: config.senderName,
+          smtpHost: config.smtpHost,
+          smtpPort: config.smtpPort,
+          smtpUser: config.smtpUser,
+          smtpPass: config.smtpPass,
+          emailFrom: config.emailFrom,
+          emailFromName: config.emailFromName,
+          smtpConfigured: config.smtpConfigured,
           autoWelcomeEmail: config.autoWelcomeEmail,
           notifyNewSeller: config.notifyNewSeller,
           notifyNewOrder: config.notifyNewOrder,
@@ -2632,6 +2663,125 @@ function AdminConfig() {
                       />
                     </div>
                   </div>
+
+                  {/* SMTP Configuration */}
+                  <div className="mt-6 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-semibold flex items-center gap-2">
+                        <Server className="h-4 w-4 text-muted-foreground" />
+                        Configuration SMTP
+                      </h4>
+                      <Switch
+                        checked={config.smtpConfigured}
+                        onCheckedChange={(checked) => {
+                          setConfig(prev => ({ ...prev, smtpConfigured: checked }))
+                          setSmtpTestResult(null)
+                        }}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Activez pour utiliser les paramètres SMTP de la base de données au lieu des variables d&apos;environnement.
+                    </p>
+
+                    {config.smtpConfigured && (
+                      <div className="space-y-3">
+                        <div className="grid sm:grid-cols-2 gap-3">
+                          <div className="space-y-1.5">
+                            <Label htmlFor="smtp-host" className="text-xs">Hôte SMTP</Label>
+                            <Input
+                              id="smtp-host"
+                              placeholder="smtp.example.com"
+                              value={config.smtpHost}
+                              onChange={(e) => setConfig(prev => ({ ...prev, smtpHost: e.target.value }))}
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label htmlFor="smtp-port" className="text-xs">Port</Label>
+                            <Input
+                              id="smtp-port"
+                              type="number"
+                              value={config.smtpPort}
+                              onChange={(e) => setConfig(prev => ({ ...prev, smtpPort: parseInt(e.target.value) || 587 }))}
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label htmlFor="smtp-user" className="text-xs">Utilisateur SMTP</Label>
+                            <Input
+                              id="smtp-user"
+                              placeholder="user@example.com"
+                              value={config.smtpUser}
+                              onChange={(e) => setConfig(prev => ({ ...prev, smtpUser: e.target.value }))}
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label htmlFor="smtp-pass" className="text-xs">Mot de passe SMTP</Label>
+                            <Input
+                              id="smtp-pass"
+                              type="password"
+                              placeholder="••••••••"
+                              value={config.smtpPass}
+                              onChange={(e) => setConfig(prev => ({ ...prev, smtpPass: e.target.value }))}
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label htmlFor="email-from" className="text-xs">Email d&apos;expédition</Label>
+                            <Input
+                              id="email-from"
+                              type="email"
+                              placeholder="no-reply@boutiko.pro"
+                              value={config.emailFrom}
+                              onChange={(e) => setConfig(prev => ({ ...prev, emailFrom: e.target.value }))}
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label htmlFor="email-from-name" className="text-xs">Nom de l&apos;expéditeur</Label>
+                            <Input
+                              id="email-from-name"
+                              placeholder="Boutiko"
+                              value={config.emailFromName}
+                              onChange={(e) => setConfig(prev => ({ ...prev, emailFromName: e.target.value }))}
+                            />
+                          </div>
+                        </div>
+
+                        {/* SMTP Test */}
+                        <div className="flex items-center gap-3">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={async () => {
+                              setTestingSmtp(true)
+                              setSmtpTestResult(null)
+                              try {
+                                const res = await fetch('/api/admin/config/test-smtp', { method: 'POST' })
+                                const data = await res.json()
+                                setSmtpTestResult({ success: data.success, message: data.message })
+                              } catch {
+                                setSmtpTestResult({ success: false, message: 'Erreur de connexion' })
+                              } finally {
+                                setTestingSmtp(false)
+                              }
+                            }}
+                            disabled={testingSmtp || !config.smtpHost || !config.smtpUser}
+                            className="gap-2"
+                          >
+                            {testingSmtp ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Server className="h-4 w-4" />
+                            )}
+                            Tester la connexion
+                          </Button>
+                          {smtpTestResult && (
+                            <span className={`text-xs font-medium ${smtpTestResult.success ? 'text-green-600' : 'text-red-600'}`}>
+                              {smtpTestResult.success ? '✓' : '✗'} {smtpTestResult.message}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
                   <div className="flex items-center justify-between py-2">
                     <div className="space-y-0.5">
                       <Label htmlFor="auto-welcome">Réponse automatique aux nouveaux vendeurs</Label>

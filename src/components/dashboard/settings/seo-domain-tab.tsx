@@ -25,6 +25,7 @@ import {
   ChevronDown,
   Globe,
   Instagram,
+  RefreshCw,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -44,6 +45,8 @@ export function SeoDomainTab({ shop }: { shop: Shop | null }) {
   const [domainLoading, setDomainLoading] = useState(false)
   const [dnsOpen, setDnsOpen] = useState(false)
   const [domainInput, setDomainInput] = useState('')
+  const [dnsVerifying, setDnsVerifying] = useState(false)
+  const [dnsResult, setDnsResult] = useState<{ success: boolean; message: string } | null>(null)
 
   useEffect(() => {
     if (shop) {
@@ -296,13 +299,57 @@ export function SeoDomainTab({ shop }: { shop: Shop | null }) {
           )}
 
           {domainStatus === 'PENDING' && (
-            <div className="flex items-center gap-3 rounded-lg border border-yellow-200 bg-yellow-50 p-4">
-              <Clock className="h-5 w-5 text-yellow-600 flex-shrink-0" />
-              <div>
-                <p className="text-sm font-medium text-yellow-800">En attente de validation</p>
-                <p className="text-sm text-yellow-700">Votre domaine <span className="font-mono">{domainName}</span> est en cours de vérification.</p>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 rounded-lg border border-yellow-200 bg-yellow-50 p-4">
+                <Clock className="h-5 w-5 text-yellow-600 flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-yellow-800">En attente de validation</p>
+                  <p className="text-sm text-yellow-700">Votre domaine <span className="font-mono">{domainName}</span> est en cours de vérification.</p>
+                </div>
+                <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 flex-shrink-0">EN ATTENTE</Badge>
               </div>
-              <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 ml-auto flex-shrink-0">EN ATTENTE</Badge>
+
+              {/* DNS Verify Button */}
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={async () => {
+                    setDnsVerifying(true)
+                    setDnsResult(null)
+                    try {
+                      const res = await fetch('/api/settings/domain/verify-dns', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ domain: domainName }),
+                      })
+                      const data = await res.json()
+                      setDnsResult({ success: data.success, message: data.message })
+                    } catch {
+                      setDnsResult({ success: false, message: 'Erreur de connexion' })
+                    } finally {
+                      setDnsVerifying(false)
+                    }
+                  }}
+                  disabled={dnsVerifying || !domainName}
+                  className="gap-2"
+                >
+                  {dnsVerifying ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <RefreshCw className="h-4 w-4" />
+                  )}
+                  Vérifier le DNS
+                </Button>
+              </div>
+
+              {/* DNS Result */}
+              {dnsResult && (
+                <div className={`flex items-center gap-2 rounded-lg border p-3 text-sm ${dnsResult.success ? 'border-green-200 bg-green-50 text-green-800' : 'border-red-200 bg-red-50 text-red-800'}`}>
+                  {dnsResult.success ? <CheckCircle2 className="h-4 w-4 flex-shrink-0" /> : <XCircle className="h-4 w-4 flex-shrink-0" />}
+                  {dnsResult.message}
+                </div>
+              )}
             </div>
           )}
 

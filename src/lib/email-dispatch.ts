@@ -92,7 +92,7 @@ async function sellerHasPref(userId: string, prefKey: string): Promise<boolean> 
  * Send welcome email after onboarding (if autoWelcomeEmail is enabled).
  */
 export async function dispatchWelcomeEmail(data: WelcomeEmailData & { userId: string }): Promise<void> {
-  if (!isEmailConfigured()) return
+  if (!(await isEmailConfigured())) return
   try {
     const flags = await getSaaSConfigFlags()
     if (!flags.autoWelcomeEmail) return
@@ -119,7 +119,7 @@ export async function dispatchNewOrderEmail(
   shopOwnerId: string,
   data: Omit<NewOrderEmailData, 'shopOwnerName' | 'shopDashboardUrl'>
 ): Promise<void> {
-  if (!isEmailConfigured()) return
+  if (!(await isEmailConfigured())) return
   try {
     const hasPref = await sellerHasPref(shopOwnerId, 'newOrders')
     if (!hasPref) return
@@ -153,12 +153,12 @@ export async function dispatchNewOrderEmail(
  * Send new order email to admin (if notifyNewOrder is enabled).
  */
 export async function dispatchAdminNewOrderEmail(data: AdminNewOrderEmailData): Promise<void> {
-  if (!isEmailConfigured()) return
+  if (!(await isEmailConfigured())) return
   try {
     const flags = await getSaaSConfigFlags()
     if (!flags.notifyNewOrder) return
 
-    const supportEmail = getSupportEmail()
+    const supportEmail = await getSupportEmail()
     const html = adminNewOrderEmail(data)
     await sendEmail({
       to: supportEmail,
@@ -174,7 +174,7 @@ export async function dispatchAdminNewOrderEmail(data: AdminNewOrderEmailData): 
  * Send domain approval email to seller.
  */
 export async function dispatchDomainApprovedEmail(data: DomainApprovedEmailData & { ownerId: string }): Promise<void> {
-  if (!isEmailConfigured()) return
+  if (!(await isEmailConfigured())) return
   try {
     const email = await getSellerEmail(data.ownerId)
     if (!email) return
@@ -194,7 +194,7 @@ export async function dispatchDomainApprovedEmail(data: DomainApprovedEmailData 
  * Send domain rejection email to seller.
  */
 export async function dispatchDomainRejectedEmail(data: DomainRejectedEmailData & { ownerId: string }): Promise<void> {
-  if (!isEmailConfigured()) return
+  if (!(await isEmailConfigured())) return
   try {
     const email = await getSellerEmail(data.ownerId)
     if (!email) return
@@ -214,7 +214,7 @@ export async function dispatchDomainRejectedEmail(data: DomainRejectedEmailData 
  * Send shop activation email to seller (when admin activates a PRO shop).
  */
 export async function dispatchShopActivatedEmail(data: ShopActivatedEmailData & { userId: string }): Promise<void> {
-  if (!isEmailConfigured()) return
+  if (!(await isEmailConfigured())) return
   try {
     const email = await getSellerEmail(data.userId)
     if (!email) return
@@ -234,12 +234,12 @@ export async function dispatchShopActivatedEmail(data: ShopActivatedEmailData & 
  * Send new shop notification email to admin (if notifyNewSeller is enabled).
  */
 export async function dispatchAdminNewShopEmail(data: AdminNewShopEmailData): Promise<void> {
-  if (!isEmailConfigured()) return
+  if (!(await isEmailConfigured())) return
   try {
     const flags = await getSaaSConfigFlags()
     if (!flags.notifyNewSeller) return
 
-    const supportEmail = getSupportEmail()
+    const supportEmail = await getSupportEmail()
     const html = adminNewShopEmail(data)
     await sendEmail({
       to: supportEmail,

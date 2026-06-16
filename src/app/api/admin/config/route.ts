@@ -8,6 +8,8 @@ const CONFIG_FIELDS = [
   'supportEmail', 'senderName', 'autoWelcomeEmail',
   'notifyNewSeller', 'notifyNewOrder', 'notifyDomainRequest',
   'notifySupportTicket', 'weeklyReport', 'lowStockAlerts',
+  'smtpHost', 'smtpPort', 'smtpUser', 'smtpPass',
+  'emailFrom', 'emailFromName', 'smtpConfigured',
 ] as const
 
 function configToJson(config: any) {
@@ -24,6 +26,13 @@ function configToJson(config: any) {
     adminWhatsAppNumber: config.adminWhatsAppNumber,
     supportEmail: config.supportEmail,
     senderName: config.senderName,
+    smtpHost: config.smtpHost,
+    smtpPort: config.smtpPort,
+    smtpUser: config.smtpUser,
+    smtpPass: config.smtpPass,
+    emailFrom: config.emailFrom,
+    emailFromName: config.emailFromName,
+    smtpConfigured: config.smtpConfigured,
     autoWelcomeEmail: config.autoWelcomeEmail,
     notifyNewSeller: config.notifyNewSeller,
     notifyNewOrder: config.notifyNewOrder,

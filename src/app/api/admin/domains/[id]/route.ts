@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { verifyAdmin, adminUnauthorized } from '@/lib/admin-auth'
 import { dispatchDomainApprovedEmail, dispatchDomainRejectedEmail } from '@/lib/email-dispatch'
+import { verifyDomainDns } from '@/lib/dns-verify'
 
 export async function PATCH(
   request: NextRequest,
@@ -32,6 +33,15 @@ export async function PATCH(
     }
 
     if (action === 'approve') {
+      // Verify DNS before approving
+      const dnsResult = await verifyDomainDns(domainRequest.domain)
+      if (!dnsResult.success) {
+        return NextResponse.json({
+          error: `Vérification DNS échouée : ${dnsResult.message}`,
+          dnsResult,
+        }, { status: 400 })
+      }
+
       await db.$transaction([
         db.domainRequest.update({
           where: { id },
@@ -51,6 +61,12 @@ export async function PATCH(
           },
         }),
       ])
+
+      // Update DNS instructions with verification result
+      await db.domainRequest.update({
+        where: { id },
+        data: { dnsInstructions: dnsResult.message },
+      })
 
       // Fire-and-forget: email to seller
       try {

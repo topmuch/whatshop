@@ -1,13 +1,14 @@
 /**
  * email.ts — SMTP Email Service (Nodemailer)
  *
- * Uses SMTP configuration from environment variables.
- * Email sending failures are logged but never throw — they run as fire-and-forget.
+ * Priority: DB (SaaSConfig) → Environment variables
+ * SMTP not configured = emails silently disabled (never throws)
  */
 import nodemailer from 'nodemailer'
+import { db } from '@/lib/db'
 import { logger } from '@/lib/logger'
 
-// ─── LAZY CONFIG (no module-level env reads) ────────────────────────────
+// ─── CONFIG CACHE ───────────────────────────────────────────────────────
 
 interface SmtpConfig {
   host: string
@@ -17,25 +18,51 @@ interface SmtpConfig {
   pass: string
   fromName: string
   fromEmail: string
+  supportEmail: string
 }
 
-let _smtpConfig: SmtpConfig | null = null
-let _transporter: nodemailer.Transporter | null = null
+let _cachedConfig: SmtpConfig | null = null
+let _cachedAt = 0
+const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
 
-function getSmtpConfig(): SmtpConfig | null {
-  if (_smtpConfig !== null) return _smtpConfig
+async function getSmtpConfig(): Promise<SmtpConfig | null> {
+  const now = Date.now()
+  if (_cachedConfig && now - _cachedAt < CACHE_TTL) return _cachedConfig
 
+  // 1. Try DB config
+  try {
+    const config = await db.saaSConfig.findFirst({
+      select: {
+        smtpHost: true, smtpPort: true, smtpUser: true, smtpPass: true,
+        emailFrom: true, emailFromName: true, supportEmail: true,
+        smtpConfigured: true,
+      },
+    })
+    if (config?.smtpConfigured && config.smtpHost && config.smtpUser && config.smtpPass) {
+      _cachedConfig = {
+        host: config.smtpHost,
+        port: config.smtpPort || 587,
+        secure: (config.smtpPort || 587) === 465,
+        user: config.smtpUser,
+        pass: config.smtpPass,
+        fromName: config.emailFromName || 'Boutiko',
+        fromEmail: config.emailFrom || config.smtpUser,
+        supportEmail: config.supportEmail || config.smtpUser,
+      }
+      _cachedAt = now
+      return _cachedConfig
+    }
+  } catch { /* DB not ready yet */ }
+
+  // 2. Fallback to env vars
   const host = process.env.SMTP_HOST
   const port = parseInt(process.env.SMTP_PORT || '587', 10)
   const user = process.env.SMTP_USER
   const pass = process.env.SMTP_PASS
 
-  if (!host || !user || !pass) {
-    // SMTP not configured — email is disabled
-    return null
-  }
+  if (!host || !user || !pass) return null
 
-  _smtpConfig = {
+  _cachedConfig = {
     host,
     port,
     secure: port === 465,
@@ -43,32 +70,43 @@ function getSmtpConfig(): SmtpConfig | null {
     pass,
     fromName: process.env.EMAIL_FROM_NAME || 'Boutiko',
     fromEmail: process.env.EMAIL_FROM || user,
+    supportEmail: process.env.SUPPORT_EMAIL || process.env.EMAIL_FROM || 'support@boutiko.pro',
   }
-
-  return _smtpConfig
+  _cachedAt = now
+  return _cachedConfig
 }
 
-function getTransporter(): nodemailer.Transporter | null {
-  if (_transporter) return _transporter
+// ─── TRANSPORT ──────────────────────────────────────────────────────────
 
-  const config = getSmtpConfig()
+let _transporter: nodemailer.Transporter | null = null
+let _transporterKey = ''
+
+async function getTransporter(): Promise<nodemailer.Transporter | null> {
+  const config = await getSmtpConfig()
   if (!config) return null
+
+  const key = `${config.host}:${config.port}:${config.user}`
+  if (_transporter && _transporterKey === key) return _transporter
 
   _transporter = nodemailer.createTransport({
     host: config.host,
     port: config.port,
     secure: config.secure,
-    auth: {
-      user: config.user,
-      pass: config.pass,
-    },
-    // Connection timeout for slow networks (Africa)
+    auth: { user: config.user, pass: config.pass },
     connectionTimeout: 15_000,
     greetingTimeout: 10_000,
     socketTimeout: 30_000,
   })
-
+  _transporterKey = key
   return _transporter
+}
+
+/** Invalidate config cache (called when admin saves SMTP settings) */
+export function invalidateEmailCache(): void {
+  _cachedConfig = null
+  _cachedAt = 0
+  _transporter = null
+  _transporterKey = ''
 }
 
 // ─── PUBLIC API ─────────────────────────────────────────────────────────
@@ -80,18 +118,11 @@ export interface EmailOptions {
   replyTo?: string
 }
 
-/**
- * Send an email via SMTP. Returns true if sent, false if SMTP is not configured or failed.
- * Never throws — failures are logged.
- */
 export async function sendEmail(options: EmailOptions): Promise<boolean> {
-  const config = getSmtpConfig()
-  if (!config) {
-    logger.info('Email not sent: SMTP not configured', 'Email')
-    return false
-  }
+  const config = await getSmtpConfig()
+  if (!config) return false
 
-  const transporter = getTransporter()
+  const transporter = await getTransporter()
   if (!transporter) return false
 
   try {
@@ -110,16 +141,31 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
   }
 }
 
-/**
- * Check if SMTP is properly configured.
- */
-export function isEmailConfigured(): boolean {
-  return getSmtpConfig() !== null
+export async function isEmailConfigured(): Promise<boolean> {
+  const config = await getSmtpConfig()
+  return config !== null
+}
+
+export async function getSupportEmail(): Promise<string> {
+  const config = await getSmtpConfig()
+  return config?.supportEmail || 'support@boutiko.pro'
 }
 
 /**
- * Get the support email from SaaSConfig or env var.
+ * Test SMTP connection. Returns { success, message }.
  */
-export function getSupportEmail(): string {
-  return process.env.SUPPORT_EMAIL || process.env.EMAIL_FROM || 'support@boutiko.pro'
+export async function testSmtpConnection(): Promise<{ success: boolean; message: string }> {
+  try {
+    const config = await getSmtpConfig()
+    if (!config) return { success: false, message: 'SMTP non configuré' }
+
+    const transporter = await getTransporter()
+    if (!transporter) return { success: false, message: 'Impossible de créer le transport' }
+
+    await transporter.verify()
+    return { success: true, message: `Connexion réussie à ${config.host}:${config.port}` }
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : 'Erreur inconnue'
+    return { success: false, message: `Échec : ${msg}` }
+  }
 }
