@@ -83,6 +83,9 @@ export interface Shop {
   trackPageViews?: boolean
   trackProductViews?: boolean
   trackWhatsAppClicks?: boolean
+  // Restaurant menu QR
+  isRestaurant?: boolean
+  qrCodeUrl?: string
 }
 
 export interface Testimonial {

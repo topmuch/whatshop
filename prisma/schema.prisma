@@ -110,6 +110,8 @@ model Shop {
   trialEndDate          DateTime?
   businessType          String   @default("ECOMMERCE") // ECOMMERCE | SERVICE
   sector                String?  // ECOMMERCE: beaute, mode, electronique, alimentation, autre | SERVICE: beaute-service, restaurant, consulting, artisanat, sante
+  isRestaurant          Boolean  @default(false) // Activates menu QR code feature
+  qrCodeUrl             String?  // Stored SVG menu QR code (base64 or path)
   template              String   @default("xstore-electro")
   accentColor           String   @default("#10B981")
   isActive              Boolean  @default(true)

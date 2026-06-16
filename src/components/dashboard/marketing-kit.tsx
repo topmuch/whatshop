@@ -23,7 +23,9 @@ import {
   ImageIcon,
   CreditCard,
   Sparkles,
+  UtensilsCrossed,
 } from 'lucide-react'
+import { QRCodeDisplay } from './qr-code-display'
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -1396,6 +1398,10 @@ export function MarketingKit() {
             <QrCode className="h-4 w-4" />
             <span className="hidden sm:inline">QR Code</span>
           </TabsTrigger>
+          <TabsTrigger value="menu-qr" className="flex items-center gap-2">
+            <UtensilsCrossed className="h-4 w-4" />
+            <span className="hidden sm:inline">Menu QR</span>
+          </TabsTrigger>
           <TabsTrigger value="stories" className="flex items-center gap-2">
             <ImageIcon className="h-4 w-4" />
             <span className="hidden sm:inline">Stories</span>
@@ -1408,6 +1414,10 @@ export function MarketingKit() {
 
         <TabsContent value="qr" className="mt-6">
           <QRCodeTab />
+        </TabsContent>
+
+        <TabsContent value="menu-qr" className="mt-6">
+          <QRCodeDisplay />
         </TabsContent>
 
         <TabsContent value="stories" className="mt-6">

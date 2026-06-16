@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: false,
   },
   reactStrictMode: false,
+  turbopack: {},
   // Rewrite legacy /uploads/xxx URLs to /api/uploads/xxx
   async rewrites() {
     return [

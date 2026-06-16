@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { Check, Loader2, Store, Upload, Trash2, ImagePlus, LinkIcon } from 'lucide-react'
+import { Check, Loader2, Store, Upload, Trash2, ImagePlus, LinkIcon, UtensilsCrossed } from 'lucide-react'
 import { toast } from 'sonner'
 import { uploadFile } from './upload-file'
 
@@ -346,6 +346,53 @@ export function ShopInfoForm({ shop }: { shop: Shop | null }) {
           )}
           Enregistrer
         </Button>
+
+        {/* ═══ Restaurant Mode Toggle ═══ */}
+        <Card className="border-emerald-200 dark:border-emerald-800">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <UtensilsCrossed className="h-4 w-4 text-emerald-600" />
+              Mode Restaurant
+            </CardTitle>
+            <CardDescription className="text-xs">
+              Activez ce mode pour générer un QR code de menu digital. Vos clients pourront scanner le QR et commander directement via WhatsApp.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <label className="flex items-center justify-between cursor-pointer">
+              <span className="text-sm font-medium">Activer le mode restaurant</span>
+              <div className="relative">
+                <input
+                  type="checkbox"
+                  checked={shop.isRestaurant || false}
+                  onChange={async (e) => {
+                    const val = e.target.checked
+                    try {
+                      const res = await fetch('/api/shops', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: shop.id, isRestaurant: val }),
+                      })
+                      if (res.ok) {
+                        setShop({ ...shop, isRestaurant: val })
+                        toast.success(val ? 'Mode restaurant activé !' : 'Mode restaurant désactivé')
+                      }
+                    } catch {
+                      toast.error('Erreur de connexion')
+                    }
+                  }}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600" />
+              </div>
+            </label>
+            {shop.isRestaurant && (
+              <p className="text-xs text-emerald-600 mt-2">
+                Rendez-vous dans <strong>Kit Marketing → Menu QR</strong> pour générer votre QR code.
+              </p>
+            )}
+          </CardContent>
+        </Card>
       </CardContent>
     </Card>
   )
