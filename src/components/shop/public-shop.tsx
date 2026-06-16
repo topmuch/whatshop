@@ -38,6 +38,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { ShopHeroCarousel } from './shop-hero-carousel'
 import { TemplateProvider } from './template-provider'
 import { LiveShopFeatures } from './live-shop-features'
+import { LiveModeView } from './live-mode-view'
 import { ElectroShopPage } from './themes/electro-grid'
 import { ElectroTemplate } from '@/components/templates/electro'
 import { CosmikaTemplate } from '@/components/templates/cosmika'
@@ -616,6 +617,19 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
       {/* Decorative background pattern */}
       <DecorativeBackground pattern={decorative.pattern} gradientBg={decorative.gradientBg} />
 
+      {/* ─── Live Mode: Single Product Spotlight ─── */}
+      {publicShop?.isLiveMode ? (
+        <LiveModeView
+          shopId={publicShop.id}
+          shopSlug={publicShop.slug}
+          shopName={publicShop.name}
+          whatsapp={publicShop.whatsapp}
+          primaryColor={publicShop.primaryColor}
+          accentColor={publicShop.accentColor}
+          logo={publicShop.logo}
+        />
+      ) : (
+      <>
       {/* ─── TikTok Live Features (Banner, Flash Pin, Lead Capture) ─── */}
       <LiveShopFeatures />
 
@@ -1379,7 +1393,6 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
       />
     </motion.div>
   )
-}
 
 /* ─── Exported PublicShop (wraps with TemplateProvider) ─── */
 export function PublicShop({ initialProductSlug }: { initialProductSlug?: string }) {

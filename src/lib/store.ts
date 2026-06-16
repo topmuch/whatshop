@@ -86,6 +86,10 @@ export interface Shop {
   // Restaurant menu QR
   isRestaurant?: boolean
   qrCodeUrl?: string
+  // Live mode
+  isLiveMode?: boolean
+  liveProductId?: string
+  liveStartedAt?: string
 }
 
 export interface Testimonial {

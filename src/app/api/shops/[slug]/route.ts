@@ -48,6 +48,9 @@ export async function GET(
         testimonialsTagline: true,
         trustBadges: true,
         footerLinks: true,
+        // Live mode (safe for public)
+        isLiveMode: true,
+        liveProductId: true,
         // Internal fields removed from public API:
         // facebookPixelId, facebookCatalogId, catalogEnabled,
         // catalogProductCount, trackPageViews, trackProductViews, trackWhatsAppClicks

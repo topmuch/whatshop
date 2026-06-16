@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatPrice } from '@/lib/shared'
+import { LiveControls } from './live-controls'
 
 // ─── Sound Helper ─────────────────────────────────────────────────────────────
 
@@ -328,6 +329,9 @@ export function DashboardLive() {
       </header>
 
       <main className="p-4 sm:p-6 space-y-6 max-w-6xl mx-auto">
+        {/* ─── Simple Live Controls (Shop-level, no Socket.IO) ─── */}
+        <LiveControls />
+
         {/* ─── Pinned Product (prominently at top when live) ─── */}
         {isLive && pinnedProductId && (() => {
           const pinnedProduct = products.find((p) => p.id === pinnedProductId)

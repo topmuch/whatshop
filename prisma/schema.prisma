@@ -191,6 +191,11 @@ model Shop {
   catalogLastSync       DateTime?
   catalogProductCount   Int       @default(0)
 
+  // Live mode (simple: 1 product spotlight, no Socket.IO needed)
+  isLiveMode            Boolean  @default(false)
+  liveProductId         String?
+  liveStartedAt         DateTime?
+
   // Tracking configuration
   trackPageViews        Boolean   @default(true)
   trackProductViews     Boolean   @default(true)

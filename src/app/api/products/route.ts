@@ -235,6 +235,18 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Produit introuvable' }, { status: 404 })
     }
 
+    // If this product is the live product, clear it
+    const shop = await db.shop.findUnique({
+      where: { id: user.shop.id },
+      select: { id: true, isLiveMode: true, liveProductId: true },
+    })
+    if (shop && shop.isLiveMode && shop.liveProductId === id) {
+      await db.shop.update({
+        where: { id: shop.id },
+        data: { liveProductId: null },
+      })
+    }
+
     await db.product.delete({ where: { id } })
     return NextResponse.json({ success: true })
   } catch (error) {
