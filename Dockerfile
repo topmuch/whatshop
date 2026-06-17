@@ -18,6 +18,10 @@ RUN bunx prisma generate
 ENV NEXT_PUBLIC_BASE_URL=https://boutiko.pro
 ENV NEXT_PUBLIC_APP_URL=https://boutiko.pro
 ENV DATABASE_URL=file:/dev/null
+ENV NEXT_TELEMETRY_DISABLED=1
+# Webpack build of this large app (90+ routes) needs a generous heap to avoid
+# OOM-kills in memory-constrained Docker builders (e.g. Coolify).
+ENV NODE_OPTIONS=--max-old-space-size=4096
 RUN bun run build
 
 # ─── Production stage ───────────────────────────────────────

@@ -20,6 +20,9 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV DATABASE_URL=file:/app/data/boutiko.db
 ENV NEXT_PUBLIC_BASE_URL=https://boutiko.pro
 ENV NEXT_PUBLIC_APP_URL=https://boutiko.pro
+# Webpack build of this large app (90+ routes) needs a generous heap to avoid
+# OOM-kills in memory-constrained Docker builders (e.g. Coolify).
+ENV NODE_OPTIONS=--max-old-space-size=4096
 RUN bun run build
 
 # Create data + uploads directories
