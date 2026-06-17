@@ -3,9 +3,8 @@
 import { useState, useCallback } from 'react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, ShoppingCart, Menu, X, Phone, MessageCircle } from 'lucide-react'
+import { ShoppingCart, Menu, X, Phone, MessageCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import type { ThemeColors } from '@/lib/theme-config'
 import type { Shop } from '@/lib/store'
@@ -14,33 +13,24 @@ interface ElectroHeaderProps {
   colors: ThemeColors
   shop: Shop | null
   cartItemCount: number
-  showSearch: boolean
   isServiceMode: boolean
-  catalogLabel: string
+  onCartClick: () => void
   onAccueilClick: () => void
   onCatalogClick: () => void
   onContactClick: () => void
-  onCartClick: () => void
-  onSearchChange: (query: string) => void
-  searchQuery: string
 }
 
 export function ElectroHeader({
   colors,
   shop,
   cartItemCount,
-  showSearch,
   isServiceMode,
-  catalogLabel,
+  onCartClick,
   onAccueilClick,
   onCatalogClick,
   onContactClick,
-  onCartClick,
-  onSearchChange,
-  searchQuery,
 }: ElectroHeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
 
   const closeMobileMenu = useCallback(() => {
     setMobileMenuOpen(false)
@@ -56,7 +46,7 @@ export function ElectroHeader({
 
   const navItems = [
     { label: 'Accueil', onClick: onAccueilClick },
-    { label: catalogLabel, onClick: onCatalogClick },
+    { label: 'Catalogue', onClick: onCatalogClick },
     { label: 'Contact', onClick: onContactClick },
   ]
 
@@ -73,15 +63,15 @@ export function ElectroHeader({
       </div>
 
       <header
-        className="sticky top-0 z-50 bg-white shadow-md"
+        className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm"
         role="banner"
       >
-        <div className="max-w-[1400px] mx-auto px-4 lg:px-6">
-          <div className="flex items-center justify-between h-16 md:h-[70px]">
-            {/* ── Logo / Shop Name ── */}
+        <div className="max-w-7xl mx-auto px-4 lg:px-6">
+          <div className="flex items-center justify-between h-14 md:h-16">
+            {/* ── Logo (well-dimensioned uploaded logo) ── */}
             <button
-              onClick={() => handleNavClick(() => {})}
-              className="flex items-center gap-2.5 shrink-0 min-h-[44px] min-w-[44px]"
+              onClick={() => handleNavClick(onAccueilClick)}
+              className="flex items-center shrink-0 min-h-[44px] min-w-[44px]"
               aria-label="Retour à l'accueil"
             >
               {shop?.logo ? (
@@ -90,107 +80,48 @@ export function ElectroHeader({
                   alt={shop.name ?? 'Logo'}
                   width={200}
                   height={53}
-                  className="h-[53px] max-h-[53px] w-auto max-w-[200px] object-contain"
+                  className="h-10 md:h-12 w-auto max-w-[180px] md:max-w-[200px] object-contain"
                   priority
                 />
               ) : (
                 <div className="flex items-center gap-2.5">
                   <div
-                    className="flex items-center justify-center w-10 h-10 rounded-xl shrink-0 bg-black text-white"
+                    className="flex items-center justify-center w-9 h-9 rounded-lg shrink-0 bg-black text-white"
                   >
-                    <span className="text-lg font-bold">
+                    <span className="text-base font-bold">
                       {(shop?.name ?? 'B').charAt(0).toUpperCase()}
                     </span>
                   </div>
-                  <span
-                    className="text-base font-bold leading-tight max-w-[160px] truncate text-black"
-                  >
+                  <span className="text-base font-bold leading-tight max-w-[160px] truncate text-gray-900">
                     {shop?.name ?? 'Boutiko'}
                   </span>
                 </div>
               )}
             </button>
 
-            {/* ── Desktop Navigation ── */}
-            <nav
-              className="hidden md:flex items-center gap-1"
-              aria-label="Navigation principale"
-            >
-              {navItems.map((item) => (
-                <button
-                  key={item.label}
-                  onClick={() => handleNavClick(item.onClick)}
-                  className="px-4 py-2 text-sm font-semibold rounded-lg transition-colors duration-200 min-h-[44px] flex items-center text-black"
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = colors.primaryBg
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'transparent'
-                  }}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </nav>
-
-            {/* ── Right Section: Search + Cart + Mobile Toggle ── */}
+            {/* ── Right Section: Cart + Mobile Toggle ── */}
             <div className="flex items-center gap-2">
-              {/* Desktop Search */}
-              {showSearch && (
-                <div className="hidden md:flex items-center relative">
-                  <Search
-                    className="absolute left-3 size-4 pointer-events-none text-black"
-                    aria-hidden="true"
-                  />
-                  <Input
-                    type="search"
-                    placeholder="Rechercher..."
-                    value={searchQuery}
-                    onChange={(e) => onSearchChange(e.target.value)}
-                    className="pl-9 pr-4 h-10 w-[300px] rounded-lg border text-sm focus:ring-2"
-                    style={{
-                      borderColor: colors.primaryLight,
-                      '--tw-ring-color': colors.primary,
-                    } as React.CSSProperties}
-                    aria-label="Rechercher des produits"
-                  />
-                </div>
-              )}
-
               {/* Cart Button (e-commerce only) */}
               {!isServiceMode && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="relative h-11 w-11 rounded-lg transition-colors duration-200"
-                onClick={onCartClick}
-                aria-label={`Panier${cartItemCount > 0 ? `, ${cartItemCount} article${cartItemCount > 1 ? 's' : ''}` : ''}`}
-              >
-                <ShoppingCart className="size-5 text-black" />
-                {cartItemCount > 0 && (
-                  <Badge
-                    className="absolute -top-1 -right-1 h-5 min-w-[20px] flex items-center justify-center text-[10px] font-bold px-1 rounded-full border-2 border-white"
-                    style={{
-                      background: colors.primary,
-                      color: colors.ctaText,
-                    }}
-                  >
-                    {cartItemCount > 99 ? '99+' : cartItemCount}
-                  </Badge>
-                )}
-              </Button>
-              )}
-
-              {/* Mobile Search Toggle */}
-              {showSearch && (
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="md:hidden h-11 w-11 rounded-lg"
-                  onClick={() => setMobileSearchOpen((prev) => !prev)}
-                  aria-label="Rechercher"
+                  className="relative h-11 w-11 rounded-lg transition-colors duration-200"
+                  onClick={onCartClick}
+                  aria-label={`Panier${cartItemCount > 0 ? `, ${cartItemCount} article${cartItemCount > 1 ? 's' : ''}` : ''}`}
                 >
-                  <Search className="size-5 text-black" />
+                  <ShoppingCart className="size-5 text-gray-700" />
+                  {cartItemCount > 0 && (
+                    <Badge
+                      className="absolute -top-1 -right-1 h-5 min-w-[20px] flex items-center justify-center text-[10px] font-bold px-1 rounded-full border-2 border-white"
+                      style={{
+                        background: colors.primary,
+                        color: colors.ctaText,
+                      }}
+                    >
+                      {cartItemCount > 99 ? '99+' : cartItemCount}
+                    </Badge>
+                  )}
                 </Button>
               )}
 
@@ -205,50 +136,17 @@ export function ElectroHeader({
                 aria-controls="electro-mobile-menu"
               >
                 {mobileMenuOpen ? (
-                  <X className="size-5 text-black" />
+                  <X className="size-5 text-gray-700" />
                 ) : (
-                  <Menu className="size-5 text-black" />
+                  <Menu className="size-5 text-gray-700" />
                 )}
               </Button>
             </div>
           </div>
-
-          {/* ── Mobile Search Bar (collapsible) ── */}
-          <AnimatePresence>
-            {showSearch && mobileSearchOpen && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.2, ease: 'easeInOut' }}
-                className="md:hidden overflow-hidden"
-              >
-                <div className="pb-3 relative">
-                  <Search
-                    className="absolute left-3 top-1/2 -translate-y-1/2 size-4 pointer-events-none text-black"
-                    aria-hidden="true"
-                  />
-                  <Input
-                    type="search"
-                    placeholder="Rechercher..."
-                    value={searchQuery}
-                    onChange={(e) => onSearchChange(e.target.value)}
-                    className="pl-9 pr-4 h-11 w-full rounded-lg border text-sm focus:ring-2"
-                    style={{
-                      borderColor: colors.primaryLight,
-                      '--tw-ring-color': colors.primary,
-                    } as React.CSSProperties}
-                    autoFocus
-                    aria-label="Rechercher des produits"
-                  />
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
       </header>
 
-      {/* ── Mobile Slide-In Menu Overlay ── */}
+      {/* ── Mobile Slide-In Menu ── */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <>
@@ -277,12 +175,10 @@ export function ElectroHeader({
             >
               {/* Drawer Header */}
               <div
-                className="flex items-center justify-between px-5 h-16 shrink-0 border-b"
+                className="flex items-center justify-between px-5 h-14 shrink-0 border-b"
                 style={{ borderColor: colors.primaryLight }}
               >
-                <span
-                  className="text-base font-bold text-black"
-                >
+                <span className="text-base font-bold text-gray-900">
                   Menu
                 </span>
                 <Button
@@ -292,7 +188,7 @@ export function ElectroHeader({
                   onClick={closeMobileMenu}
                   aria-label="Fermer le menu"
                 >
-                  <X className="size-5 text-black" />
+                  <X className="size-5 text-gray-700" />
                 </Button>
               </div>
 
@@ -306,13 +202,7 @@ export function ElectroHeader({
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.05 * index, duration: 0.2 }}
                       onClick={() => handleNavClick(item.onClick)}
-                      className="flex items-center w-full px-4 py-3.5 text-sm font-semibold rounded-lg transition-colors duration-200 min-h-[44px] text-black"
-                      onTouchStart={(e) => {
-                        e.currentTarget.style.background = colors.primaryBg
-                      }}
-                      onTouchEnd={(e) => {
-                        e.currentTarget.style.background = 'transparent'
-                      }}
+                      className="flex items-center w-full px-4 py-3.5 text-sm font-semibold rounded-lg transition-colors duration-200 min-h-[44px] text-gray-900"
                       onMouseEnter={(e) => {
                         e.currentTarget.style.background = colors.primaryBg
                       }}
@@ -334,7 +224,7 @@ export function ElectroHeader({
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.2, duration: 0.2 }}
                         href={`tel:${shop.phone.replace(/\D/g, '')}`}
-                        className="flex items-center gap-3 w-full px-4 py-3.5 text-sm font-semibold rounded-lg transition-colors duration-200 min-h-[44px] text-black"
+                        className="flex items-center gap-3 w-full px-4 py-3.5 text-sm font-semibold rounded-lg transition-colors duration-200 min-h-[44px] text-gray-900"
                         onClick={closeMobileMenu}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.background = colors.primaryBg
@@ -355,7 +245,7 @@ export function ElectroHeader({
                         href={`https://wa.me/${shop.whatsapp.replace(/\D/g, '')}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-3 w-full px-4 py-3.5 text-sm font-semibold rounded-lg transition-colors duration-200 min-h-[44px] text-black"
+                        className="flex items-center gap-3 w-full px-4 py-3.5 text-sm font-semibold rounded-lg transition-colors duration-200 min-h-[44px] text-gray-900"
                         onClick={closeMobileMenu}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.background = colors.primaryBg
@@ -374,36 +264,36 @@ export function ElectroHeader({
 
               {/* Drawer Footer with Cart (e-commerce only) */}
               {!isServiceMode && (
-              <div
-                className="shrink-0 px-4 py-4 border-t"
-                style={{ borderColor: colors.primaryLight }}
-              >
-                <Button
-                  className="w-full h-12 rounded-lg font-semibold text-sm flex items-center justify-center gap-2"
-                  style={{
-                    background: colors.primary,
-                    color: colors.ctaText,
-                  }}
-                  onClick={() => {
-                    onCartClick()
-                    closeMobileMenu()
-                  }}
+                <div
+                  className="shrink-0 px-4 py-4 border-t"
+                  style={{ borderColor: colors.primaryLight }}
                 >
-                  <ShoppingCart className="size-4" />
-                  <span>Panier</span>
-                  {cartItemCount > 0 && (
-                    <Badge
-                      className="ml-1 h-5 min-w-[20px] flex items-center justify-center text-[10px] font-bold px-1.5 rounded-full"
-                      style={{
-                        background: colors.primaryDark,
-                        color: colors.ctaText,
-                      }}
-                    >
-                      {cartItemCount > 99 ? '99+' : cartItemCount}
-                    </Badge>
-                  )}
-                </Button>
-              </div>
+                  <Button
+                    className="w-full h-12 rounded-lg font-semibold text-sm flex items-center justify-center gap-2"
+                    style={{
+                      background: colors.primary,
+                      color: colors.ctaText,
+                    }}
+                    onClick={() => {
+                      onCartClick()
+                      closeMobileMenu()
+                    }}
+                  >
+                    <ShoppingCart className="size-4" />
+                    <span>Panier</span>
+                    {cartItemCount > 0 && (
+                      <Badge
+                        className="ml-1 h-5 min-w-[20px] flex items-center justify-center text-[10px] font-bold px-1.5 rounded-full"
+                        style={{
+                          background: colors.primaryDark,
+                          color: colors.ctaText,
+                        }}
+                      >
+                        {cartItemCount > 99 ? '99+' : cartItemCount}
+                      </Badge>
+                    )}
+                  </Button>
+                </div>
               )}
             </motion.div>
           </>

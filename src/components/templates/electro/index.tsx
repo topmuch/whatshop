@@ -711,7 +711,7 @@ export function ElectroTemplate() {
   } = useAppStore()
 
   const [loading, setLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState('')
+  const [searchQuery, setSearchQuery] = useState('') // kept for SortBar filtering compatibility
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [sortBy, setSortBy] = useState<SortOption>('recent')
   const [cartExpanded, setCartExpanded] = useState(false)
@@ -935,15 +935,11 @@ export function ElectroTemplate() {
         colors={colors}
         shop={publicShop}
         cartItemCount={itemCount}
-        showSearch={showSearch}
         isServiceMode={isServiceMode}
-        catalogLabel={navLabels.catalog}
         onAccueilClick={handleNavAccueil}
         onCatalogClick={handleNavCatalog}
         onContactClick={handleContact}
         onCartClick={() => cart.length > 0 && setCartExpanded(!cartExpanded)}
-        onSearchChange={setSearchQuery}
-        searchQuery={searchQuery}
       />
 
       <main className="flex-1">
@@ -983,11 +979,8 @@ export function ElectroTemplate() {
                 colors={colors}
                 hero={heroConfig}
                 shop={publicShop}
-                ctaText={heroCtaText}
                 isServiceMode={isServiceMode}
                 showConsultantPhoto={heroConfig.showConsultantPhoto}
-                onCtaClick={handleHeroCta}
-                onCatalogClick={handleHeroCatalog}
               />
 
               {/* ═══ CATEGORIES ═══ */}
