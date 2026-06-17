@@ -1,5 +1,6 @@
 import { db } from '@/lib/db'
-import { Metadata, notFound } from 'next'
+import { Metadata } from 'next'
+import { notFound } from 'next/navigation'
 import { JsonLdServer, type ShopSeoData } from '@/components/seo/json-ld-server'
 import { ShopPageBootstrap } from '@/components/shop/shop-page-bootstrap'
 
@@ -152,7 +153,7 @@ export default async function BoutiquePage({ params, searchParams }: PageProps) 
   })
 
   if (!shop) {
-    notFound()
+    return notFound()
   }
 
   // Build SEO data for JSON-LD (transform Prisma types)

@@ -160,7 +160,7 @@ export default function JsonLd({ shop, products = [], categories = [] }: JsonLdP
 
     setMeta('property', 'og:title', title)
     setMeta('property', 'og:description', ogDesc)
-    const ogImage = (shop as Record<string, unknown>).ogImage as string | undefined
+    const ogImage = (shop as unknown as Record<string, unknown>).ogImage as string | undefined
       || shop.banner || shop.logo || undefined
     setMeta('property', 'og:url', `https://boutiko.pro/${shop.slug}`)
     if (ogImage) {

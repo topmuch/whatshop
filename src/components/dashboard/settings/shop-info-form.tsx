@@ -130,6 +130,8 @@ export function ShopInfoForm({ shop }: { shop: Shop | null }) {
     }
   }
 
+  if (!shop) return null
+
   return (
     <Card>
       <CardHeader>

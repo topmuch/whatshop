@@ -1,5 +1,6 @@
 import { db } from '@/lib/db'
-import { Metadata, notFound } from 'next'
+import { Metadata } from 'next'
+import { notFound } from 'next/navigation'
 import { JsonLdServer, type ShopSeoData } from '@/components/seo/json-ld-server'
 import { ShopPageBootstrap } from '@/components/shop/shop-page-bootstrap'
 
@@ -120,7 +121,7 @@ export default async function ProductPage({ params }: PageProps) {
   })
 
   if (!product) {
-    notFound()
+    return notFound()
   }
 
   // Fetch shop data for JSON-LD (Product schema this time)
@@ -147,10 +148,26 @@ export default async function ProductPage({ params }: PageProps) {
   })
 
   if (!shop) {
-    notFound()
+    return notFound()
   }
 
-  const seoData: ShopSeoData = { ...shop }
+  const seoData: ShopSeoData = {
+    name: shop.name!,
+    slug: shop.slug!,
+    description: shop.description,
+    logo: shop.logo,
+    banner: shop.banner,
+    whatsapp: shop.whatsapp ?? '',
+    address: shop.address,
+    phone: shop.phone,
+    sector: shop.sector,
+    businessHours: shop.businessHours,
+    seoTitle: shop.seoTitle,
+    seoDescription: shop.seoDescription,
+    ogImage: shop.ogImage,
+    coverImageUrl: shop.coverImageUrl,
+    contactEmail: shop.contactEmail,
+  }
   const shopUrl = `${BASE_URL}/boutique/${shopSlug}`
 
   return (

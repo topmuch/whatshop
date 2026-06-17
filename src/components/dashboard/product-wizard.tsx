@@ -762,7 +762,7 @@ export function ProductWizard({
                           {watched.price != null ? watched.price.toLocaleString('fr-FR') : '—'} FCFA
                         </p>
                       </div>
-                      {watched.compareAtPrice != null && watched.compareAtPrice > 0 && (
+                      {typeof watched.compareAtPrice === 'number' && watched.compareAtPrice > 0 && (
                         <div>
                           <span className="text-xs text-muted-foreground">Prix barré</span>
                           <p className="text-lg font-bold text-muted-foreground line-through">

@@ -42,7 +42,7 @@ export function CheckoutForm({ open, onOpenChange, onSuccess }: CheckoutFormProp
   } = useAppStore()
 
   const [step, setStep] = useState<FormStep>('form')
-  const [submitting, submittingFinish, setSubmitting] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
   const [orderId, setOrderId] = useState<string | null>(null)
 

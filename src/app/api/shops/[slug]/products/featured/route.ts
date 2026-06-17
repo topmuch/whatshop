@@ -4,10 +4,20 @@ import { requireShopOwner } from '@/lib/auth'
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ shopId: string }> }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const { shopId } = await params
+    const { slug } = await params
+
+    // Look up the shop by slug to get the shopId
+    const shop = await db.shop.findUnique({
+      where: { slug },
+      select: { id: true },
+    })
+    if (!shop) {
+      return NextResponse.json({ error: 'Boutique introuvable' }, { status: 404 })
+    }
+    const shopId = shop.id
     const { user, response: authError } = await requireShopOwner(request, shopId)
     if (authError) return authError
 

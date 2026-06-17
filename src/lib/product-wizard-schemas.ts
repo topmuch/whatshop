@@ -27,14 +27,10 @@ export const step2Schema = z.object({
   image: z.string().min(1, 'Ajoutez au moins une image principale'),
   description: z
     .string()
-    .max(2000, 'La description ne peut pas dépasser 2000 caractères')
-    .optional()
-    .default(''),
+    .max(2000, 'La description ne peut pas dépasser 2000 caractères'),
   images: z
     .array(z.string())
-    .max(9, 'Maximum 9 photos supplémentaires')
-    .optional()
-    .default([]),
+    .max(9, 'Maximum 9 photos supplémentaires'),
 })
 
 export type Step2Input = z.infer<typeof step2Schema>
@@ -43,7 +39,7 @@ export type Step2Input = z.infer<typeof step2Schema>
 
 export const step3Schema = z.object({
   price: z
-    .number({ invalid_type_error: 'Entrez un prix valide' })
+    .number({ message: 'Entrez un prix valide' })
     .positive('Le prix doit être supérieur à 0')
     .max(99_999_999, 'Prix trop élevé'),
   compareAtPrice: z
@@ -54,7 +50,7 @@ export const step3Schema = z.object({
     .or(z.literal(undefined))
     .or(z.literal('')),
   stock: z
-    .number({ invalid_type_error: 'Entrez une quantité valide' })
+    .number({ message: 'Entrez une quantité valide' })
     .int('La quantité doit être un nombre entier')
     .min(0, 'Le stock ne peut pas être négatif')
     .max(999_999, 'Quantité trop élevée')
