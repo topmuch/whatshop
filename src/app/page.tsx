@@ -212,6 +212,17 @@ export default function Home() {
             if (data.shops) setShops(data.shops)
             if (data.shop) setShop(data.shop)
 
+            // Re-resolve the current view from the REAL URL (not the stale
+            // hydration value captured in `urlView`). During hydration the
+            // pathname snapshot is "/", so urlView.view is "landing" even when
+            // the user actually opened a public shop URL (e.g. via the
+            // "Voir ma boutique" link). By the time this async fetch resolves,
+            // window.location.pathname is guaranteed to be the real one.
+            // If the user is viewing a public shop page, do NOT redirect them
+            // to the dashboard — let the shop page render.
+            const currentView = resolveViewFromPath(window.location.pathname).view
+            if (currentView === 'shop') return
+
             // Route based on role
             if (data.user.role === 'ADMIN' || data.user.role === 'SUPER_ADMIN') {
               setView('admin')
