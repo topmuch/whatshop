@@ -117,6 +117,10 @@ model Shop {
   isActive              Boolean  @default(true)
   ownerId               String   // NO @unique — allows multiple shops per user
 
+  // Template Single Product Landing Page
+  templateType          String   @default("STANDARD") // STANDARD | SINGLE_PRODUCT
+  singleProductConfig   String?  // JSON: { productId, countdownEnd, countdownEnabled, benefits[], faqIds[], crossSellProductIds[] }
+
   // SEO & Open Graph
   seoTitle              String?
   seoDescription        String?
@@ -225,6 +229,7 @@ model Shop {
   analyticsEvents AnalyticsEvent[]
   facebookEvents   FacebookEvent[]
   socialPosts     SocialPost[]
+  faqs            FAQ[]
 }
 
 // ─── CATEGORY ──────────────────────────────────────────────────────────────────
@@ -311,6 +316,9 @@ model Product {
   category Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   socialPosts SocialPost[]
   orderItems OrderItem[]
+  productImages ProductImage[]
+  productVariants ProductVariant[]
+  reviews Review[]
 }
 
 // ─── ORDER ─────────────────────────────────────────────────────────────────────
@@ -642,4 +650,57 @@ model SocialPost {
   @@index([shopId])
   @@index([platform])
   @@index([createdAt])
+}
+// ─── SINGLE PRODUCT LANDING PAGE (template mono-produit) ──────────────────────
+
+model ProductImage {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([productId])
+}
+
+model ProductVariant {
+  id          String   @id @default(cuid())
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  type        String   // COLOR | SIZE
+  name        String   // "Rouge", "XL", etc.
+  priceOffset Int      @default(0) // Différence de prix appliquée au prix de base
+  stock       Int      @default(0)
+
+  @@index([productId])
+}
+
+model Review {
+  id           String   @id @default(cuid())
+  productId    String
+  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  customerName String
+  rating       Int
+  comment      String?  // @db.Text non supporté par SQLite → String classique
+  photos       String   @default("[]") // JSON array d'URLs (pas de String[] sous SQLite)
+  source       String   @default("MANUAL") // MANUAL | FACEBOOK | TIKTOK
+  verified     Boolean  @default(false)
+  status       String   @default("PENDING") // PENDING | PUBLISHED | REJECTED
+  createdAt    DateTime @default(now())
+
+  @@index([productId])
+  @@index([source])
+  @@index([status])
+}
+
+model FAQ {
+  id        String   @id @default(cuid())
+  shopId    String
+  shop      Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  question  String
+  answer    String   // @db.Text non supporté par SQLite → String classique
+  order     Int      @default(0)
+
+  @@index([shopId])
 }

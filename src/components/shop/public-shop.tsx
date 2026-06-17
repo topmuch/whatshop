@@ -43,6 +43,7 @@ import { ElectroShopPage } from './themes/electro-grid'
 import { ElectroTemplate } from '@/components/templates/electro'
 import { CosmikaTemplate } from '@/components/templates/cosmika'
 import { ElegancePlusTemplate } from '@/components/templates/elegance-plus'
+import { SingleProductTemplate } from '@/components/single-product/single-product-template'
 import JsonLd from '@/components/seo/json-ld'
 import { CosmikaBeautyShopPage } from './themes/cosmika-beauty-grid'
 import { ShippingZoneSelector } from './shipping-zone-selector'
@@ -553,6 +554,14 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
         logo={publicShop.logo}
       />
     )
+  }
+
+  // ── Single Product Landing Page template ──
+  // When the shop has templateType = SINGLE_PRODUCT, render the dedicated
+  // mono-product landing page (optimized for conversion). Must come after
+  // the live-mode check (live takes priority) but before the other templates.
+  if (publicShop?.templateType === 'SINGLE_PRODUCT') {
+    return <SingleProductTemplate />
   }
 
   // ── Full-page custom templates render their own complete layout ──

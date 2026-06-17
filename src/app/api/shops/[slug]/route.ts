@@ -57,6 +57,9 @@ export async function GET(
         // Live mode (safe for public)
         isLiveMode: true,
         liveProductId: true,
+        // Single Product Landing Page template (safe for public)
+        templateType: true,
+        singleProductConfig: true,
         // Internal fields removed from public API:
         // facebookPixelId, facebookCatalogId, catalogEnabled,
         // catalogProductCount, trackPageViews, trackProductViews, trackWhatsAppClicks
