@@ -200,13 +200,46 @@ export function DashboardLive() {
   }, [isLive, endTime, startTime])
 
   // ── Actions ──
+
+  // Persist live mode to the database via the API so the public shop
+  // (which reads /api/shops/[slug]) shows the LiveModeView. The Socket.IO
+  // events handle real-time features (viewer count, clicks) but the DB is
+  // the source of truth for whether live mode is active.
+  async function persistLiveState(isActive: boolean, productId?: string | null) {
+    try {
+      await fetch('/api/live/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive }),
+      })
+      if (isActive && productId) {
+        await fetch('/api/live/set-product', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productId }),
+        })
+      }
+    } catch {
+      // Non-critical: Socket.IO state still works locally
+    }
+  }
+
   function handleToggleLive() {
-    if (!socketRef.current) return
-    if (!isLive) {
-      // Start live for 30 minutes
+    if (isLive) {
+      // ── Stop live ──
+      socketRef.current?.emit('live:toggle', { isLive: false })
+      setIsLive(false)
+      setEndTime(null)
+      setStartTime(null)
+      setPinnedProductId(null)
+      setPromoCode(null)
+      persistLiveState(false)
+      toast.info('Live arrêté.')
+    } else {
+      // ── Start live for 30 minutes ──
       const newEnd = Date.now() + 30 * 60 * 1000
       const newStart = Date.now()
-      socketRef.current.emit('live:toggle', { isLive: true, endTime: newEnd, startTime: newStart })
+      socketRef.current?.emit('live:toggle', { isLive: true, endTime: newEnd, startTime: newStart })
       setEndTime(newEnd)
       setStartTime(newStart)
       setIsLive(true)
@@ -215,19 +248,15 @@ export function DashboardLive() {
       setPromoCode(null)
       // Auto-pin first available product
       const firstAvailable = productsRef.current.find((p) => p.isAvailable && (p.image || (p.images && p.images[0])))
+      let pinnedId: string | null = null
       if (firstAvailable) {
+        pinnedId = firstAvailable.id
         setPinnedProductId(firstAvailable.id)
-        socketRef.current.emit('live:pin', { productId: firstAvailable.id })
+        socketRef.current?.emit('live:pin', { productId: firstAvailable.id })
       }
+      // Persist to DB so the public shop shows LiveModeView
+      persistLiveState(true, pinnedId)
       toast.success('Live démarré !')
-    } else {
-      socketRef.current.emit('live:toggle', { isLive: false })
-      setIsLive(false)
-      setEndTime(null)
-      setStartTime(null)
-      setPinnedProductId(null)
-      setPromoCode(null)
-      toast.info('Live arrêté.')
     }
   }
 
@@ -240,10 +269,15 @@ export function DashboardLive() {
   }
 
   function handlePinProduct(productId: string) {
-    if (!socketRef.current) return
     const newPinned = pinnedProductIdRef.current === productId ? null : productId
-    socketRef.current.emit('live:pin', { productId: newPinned })
+    socketRef.current?.emit('live:pin', { productId: newPinned })
     setPinnedProductId(newPinned)
+    // Persist pinned product to DB so LiveModeView shows the right product
+    fetch('/api/live/set-product', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ productId: newPinned || null }),
+    }).catch(() => {})
   }
 
   function handleOutOfStock(productId: string) {

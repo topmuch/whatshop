@@ -535,6 +535,26 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
     return icons[template.id] || <Store className="h-5 w-5" />
   }, [template.id])
 
+  // ── Live Mode takes priority over ALL templates ──
+  // When the seller activates TikTok live mode, the public shop must show
+  // the single-product spotlight (LiveModeView) regardless of which template
+  // the shop uses. This check MUST come before the template early returns
+  // below, otherwise custom templates (xstore-electro, cosmika-beauty,
+  // elegance-plus) would render their normal layout and ignore live mode.
+  if (publicShop?.isLiveMode) {
+    return (
+      <LiveModeView
+        shopId={publicShop.id}
+        shopSlug={publicShop.slug}
+        shopName={publicShop.name}
+        whatsapp={publicShop.whatsapp}
+        primaryColor={publicShop.primaryColor}
+        accentColor={publicShop.accentColor}
+        logo={publicShop.logo}
+      />
+    )
+  }
+
   // ── Full-page custom templates render their own complete layout ──
   // Early returns after ALL hooks to satisfy React rules-of-hooks.
   if (template.id === 'xstore-electro') {
@@ -617,19 +637,6 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
       {/* Decorative background pattern */}
       <DecorativeBackground pattern={decorative.pattern} gradientBg={decorative.gradientBg} />
 
-      {/* ─── Live Mode: Single Product Spotlight ─── */}
-      {publicShop?.isLiveMode ? (
-        <LiveModeView
-          shopId={publicShop.id}
-          shopSlug={publicShop.slug}
-          shopName={publicShop.name}
-          whatsapp={publicShop.whatsapp}
-          primaryColor={publicShop.primaryColor}
-          accentColor={publicShop.accentColor}
-          logo={publicShop.logo}
-        />
-      ) : (
-      <>
       {/* ─── TikTok Live Features (Banner, Flash Pin, Lead Capture) ─── */}
       <LiveShopFeatures />
 
@@ -1392,8 +1399,6 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
           setCartExpanded(false)
         }}
       />
-      </>
-    )}
     </motion.div>
   )
 }
