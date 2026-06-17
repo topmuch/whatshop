@@ -1,6 +1,6 @@
 'use client'
 
-import { Truck, ShieldCheck, RotateCcw, BadgeCheck, Headphones, Wallet } from 'lucide-react'
+import { Truck, ShieldCheck, RotateCcw, BadgeCheck, Headphones, Wallet, Package, Clock } from 'lucide-react'
 
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   Truck,
@@ -9,6 +9,8 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   BadgeCheck,
   Headphones,
   Wallet,
+  Package,
+  Clock,
 }
 
 export interface TrustBadgeItem {
@@ -20,22 +22,21 @@ export interface TrustBadgeItem {
 export function TrustBadges({ badges, accent }: { badges: TrustBadgeItem[]; accent: string }) {
   if (!badges.length) return null
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+    <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
       {badges.map((b, i) => {
         const Icon = ICONS[b.icon] || ShieldCheck
         return (
-          <div
-            key={i}
-            className="flex flex-col items-center gap-1.5 rounded-2xl border border-gray-100 bg-white p-4 text-center shadow-sm"
-          >
+          <div key={i} className="flex flex-col items-center gap-2 text-center">
             <div
-              className="flex h-10 w-10 items-center justify-center rounded-full"
-              style={{ backgroundColor: `${accent}15`, color: accent }}
+              className="flex h-12 w-12 items-center justify-center rounded-full"
+              style={{ backgroundColor: `${accent}12`, color: accent }}
             >
-              <Icon className="h-5 w-5" />
+              <Icon className="h-6 w-6" />
             </div>
-            <p className="text-sm font-semibold text-gray-900">{b.title}</p>
-            <p className="text-xs text-gray-500">{b.description}</p>
+            <div>
+              <p className="text-sm font-bold text-gray-900">{b.title}</p>
+              <p className="mt-0.5 text-xs text-gray-500">{b.description}</p>
+            </div>
           </div>
         )
       })}

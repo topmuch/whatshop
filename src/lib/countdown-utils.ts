@@ -7,6 +7,7 @@
  */
 
 export interface TimeRemaining {
+  days: number
   hours: number
   minutes: number
   seconds: number
@@ -40,7 +41,8 @@ export function getTimeRemaining(
   const totalSeconds = Math.max(0, Math.floor(diffMs / 1000))
 
   return {
-    hours: Math.floor(totalSeconds / 3600),
+    days: Math.floor(totalSeconds / 86400),
+    hours: Math.floor((totalSeconds % 86400) / 3600),
     minutes: Math.floor((totalSeconds % 3600) / 60),
     seconds: totalSeconds % 60,
     totalSeconds,
@@ -78,7 +80,8 @@ export function resolveCountdown(
     if (!isNaN(target.getTime()) && target.getTime() > now.getTime()) {
       const totalSeconds = Math.max(0, Math.floor((target.getTime() - now.getTime()) / 1000))
       return {
-        hours: Math.floor(totalSeconds / 3600),
+        days: Math.floor(totalSeconds / 86400),
+        hours: Math.floor((totalSeconds % 86400) / 3600),
         minutes: Math.floor((totalSeconds % 3600) / 60),
         seconds: totalSeconds % 60,
         totalSeconds,

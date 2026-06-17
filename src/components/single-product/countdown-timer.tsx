@@ -1,8 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Clock, Flame } from 'lucide-react'
-import { resolveCountdown, formatCountdown, formatCountdownCompact, type TimeRemaining } from '@/lib/countdown-utils'
+import { resolveCountdown, type TimeRemaining } from '@/lib/countdown-utils'
 
 interface CountdownTimerProps {
   enabled: boolean
@@ -35,24 +34,54 @@ export function CountdownTimer({
   if (!enabled || !time || time.isExpired) return null
 
   if (compact) {
+    const parts: string[] = []
+    if (time.days > 0) parts.push(`${time.days}j`)
+    parts.push(`${String(time.hours).padStart(2, '0')}h`)
+    parts.push(`${String(time.minutes).padStart(2, '0')}m`)
+    parts.push(`${String(time.seconds).padStart(2, '0')}s`)
     return (
       <span className="flex items-center gap-1 text-xs font-bold tabular-nums text-red-600">
-        <Flame className="h-3 w-3" />
-        {formatCountdownCompact(time)}
+        {parts.join(' ')}
       </span>
     )
   }
 
+  const units = [
+    { label: 'Jours', value: time.days },
+    { label: 'Heures', value: time.hours },
+    { label: 'Min', value: time.minutes },
+    { label: 'Sec', value: time.seconds },
+  ]
+
   return (
-    <div className="flex items-center gap-2 rounded-2xl bg-red-50 px-4 py-3" role="timer" aria-live="polite">
-      <Clock className="h-5 w-5 text-red-600" />
-      <div className="flex flex-col">
-        <span className="text-xs font-medium uppercase tracking-wide text-red-500">
-          Offre se termine dans
+    <div className="w-full" role="timer" aria-live="polite">
+      {/* Headline */}
+      <div className="mb-3 flex items-center gap-2">
+        <span
+          className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-white"
+          style={{ backgroundColor: accent }}
+        >
+          Offre de lancement
         </span>
-        <span className="text-2xl font-black tabular-nums text-red-600 sm:text-3xl">
-          {formatCountdown(time)}
-        </span>
+        <p className="text-sm font-medium text-gray-600">
+          Le prix de lancement se termine dans
+        </p>
+      </div>
+      {/* 4 unités */}
+      <div className="grid grid-cols-4 gap-2 sm:gap-3">
+        {units.map((u, i) => (
+          <div
+            key={i}
+            className="flex flex-col items-center justify-center rounded-2xl bg-gray-900 py-3 sm:py-4"
+          >
+            <span className="text-2xl font-black tabular-nums text-white sm:text-4xl">
+              {String(u.value).padStart(2, '0')}
+            </span>
+            <span className="mt-0.5 text-[10px] font-medium uppercase tracking-wide text-gray-400 sm:text-xs">
+              {u.label}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   )
