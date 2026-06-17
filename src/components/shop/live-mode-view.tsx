@@ -5,7 +5,18 @@ import { useAppStore, type Product } from '@/lib/store'
 import { formatPrice } from '@/lib/shared'
 import { openWhatsApp } from '@/lib/shared'
 import { Button } from '@/components/ui/button'
-import { MessageCircle, Share2, Loader2, Store, Flame, Clock, ChevronRight, Check, Zap } from 'lucide-react'
+import {
+  Star,
+  Eye,
+  Flame,
+  Share2,
+  X,
+  MessageCircle,
+  CheckCircle2,
+  Loader2,
+  Store,
+  Clock,
+} from 'lucide-react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -19,17 +30,27 @@ interface LiveModeViewProps {
   logo?: string
 }
 
+interface ShopTestimonial {
+  id: string
+  clientName: string
+  rating: number
+  comment: string
+}
+
 /**
  * Full-screen live mode view: single product spotlight with EN DIRECT badge.
  * Rendered by the public shop when isLiveMode is true.
- * Fetches the live product and displays it in a TikTok-optimized layout.
- * Polls every 10s so viewers see product changes quickly.
+ * Fetches the live product + shop testimonials and displays them in a
+ * TikTok-optimized layout. Polls every 10s for product changes.
  */
 export function LiveModeView({ shopId, shopSlug, shopName, whatsapp, primaryColor, accentColor, logo }: LiveModeViewProps) {
   const [product, setProduct] = useState<Product | null>(null)
+  const [testimonials, setTestimonials] = useState<ShopTestimonial[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [elapsed, setElapsed] = useState(0)
+  const [viewers, setViewers] = useState(0)
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const [ordered, setOrdered] = useState(false)
 
   const accent = accentColor || primaryColor || '#EC4899'
@@ -42,45 +63,41 @@ export function LiveModeView({ shopId, shopSlug, shopName, whatsapp, primaryColo
     let cancelled = false
     const controller = new AbortController()
 
-    const intervalMs = 10000 // Re-fetch every 10s
-
     async function fetchLive() {
       try {
-        // Fetch shop data to get liveProductId + check if live is still on
-        const shopRes = await fetch(`/api/shops/${shopSlug}`, {
-          signal: controller.signal,
-        })
+        const shopRes = await fetch(`/api/shops/${shopSlug}`, { signal: controller.signal })
         if (cancelled || !shopRes.ok) return
-
         const shopData = await shopRes.json()
 
         if (!shopData.isLiveMode) {
-          // Live mode was turned off — signal parent to show normal shop
           setError('LIVE_OFF')
           return
         }
 
         if (!shopData.liveProductId) {
-          // No product pinned yet
           setProduct(null)
           setLoading(false)
           return
         }
 
-        // Fetch products and find the live one
-        const res = await fetch(`/api/shops/${shopSlug}/products`, {
-          signal: controller.signal,
-        })
-        if (cancelled || !res.ok) return
+        const [prodRes, testRes] = await Promise.all([
+          fetch(`/api/shops/${shopSlug}/products`, { signal: controller.signal }),
+          fetch(`/api/shops/${shopSlug}/testimonials`, { signal: controller.signal }),
+        ])
+        if (cancelled || !prodRes.ok) return
 
-        const data: Product[] = await res.json()
-        const live = data.find((p: Product) => p.id === shopData.liveProductId)
+        const products: Product[] = await prodRes.json()
+        const live = products.find((p) => p.id === shopData.liveProductId)
         if (live) {
           setProduct(live)
           setError(null)
         } else {
-          // Product was deleted or removed
           setProduct(null)
+        }
+
+        if (testRes.ok) {
+          const testData: ShopTestimonial[] = await testRes.json()
+          if (!cancelled) setTestimonials(testData)
         }
       } catch {
         if (!cancelled) setError('network')
@@ -90,7 +107,7 @@ export function LiveModeView({ shopId, shopSlug, shopName, whatsapp, primaryColo
     }
 
     fetchLive()
-    const interval = setInterval(fetchLive, intervalMs)
+    const interval = setInterval(fetchLive, 10000)
 
     return () => {
       cancelled = true
@@ -103,6 +120,14 @@ export function LiveModeView({ shopId, shopSlug, shopName, whatsapp, primaryColo
   useEffect(() => {
     const t = setInterval(() => setElapsed((e) => e + 1), 1000)
     return () => clearInterval(t)
+  }, [])
+
+  // Viewers count (social proof) — random refresh every 30s
+  useEffect(() => {
+    const update = () => setViewers(Math.floor(Math.random() * (150 - 15 + 1)) + 15)
+    update()
+    const i = setInterval(update, 30000)
+    return () => clearInterval(i)
   }, [])
 
   const handleOrder = useCallback(() => {
@@ -121,15 +146,24 @@ export function LiveModeView({ shopId, shopSlug, shopName, whatsapp, primaryColo
     }
   }, [shopSlug, shopName])
 
-  // Resolve product image (main image or first from gallery)
   const productImage = product?.image || product?.images?.[0]
 
-  // Format elapsed time → MM:SS
   const formatElapsed = (s: number) => {
     const m = Math.floor(s / 60)
     const sec = s % 60
     return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
   }
+
+  // Shop rating from testimonials
+  const avgRating = testimonials.length > 0
+    ? testimonials.reduce((sum, t) => sum + t.rating, 0) / testimonials.length
+    : 0
+  const reviewCount = testimonials.length
+
+  // Discount calculation
+  const discount = product?.oldPrice && product.oldPrice > product.price
+    ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
+    : 0
 
   // ─── LIVE OFF → return null so parent renders normal shop ───────────
   if (error === 'LIVE_OFF') {
@@ -139,12 +173,12 @@ export function LiveModeView({ shopId, shopSlug, shopName, whatsapp, primaryColo
   // ─── LOADING ─────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="fixed inset-0 flex flex-col items-center justify-center gap-5 bg-gradient-to-b from-zinc-900 via-zinc-950 to-black">
+      <div className="fixed inset-0 flex flex-col items-center justify-center gap-5 bg-gray-950">
         <div className="relative">
           <span className="absolute inset-0 animate-ping rounded-full bg-red-500/40" />
           <div className="relative h-14 w-14 rounded-full border-4 border-red-500/30 border-t-red-500 animate-spin" />
         </div>
-        <p className="text-sm font-medium tracking-wide text-zinc-400">Connexion au live...</p>
+        <p className="text-sm font-medium tracking-wide text-gray-400">Connexion au live...</p>
       </div>
     )
   }
@@ -152,10 +186,10 @@ export function LiveModeView({ shopId, shopSlug, shopName, whatsapp, primaryColo
   // ─── NO PRODUCT PINNED YET ──────────────────────────────────────────
   if (!product) {
     return (
-      <div className="fixed inset-0 flex flex-col bg-gradient-to-b from-zinc-900 via-zinc-950 to-black">
+      <div className="fixed inset-0 flex flex-col bg-gray-950">
         {/* Live banner */}
         <div className="bg-red-600 px-4 py-3 shadow-lg">
-          <div className="mx-auto flex max-w-lg items-center justify-center gap-2.5 text-white">
+          <div className="mx-auto flex max-w-md items-center justify-center gap-2.5 text-white">
             <span className="relative flex h-2.5 w-2.5">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
               <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-white" />
@@ -174,8 +208,8 @@ export function LiveModeView({ shopId, shopSlug, shopName, whatsapp, primaryColo
           >
             <Flame className="h-8 w-8 text-red-500" />
           </motion.div>
-          <p className="text-base font-semibold text-zinc-200">En attente du produit...</p>
-          <p className="text-sm text-zinc-500">Le produit apparaîtra automatiquement</p>
+          <p className="text-base font-semibold text-gray-200">En attente du produit...</p>
+          <p className="text-sm text-gray-500">Le produit apparaîtra automatiquement</p>
         </div>
       </div>
     )
@@ -184,202 +218,308 @@ export function LiveModeView({ shopId, shopSlug, shopName, whatsapp, primaryColo
   // ─── NETWORK ERROR ──────────────────────────────────────────────────
   if (error === 'network') {
     return (
-      <div className="fixed inset-0 flex flex-col items-center justify-center gap-3 bg-zinc-950 px-4">
-        <p className="text-sm text-zinc-400">Erreur de connexion. Reconnexion...</p>
-        <Loader2 className="h-5 w-5 animate-spin text-zinc-500" />
+      <div className="fixed inset-0 flex flex-col items-center justify-center gap-3 bg-gray-950 px-4">
+        <p className="text-sm text-gray-400">Erreur de connexion. Reconnexion...</p>
+        <Loader2 className="h-5 w-5 animate-spin text-gray-500" />
       </div>
     )
   }
 
-  const lowStock = product.stock !== null && product.stock !== undefined && product.stock <= 5 && product.stock > 0
-  const description = product.shortDescription || product.description
+  const shortName = product.shortDescription || product.name
+  const fullDescription = product.description || product.shortDescription || ''
 
   // ─── LIVE VIEW: PRODUCT SPOTLIGHT ───────────────────────────────────
   return (
-    <div className="fixed inset-0 flex flex-col overflow-hidden bg-gradient-to-b from-zinc-900 via-zinc-950 to-black">
-      {/* ─── Sticky Live Banner ─── */}
-      <div className="z-50 flex-shrink-0 bg-red-600 shadow-lg">
-        <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-2.5 text-white">
-          <div className="flex items-center gap-2">
-            <span className="relative flex h-2.5 w-2.5">
+    <div className="fixed inset-0 flex flex-col overflow-hidden bg-gray-950 text-white">
+      {/* ─── 1. HEADER LIVE ─── */}
+      <header className="z-40 flex flex-shrink-0 items-center justify-center gap-2 bg-red-600 px-4 py-3 text-white shadow-lg">
+        <div className="relative flex items-center gap-2">
+          <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-white" />
+          <span className="text-sm font-bold tracking-wider">EN DIRECT</span>
+        </div>
+        <span className="mx-2 text-white/80">—</span>
+        <span className="truncate text-sm font-medium">{shopName}</span>
+        <div className="ml-auto flex items-center gap-1.5 rounded-full bg-black/20 px-2.5 py-1">
+          <Clock className="h-3 w-3" />
+          <span className="text-xs font-semibold tabular-nums">{formatElapsed(elapsed)}</span>
+        </div>
+      </header>
+
+      {/* ─── 2. CONTENU PRINCIPAL ─── */}
+      <main className="mx-auto flex w-full max-w-md flex-1 flex-col overflow-y-auto bg-gray-900 shadow-2xl">
+        {/* IMAGE PRODUIT */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: 'easeOut' }}
+          className="relative aspect-[4/5] w-full overflow-hidden bg-gray-800"
+        >
+          {productImage ? (
+            <Image
+              src={productImage}
+              alt={shortName}
+              fill
+              unoptimized
+              priority
+              className="object-cover"
+              sizes="(max-width: 640px) 100vw, 448px"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-700 to-gray-900">
+              <span className="text-7xl opacity-50">🛍️</span>
+            </div>
+          )}
+
+          {/* Badge promo sur l'image */}
+          {discount > 0 && (
+            <div className="absolute left-4 top-4 rounded-full bg-yellow-400 px-3 py-1 text-sm font-bold text-black shadow-lg">
+              -{discount}%
+            </div>
+          )}
+
+          {/* Badge LIVE sur l'image */}
+          <div className="absolute right-4 top-4 flex items-center gap-1.5 rounded-full bg-red-600 px-3 py-1.5 shadow-lg">
+            <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
-              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-white" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
             </span>
-            <span className="text-sm font-bold tracking-wide">EN DIRECT</span>
+            <span className="text-xs font-bold tracking-wide text-white">LIVE</span>
           </div>
-          <div className="flex items-center gap-1.5 rounded-full bg-black/20 px-2.5 py-1">
-            <Clock className="h-3 w-3" />
-            <span className="text-xs font-semibold tabular-nums">{formatElapsed(elapsed)}</span>
+        </motion.div>
+
+        {/* INFOS PRODUIT — carte qui chevauche l'image */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1, ease: 'easeOut' }}
+          className="relative z-10 flex flex-col gap-4 rounded-t-3xl bg-gray-900 p-5 -mt-6"
+        >
+          {/* Shop name + logo */}
+          <div className="mb-1 flex items-center gap-2">
+            {logo ? (
+              <Image
+                src={logo}
+                alt=""
+                width={22}
+                height={22}
+                unoptimized
+                className="rounded-full object-cover ring-1 ring-white/20"
+              />
+            ) : (
+              <div className="flex h-[22px] w-[22px] items-center justify-center rounded-full bg-white/10">
+                <Store className="h-3 w-3 text-gray-300" />
+              </div>
+            )}
+            <span className="text-xs font-semibold text-gray-400">{shopName}</span>
           </div>
-        </div>
-      </div>
 
-      {/* ─── Scrollable Content ─── */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-lg px-4 pb-32 pt-5 sm:pt-8">
-          {/* ─── Product Image (clean, no text overlay) ─── */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, ease: 'easeOut' }}
-            className="relative overflow-hidden rounded-3xl bg-zinc-800 shadow-2xl"
-            style={{ boxShadow: `0 20px 60px -15px ${accent}40` }}
-          >
-            <div className="relative aspect-[4/5] w-full">
-              {productImage ? (
-                <Image
-                  src={productImage}
-                  alt={product.name}
-                  fill
-                  unoptimized
-                  priority
-                  className="object-cover"
-                  sizes="(max-width: 640px) 100vw, 448px"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-zinc-700 to-zinc-900">
-                  <span className="text-7xl opacity-50">🛍️</span>
-                </div>
-              )}
-            </div>
+          {/* Titre court et lisible */}
+          <h1 className="text-xl font-bold leading-tight text-white">
+            {shortName}
+          </h1>
 
-            {/* Live badge floating on image */}
-            <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-red-600 px-3 py-1.5 shadow-lg">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
+          {/* Note et avis (depuis les testimonials boutique) */}
+          {avgRating > 0 && (
+            <div className="flex items-center gap-2 text-sm text-yellow-400">
+              <div className="flex">
+                {[...Array(5)].map((_, i) => (
+                  <Star
+                    key={i}
+                    size={16}
+                    fill={i < Math.floor(avgRating) ? 'currentColor' : 'none'}
+                  />
+                ))}
+              </div>
+              <span className="font-medium text-gray-400">
+                {avgRating.toFixed(1)} ({reviewCount} avis)
               </span>
-              <span className="text-xs font-bold tracking-wide text-white">LIVE</span>
             </div>
+          )}
 
-            {/* Low stock badge floating on image */}
-            {lowStock && (
-              <div className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-amber-500 px-3 py-1.5 shadow-lg">
-                <Zap className="h-3 w-3 text-white" />
-                <span className="text-xs font-bold text-white">Plus que {product.stock}</span>
-              </div>
-            )}
-          </motion.div>
-
-          {/* ─── Product Info Card ─── */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.1, ease: 'easeOut' }}
-            className="mt-4 rounded-2xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur-sm"
-          >
-            {/* Shop name + logo */}
-            <div className="mb-3 flex items-center gap-2">
-              {logo ? (
-                <Image
-                  src={logo}
-                  alt=""
-                  width={22}
-                  height={22}
-                  unoptimized
-                  className="rounded-full object-cover ring-1 ring-white/20"
-                />
-              ) : (
-                <div className="flex h-[22px] w-[22px] items-center justify-center rounded-full bg-white/10">
-                  <Store className="h-3 w-3 text-zinc-300" />
-                </div>
-              )}
-              <span className="text-xs font-semibold text-zinc-400">{shopName}</span>
-            </div>
-
-            {/* Product name */}
-            <h2 className="text-xl font-bold leading-tight text-white sm:text-2xl">
-              {product.name}
-            </h2>
-
-            {/* Description */}
-            {description && (
-              <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-zinc-400">
-                {description}
-              </p>
-            )}
-
-            {/* Price + stock row */}
-            <div className="mt-4 flex items-end justify-between">
-              <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Prix</p>
-                <p
-                  className="text-2xl font-black sm:text-3xl"
-                  style={{ color: accent }}
-                >
-                  {formatPrice(product.price)}
-                </p>
-              </div>
-              {lowStock && (
-                <div className="flex items-center gap-1 rounded-lg bg-amber-500/10 px-2.5 py-1.5">
-                  <Flame className="h-3.5 w-3.5 text-amber-500" />
-                  <span className="text-xs font-semibold text-amber-400">
-                    Stock limité
-                  </span>
-                </div>
-              )}
-            </div>
-          </motion.div>
-        </div>
-      </div>
-
-      {/* ─── Fixed Bottom CTA Bar ─── */}
-      <div className="flex-shrink-0 border-t border-white/10 bg-zinc-950/80 backdrop-blur-lg">
-        <div className="mx-auto max-w-lg px-4 py-3">
-          <div className="flex gap-2.5">
-            {/* WhatsApp CTA */}
-            <Button
-              size="lg"
-              className="h-14 flex-1 gap-2 rounded-2xl text-base font-bold shadow-lg transition-transform active:scale-[0.97]"
-              style={{ backgroundColor: '#25D366', color: '#ffffff' }}
-              onClick={handleOrder}
+          {/* Prix */}
+          <div className="flex items-baseline gap-3">
+            <span
+              className="text-3xl font-black"
+              style={{ color: accent }}
             >
-              <AnimatePresence mode="wait">
-                {ordered ? (
-                  <motion.span
-                    key="ordered"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    className="flex items-center gap-2"
-                  >
-                    <Check className="h-5 w-5" />
-                    Redirection...
-                  </motion.span>
-                ) : (
-                  <motion.span
-                    key="default"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    className="flex items-center gap-2"
-                  >
-                    <MessageCircle className="h-5 w-5" />
-                    Commander
-                    <ChevronRight className="h-4 w-4" />
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </Button>
-
-            {/* Share button */}
-            <Button
-              variant="outline"
-              size="lg"
-              className="h-14 w-14 shrink-0 rounded-2xl border-white/15 bg-white/5 p-0 text-white hover:bg-white/10 active:scale-95"
-              onClick={handleShare}
-              aria-label="Partager le live"
-            >
-              <Share2 className="h-5 w-5" />
-            </Button>
+              {formatPrice(product.price)}
+            </span>
+            {product.oldPrice && product.oldPrice > product.price && (
+              <span className="text-base text-gray-500 line-through">
+                {formatPrice(product.oldPrice)}
+              </span>
+            )}
           </div>
 
-          {/* Powered by */}
-          <p className="mt-2 text-center text-[10px] font-medium tracking-wide text-zinc-600">
-            Live shopping propulsé par Boutiko
-          </p>
-        </div>
-      </div>
+          {/* Urgence et Preuve Sociale */}
+          <div className="flex flex-col gap-2 border-y border-gray-800 py-3">
+            {product.stock !== null && product.stock !== undefined && product.stock <= 5 && product.stock > 0 && (
+              <div className="flex items-center gap-2 text-sm font-semibold text-red-400">
+                <Flame size={16} className="animate-pulse" />
+                <span>🔴 Plus que {product.stock} en stock !</span>
+              </div>
+            )}
+            <div className="flex items-center gap-2 text-sm text-gray-400">
+              <Eye size={16} />
+              <span>{viewers} personnes regardent ce live</span>
+            </div>
+          </div>
+
+          {/* BOUTON WHATSAPP ÉNORME */}
+          <Button
+            className="w-full gap-3 rounded-xl bg-green-500 py-4 text-lg font-bold text-white shadow-lg shadow-green-500/20 transition-all hover:bg-green-600 active:scale-95"
+            onClick={handleOrder}
+          >
+            <AnimatePresence mode="wait">
+              {ordered ? (
+                <motion.span
+                  key="ordered"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  className="flex items-center gap-2"
+                >
+                  <CheckCircle2 className="h-6 w-6" />
+                  Redirection...
+                </motion.span>
+              ) : (
+                <motion.span
+                  key="default"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  className="flex items-center gap-2"
+                >
+                  <MessageCircle className="h-6 w-6" fill="white" />
+                  COMMANDER VIA WHATSAPP
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </Button>
+
+          {/* BOUTON DÉTAILS (Ouvre la modale) */}
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-700 bg-gray-800 py-3 font-medium text-white transition-all hover:bg-gray-700"
+          >
+            <span>Voir les détails du produit</span>
+          </button>
+
+          {/* PARTAGER (Discret) */}
+          <button
+            onClick={handleShare}
+            className="flex items-center justify-center gap-2 py-2 text-sm text-gray-500 transition-colors hover:text-white"
+          >
+            <Share2 size={14} />
+            <span>Partager ce live</span>
+          </button>
+
+          <div className="pt-2 text-center text-xs text-gray-600">
+            Propulsé par <span className="font-bold text-gray-400">Boutiko</span>
+          </div>
+        </motion.div>
+      </main>
+
+      {/* ─── 3. MODALE DES DÉTAILS ─── */}
+      <AnimatePresence>
+        {isModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 backdrop-blur-sm"
+            onClick={() => setIsModalOpen(false)}
+          >
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              className="max-h-[85vh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-white text-gray-900"
+            >
+              {/* Header Modale */}
+              <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white p-4">
+                <h2 className="text-lg font-bold">Détails du produit</h2>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="rounded-full p-2 transition-colors hover:bg-gray-100"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Contenu Modale */}
+              <div className="space-y-6 p-6">
+                {/* Nom complet */}
+                <div>
+                  <h3 className="mb-1 text-lg font-bold text-gray-900">{product.name}</h3>
+                  {product.shortDescription && (
+                    <p className="text-sm font-medium text-gray-500">{product.shortDescription}</p>
+                  )}
+                </div>
+
+                {/* Description */}
+                {fullDescription && (
+                  <div>
+                    <h3 className="mb-2 flex items-center gap-2 font-bold text-gray-900">
+                      <span className="text-xl">📋</span> Description
+                    </h3>
+                    <p className="text-sm leading-relaxed text-gray-600">
+                      {fullDescription}
+                    </p>
+                  </div>
+                )}
+
+                {/* Prix dans la modale */}
+                <div className="flex items-baseline gap-3 rounded-xl bg-gray-50 p-4">
+                  <span
+                    className="text-2xl font-black"
+                    style={{ color: accent }}
+                  >
+                    {formatPrice(product.price)}
+                  </span>
+                  {product.oldPrice && product.oldPrice > product.price && (
+                    <span className="text-base text-gray-500 line-through">
+                      {formatPrice(product.oldPrice)}
+                    </span>
+                  )}
+                </div>
+
+                {/* Livraison & Paiement */}
+                <div>
+                  <h3 className="mb-2 flex items-center gap-2 font-bold text-gray-900">
+                    <span className="text-xl">🚚</span> Livraison &amp; Paiement
+                  </h3>
+                  <ul className="space-y-2 text-sm text-gray-700">
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 size={16} className="mt-0.5 text-green-500" />
+                      Livraison rapide selon votre zone
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 size={16} className="mt-0.5 text-green-500" />
+                      Paiement à la livraison disponible
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 size={16} className="mt-0.5 text-green-500" />
+                      Commande via WhatsApp
+                    </li>
+                  </ul>
+                </div>
+
+                {/* Bouton Commander dans la modale */}
+                <Button
+                  className="sticky bottom-0 flex w-full items-center justify-center gap-3 rounded-xl bg-green-500 py-4 text-base font-bold text-white shadow-lg transition-all hover:bg-green-600 active:scale-95"
+                  onClick={handleOrder}
+                >
+                  <MessageCircle size={20} fill="white" />
+                  COMMANDER MAINTENANT
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

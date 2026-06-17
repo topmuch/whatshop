@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
     if (!user || !user.shop) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
 
     const body = await request.json()
-    const { name, description, price, image, images, stock, categoryId, isAvailable } = body
+    const { name, description, price, oldPrice, image, images, stock, categoryId, isAvailable } = body
 
     if (!name || price === undefined || price === null || isNaN(parseFloat(price))) {
       return NextResponse.json({ error: 'Champs requis manquants ou prix invalide' }, { status: 400 })
@@ -128,6 +128,7 @@ export async function POST(request: NextRequest) {
         slug,
         description: description || null,
         price: parseFloat(price),
+        oldPrice: oldPrice !== undefined && oldPrice !== null && oldPrice !== '' ? parseFloat(oldPrice) : null,
         image: image || null,
         images: JSON.stringify(parsedImages),
         stock: stock !== undefined ? parseInt(stock) : null,
@@ -152,7 +153,7 @@ export async function PUT(request: NextRequest) {
     if (!user || !user.shop) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
 
     const body = await request.json()
-    const { id, name, description, price, image, images, stock, categoryId, isAvailable } = body
+    const { id, name, description, price, oldPrice, image, images, stock, categoryId, isAvailable } = body
 
     if (!id) {
       return NextResponse.json({ error: 'ID requis' }, { status: 400 })
@@ -192,6 +193,7 @@ export async function PUT(request: NextRequest) {
     }
     if (description !== undefined) data.description = description || null
     if (price !== undefined) data.price = parseFloat(price)
+    if (oldPrice !== undefined) data.oldPrice = (oldPrice === null || oldPrice === '' ) ? null : parseFloat(oldPrice)
     if (image !== undefined) data.image = image || null
     if (images !== undefined) {
       data.images = Array.isArray(images) ? JSON.stringify(images) : '[]'

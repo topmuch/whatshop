@@ -63,6 +63,7 @@ export async function GET(
       shortDescription: p.shortDescription,
       description: p.description,
       price: p.price,
+      oldPrice: p.oldPrice,
       image: p.image,
       images: parseImages(p.images),
       stock: p.stock,

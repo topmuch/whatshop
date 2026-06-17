@@ -290,6 +290,7 @@ model Product {
   shortDescription String?
   description String?
   price       Float
+  oldPrice    Float?   // Prix barré (pour afficher les promotions)
   image       String?
   images      String   @default("[]") // JSON array of image URLs
   stock       Int?

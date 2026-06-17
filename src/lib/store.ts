@@ -119,6 +119,7 @@ export interface Product {
   shortDescription?: string
   description?: string
   price: number
+  oldPrice?: number | null
   image?: string
   images?: string[]
   stock?: number
