@@ -118,7 +118,7 @@ function getNavItems(businessType?: string | null, sector?: string | null): { id
     { id: 'marketing-kit', label: 'Kit Marketing', icon: <Megaphone className="h-5 w-5" /> },
     { id: 'integrations', label: 'Intégrations', icon: <Plug className="h-5 w-5" /> },
     { id: 'templates', label: 'Templates', icon: <Palette className="h-5 w-5" /> },
-    { id: 'single-product', label: 'Page Produit', icon: <Target className="h-5 w-5" /> },
+    { id: 'single-product', label: 'Single Produit', icon: <Target className="h-5 w-5" /> },
     { id: 'settings', label: 'Paramètres', icon: <Settings className="h-5 w-5" /> },
   ]
 }

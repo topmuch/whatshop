@@ -141,7 +141,7 @@ export function SingleProductManager() {
       <div>
         <h1 className="flex items-center gap-2 text-2xl font-bold">
           <Target className="h-6 w-6 text-primary" />
-          Page Produit Unique
+          Single Produit
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Template optimisé conversion pour vendeurs mono-produit et TikTokeurs.
@@ -156,7 +156,7 @@ export function SingleProductManager() {
         <CardContent>
           <div className="flex items-center justify-between gap-4 rounded-xl border p-4">
             <div>
-              <p className="font-medium">Utiliser le template « Page Produit Unique »</p>
+              <p className="font-medium">Utiliser le template « Single Produit »</p>
               <p className="text-sm text-muted-foreground">
                 Remplace votre boutique classique par une landing page focalisée sur un seul produit.
               </p>

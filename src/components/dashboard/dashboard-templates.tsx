@@ -29,7 +29,7 @@ const TEMPLATE_TYPES: { id: TemplateType; name: string; description: string; ico
   },
   {
     id: 'SINGLE_PRODUCT',
-    name: 'Page Produit Unique',
+    name: 'Single Produit',
     description: 'Landing page optimisée conversion pour un seul produit. Countdown, avis, FAQ. Parfait pour TikTokeurs et vendeurs mono-produit.',
     icon: <Target className="h-6 w-6" />,
   },
@@ -199,7 +199,7 @@ export function DashboardTemplates() {
                   <p className="mt-1 text-sm text-muted-foreground">{t.description}</p>
                   {t.id === 'SINGLE_PRODUCT' && (
                     <p className="mt-1.5 text-xs text-amber-600 dark:text-amber-400">
-                      ⚙️ Configurez votre produit dans l'onglet « Page Produit »
+                      ⚙️ Configurez votre produit dans l'onglet « Single Produit »
                     </p>
                   )}
                   {t.id === 'MODERN_STORE' && (
@@ -217,41 +217,29 @@ export function DashboardTemplates() {
 
       <Separator />
 
-      {/* ─── Thème visuel (template) — uniquement pertinent pour STANDARD ─── */}
-      {currentType === 'STANDARD' && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Thème visuel</CardTitle>
-            <CardDescription>
-              Sélectionnez le design de votre boutique publique. Le changement est immédiat.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <TemplateSelector
-              currentTemplate={shop.template || 'xstore-electro'}
-              onSelect={handleTemplateSelect}
-            />
-            <div className="flex items-center gap-3 mt-4">
-              {saving && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Enregistrement...
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {currentType !== 'STANDARD' && (
-        <Card className="border-dashed bg-muted/30">
-          <CardContent className="py-4 text-center text-sm text-muted-foreground">
-            Le thème visuel (Cosmika, Electro, Elegance) s'applique uniquement au type « Boutique classique ».
-            Pour {currentType === 'MODERN_STORE' ? 'Modern Store' : 'Page Produit Unique'}, le design est
-            intégré et optimisé automatiquement.
-          </CardContent>
-        </Card>
-      )}
+      {/* ─── Thème visuel (template) — toujours visible ─── */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Thème visuel</CardTitle>
+          <CardDescription>
+            Sélectionnez le design de votre boutique publique. Le changement est immédiat.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <TemplateSelector
+            currentTemplate={shop.template || 'xstore-electro'}
+            onSelect={handleTemplateSelect}
+          />
+          <div className="flex items-center gap-3 mt-4">
+            {saving && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Enregistrement...
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Preview button */}
       {shop && (
@@ -276,8 +264,8 @@ export function DashboardTemplates() {
         </Card>
       )}
 
-      {/* Template-specific customization (only for STANDARD) */}
-      {currentType === 'STANDARD' && <TemplateCustomization shopSlug={shop.slug} />}
+      {/* Template-specific customization */}
+      <TemplateCustomization shopSlug={shop.slug} />
 
       {/* Color customization (applies to all types) */}
       <ThemeCustomization />
