@@ -245,179 +245,185 @@ export function LiveModeView({ shopId, shopSlug, shopName, whatsapp, primaryColo
         </div>
       </header>
 
-      {/* ─── 2. CONTENU PRINCIPAL ─── */}
-      <main className="mx-auto flex w-full max-w-md flex-1 flex-col overflow-y-auto bg-gray-900 shadow-2xl">
-        {/* IMAGE PRODUIT */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, ease: 'easeOut' }}
-          className="relative aspect-[4/5] w-full overflow-hidden bg-gray-800"
-        >
-          {productImage ? (
-            <Image
-              src={productImage}
-              alt={shortName}
-              fill
-              unoptimized
-              priority
-              className="object-cover"
-              sizes="(max-width: 640px) 100vw, 448px"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-700 to-gray-900">
-              <span className="text-7xl opacity-50">🛍️</span>
-            </div>
-          )}
-
-          {/* Badge promo sur l'image */}
-          {discount > 0 && (
-            <div className="absolute left-4 top-4 rounded-full bg-yellow-400 px-3 py-1 text-sm font-bold text-black shadow-lg">
-              -{discount}%
-            </div>
-          )}
-
-          {/* Badge LIVE sur l'image */}
-          <div className="absolute right-4 top-4 flex items-center gap-1.5 rounded-full bg-red-600 px-3 py-1.5 shadow-lg">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
-            </span>
-            <span className="text-xs font-bold tracking-wide text-white">LIVE</span>
-          </div>
-        </motion.div>
-
-        {/* INFOS PRODUIT — carte qui chevauche l'image */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1, ease: 'easeOut' }}
-          className="relative z-10 flex flex-col gap-4 rounded-t-3xl bg-gray-900 p-5 -mt-6"
-        >
-          {/* Shop name + logo */}
-          <div className="mb-1 flex items-center gap-2">
-            {logo ? (
+      {/* ─── 2. CONTENU PRINCIPAL (responsive 2 colonnes sur desktop) ─── */}
+      <main className="flex-1 overflow-y-auto bg-gray-900">
+        <div className="mx-auto flex w-full max-w-6xl flex-col md:flex-row">
+          {/* IMAGE PRODUIT — 100% mobile, 50% desktop */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: 'easeOut' }}
+            className="relative w-full overflow-hidden bg-gray-800 aspect-[4/3] md:aspect-auto md:min-h-[600px] md:w-1/2"
+          >
+            {productImage ? (
               <Image
-                src={logo}
-                alt=""
-                width={22}
-                height={22}
+                src={productImage}
+                alt={shortName}
+                fill
                 unoptimized
-                className="rounded-full object-cover ring-1 ring-white/20"
+                priority
+                className="object-contain md:object-cover"
+                sizes="(max-width: 768px) 100vw, 50vw"
               />
             ) : (
-              <div className="flex h-[22px] w-[22px] items-center justify-center rounded-full bg-white/10">
-                <Store className="h-3 w-3 text-gray-300" />
+              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-700 to-gray-900">
+                <span className="text-7xl opacity-50">🛍️</span>
               </div>
             )}
-            <span className="text-xs font-semibold text-gray-400">{shopName}</span>
-          </div>
 
-          {/* Titre court et lisible */}
-          <h1 className="text-xl font-bold leading-tight text-white">
-            {shortName}
-          </h1>
+            {/* Badge promo sur l'image */}
+            {discount > 0 && (
+              <div className="absolute left-4 top-4 rounded-full bg-yellow-400 px-3 py-1 text-sm font-bold text-black shadow-lg md:px-4 md:py-2 md:text-base">
+                -{discount}%
+                <span className="ml-1 hidden sm:inline">PROMO LIVE</span>
+              </div>
+            )}
 
-          {/* Note et avis (depuis les testimonials boutique) */}
-          {avgRating > 0 && (
-            <div className="flex items-center gap-2 text-sm text-yellow-400">
-              <div className="flex">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    size={16}
-                    fill={i < Math.floor(avgRating) ? 'currentColor' : 'none'}
+            {/* Badge LIVE sur l'image */}
+            <div className="absolute right-4 top-4 flex items-center gap-1.5 rounded-full bg-red-600 px-3 py-1.5 shadow-lg md:px-4 md:py-2">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
+              </span>
+              <span className="text-xs font-bold tracking-wide text-white md:text-sm">LIVE</span>
+            </div>
+          </motion.div>
+
+          {/* INFOS PRODUIT — 100% mobile (chevauche l'image), 50% desktop (colonne dédiée) */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.1, ease: 'easeOut' }}
+            className="relative z-10 flex w-full flex-col gap-4 rounded-t-3xl bg-gray-900 p-5 -mt-6 md:mt-0 md:w-1/2 md:rounded-none md:p-10"
+          >
+            {/* Contenu centré sur desktop */}
+            <div className="mx-auto w-full max-w-lg space-y-6">
+              {/* Shop name + logo */}
+              <div className="flex items-center gap-2">
+                {logo ? (
+                  <Image
+                    src={logo}
+                    alt=""
+                    width={22}
+                    height={22}
+                    unoptimized
+                    className="rounded-full object-cover ring-1 ring-white/20"
                   />
-                ))}
+                ) : (
+                  <div className="flex h-[22px] w-[22px] items-center justify-center rounded-full bg-white/10">
+                    <Store className="h-3 w-3 text-gray-300" />
+                  </div>
+                )}
+                <span className="text-sm font-medium text-gray-400">{shopName}</span>
               </div>
-              <span className="font-medium text-gray-400">
-                {avgRating.toFixed(1)} ({reviewCount} avis)
-              </span>
-            </div>
-          )}
 
-          {/* Prix */}
-          <div className="flex items-baseline gap-3">
-            <span
-              className="text-3xl font-black"
-              style={{ color: accent }}
-            >
-              {formatPrice(product.price)}
-            </span>
-            {product.oldPrice && product.oldPrice > product.price && (
-              <span className="text-base text-gray-500 line-through">
-                {formatPrice(product.oldPrice)}
-              </span>
-            )}
-          </div>
+              {/* Titre court et lisible */}
+              <h1 className="text-2xl font-bold leading-tight text-white md:text-3xl">
+                {shortName}
+              </h1>
 
-          {/* Urgence et Preuve Sociale */}
-          <div className="flex flex-col gap-2 border-y border-gray-800 py-3">
-            {product.stock !== null && product.stock !== undefined && product.stock <= 5 && product.stock > 0 && (
-              <div className="flex items-center gap-2 text-sm font-semibold text-red-400">
-                <Flame size={16} className="animate-pulse" />
-                <span>🔴 Plus que {product.stock} en stock !</span>
-              </div>
-            )}
-            <div className="flex items-center gap-2 text-sm text-gray-400">
-              <Eye size={16} />
-              <span>{viewers} personnes regardent ce live</span>
-            </div>
-          </div>
-
-          {/* BOUTON WHATSAPP ÉNORME */}
-          <Button
-            className="w-full gap-3 rounded-xl bg-green-500 py-4 text-lg font-bold text-white shadow-lg shadow-green-500/20 transition-all hover:bg-green-600 active:scale-95"
-            onClick={handleOrder}
-          >
-            <AnimatePresence mode="wait">
-              {ordered ? (
-                <motion.span
-                  key="ordered"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  className="flex items-center gap-2"
-                >
-                  <CheckCircle2 className="h-6 w-6" />
-                  Redirection...
-                </motion.span>
-              ) : (
-                <motion.span
-                  key="default"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  className="flex items-center gap-2"
-                >
-                  <MessageCircle className="h-6 w-6" fill="white" />
-                  COMMANDER VIA WHATSAPP
-                </motion.span>
+              {/* Note et avis (depuis les testimonials boutique) */}
+              {avgRating > 0 && (
+                <div className="flex items-center gap-2 text-yellow-400">
+                  <div className="flex">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        size={18}
+                        fill={i < Math.floor(avgRating) ? 'currentColor' : 'none'}
+                      />
+                    ))}
+                  </div>
+                  <span className="font-medium text-gray-400">
+                    {avgRating.toFixed(1)} ({reviewCount} avis)
+                  </span>
+                </div>
               )}
-            </AnimatePresence>
-          </Button>
 
-          {/* BOUTON DÉTAILS (Ouvre la modale) */}
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-700 bg-gray-800 py-3 font-medium text-white transition-all hover:bg-gray-700"
-          >
-            <span>Voir les détails du produit</span>
-          </button>
+              {/* Prix */}
+              <div className="flex flex-wrap items-baseline gap-4">
+                <span
+                  className="text-4xl font-black md:text-5xl"
+                  style={{ color: accent }}
+                >
+                  {formatPrice(product.price)}
+                </span>
+                {product.oldPrice && product.oldPrice > product.price && (
+                  <span className="text-xl text-gray-500 line-through">
+                    {formatPrice(product.oldPrice)}
+                  </span>
+                )}
+              </div>
 
-          {/* PARTAGER (Discret) */}
-          <button
-            onClick={handleShare}
-            className="flex items-center justify-center gap-2 py-2 text-sm text-gray-500 transition-colors hover:text-white"
-          >
-            <Share2 size={14} />
-            <span>Partager ce live</span>
-          </button>
+              {/* Urgence et Preuve Sociale */}
+              <div className="flex flex-col gap-3 border-y border-gray-800 py-4">
+                {product.stock !== null && product.stock !== undefined && product.stock <= 5 && product.stock > 0 && (
+                  <div className="flex items-center gap-2 font-semibold text-red-400">
+                    <Flame size={20} className="animate-pulse" />
+                    <span>🔴 Plus que {product.stock} en stock !</span>
+                  </div>
+                )}
+                <div className="flex items-center gap-2 text-gray-400">
+                  <Eye size={18} />
+                  <span>{viewers} personnes regardent ce live</span>
+                </div>
+              </div>
 
-          <div className="pt-2 text-center text-xs text-gray-600">
-            Propulsé par <span className="font-bold text-gray-400">Boutiko</span>
-          </div>
-        </motion.div>
+              {/* BOUTONS */}
+              <div className="space-y-3">
+                <Button
+                  className="w-full gap-3 rounded-xl bg-green-500 py-4 text-lg font-bold text-white shadow-lg shadow-green-500/20 transition-all hover:bg-green-600 active:scale-95"
+                  onClick={handleOrder}
+                >
+                  <AnimatePresence mode="wait">
+                    {ordered ? (
+                      <motion.span
+                        key="ordered"
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        className="flex items-center gap-2"
+                      >
+                        <CheckCircle2 className="h-6 w-6" />
+                        Redirection...
+                      </motion.span>
+                    ) : (
+                      <motion.span
+                        key="default"
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        className="flex items-center gap-2"
+                      >
+                        <MessageCircle className="h-6 w-6" fill="white" />
+                        COMMANDER VIA WHATSAPP
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </Button>
+
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-700 bg-gray-800 py-3 font-medium text-white transition-all hover:bg-gray-700"
+                >
+                  <span>Voir les détails du produit</span>
+                </button>
+
+                <button
+                  onClick={handleShare}
+                  className="flex w-full items-center justify-center gap-2 py-2 text-sm text-gray-500 transition-colors hover:text-white"
+                >
+                  <Share2 size={16} />
+                  <span>Partager ce live</span>
+                </button>
+              </div>
+
+              <div className="pt-4 text-center text-xs text-gray-600">
+                Propulsé par <span className="font-bold text-gray-400">Boutiko</span>
+              </div>
+            </div>
+          </motion.div>
+        </div>
       </main>
 
       {/* ─── 3. MODALE DES DÉTAILS ─── */}
@@ -427,7 +433,7 @@ export function LiveModeView({ shopId, shopSlug, shopName, whatsapp, primaryColo
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 p-0 backdrop-blur-sm sm:items-center sm:p-4"
             onClick={() => setIsModalOpen(false)}
           >
             <motion.div
@@ -436,7 +442,7 @@ export function LiveModeView({ shopId, shopSlug, shopName, whatsapp, primaryColo
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              className="max-h-[85vh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-white text-gray-900"
+              className="max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-t-3xl bg-white text-gray-900 sm:rounded-3xl"
             >
               {/* Header Modale */}
               <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white p-4">
@@ -451,6 +457,20 @@ export function LiveModeView({ shopId, shopSlug, shopName, whatsapp, primaryColo
 
               {/* Contenu Modale */}
               <div className="space-y-6 p-6">
+                {/* Image dans la modale */}
+                {productImage && (
+                  <div className="aspect-video overflow-hidden rounded-xl bg-gray-100">
+                    <Image
+                      src={productImage}
+                      alt={product.name}
+                      width={800}
+                      height={450}
+                      unoptimized
+                      className="h-full w-full object-contain"
+                    />
+                  </div>
+                )}
+
                 {/* Nom complet */}
                 <div>
                   <h3 className="mb-1 text-lg font-bold text-gray-900">{product.name}</h3>
