@@ -48,6 +48,12 @@ export async function GET(
         testimonialsTagline: true,
         trustBadges: true,
         footerLinks: true,
+        // SEO fields (safe for public — needed by client-side JSON-LD)
+        seoTitle: true,
+        seoDescription: true,
+        seoKeywords: true,
+        ogImage: true,
+        coverImageUrl: true,
         // Live mode (safe for public)
         isLiveMode: true,
         liveProductId: true,

@@ -8,7 +8,8 @@ export function injectShopMeta(shop: { name: string; slug: string; description?:
   const description = shop.description 
     ? shop.description.slice(0, 160) 
     : `Découvrez les produits de ${shop.name} sur Boutiko. Commandez facilement sur WhatsApp.`
-  const ogImage = shop.logo || `${baseUrl}/og-default.png`
+  const ogImage = (shop as Record<string, unknown>).ogImage as string | undefined
+    || shop.logo || `${baseUrl}/api/og?shop=${shop.slug}`
   const url = `${baseUrl}/${shop.slug}`
 
   // Helper to set or create meta tag

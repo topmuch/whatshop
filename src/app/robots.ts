@@ -5,8 +5,17 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: '*',
-        allow: ['/', '/onboarding', '/pricing', '/about', '/contact', '/faq', '/register'],
-        disallow: ['/dashboard/*', '/api/*', '/admin/*', '/_next/'],
+        allow: [
+          '/',
+          '/onboarding',
+          '/pricing',
+          '/about',
+          '/contact',
+          '/faq',
+          '/register',
+          '/boutique/',
+        ],
+        disallow: ['/dashboard/*', '/api/*', '/admin/*', '/reseller*', '/_next/'],
       },
     ],
     sitemap: 'https://boutiko.pro/sitemap.xml',

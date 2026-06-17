@@ -39,6 +39,8 @@ export interface Shop {
   isActive: boolean
   seoTitle?: string
   seoDescription?: string
+  seoKeywords?: string
+  ogImage?: string
   coverImageUrl?: string
   customDomain?: string
   customDomainStatus?: string

@@ -6,6 +6,7 @@ import { formatPrice } from '@/lib/shared'
 import { openWhatsApp } from '@/lib/shared'
 import { Button } from '@/components/ui/button'
 import { MessageCircle, Share2, Loader2, Store } from 'lucide-react'
+import Image from 'next/image'
 
 interface LiveModeViewProps {
   shopId: string
@@ -188,10 +189,14 @@ export function LiveModeView({ shopId, shopSlug, shopName, whatsapp, primaryColo
         {/* Product Image — full width on mobile, max 400px on larger */}
         <div className="relative w-full max-w-[400px] aspect-square rounded-2xl overflow-hidden bg-gray-800 shadow-2xl shadow-red-500/10 mb-6">
           {product.image ? (
-            <img
+            <Image
               src={product.image}
               alt={product.name}
-              className="w-full h-full object-cover"
+              fill
+              unoptimized
+              priority
+              className="object-cover"
+              sizes="(max-width: 640px) 100vw, 400px"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-700 to-gray-900">
@@ -252,10 +257,13 @@ export function LiveModeView({ shopId, shopSlug, shopName, whatsapp, primaryColo
         {/* Shop branding at bottom */}
         <div className="mt-8 flex items-center gap-2 text-white/40">
           {logo ? (
-            <img
+            <Image
               src={logo}
               alt=""
-              className="w-5 h-5 rounded-full object-cover"
+              width={20}
+              height={20}
+              unoptimized
+              className="rounded-full object-cover"
             />
           ) : (
             <Store className="h-4 w-4" />

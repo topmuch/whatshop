@@ -911,6 +911,7 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
                             src={img}
                             alt={`${selectedProduct.name} - Photo ${idx + 1}`}
                             className="w-full h-full object-cover"
+                            loading="lazy"
                           />
                         </button>
                       ))}

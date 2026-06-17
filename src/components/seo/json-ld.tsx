@@ -160,9 +160,11 @@ export default function JsonLd({ shop, products = [], categories = [] }: JsonLdP
 
     setMeta('property', 'og:title', title)
     setMeta('property', 'og:description', ogDesc)
+    const ogImage = (shop as Record<string, unknown>).ogImage as string | undefined
+      || shop.banner || shop.logo || undefined
     setMeta('property', 'og:url', `https://boutiko.pro/${shop.slug}`)
-    if (shop.banner || shop.logo) {
-      setMeta('property', 'og:image', shop.banner || shop.logo!)
+    if (ogImage) {
+      setMeta('property', 'og:image', ogImage)
     }
     setMeta('property', 'og:type', 'website')
     setMeta('property', 'og:locale', 'fr_FR')
@@ -171,8 +173,8 @@ export default function JsonLd({ shop, products = [], categories = [] }: JsonLdP
     // Twitter
     setMeta('name', 'twitter:card', 'summary_large_image')
     setMeta('name', 'twitter:title', title)
-    if (shop.banner || shop.logo) {
-      setMeta('name', 'twitter:image', shop.banner || shop.logo!)
+    if (ogImage) {
+      setMeta('name', 'twitter:image', ogImage)
     }
 
     // Canonical
