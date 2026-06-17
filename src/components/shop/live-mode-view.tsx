@@ -5,8 +5,9 @@ import { useAppStore, type Product } from '@/lib/store'
 import { formatPrice } from '@/lib/shared'
 import { openWhatsApp } from '@/lib/shared'
 import { Button } from '@/components/ui/button'
-import { MessageCircle, Share2, Loader2, Store } from 'lucide-react'
+import { MessageCircle, Share2, Loader2, Store, Flame, Clock, ChevronRight, Check, Zap } from 'lucide-react'
 import Image from 'next/image'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface LiveModeViewProps {
   shopId: string
@@ -28,6 +29,8 @@ export function LiveModeView({ shopId, shopSlug, shopName, whatsapp, primaryColo
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [elapsed, setElapsed] = useState(0)
+  const [ordered, setOrdered] = useState(false)
 
   const accent = accentColor || primaryColor || '#EC4899'
 
@@ -96,9 +99,17 @@ export function LiveModeView({ shopId, shopSlug, shopName, whatsapp, primaryColo
     }
   }, [shopId, shopSlug])
 
+  // Live elapsed timer (counts up every second)
+  useEffect(() => {
+    const t = setInterval(() => setElapsed((e) => e + 1), 1000)
+    return () => clearInterval(t)
+  }, [])
+
   const handleOrder = useCallback(() => {
     if (!product) return
     openWhatsApp({ name: product.name, price: product.price }, whatsapp, 1)
+    setOrdered(true)
+    setTimeout(() => setOrdered(false), 3000)
   }, [product, whatsapp])
 
   const handleShare = useCallback(() => {
@@ -110,6 +121,16 @@ export function LiveModeView({ shopId, shopSlug, shopName, whatsapp, primaryColo
     }
   }, [shopSlug, shopName])
 
+  // Resolve product image (main image or first from gallery)
+  const productImage = product?.image || product?.images?.[0]
+
+  // Format elapsed time → MM:SS
+  const formatElapsed = (s: number) => {
+    const m = Math.floor(s / 60)
+    const sec = s % 60
+    return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
+  }
+
   // ─── LIVE OFF → return null so parent renders normal shop ───────────
   if (error === 'LIVE_OFF') {
     return null
@@ -118,9 +139,12 @@ export function LiveModeView({ shopId, shopSlug, shopName, whatsapp, primaryColo
   // ─── LOADING ─────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="min-h-[70vh] flex flex-col items-center justify-center gap-4 px-4 bg-gray-950">
-        <Loader2 className="h-8 w-8 animate-spin text-red-500" />
-        <p className="text-sm text-gray-400">Connexion au live...</p>
+      <div className="fixed inset-0 flex flex-col items-center justify-center gap-5 bg-gradient-to-b from-zinc-900 via-zinc-950 to-black">
+        <div className="relative">
+          <span className="absolute inset-0 animate-ping rounded-full bg-red-500/40" />
+          <div className="relative h-14 w-14 rounded-full border-4 border-red-500/30 border-t-red-500 animate-spin" />
+        </div>
+        <p className="text-sm font-medium tracking-wide text-zinc-400">Connexion au live...</p>
       </div>
     )
   }
@@ -128,28 +152,30 @@ export function LiveModeView({ shopId, shopSlug, shopName, whatsapp, primaryColo
   // ─── NO PRODUCT PINNED YET ──────────────────────────────────────────
   if (!product) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-950 to-black flex flex-col items-center justify-center gap-4 px-4">
-        {/* Live banner even when no product */}
-        <div className="absolute top-0 left-0 right-0 bg-red-600 text-white text-center py-3 px-4">
-          <div className="flex items-center justify-center gap-2">
+      <div className="fixed inset-0 flex flex-col bg-gradient-to-b from-zinc-900 via-zinc-950 to-black">
+        {/* Live banner */}
+        <div className="bg-red-600 px-4 py-3 shadow-lg">
+          <div className="mx-auto flex max-w-lg items-center justify-center gap-2.5 text-white">
             <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-white" />
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-white" />
             </span>
-            <span className="text-sm font-bold tracking-wide">🔴 EN DIRECT</span>
+            <span className="text-sm font-bold tracking-wide">EN DIRECT</span>
             <span className="text-sm font-medium opacity-90">— {shopName}</span>
           </div>
         </div>
 
-        <div className="mt-16 flex flex-col items-center gap-3">
-          <span className="relative flex h-3 w-3">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500" />
-          </span>
-          <p className="text-sm text-gray-400 font-medium">
-            En attente du produit...
-          </p>
-          <p className="text-xs text-gray-600">Le produit apparaîtra automatiquement</p>
+        {/* Waiting state */}
+        <div className="flex flex-1 flex-col items-center justify-center gap-4 px-4">
+          <motion.div
+            animate={{ scale: [1, 1.15, 1] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+            className="flex h-16 w-16 items-center justify-center rounded-full bg-red-500/10"
+          >
+            <Flame className="h-8 w-8 text-red-500" />
+          </motion.div>
+          <p className="text-base font-semibold text-zinc-200">En attente du produit...</p>
+          <p className="text-sm text-zinc-500">Le produit apparaîtra automatiquement</p>
         </div>
       </div>
     )
@@ -158,117 +184,200 @@ export function LiveModeView({ shopId, shopSlug, shopName, whatsapp, primaryColo
   // ─── NETWORK ERROR ──────────────────────────────────────────────────
   if (error === 'network') {
     return (
-      <div className="min-h-[70vh] flex flex-col items-center justify-center gap-3 px-4 bg-gray-950">
-        <p className="text-sm text-gray-400">Erreur de connexion. Reconnexion...</p>
-        <Loader2 className="h-5 w-5 animate-spin text-gray-500" />
+      <div className="fixed inset-0 flex flex-col items-center justify-center gap-3 bg-zinc-950 px-4">
+        <p className="text-sm text-zinc-400">Erreur de connexion. Reconnexion...</p>
+        <Loader2 className="h-5 w-5 animate-spin text-zinc-500" />
       </div>
     )
   }
 
+  const lowStock = product.stock !== null && product.stock !== undefined && product.stock <= 5 && product.stock > 0
+  const description = product.shortDescription || product.description
+
   // ─── LIVE VIEW: PRODUCT SPOTLIGHT ───────────────────────────────────
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-950 to-black flex flex-col">
-      {/* Sticky Live Banner */}
-      <div className="sticky top-0 z-50 bg-red-600 text-white text-center py-2.5 px-4 shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
-        <div className="flex items-center justify-center gap-2 flex-wrap">
-          <span className="relative flex h-2.5 w-2.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-white" />
-          </span>
-          <span className="text-sm sm:text-base font-bold tracking-wide">
-            🔴 EN DIRECT
-          </span>
-          <span className="text-sm sm:text-base font-medium opacity-90 hidden sm:inline">
-            — {shopName}
-          </span>
+    <div className="fixed inset-0 flex flex-col overflow-hidden bg-gradient-to-b from-zinc-900 via-zinc-950 to-black">
+      {/* ─── Sticky Live Banner ─── */}
+      <div className="z-50 flex-shrink-0 bg-red-600 shadow-lg">
+        <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-2.5 text-white">
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-white" />
+            </span>
+            <span className="text-sm font-bold tracking-wide">EN DIRECT</span>
+          </div>
+          <div className="flex items-center gap-1.5 rounded-full bg-black/20 px-2.5 py-1">
+            <Clock className="h-3 w-3" />
+            <span className="text-xs font-semibold tabular-nums">{formatElapsed(elapsed)}</span>
+          </div>
         </div>
       </div>
 
-      {/* Product Spotlight */}
-      <div className="flex-1 flex flex-col items-center px-4 py-6 sm:py-8">
-        {/* Product Image — full width on mobile, max 400px on larger */}
-        <div className="relative w-full max-w-[400px] aspect-square rounded-2xl overflow-hidden bg-gray-800 shadow-2xl shadow-red-500/10 mb-6">
-          {product.image ? (
-            <Image
-              src={product.image}
-              alt={product.name}
-              fill
-              unoptimized
-              priority
-              className="object-cover"
-              sizes="(max-width: 640px) 100vw, 400px"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-700 to-gray-900">
-              <span className="text-6xl">🛍️</span>
+      {/* ─── Scrollable Content ─── */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="mx-auto max-w-lg px-4 pb-32 pt-5 sm:pt-8">
+          {/* ─── Product Image (clean, no text overlay) ─── */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: 'easeOut' }}
+            className="relative overflow-hidden rounded-3xl bg-zinc-800 shadow-2xl"
+            style={{ boxShadow: `0 20px 60px -15px ${accent}40` }}
+          >
+            <div className="relative aspect-[4/5] w-full">
+              {productImage ? (
+                <Image
+                  src={productImage}
+                  alt={product.name}
+                  fill
+                  unoptimized
+                  priority
+                  className="object-cover"
+                  sizes="(max-width: 640px) 100vw, 448px"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-zinc-700 to-zinc-900">
+                  <span className="text-7xl opacity-50">🛍️</span>
+                </div>
+              )}
             </div>
-          )}
 
-          {/* Gradient overlay with product info */}
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-5 pt-16">
-            <h2 className="text-xl sm:text-3xl font-bold text-white leading-tight mb-1 drop-shadow-lg">
+            {/* Live badge floating on image */}
+            <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-red-600 px-3 py-1.5 shadow-lg">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
+              </span>
+              <span className="text-xs font-bold tracking-wide text-white">LIVE</span>
+            </div>
+
+            {/* Low stock badge floating on image */}
+            {lowStock && (
+              <div className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-amber-500 px-3 py-1.5 shadow-lg">
+                <Zap className="h-3 w-3 text-white" />
+                <span className="text-xs font-bold text-white">Plus que {product.stock}</span>
+              </div>
+            )}
+          </motion.div>
+
+          {/* ─── Product Info Card ─── */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.1, ease: 'easeOut' }}
+            className="mt-4 rounded-2xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur-sm"
+          >
+            {/* Shop name + logo */}
+            <div className="mb-3 flex items-center gap-2">
+              {logo ? (
+                <Image
+                  src={logo}
+                  alt=""
+                  width={22}
+                  height={22}
+                  unoptimized
+                  className="rounded-full object-cover ring-1 ring-white/20"
+                />
+              ) : (
+                <div className="flex h-[22px] w-[22px] items-center justify-center rounded-full bg-white/10">
+                  <Store className="h-3 w-3 text-zinc-300" />
+                </div>
+              )}
+              <span className="text-xs font-semibold text-zinc-400">{shopName}</span>
+            </div>
+
+            {/* Product name */}
+            <h2 className="text-xl font-bold leading-tight text-white sm:text-2xl">
               {product.name}
             </h2>
-            {(product.shortDescription || product.description) && (
-              <p className="text-sm text-gray-300 line-clamp-2 mb-2">
-                {product.shortDescription || product.description}
+
+            {/* Description */}
+            {description && (
+              <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-zinc-400">
+                {description}
               </p>
             )}
-            <p
-              className="text-xl sm:text-3xl font-black"
-              style={{ color: accent }}
+
+            {/* Price + stock row */}
+            <div className="mt-4 flex items-end justify-between">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Prix</p>
+                <p
+                  className="text-2xl font-black sm:text-3xl"
+                  style={{ color: accent }}
+                >
+                  {formatPrice(product.price)}
+                </p>
+              </div>
+              {lowStock && (
+                <div className="flex items-center gap-1 rounded-lg bg-amber-500/10 px-2.5 py-1.5">
+                  <Flame className="h-3.5 w-3.5 text-amber-500" />
+                  <span className="text-xs font-semibold text-amber-400">
+                    Stock limité
+                  </span>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* ─── Fixed Bottom CTA Bar ─── */}
+      <div className="flex-shrink-0 border-t border-white/10 bg-zinc-950/80 backdrop-blur-lg">
+        <div className="mx-auto max-w-lg px-4 py-3">
+          <div className="flex gap-2.5">
+            {/* WhatsApp CTA */}
+            <Button
+              size="lg"
+              className="h-14 flex-1 gap-2 rounded-2xl text-base font-bold shadow-lg transition-transform active:scale-[0.97]"
+              style={{ backgroundColor: '#25D366', color: '#ffffff' }}
+              onClick={handleOrder}
             >
-              {formatPrice(product.price)}
-            </p>
+              <AnimatePresence mode="wait">
+                {ordered ? (
+                  <motion.span
+                    key="ordered"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    className="flex items-center gap-2"
+                  >
+                    <Check className="h-5 w-5" />
+                    Redirection...
+                  </motion.span>
+                ) : (
+                  <motion.span
+                    key="default"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    className="flex items-center gap-2"
+                  >
+                    <MessageCircle className="h-5 w-5" />
+                    Commander
+                    <ChevronRight className="h-4 w-4" />
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </Button>
+
+            {/* Share button */}
+            <Button
+              variant="outline"
+              size="lg"
+              className="h-14 w-14 shrink-0 rounded-2xl border-white/15 bg-white/5 p-0 text-white hover:bg-white/10 active:scale-95"
+              onClick={handleShare}
+              aria-label="Partager le live"
+            >
+              <Share2 className="h-5 w-5" />
+            </Button>
           </div>
-        </div>
 
-        {/* Stock indicator */}
-        {product.stock !== null && product.stock !== undefined && product.stock <= 5 && product.stock > 0 && (
-          <div className="mb-4 px-3 py-1.5 bg-amber-500/10 border border-amber-500/30 rounded-full">
-            <span className="text-xs font-medium text-amber-400">
-              ⚡ Plus que {product.stock} en stock
-            </span>
-          </div>
-        )}
-
-        {/* CTA Buttons */}
-        <div className="w-full max-w-[400px] space-y-3">
-          <Button
-            size="lg"
-            className="w-full h-14 sm:h-16 gap-2 text-lg sm:text-xl font-bold rounded-2xl shadow-lg shadow-green-500/20 active:scale-[0.98] transition-transform"
-            style={{ backgroundColor: '#25D366', color: '#ffffff' }}
-            onClick={handleOrder}
-          >
-            <MessageCircle className="h-6 w-6" />
-            Commander via WhatsApp
-          </Button>
-          <Button
-            variant="outline"
-            size="lg"
-            className="w-full h-12 gap-2 rounded-2xl border-white/20 text-white hover:bg-white/10 active:scale-[0.98] transition-transform"
-            onClick={handleShare}
-          >
-            <Share2 className="h-5 w-5" />
-            Partager le lien du live
-          </Button>
-        </div>
-
-        {/* Shop branding at bottom */}
-        <div className="mt-8 flex items-center gap-2 text-white/40">
-          {logo ? (
-            <Image
-              src={logo}
-              alt=""
-              width={20}
-              height={20}
-              unoptimized
-              className="rounded-full object-cover"
-            />
-          ) : (
-            <Store className="h-4 w-4" />
-          )}
-          <span className="text-xs font-medium">{shopName}</span>
+          {/* Powered by */}
+          <p className="mt-2 text-center text-[10px] font-medium tracking-wide text-zinc-600">
+            Live shopping propulsé par Boutiko
+          </p>
         </div>
       </div>
     </div>
