@@ -110,8 +110,8 @@ function TikTokHeader({
                 src={logo}
                 alt={shopName}
                 width={200}
-                height={50}
-                className="h-[50px] w-auto max-w-[200px] object-contain"
+                height={53}
+                className="h-[53px] w-auto max-w-[200px] object-contain"
                 fallbackIcon="image"
               />
             ) : (

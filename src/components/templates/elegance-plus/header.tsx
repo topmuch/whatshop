@@ -95,9 +95,9 @@ export function EleganceHeader({
               <Image
                 src={shop.logo}
                 alt={shop.name ?? 'Logo'}
-                width={180}
-                height={40}
-                className="h-8 lg:h-10 w-auto max-w-[180px] object-contain"
+                width={200}
+                height={53}
+                className="h-[53px] w-auto max-w-[200px] object-contain"
                 priority
               />
             ) : (

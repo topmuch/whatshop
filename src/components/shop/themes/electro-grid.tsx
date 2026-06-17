@@ -105,9 +105,9 @@ function ElectroMenu({
               <ImageWithFallback
                 src={logo}
                 alt={shopName}
-                width={255}
-                height={82}
-                className="h-[82px] w-[255px] object-contain"
+                width={200}
+                height={53}
+                className="h-[53px] w-[200px] object-contain"
                 fallbackIcon="image"
               />
             ) : (

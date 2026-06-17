@@ -78,9 +78,9 @@ function CosmikaHeader({
               <ImageWithFallback
                 src={logo}
                 alt={shopName}
-                width={160}
-                height={40}
-                className="h-10 w-auto object-contain"
+                width={200}
+                height={53}
+                className="h-[53px] w-auto object-contain"
                 fallbackIcon="image"
               />
             ) : (
@@ -863,7 +863,7 @@ function CosmikaFooter({
           <div className="md:col-span-1">
             <div className="flex items-center gap-3 mb-4">
               {logo && logo.length > 0 ? (
-                <ImageWithFallback src={logo} alt={shopName} width={160} height={40} className="h-10 w-auto object-contain brightness-0 invert" fallbackIcon="image" />
+                <ImageWithFallback src={logo} alt={shopName} width={200} height={53} className="h-[53px] w-auto object-contain brightness-0 invert" fallbackIcon="image" />
               ) : (
                 <span className="text-lg font-bold">{shopName}</span>
               )}

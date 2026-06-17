@@ -119,8 +119,8 @@ function BeautyHeader({
                 src={logo}
                 alt={shopName}
                 width={200}
-                height={50}
-                className="h-[50px] w-auto object-contain"
+                height={53}
+                className="h-[53px] w-auto object-contain"
                 fallbackIcon="image"
               />
             ) : (

@@ -128,8 +128,8 @@ function LuxeHeader({
                 src={logo}
                 alt={shopName}
                 width={200}
-                height={70}
-                className="h-[70px] w-[200px] object-contain"
+                height={53}
+                className="h-[53px] w-[200px] object-contain"
                 fallbackIcon="image"
               />
             ) : (
