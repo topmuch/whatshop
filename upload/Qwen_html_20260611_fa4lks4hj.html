@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cosmika - Cosmétiques Premium</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        serif: ['Playfair Display', 'serif'],
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        rose: {
+                            50: '#fff1f2',
+                            100: '#ffe4e6',
+                            200: '#fecdd3',
+                            300: '#fda4af',
+                            400: '#fb7185',
+                            500: '#f43f5e',
+                            600: '#e11d48',
+                        },
+                        gold: {
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .whatsapp-black {
+            animation: pulse-black 2s infinite;
+        }
+        @keyframes pulse-black {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.7); }
+            50% { box-shadow: 0 0 0 20px rgba(0, 0, 0, 0); }
+        }
+    </style>
+</head>
+<body class="font-sans bg-white">
+
+    <!-- Top Bar -->
+    <div class="bg-black text-white text-center py-2 text-sm">
+        Free shipping on orders over $100!
+    </div>
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between gap-8">
+                <!-- Logo -->
+                <img src="https://wordpressthemes.live/WCG10/WCM231_cosmika/cosmetic05/wp-content/plugins/templatemela-plugin-cosmika/layouts/cosmetic05/img/logo.svg" alt="Cosmika" class="h-8">
+                
+                <!-- Navigation -->
+                <nav class="hidden lg:flex gap-6 text-sm font-medium">
+                    <a href="#" class="text-gray-700 hover:text-rose-600">Home</a>
+                    <a href="#" class="text-gray-700 hover:text-rose-600">Shop</a>
+                    <a href="#categories" class="text-gray-700 hover:text-rose-600">Categories</a>
+                    <a href="#products" class="text-gray-700 hover:text-rose-600">Products</a>
+                    <a href="#" class="text-gray-700 hover:text-rose-600">Top deals</a>
+                    <a href="#" class="text-gray-700 hover:text-rose-600">Elements</a>
+                </nav>
+
+                <!-- Search & Icons -->
+                <div class="flex items-center gap-4">
+                    <input type="text" placeholder="I am looking for..." class="hidden md:block px-4 py-2 bg-gray-100 rounded-full text-sm w-48 focus:outline-none focus:ring-2 focus:ring-rose-500">
+                    <button class="text-gray-700 hover:text-rose-600">🔍</button>
+                    <button class="text-gray-700 hover:text-rose-600">👤</button>
+                    <button class="text-gray-700 hover:text-rose-600 relative">
+                        🛒
+                        <span class="absolute -top-2 -right-2 bg-rose-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">2</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Slider -->
+    <section class="relative bg-gradient-to-br from-rose-50 to-pink-100 py-20">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div class="fade-in">
+                    <p class="text-sm font-semibold text-gray-600 mb-2">PERFECT YOUR LOOK WITH DISCOUNTS!</p>
+                    <h1 class="font-serif text-5xl font-bold text-gray-900 mb-4">Flawless Makeup Deals Just for You!</h1>
+                    <p class="text-gray-600 mb-6">Discover the iconic product, now reimagined in an upgraded formula. Mini Blush lasts for up to 16 hours with a comfortable,...</p>
+                    <button class="bg-black text-white px-8 py-3 rounded-full font-semibold hover:bg-gray-800 transition">Shop Now</button>
+                </div>
+                <div class="relative">
+                    <img src="https://wordpressthemes.live/WCG10/WCM231_cosmika/cosmetic05/wp-content/uploads/2025/04/cat05.jpg" alt="Makeup" class="rounded-2xl shadow-2xl">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Products -->
+    <section id="products" class="py-16 px-4">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="font-serif text-3xl font-bold text-center mb-12">Featured Products</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Product 1 -->
+                <div class="group">
+                    <div class="relative overflow-hidden rounded-lg mb-3">
+                        <span class="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">-17%</span>
+                        <img src="https://wordpressthemes.live/WCG10/WCM231_cosmika/default/wp-content/uploads/2025/04/cat01.jpg" alt="Product" class="w-full h-64 object-cover group-hover:scale-105 transition">
+                        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3">
+                            <div class="flex text-gold-400 text-xs">
+                                <span>⭐⭐⭐⭐⭐</span>
+                            </div>
+                        </div>
+                    </div>
+                    <h3 class="font-semibold text-sm mb-1">Laneige Lip Sleeping Mask Nuit Pure 20g</h3>
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-red-500 text-xs">578d : 00h : 34m : 27s</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-lg font-bold text-gray-900">$249</span>
+                        <span class="text-sm text-gray-400 line-through">$299</span>
+                    </div>
+                </div>
+
+                <!-- Product 2 -->
+                <div class="group">
+                    <div class="relative overflow-hidden rounded-lg mb-3">
+                        <img src="https://wordpressthemes.live/WCG10/WCM231_cosmika/default/wp-content/uploads/2025/04/cat02.jpg" alt="Product" class="w-full h-64 object-cover group-hover:scale-105 transition">
+                        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3">
+                            <div class="flex text-gold-400 text-xs">
+                                <span>⭐⭐⭐⭐⭐</span>
+                            </div>
+                        </div>
+                    </div>
+                    <h3 class="font-semibold text-sm mb-1">Ceo Afterglow Brightening Vitamin C Cream</h3>
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-gray-900 font-bold">$199</span>
+                    </div>
+                </div>
+
+                <!-- Product 3 -->
+                <div class="group">
+                    <div class="relative overflow-hidden rounded-lg mb-3">
+                        <span class="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">-17%</span>
+                        <img src="https://wordpressthemes.live/WCG10/WCM231_cosmika/default/wp-content/uploads/2025/04/cat03.jpg" alt="Product" class="w-full h-64 object-cover group-hover:scale-105 transition">
+                        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3">
+                            <div class="flex text-gold-400 text-xs">
+                                <span>⭐⭐⭐⭐⭐</span>
+                            </div>
+                        </div>
+                    </div>
+                    <h3 class="font-semibold text-sm mb-1">Granactive Retinoid 2% in Squalane 30ml</h3>
+                    <div class="flex items-center gap-2">
+                        <span class="text-lg font-bold text-gray-900">$199</span>
+                        <span class="text-sm text-gray-400">$249</span>
+                    </div>
+                </div>
+
+                <!-- Product 4 -->
+                <div class="group">
+                    <div class="relative overflow-hidden rounded-lg mb-3">
+                        <img src="https://wordpressthemes.live/WCG10/WCM231_cosmika/default/wp-content/uploads/2025/04/cat04.jpg" alt="Product" class="w-full h-64 object-cover group-hover:scale-105 transition">
+                        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3">
+                            <div class="flex text-gold-400 text-xs">
+                                <span>⭐⭐⭐⭐⭐</span>
+                            </div>
+                        </div>
+                    </div>
+                    <h3 class="font-semibold text-sm mb-1">Overnight Glow Dark Spot Sleeping Cream 50ml</h3>
+                    <div class="flex items-center gap-2">
+                        <span class="text-lg font-bold text-gray-900">$89</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Categories Grid -->
+    <section id="categories" class="py-16 px-4 bg-gray-50">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div class="relative group cursor-pointer overflow-hidden rounded-lg">
+                    <img src="https://wordpressthemes.live/WCG10/WCM231_cosmika/cosmetic05/wp-content/uploads/2025/04/cat05.jpg" alt="Foundation" class="w-full h-80 object-cover group-hover:scale-105 transition">
+                    <div class="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition"></div>
+                    <div class="absolute bottom-4 left-4 right-4 text-center">
+                        <button class="bg-white text-black px-6 py-2 rounded-full text-sm font-semibold hover:bg-gray-100 transition">Foundation</button>
+                    </div>
+                </div>
+
+                <div class="relative group cursor-pointer overflow-hidden rounded-lg">
+                    <img src="https://wordpressthemes.live/WCG10/WCM231_cosmika/cosmetic05/wp-content/uploads/2025/04/cat01.jpg" alt="Concealer" class="w-full h-80 object-cover group-hover:scale-105 transition">
+                    <div class="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition"></div>
+                    <div class="absolute bottom-4 left-4 right-4 text-center">
+                        <button class="bg-white text-black px-6 py-2 rounded-full text-sm font-semibold hover:bg-gray-100 transition">Concealer</button>
+                    </div>
+                </div>
+
+                <div class="relative group cursor-pointer overflow-hidden rounded-lg">
+                    <img src="https://wordpressthemes.live/WCG10/WCM231_cosmika/cosmetic05/wp-content/uploads/2025/04/cat02.jpg" alt="Moisturiser" class="w-full h-80 object-cover group-hover:scale-105 transition">
+                    <div class="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition"></div>
+                    <div class="absolute bottom-4 left-4 right-4 text-center">
+                        <button class="bg-white text-black px-6 py-2 rounded-full text-sm font-semibold hover:bg-gray-100 transition">Moisturiser</button>
+                    </div>
+                </div>
+
+                <div class="relative group cursor-pointer overflow-hidden rounded-lg">
+                    <img src="https://wordpressthemes.live/WCG10/WCM231_cosmika/cosmetic05/wp-content/uploads/2025/04/cat03.jpg" alt="Brightening" class="w-full h-80 object-cover group-hover:scale-105 transition">
+                    <div class="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition"></div>
+                    <div class="absolute bottom-4 left-4 right-4 text-center">
+                        <button class="bg-white text-black px-6 py-2 rounded-full text-sm font-semibold hover:bg-gray-100 transition">Brightening</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Promo Banner -->
+    <section class="py-16 px-4 bg-gradient-to-br from-rose-50 to-pink-100">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div class="relative">
+                    <img src="https://wordpressthemes.live/WCG10/WCM231_cosmika/cosmetic05/wp-content/uploads/2025/04/cat05.jpg" alt="Transform" class="rounded-2xl shadow-xl">
+                </div>
+                <div>
+                    <p class="text-sm font-semibold text-gray-600 mb-2">GLAM UP WITH HOT DISCOUNTS!</p>
+                    <h2 class="font-serif text-4xl font-bold text-gray-900 mb-4">Transform Your Look with Special Savings!</h2>
+                    <p class="text-gray-600 mb-6">Discover the iconic product, now reimagined in an upgraded formula. Mini Blush lasts for up to 16 hours with a comfortable,...</p>
+                    <button class="bg-black text-white px-8 py-3 rounded-full font-semibold hover:bg-gray-800 transition">Shop Now</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Advantages -->
+    <section class="py-12 px-4 bg-white border-t">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                <div>
+                    <div class="text-4xl mb-3">🚚</div>
+                    <h3 class="font-semibold mb-1">Free Shipping</h3>
+                    <p class="text-sm text-gray-500">Free Shipping for orders over $199</p>
+                </div>
+                <div>
+                    <div class="text-4xl mb-3">🔄</div>
+                    <h3 class="font-semibold mb-1">Returns Policy</h3>
+                    <p class="text-sm text-gray-500">Within 30 days for an exchange</p>
+                </div>
+                <div>
+                    <div class="text-4xl mb-3">💬</div>
+                    <h3 class="font-semibold mb-1">Online Support</h3>
+                    <p class="text-sm text-gray-500">24 hours a day, 7 days a week</p>
+                </div>
+                <div>
+                    <div class="text-4xl mb-3">💳</div>
+                    <h3 class="font-semibold mb-1">Flexible Payment</h3>
+                    <p class="text-sm text-gray-500">Pay with Multiple Credit cards</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="py-16 px-4 bg-gray-50">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div>
+                    <div class="flex text-gold-500 mb-4">
+                        <span>⭐⭐⭐⭐⭐</span>
+                    </div>
+                    <h3 class="font-serif text-3xl font-bold mb-6">I will buy more!</h3>
+                    <p class="text-gray-600 mb-6">"It's still tough enough that it lasts her a few days of on and off chewing but soft enough that I'm not worried it'll hurt her mouth."</p>
+                    <p class="font-semibold">Josh Doe</p>
+                    <p class="text-sm text-gray-500">Orlando, FL</p>
+                </div>
+                <div>
+                    <img src="https://images.unsplash.com/photo-1515377905703-c4788e51af15?w=600" alt="Happy customer" class="rounded-2xl shadow-xl">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12 px-4">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <h4 class="font-semibold mb-4">Contact us</h4>
+                    <p class="text-sm text-gray-400 mb-2">99 New Theme St. XY, USA 12345, Beside the Sun point land.</p>
+                    <p class="text-sm text-gray-400">📞 +00 123-456-789</p>
+                    <p class="text-sm text-gray-400">📞 +00 987-654-321</p>
+                    <p class="text-sm text-gray-400">✉️ demo@example.com</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Get to know Us</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="#" class="hover:text-white">About Us</a></li>
+                        <li><a href="#" class="hover:text-white">Term & Policy</a></li>
+                        <li><a href="#" class="hover:text-white">Careers</a></li>
+                        <li><a href="#" class="hover:text-white">News & Blog</a></li>
+                        <li><a href="#" class="hover:text-white">Contact Us</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Information</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="#" class="hover:text-white">Help Center</a></li>
+                        <li><a href="#" class="hover:text-white">Feedback</a></li>
+                        <li><a href="#" class="hover:text-white">FAQs</a></li>
+                        <li><a href="#" class="hover:text-white">Size Guide</a></li>
+                        <li><a href="#" class="hover:text-white">Payments</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Sign Up Newsletter</h4>
+                    <p class="text-sm text-gray-400 mb-4">Join our list and get 15% Discount on your First Order!</p>
+                    <div class="flex">
+                        <input type="email" placeholder="Your email address" class="flex-1 px-4 py-2 rounded-l-lg bg-gray-800 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-rose-500">
+                        <button class="bg-rose-600 px-4 py-2 rounded-r-lg hover:bg-rose-700 transition">➤</button>
+                    </div>
+                    <div class="flex gap-4 mt-4">
+                        <a href="#" class="text-gray-400 hover:text-white">f</a>
+                        <a href="#" class="text-gray-400 hover:text-white">🐦</a>
+                        <a href="#" class="text-gray-400 hover:text-white">📷</a>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+                <p class="text-sm text-gray-400">© 2026 Cosmika_Cosmetic05 - WordPress Theme by Avanam</p>
+                <div class="flex gap-2">
+                    <div class="w-10 h-6 bg-blue-600 rounded"></div>
+                    <div class="w-10 h-6 bg-blue-800 rounded"></div>
+                    <div class="w-10 h-6 bg-yellow-500 rounded"></div>
+                    <div class="w-10 h-6 bg-red-600 rounded"></div>
+                    <div class="w-10 h-6 bg-purple-600 rounded"></div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
