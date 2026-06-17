@@ -80,6 +80,45 @@ export const TEMPLATE_DISPLAY: Record<string, TemplateDisplayInfo> = {
       emoji: '⚡',
     },
   },
+  'modern-store': {
+    displayName: 'Modern Store',
+    tagline: 'E-commerce avec panier et checkout',
+    description:
+      "Template e-commerce complet avec page d'accueil, fiches produit détaillées, panier persistant, checkout formulaire (COD/Mobile Money) ET bouton « Buy It Now » WhatsApp. Idéal pour les boutiques en ligne professionnelles.",
+    features: [
+      'Page d\'accueil avec hero, best sellers, témoignages',
+      'Fiches produit avec galerie, variantes, produits similaires',
+      'Panier persistant (localStorage)',
+      'Checkout formulaire (COD, Mobile Money)',
+      'Bouton « Buy It Now » WhatsApp direct',
+      'Sticky CTA mobile',
+    ],
+    style: {
+      primaryColor: '#3B82F6',
+      badge: 'E-commerce',
+      emoji: '🛒',
+    },
+  },
+  'single-product': {
+    displayName: 'Single Produit',
+    tagline: 'Landing page optimisée conversion',
+    description:
+      "Landing page focalisée sur un seul produit, optimisée pour la conversion. Compte à rebours, avis clients, FAQ, preuve sociale. Parfait pour les TikTokeurs et vendeurs mono-produit.",
+    features: [
+      'Landing page mono-produit optimisée conversion',
+      'Compte à rebours avec reset quotidien',
+      'Galerie d\'images avec lightbox',
+      'Sélecteur de variantes (couleurs/tailles)',
+      'Avis clients avec distribution',
+      'FAQ accordéon',
+      'Sticky CTA mobile',
+    ],
+    style: {
+      primaryColor: '#EC4899',
+      badge: 'Conversion',
+      emoji: '🎯',
+    },
+  },
 }
 
 /**
