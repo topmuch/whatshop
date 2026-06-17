@@ -15,7 +15,6 @@ import {
   Facebook,
   MessageCircle,
   Flame,
-  Search,
 } from 'lucide-react'
 import { useAppStore, type Shop as ShopType } from '@/lib/store'
 import { formatPrice } from '@/lib/shared'
@@ -88,7 +87,7 @@ export function ModernStoreTemplate() {
   )
   const [loading, setLoading] = useState(true)
   const [testimonials, setTestimonials] = useState<Testimonial[]>([])
-  const [searchQuery, setSearchQuery] = useState('')
+  // searchQuery removed — search bar removed from header
 
   // Product view state
   const [detailedProduct, setDetailedProduct] = useState<DetailedProduct | null>(
@@ -216,15 +215,8 @@ export function ModernStoreTemplate() {
     [products],
   )
 
-  const filteredProducts = useMemo(() => {
-    if (!searchQuery.trim()) return products
-    const q = searchQuery.toLowerCase()
-    return products.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        (p.categoryName || '').toLowerCase().includes(q),
-    )
-  }, [products, searchQuery])
+  // All products shown (no search filtering — search bar removed)
+  const filteredProducts = products
 
   // ─── Cart actions ───
   const handleAddDetailedToCart = useCallback(() => {
@@ -297,8 +289,6 @@ export function ModernStoreTemplate() {
         accent={accent}
         itemCount={itemCount}
         onCartClick={openCart}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
         onHomeClick={() => setView('home')}
       />
 
@@ -391,93 +381,66 @@ function Header({
   accent,
   itemCount,
   onCartClick,
-  searchQuery,
-  onSearchChange,
   onHomeClick,
 }: {
   shop: PublicShopData
   accent: string
   itemCount: number
   onCartClick: () => void
-  searchQuery: string
-  onSearchChange: (q: string) => void
   onHomeClick: () => void
 }) {
   return (
-    <header className="sticky top-0 z-30 border-b border-gray-100 bg-white/95 backdrop-blur-md">
-      <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
-        {/* Logo + shop name */}
+    <header className="sticky top-0 z-30 border-b border-gray-100 bg-white/95 backdrop-blur-md shadow-sm">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
+        {/* Logo — well-dimensioned uploaded logo */}
         <button
           type="button"
           onClick={onHomeClick}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 min-h-[44px]"
           aria-label="Retour à l'accueil"
         >
           {shop.logo ? (
             <Image
               src={shop.logo}
               alt={shop.name}
-              width={32}
-              height={32}
+              width={200}
+              height={53}
               unoptimized
-              className="h-8 w-8 rounded-full object-cover"
+              className="h-10 md:h-12 w-auto max-w-[180px] md:max-w-[200px] object-contain"
+              priority
             />
           ) : (
-            <div
-              className="flex h-8 w-8 items-center justify-center rounded-full text-white"
-              style={{ backgroundColor: accent }}
-            >
-              <Store className="h-4 w-4" />
-            </div>
-          )}
-          <span className="hidden font-bold text-gray-900 sm:inline">
-            {shop.name}
-          </span>
-        </button>
-
-        {/* Search (desktop) */}
-        <div className="relative ml-2 hidden flex-1 md:block">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-          <Input
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Rechercher un produit..."
-            className="h-9 pl-9"
-          />
-        </div>
-
-        <div className="ml-auto flex items-center gap-2">
-          {/* Cart icon */}
-          <button
-            type="button"
-            onClick={onCartClick}
-            aria-label={`Voir le panier (${itemCount} article${itemCount > 1 ? 's' : ''})`}
-            className="relative flex h-10 w-10 items-center justify-center rounded-full text-gray-700 transition-colors hover:bg-gray-100"
-          >
-            <ShoppingBag className="h-5 w-5" />
-            {itemCount > 0 && (
-              <span
-                className="absolute -right-0.5 -top-0.5 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1 text-[10px] font-bold text-white"
+            <div className="flex items-center gap-2">
+              <div
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-white"
                 style={{ backgroundColor: accent }}
               >
-                {itemCount}
+                <Store className="h-4 w-4" />
+              </div>
+              <span className="text-base font-bold text-gray-900">
+                {shop.name}
               </span>
-            )}
-          </button>
-        </div>
-      </div>
+            </div>
+          )}
+        </button>
 
-      {/* Search (mobile) */}
-      <div className="px-4 pb-3 md:hidden">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-          <Input
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Rechercher un produit..."
-            className="h-9 pl-9"
-          />
-        </div>
+        {/* Cart icon */}
+        <button
+          type="button"
+          onClick={onCartClick}
+          aria-label={`Voir le panier (${itemCount} article${itemCount > 1 ? 's' : ''})`}
+          className="relative flex h-11 w-11 items-center justify-center rounded-full text-gray-700 transition-colors hover:bg-gray-100"
+        >
+          <ShoppingBag className="h-5 w-5" />
+          {itemCount > 0 && (
+            <span
+              className="absolute -right-0.5 -top-0.5 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1 text-[10px] font-bold text-white"
+              style={{ backgroundColor: accent }}
+            >
+              {itemCount}
+            </span>
+          )}
+        </button>
       </div>
     </header>
   )
@@ -522,83 +485,30 @@ function HomeView(props: HomeViewProps) {
 
   return (
     <>
-      {/* ─── SECTION A: HERO ─── */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-gray-50 to-white">
-        <div className="mx-auto grid max-w-6xl items-center gap-8 px-4 py-12 md:grid-cols-2 md:py-20">
-          {/* Text */}
-          <div>
-            <p
-              className="mb-3 inline-flex items-center rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider"
-              style={{ backgroundColor: `${accent}14`, color: accent }}
-            >
-              ★ Boutique officielle
-            </p>
-            <h1 className="text-3xl font-black leading-tight text-gray-900 md:text-5xl">
-              {config.hero.title}
-            </h1>
-            <p className="mt-3 text-base text-gray-600 md:text-lg">
-              {config.hero.subtitle}
-            </p>
-
-            {/* Stats */}
-            {config.hero.stats.length > 0 && (
-              <div className="mt-6 flex flex-wrap gap-6">
-                {config.hero.stats.map((s, i) => (
-                  <div key={i}>
-                    <p className="text-2xl font-black text-gray-900">
-                      {s.value}
-                    </p>
-                    <p className="text-xs uppercase tracking-wide text-gray-500">
-                      {s.label}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Button
-                onClick={onSeeProducts}
-                size="lg"
-                className="gap-2 rounded-xl text-sm font-bold uppercase tracking-wide"
-                style={{ backgroundColor: accent, color: '#fff' }}
-              >
-                {config.hero.ctaText}
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
+      {/* ─── SECTION A: HERO — Full-width featured image only ─── */}
+      {(heroProduct?.images?.[0] || heroProduct?.image || shop.heroImageUrl || shop.coverImageUrl || shop.banner) && (
+        <section className="w-full bg-gray-50 overflow-hidden">
+          <div className="relative w-full" style={{ maxHeight: '600px' }}>
+            <Image
+              src={
+                heroProduct?.images?.[0] ||
+                heroProduct?.image ||
+                shop.heroImageUrl ||
+                shop.coverImageUrl ||
+                shop.banner!
+              }
+              alt="Produit vedette"
+              width={1400}
+              height={600}
+              unoptimized
+              priority
+              className="w-full h-auto object-cover"
+              style={{ maxHeight: '600px' }}
+              sizes="100vw"
+            />
           </div>
-
-          {/* Image */}
-          <div className="relative aspect-square w-full overflow-hidden rounded-3xl bg-gray-100 shadow-xl md:aspect-[4/5]">
-            {heroProduct?.images?.[0] || heroProduct?.image ? (
-              <Image
-                src={heroProduct.images?.[0] || heroProduct.image!}
-                alt={heroProduct.name}
-                fill
-                unoptimized
-                priority
-                className="object-cover"
-                sizes="(max-width: 768px) 100vw, 50vw"
-              />
-            ) : shop.heroImageUrl || shop.coverImageUrl || shop.banner ? (
-              <Image
-                src={shop.heroImageUrl || shop.coverImageUrl || shop.banner!}
-                alt={shop.name}
-                fill
-                unoptimized
-                priority
-                className="object-cover"
-                sizes="(max-width: 768px) 100vw, 50vw"
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-                <Store className="h-20 w-20 text-gray-300" />
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ─── SECTION B: EXCLUSIVE DEALS ─── */}
       {promoProducts.length > 0 && (
