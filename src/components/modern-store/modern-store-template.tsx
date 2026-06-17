@@ -15,6 +15,8 @@ import {
   Facebook,
   MessageCircle,
   Flame,
+  Phone,
+  MapPin,
 } from 'lucide-react'
 import { useAppStore, type Shop as ShopType } from '@/lib/store'
 import { formatPrice } from '@/lib/shared'
@@ -215,6 +217,17 @@ export function ModernStoreTemplate() {
     [products],
   )
 
+  // Derive unique categories from products
+  const categories = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const p of products) {
+      if (p.categoryName && !map.has(p.categoryName)) {
+        map.set(p.categoryName, p.categoryId || '')
+      }
+    }
+    return Array.from(map.entries()).map(([name, id]) => ({ name, id }))
+  }, [products])
+
   // All products shown (no search filtering — search bar removed)
   const filteredProducts = products
 
@@ -325,6 +338,7 @@ export function ModernStoreTemplate() {
           loading={loadingProduct}
           product={detailedProduct}
           relatedProducts={relatedProducts}
+          allProducts={products}
           quantity={quantity}
           onQuantityChange={setQuantity}
           finalPrice={finalPrice}
@@ -351,14 +365,19 @@ export function ModernStoreTemplate() {
       )}
 
       {/* ─── FOOTER ─── */}
-      <footer className="border-t border-gray-100 bg-gray-50 py-8 text-center">
-        <p className="text-xs text-gray-500">
-          © {new Date().getFullYear()} {shopName}. Tous droits réservés.
-        </p>
-        <p className="mt-1 text-xs text-gray-400">
-          Propulsé par <span className="font-bold text-gray-500">Boutiko</span>
-        </p>
-      </footer>
+      <ModernStoreFooter
+        shop={shop}
+        shopName={shopName}
+        accent={accent}
+        categories={categories}
+        products={products}
+        onProductClick={handleProductClick}
+        whatsapp={whatsapp}
+        phone={shop?.phone || ''}
+        address={shop?.address || ''}
+        contactEmail={shop?.contactEmail || ''}
+        config={config}
+      />
 
       {/* ─── CART DRAWER (always rendered) ─── */}
       <CartDrawer
@@ -894,6 +913,7 @@ interface ProductViewProps {
   loading: boolean
   product: DetailedProduct | null
   relatedProducts: ModernStoreProduct[]
+  allProducts: ModernStoreProduct[]
   quantity: number
   onQuantityChange: (n: number) => void
   finalPrice: number | null
@@ -919,6 +939,7 @@ function ProductView(props: ProductViewProps) {
     loading,
     product,
     relatedProducts,
+    allProducts,
     quantity,
     onQuantityChange,
     finalPrice,
@@ -1178,28 +1199,31 @@ function ProductView(props: ProductViewProps) {
           </section>
         )}
 
-        {/* ─── Related products ─── */}
-        {relatedProducts.length > 0 && (
-          <section className="mt-12 border-t border-gray-100 pt-8">
-            <h2 className="mb-5 text-xl font-bold text-gray-900 md:text-2xl">
-              Produits similaires
-            </h2>
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-              {relatedProducts.map((p) => (
-                <ProductCard
-                  key={p.id}
-                  product={p}
-                  accent={accent}
-                  whatsapp={whatsapp}
-                  shopId={shopId}
-                  shopName={shopName}
-                  rating={0}
-                  onQuickView={onProductClick}
-                />
-              ))}
-            </div>
-          </section>
-        )}
+        {/* ─── Produits similaires ─── */}
+        <section className="mt-12 border-t border-gray-100 pt-8">
+          <h2 className="mb-5 text-xl font-bold text-gray-900 md:text-2xl">
+            Produits similaires
+          </h2>
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            {(relatedProducts.length > 0
+              ? relatedProducts
+              : allProducts
+                  .filter((p) => p.id !== product?.id)
+                  .slice(0, 4)
+            ).map((p) => (
+              <ProductCard
+                key={p.id}
+                product={p}
+                accent={accent}
+                whatsapp={whatsapp}
+                shopId={shopId}
+                shopName={shopName}
+                rating={0}
+                onQuickView={onProductClick}
+              />
+            ))}
+          </div>
+        </section>
       </section>
 
       {/* ─── Sticky CTA mobile ─── */}
@@ -1212,5 +1236,226 @@ function ProductView(props: ProductViewProps) {
         onAddToCart={onAddToCart}
       />
     </>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FOOTER — Multi-column dark footer (inspired by ShoeVibe)
+// ═══════════════════════════════════════════════════════════════════════════
+
+function ModernStoreFooter({
+  shop,
+  shopName,
+  accent,
+  categories,
+  products,
+  onProductClick,
+  whatsapp,
+  phone,
+  address,
+  contactEmail,
+  config,
+}: {
+  shop: PublicShopData | null
+  shopName: string
+  accent: string
+  categories: { name: string; id: string }[]
+  products: ModernStoreProduct[]
+  onProductClick: (p: ModernStoreProduct) => void
+  whatsapp: string
+  phone: string
+  address: string
+  contactEmail: string
+  config: ModernStoreConfig
+}) {
+  const year = new Date().getFullYear()
+  // Show up to 6 best sellers in footer
+  const footerProducts = products
+    .filter((p) => p.isBestSeller)
+    .slice(0, 6)
+
+  return (
+    <footer className="mt-auto bg-gray-900 text-gray-300">
+      {/* ── Top: 4 columns ── */}
+      <div className="mx-auto max-w-6xl px-4 py-12 md:py-16">
+        <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
+          {/* Column 1: Menu */}
+          <div>
+            <h4 className="mb-4 text-xs font-bold uppercase tracking-widest text-white">
+              Menu
+            </h4>
+            <ul className="space-y-2.5 text-sm">
+              <li>
+                <button
+                  type="button"
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                  className="transition-colors hover:text-white"
+                >
+                  Accueil
+                </button>
+              </li>
+              {shop?.description && (
+                <li>
+                  <span className="line-clamp-1 text-gray-500">{shop.description}</span>
+                </li>
+              )}
+              <li>
+                <button
+                  type="button"
+                  onClick={() =>
+                    document.getElementById('best-sellers')?.scrollIntoView({ behavior: 'smooth' })
+                  }
+                  className="transition-colors hover:text-white"
+                >
+                  Produits
+                </button>
+              </li>
+              {contactEmail && (
+                <li>
+                  <a
+                    href={`mailto:${contactEmail}`}
+                    className="transition-colors hover:text-white"
+                  >
+                    Contact
+                  </a>
+                </li>
+              )}
+            </ul>
+          </div>
+
+          {/* Column 2: Collections (categories) */}
+          <div>
+            <h4 className="mb-4 text-xs font-bold uppercase tracking-widest text-white">
+              Collections
+            </h4>
+            <ul className="space-y-2.5 text-sm">
+              {categories.length > 0 ? (
+                categories.slice(0, 5).map((cat) => (
+                  <li key={cat.id || cat.name}>
+                    <span className="transition-colors hover:text-white cursor-default">
+                      {cat.name}
+                    </span>
+                  </li>
+                ))
+              ) : (
+                <li className="text-gray-500">Aucune catégorie</li>
+              )}
+            </ul>
+          </div>
+
+          {/* Column 3: Contact / Mon compte */}
+          <div>
+            <h4 className="mb-4 text-xs font-bold uppercase tracking-widest text-white">
+              Contact
+            </h4>
+            <ul className="space-y-2.5 text-sm">
+              {phone && (
+                <li>
+                  <a
+                    href={`tel:${phone.replace(/\D/g, '')}`}
+                    className="flex items-center gap-2 transition-colors hover:text-white"
+                  >
+                    <Phone className="h-3.5 w-3.5" />
+                    {phone}
+                  </a>
+                </li>
+              )}
+              {whatsapp && (
+                <li>
+                  <a
+                    href={`https://wa.me/${whatsapp.replace(/\D/g, '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 transition-colors hover:text-white"
+                  >
+                    <MessageCircle className="h-3.5 w-3.5" />
+                    WhatsApp
+                  </a>
+                </li>
+              )}
+              {address && (
+                <li className="flex items-start gap-2">
+                  <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                  <span className="line-clamp-2">{address}</span>
+                </li>
+              )}
+              {contactEmail && (
+                <li>
+                  <a
+                    href={`mailto:${contactEmail}`}
+                    className="transition-colors hover:text-white"
+                  >
+                    {contactEmail}
+                  </a>
+                </li>
+              )}
+            </ul>
+          </div>
+
+          {/* Column 4: Newsletter */}
+          <div>
+            <h4 className="mb-4 text-xs font-bold uppercase tracking-widest text-white">
+              Newsletter
+            </h4>
+            {config.newsletter.enabled && (
+              <p className="mb-3 text-sm text-gray-400">
+                {config.newsletter.placeholder || 'Inscrivez-vous pour recevoir nos offres.'}
+              </p>
+            )}
+            <form
+              className="flex"
+              onSubmit={(e) => {
+                e.preventDefault()
+                toast.success('Merci pour votre inscription !')
+                ;(e.currentTarget as HTMLFormElement).reset()
+              }}
+            >
+              <Input
+                type="email"
+                placeholder="Votre email"
+                required
+                className="h-10 flex-1 rounded-l-lg rounded-r-none border-gray-600 bg-gray-800 text-sm text-white placeholder:text-gray-500 focus:ring-0 focus:border-gray-500"
+              />
+              <button
+                type="submit"
+                className="flex h-10 items-center justify-center rounded-r-lg px-3 text-white transition-colors"
+                style={{ backgroundColor: accent }}
+                aria-label="S'inscrire"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </form>
+
+            {/* Social links */}
+            {whatsapp && (
+              <a
+                href={`https://wa.me/${whatsapp.replace(/\D/g, '')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 inline-flex items-center gap-2 text-sm text-gray-400 transition-colors hover:text-white"
+              >
+                <MessageCircle className="h-4 w-4" />
+                Rejoignez-nous sur WhatsApp
+              </a>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Bottom: Copyright ── */}
+      <div className="border-t border-gray-800">
+        <div className="mx-auto flex max-w-6xl flex-col items-center gap-2 px-4 py-6 text-center text-xs text-gray-500 sm:flex-row sm:justify-between">
+          <p>
+            © {year} {shopName}. Tous droits réservés.
+          </p>
+          <p>
+            Propulsé par{' '}
+            <span className="font-bold" style={{ color: accent }}>
+              Boutiko
+            </span>
+          </p>
+        </div>
+      </div>
+    </footer>
   )
 }
