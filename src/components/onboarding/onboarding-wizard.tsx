@@ -1012,12 +1012,19 @@ export function OnboardingWizard() {
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') selectPlan('TRIAL') }}
           >
             <Card
-              className={`cursor-pointer transition-all duration-200 hover:shadow-xl h-full ${
+              className={`cursor-pointer transition-all duration-200 hover:shadow-xl h-full relative overflow-hidden ${
                 form.plan === 'TRIAL'
-                  ? 'ring-2 ring-rose-600 shadow-lg bg-rose-50/50'
+                  ? 'ring-2 ring-rose-600 shadow-lg bg-rose-50/50 border-rose-600'
                   : 'hover:border-rose-300'
               }`}
             >
+              {form.plan === 'TRIAL' && (
+                <div className="absolute top-3 right-3 z-10">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-600 px-3 py-1 text-xs font-bold text-white shadow-md">
+                    ✓ Sélectionné
+                  </span>
+                </div>
+              )
               <CardContent className="p-6 flex flex-col h-full">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-2xl">🟢</span>
@@ -1054,7 +1061,7 @@ export function OnboardingWizard() {
                   }`}
                   size="lg"
                 >
-                  Commencer gratuit →
+                  {form.plan === 'TRIAL' ? '✓ Essai gratuit choisi' : 'Commencer gratuit →'}
                 </Button>
               </CardContent>
             </Card>
@@ -1068,12 +1075,19 @@ export function OnboardingWizard() {
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') selectPlan('PRO') }}
           >
             <Card
-              className={`cursor-pointer transition-all duration-200 hover:shadow-xl h-full relative ${
+              className={`cursor-pointer transition-all duration-200 hover:shadow-xl h-full relative overflow-hidden ${
                 form.plan === 'PRO'
-                  ? 'ring-2 ring-gray-900 shadow-lg bg-gray-50'
+                  ? 'ring-2 ring-gray-900 shadow-lg bg-gray-50 border-gray-900'
                   : 'hover:border-gray-400'
               }`}
             >
+              {form.plan === 'PRO' && (
+                <div className="absolute top-3 right-3 z-10">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-900 px-3 py-1 text-xs font-bold text-white shadow-md">
+                    ✓ Sélectionné
+                  </span>
+                </div>
+              )
               {form.plan !== 'PRO' && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
                   <span className="bg-gray-900 text-white text-xs font-semibold px-3 py-1 rounded-full">
@@ -1116,7 +1130,7 @@ export function OnboardingWizard() {
                   className="w-full mt-5 rounded-xl font-semibold bg-gray-900 text-white hover:bg-gray-800"
                   size="lg"
                 >
-                  Choisir Pro →
+                  {form.plan === 'PRO' ? '✓ Plan Pro choisi' : 'Choisir Pro →'}
                 </Button>
               </CardContent>
             </Card>

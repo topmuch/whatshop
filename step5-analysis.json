@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "The two plan cards have distinct visual states:  \n\n1. **Left Card (\"ESSAI GRATUIT\")**:  \n   - Has a green dot (status indicator) and an orange button (\"Commencer l’essai gratuit\").  \n   - Features grayed - out (inactive) checkmarks for some features (e.g., “Domaine personnalisé”, “Logo Boutiko affiché”).  \n\n2. **Right Card (\"PRO - Recommandé\")**:  \n   - Has an orange “Recommandé” badge at the top, yellow stars, and a white button (“Passer Pro maintenant”).  \n   - All features have green checkmarks (active).  \n\n\nThe **right card (“PRO - Recommandé”)** appears selected. Clear visual differences include:  \n- The “Recommandé” badge (orange, top - right of the right card) vs. no badge on the left.  \n- The button color (orange on the left, white on the right).  \n- Feature checkmark colors (green on the right, gray on the left for some features).  \n- The presence of yellow stars on the right card (absent on the left).",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1781737651,
+  "id": "2026061807072729a83affe0094697",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "2026061807072729a83affe0094697",
+  "usage": {
+    "completion_tokens": 240,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 999,
+    "prompt_tokens_details": {
+      "cached_tokens": 6
+    },
+    "total_tokens": 1239
+  }
+}
