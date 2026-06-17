@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { Separator } from '@/components/ui/separator'
 import {
@@ -40,6 +41,11 @@ import {
   Rss,
   MessageSquare,
   Store,
+  Share2,
+  Link2,
+  Mail,
+  Bell,
+  BellOff,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -47,7 +53,7 @@ import { toast } from 'sonner'
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
 
-type View = 'hub' | 'wizard' | 'catalog' | 'social'
+type View = 'hub' | 'wizard' | 'catalog' | 'social' | 'smartlink' | 'recap' | 'notifications'
 
 interface CatalogProduct {
   id: string
@@ -97,6 +103,43 @@ const INTEGRATIONS = [
     bgColor: 'bg-purple-50 dark:bg-purple-950/30',
     comingSoon: true,
   },
+  // ── Marketing & Communication modules ──
+  {
+    id: 'social',
+    name: 'Publication Réseaux Sociaux',
+    description: 'Publiez vos produits sur Facebook depuis le dashboard',
+    icon: <Share2 className="size-6" />,
+    color: 'text-rose-600',
+    bgColor: 'bg-rose-50 dark:bg-rose-950/30',
+    section: 'marketing',
+  },
+  {
+    id: 'smartlink',
+    name: 'Smart Link (Lien Bio)',
+    description: 'Un lien unique qui redirige vers votre produit mis en avant',
+    icon: <Link2 className="size-6" />,
+    color: 'text-cyan-600',
+    bgColor: 'bg-cyan-50 dark:bg-cyan-950/30',
+    section: 'marketing',
+  },
+  {
+    id: 'recap',
+    name: 'Récap Email',
+    description: 'Recevez un récapitulatif quotidien de votre activité par email',
+    icon: <Mail className="size-6" />,
+    color: 'text-amber-600',
+    bgColor: 'bg-amber-50 dark:bg-amber-950/30',
+    section: 'marketing',
+  },
+  {
+    id: 'notifications',
+    name: 'Centre de Notifications',
+    description: 'Consultez vos alertes, publications et mises à jour',
+    icon: <Bell className="size-6" />,
+    color: 'text-indigo-600',
+    bgColor: 'bg-indigo-50 dark:bg-indigo-950/30',
+    section: 'marketing',
+  },
 ]
 
 /* ------------------------------------------------------------------ */
@@ -126,6 +169,9 @@ function timeAgo(dateStr?: string | null): string {
 function HubView({ onOpen }: { onOpen: (id: string) => void }) {
   const shop = useAppStore((s) => s.shop)
 
+  const coreIntegrations = INTEGRATIONS.filter((i) => !i.section)
+  const marketingModules = INTEGRATIONS.filter((i) => i.section === 'marketing')
+
   return (
     <div className="space-y-6">
       <div>
@@ -135,13 +181,78 @@ function HubView({ onOpen }: { onOpen: (id: string) => void }) {
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        {INTEGRATIONS.map((item) => {
-          const isFacebook = item.id === 'facebook'
-          const isConnected = isFacebook && !!shop?.facebookConnected
+      {/* ── Core Integrations ── */}
+      <div>
+        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+          Intégrations externes
+        </h3>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {coreIntegrations.map((item) => {
+            const isFacebook = item.id === 'facebook'
+            const isConnected = isFacebook && !!shop?.facebookConnected
 
-          return (
-            <Card key={item.id} className={`relative overflow-hidden ${item.comingSoon ? 'opacity-60' : ''}`}>
+            return (
+              <Card key={item.id} className={`relative overflow-hidden ${item.comingSoon ? 'opacity-60' : ''}`}>
+                <CardContent className="p-5">
+                  <div className="flex items-start gap-4">
+                    <div className={`rounded-xl p-3 ${item.bgColor}`}>
+                      <span className={item.color}>{item.icon}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-semibold text-sm">{item.name}</h3>
+                        {item.comingSoon && (
+                          <Badge variant="secondary" className="text-[10px] px-1.5">Bientôt</Badge>
+                        )}
+                        {isConnected && (
+                          <Badge className="bg-green-100 text-green-700 text-[10px] px-1.5">
+                            <CheckCircle2 className="size-3 mr-0.5" />Connecté
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground mb-3">{item.description}</p>
+
+                      {isFacebook && !isConnected && (
+                        <Button size="sm" className="h-8 text-xs" onClick={() => onOpen('facebook')}>
+                          <Facebook className="size-3.5 mr-1.5" />
+                          Connecter
+                        </Button>
+                      )}
+
+                      {isFacebook && isConnected && (
+                        <div className="space-y-2">
+                          <FacebookStatus />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 text-xs"
+                            onClick={() => onOpen('facebook')}
+                          >
+                            Voir le dashboard
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* ── Marketing & Communication ── */}
+      <div>
+        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+          Marketing &amp; Communication
+        </h3>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {marketingModules.map((item) => (
+            <Card
+              key={item.id}
+              className="relative overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => onOpen(item.id)}
+            >
               <CardContent className="p-5">
                 <div className="flex items-start gap-4">
                   <div className={`rounded-xl p-3 ${item.bgColor}`}>
@@ -150,43 +261,17 @@ function HubView({ onOpen }: { onOpen: (id: string) => void }) {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-semibold text-sm">{item.name}</h3>
-                      {item.comingSoon && (
-                        <Badge variant="secondary" className="text-[10px] px-1.5">Bientôt</Badge>
-                      )}
-                      {isConnected && (
-                        <Badge className="bg-green-100 text-green-700 text-[10px] px-1.5">
-                          <CheckCircle2 className="size-3 mr-0.5" />Connecté
-                        </Badge>
-                      )}
                     </div>
                     <p className="text-xs text-muted-foreground mb-3">{item.description}</p>
-
-                    {isFacebook && !isConnected && (
-                      <Button size="sm" className="h-8 text-xs" onClick={() => onOpen('facebook')}>
-                        <Facebook className="size-3.5 mr-1.5" />
-                        Connecter
-                      </Button>
-                    )}
-
-                    {isFacebook && isConnected && (
-                      <div className="space-y-2">
-                        <FacebookStatus />
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-8 text-xs"
-                          onClick={() => onOpen('facebook')}
-                        >
-                          Voir le dashboard
-                        </Button>
-                      </div>
-                    )}
+                    <span className="text-xs font-medium text-primary inline-flex items-center gap-1">
+                      Ouvrir <ArrowRight className="size-3" />
+                    </span>
                   </div>
                 </div>
               </CardContent>
             </Card>
-          )
-        })}
+          ))}
+        </div>
       </div>
     </div>
   )
@@ -693,6 +778,329 @@ function StatusCard({ label, value, good }: { label: string; value: string; good
 }
 
 /* ================================================================== */
+/*  SMART LINK VIEW                                                    */
+/* ================================================================== */
+
+function SmartLinkView({ onBack }: { onBack: () => void }) {
+  const shop = useAppStore((s) => s.shop)
+  const smartLinkUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}/go/${shop?.slug || ''}`
+    : ''
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onBack}>
+          <ArrowLeft className="size-4" />
+        </Button>
+        <div>
+          <h2 className="text-xl font-bold flex items-center gap-2">
+            <Link2 className="size-5 text-cyan-600" />
+            Smart Link (Lien Bio)
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Un lien unique pour mettre en avant votre produit vedette
+          </p>
+        </div>
+      </div>
+
+      <Card>
+        <CardContent className="p-6 space-y-6">
+          <div className="text-center space-y-3">
+            <div className="mx-auto w-16 h-16 rounded-2xl bg-cyan-100 dark:bg-cyan-950/30 flex items-center justify-center">
+              <Link2 className="size-8 text-cyan-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold">Votre lien personnel</h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                Partagez ce lien sur Instagram, TikTok, WhatsApp Status… Il redirige automatiquement vers votre produit mis en avant.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Input
+              readOnly
+              value={smartLinkUrl}
+              className="h-11 text-sm font-mono"
+              onClick={(e) => (e.target as HTMLInputElement).select()}
+            />
+            <Button
+              className="h-11 px-6 shrink-0"
+              onClick={() => {
+                navigator.clipboard.writeText(smartLinkUrl)
+                toast.success('Lien copié !')
+              }}
+            >
+              <Copy className="size-4 mr-2" />
+              Copier
+            </Button>
+          </div>
+
+          <div className="bg-muted/50 rounded-xl p-4 text-sm space-y-2">
+            <p className="font-medium">Comment ça marche ?</p>
+            <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
+              <li>Sélectionnez un produit mis en avant dans &quot;Publication Réseaux Sociaux&quot;</li>
+              <li>Copiez votre Smart Link ci-dessus</li>
+              <li>Collez-le dans votre bio Instagram, TikTok, ou WhatsApp Status</li>
+              <li>Vos visiteurs arrivent directement sur le produit vedette</li>
+            </ol>
+          </div>
+
+          {smartLinkUrl && (
+            <div className="flex justify-center">
+              <Button variant="outline" onClick={() => window.open(smartLinkUrl, '_blank')}>
+                <ExternalLink className="size-4 mr-2" />
+                Tester le lien
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+/* ================================================================== */
+/*  RECAP EMAIL VIEW                                                  */
+/* ================================================================== */
+
+function RecapEmailView({ onBack }: { onBack: () => void }) {
+  const shop = useAppStore((s) => s.shop)
+  const [saving, setSaving] = useState(false)
+
+  const prefs = (typeof shop?.notificationPreferences === 'string'
+    ? JSON.parse(shop.notificationPreferences || '{}')
+    : shop?.notificationPreferences || {}) as Record<string, boolean>
+
+  const recapEnabled = prefs.notifyWeeklyReport !== false
+
+  const handleToggle = async () => {
+    if (!shop?.id) return
+    setSaving(true)
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: shop.id,
+          notificationPreferences: JSON.stringify({
+            ...prefs,
+            notifyWeeklyReport: !recapEnabled,
+          }),
+        }),
+      })
+      if (res.ok) {
+        toast.success(!recapEnabled ? 'Récap email activé !' : 'Récap email désactivé')
+      } else {
+        toast.error('Erreur de sauvegarde')
+      }
+    } catch {
+      toast.error('Erreur réseau')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onBack}>
+          <ArrowLeft className="size-4" />
+        </Button>
+        <div>
+          <h2 className="text-xl font-bold flex items-center gap-2">
+            <Mail className="size-5 text-amber-600" />
+            Récap Email
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Recevez un récapitulatif quotidien de votre activité
+          </p>
+        </div>
+      </div>
+
+      <Card>
+        <CardContent className="p-6 space-y-6">
+          <div className="text-center space-y-3">
+            <div className="mx-auto w-16 h-16 rounded-2xl bg-amber-100 dark:bg-amber-950/30 flex items-center justify-center">
+              <Mail className="size-8 text-amber-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold">Récapitulatif quotidien</h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                Chaque jour à 20h, recevez un email avec vos statistiques : commandes, revenus, vues, clics WhatsApp et alertes stock bas.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between rounded-lg border p-4">
+            <div>
+              <p className="font-medium text-sm">Activer le récap quotidien</p>
+              <p className="text-xs text-muted-foreground">
+                Envoyé à {shop?.contactEmail || 'votre email de contact'}
+              </p>
+            </div>
+            <Switch
+              checked={recapEnabled}
+              onCheckedChange={handleToggle}
+              disabled={saving}
+            />
+          </div>
+
+          <div className="bg-muted/50 rounded-xl p-4 text-sm space-y-3">
+            <p className="font-medium">Contenu du récap :</p>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                'Nouvelles commandes',
+                'Chiffre d\'affaires du jour',
+                'Vues de la boutique',
+                'Clics WhatsApp',
+                'Publications réseaux sociaux',
+                'Top 5 produits',
+                'Alertes stock bas',
+              ].map((item) => (
+                <div key={item} className="flex items-center gap-2 text-muted-foreground">
+                  <CheckCircle2 className="size-3.5 text-amber-500 shrink-0" />
+                  <span className="text-xs">{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+/* ================================================================== */
+/*  NOTIFICATIONS CENTER VIEW                                         */
+/* ================================================================== */
+
+interface NotificationItem {
+  id: string
+  type: string
+  title: string
+  message: string
+  isRead: boolean
+  metadata: unknown
+  createdAt: string
+}
+
+function NotificationsView({ onBack }: { onBack: () => void }) {
+  const [notifications, setNotifications] = useState<NotificationItem[]>([])
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [loading, setLoading] = useState(true)
+
+  const loadNotifications = useCallback(async () => {
+    try {
+      const res = await fetch('/api/notifications?limit=50')
+      if (res.ok) {
+        const data = await res.json()
+        setNotifications(data.notifications || [])
+        setUnreadCount(data.unreadCount || 0)
+      }
+    } catch {
+      // silent
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { loadNotifications() }, [loadNotifications])
+
+  const markAsRead = async (id: string) => {
+    try {
+      await fetch('/api/notifications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notificationId: id }),
+      })
+      setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, isRead: true } : n))
+      setUnreadCount((c) => Math.max(0, c - 1))
+    } catch {
+      // silent
+    }
+  }
+
+  const iconForType = (type: string) => {
+    if (type.includes('SOCIAL_POST')) return <Share2 className="size-4 text-rose-500" />
+    if (type.includes('ORDER')) return <ShoppingBag className="size-4 text-green-500" />
+    if (type.includes('STOCK')) return <Store className="size-4 text-amber-500" />
+    return <Bell className="size-4 text-indigo-500" />
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onBack}>
+          <ArrowLeft className="size-4" />
+        </Button>
+        <div className="flex-1">
+          <h2 className="text-xl font-bold flex items-center gap-2">
+            <Bell className="size-5 text-indigo-600" />
+            Centre de Notifications
+            {unreadCount > 0 && (
+              <Badge className="bg-indigo-600 text-white text-[10px] px-1.5">{unreadCount}</Badge>
+            )}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Vos alertes, publications et mises à jour
+          </p>
+        </div>
+        <Button variant="outline" size="sm" onClick={loadNotifications} disabled={loading}>
+          <RefreshCw className={`size-3.5 mr-1.5 ${loading ? 'animate-spin' : ''}`} />
+          Rafraîchir
+        </Button>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center py-16">
+          <Loader2 className="size-6 animate-spin text-muted-foreground" />
+        </div>
+      ) : notifications.length === 0 ? (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <BellOff className="size-12 mx-auto text-muted-foreground/30 mb-3" />
+            <p className="text-sm text-muted-foreground">Aucune notification</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Vos alertes apparaîtront ici (publications, commandes, stock…)
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-2 max-h-[600px] overflow-y-auto">
+          {notifications.map((n) => (
+            <Card
+              key={n.id}
+              className={`cursor-pointer transition-colors hover:bg-muted/30 ${!n.isRead ? 'border-l-4 border-l-indigo-500' : ''}`}
+              onClick={() => !n.isRead && markAsRead(n.id)}
+            >
+              <CardContent className="p-4">
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 shrink-0">{iconForType(n.type)}</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <p className={`text-sm ${!n.isRead ? 'font-semibold' : ''}`}>{n.title}</p>
+                      {!n.isRead && <span className="size-2 rounded-full bg-indigo-500 shrink-0" />}
+                    </div>
+                    <p className="text-xs text-muted-foreground line-clamp-2">{n.message}</p>
+                    <p className="text-[10px] text-muted-foreground/60 mt-1">
+                      {new Date(n.createdAt).toLocaleDateString('fr-FR', {
+                        day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
+                      })}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ================================================================== */
 /*  MAIN EXPORT                                                        */
 /* ================================================================== */
 
@@ -703,6 +1111,8 @@ export function DashboardIntegrations() {
   const handleOpen = useCallback((id: string) => {
     if (id === 'facebook') {
       setView(shop?.facebookConnected ? 'wizard' : 'wizard')
+    } else if (id === 'social' || id === 'smartlink' || id === 'recap' || id === 'notifications') {
+      setView(id as View)
     }
   }, [shop?.facebookConnected])
 
@@ -712,7 +1122,7 @@ export function DashboardIntegrations() {
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => setView('wizard')}>
+          <Button variant="ghost" size="sm" onClick={() => setView('hub')}>
             <ArrowLeft className="size-4 mr-1" /> Retour
           </Button>
         </div>
@@ -725,6 +1135,9 @@ export function DashboardIntegrations() {
       </div>
     )
   }
+  if (view === 'smartlink') return <SmartLinkView onBack={() => setView('hub')} />
+  if (view === 'recap') return <RecapEmailView onBack={() => setView('hub')} />
+  if (view === 'notifications') return <NotificationsView onBack={() => setView('hub')} />
   if (view === 'wizard') return <WizardView onBack={() => setView('hub')} onOpenSocial={openSocial} />
   if (view === 'catalog') return <CatalogStatusView onBack={() => setView('hub')} />
 

@@ -82,6 +82,7 @@ export interface Shop {
   catalogEnabled?: boolean
   catalogLastSync?: string
   catalogProductCount?: number
+  notificationPreferences?: string | Record<string, unknown>
   trackPageViews?: boolean
   trackProductViews?: boolean
   trackWhatsAppClicks?: boolean
