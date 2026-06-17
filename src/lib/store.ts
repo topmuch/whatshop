@@ -94,8 +94,9 @@ export interface Shop {
   liveProductId?: string
   liveStartedAt?: string
   // Single Product Landing Page template
-  templateType?: string // STANDARD | SINGLE_PRODUCT
+  templateType?: string // STANDARD | SINGLE_PRODUCT | MODERN_STORE
   singleProductConfig?: string | null // JSON string
+  modernStoreConfig?: string | null // JSON string
 }
 
 export interface Testimonial {

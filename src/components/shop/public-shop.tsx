@@ -44,6 +44,7 @@ import { ElectroTemplate } from '@/components/templates/electro'
 import { CosmikaTemplate } from '@/components/templates/cosmika'
 import { ElegancePlusTemplate } from '@/components/templates/elegance-plus'
 import { SingleProductTemplate } from '@/components/single-product/single-product-template'
+import { ModernStoreTemplate } from '@/components/modern-store/modern-store-template'
 import JsonLd from '@/components/seo/json-ld'
 import { CosmikaBeautyShopPage } from './themes/cosmika-beauty-grid'
 import { ShippingZoneSelector } from './shipping-zone-selector'
@@ -562,6 +563,12 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
   // the live-mode check (live takes priority) but before the other templates.
   if (publicShop?.templateType === 'SINGLE_PRODUCT') {
     return <SingleProductTemplate />
+  }
+
+  // ── Modern Store template ──
+  // Full e-commerce template with cart, checkout, and BUY IT NOW (WhatsApp).
+  if (publicShop?.templateType === 'MODERN_STORE') {
+    return <ModernStoreTemplate />
   }
 
   // ── Full-page custom templates render their own complete layout ──

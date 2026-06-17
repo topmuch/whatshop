@@ -60,6 +60,7 @@ export async function GET(
         // Single Product Landing Page template (safe for public)
         templateType: true,
         singleProductConfig: true,
+        modernStoreConfig: true,
         // Internal fields removed from public API:
         // facebookPixelId, facebookCatalogId, catalogEnabled,
         // catalogProductCount, trackPageViews, trackProductViews, trackWhatsAppClicks
