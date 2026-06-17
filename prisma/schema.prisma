@@ -118,7 +118,7 @@ model Shop {
   ownerId               String   // NO @unique — allows multiple shops per user
 
   // Template Single Product Landing Page
-  templateType          String   @default("STANDARD") // STANDARD | SINGLE_PRODUCT | MODERN_STORE
+  templateType          String   @default("STANDARD") // STANDARD | SINGLE_PRODUCT | MODERN_STORE | COSMIKA_DARK
   singleProductConfig   String?  // JSON: { productId, countdownEnd, countdownEnabled, benefits[], faqIds[], crossSellProductIds[] }
   modernStoreConfig     String?  // JSON: config du template Modern Store (hero, benefits, testimonials, newsletter)
 

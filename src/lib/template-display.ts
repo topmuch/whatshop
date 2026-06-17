@@ -99,6 +99,29 @@ export const TEMPLATE_DISPLAY: Record<string, TemplateDisplayInfo> = {
       emoji: '🛒',
     },
   },
+  'cosmika-dark': {
+    displayName: 'Cosmika Dark',
+    tagline: 'Dark luxe avec accents dorés',
+    description:
+      "Template e-commerce premium au design sombre et luxueux. Barre défilante animée, accents dorés, catégories en onglets, produit phare en plein écran. Idéal pour la beauté, la mode et les produits haut de gamme.",
+    features: [
+      'Design dark luxe avec accents dorés #FFD21D',
+      'Barre défilante animée (marquee) en haut',
+      'Navigation sticky avec menu mobile plein écran',
+      'Catégories en onglets horizontaux scrollables',
+      'Grille produits 4 colonnes avec badges dorés',
+      'Compte à rebours sur les offres promotionnelles',
+      'Fiches produit avec galerie, variantes et similaires',
+      'Panier persistant + checkout formulaire',
+      'Bouton « Acheter maintenant » WhatsApp',
+      'Footer multi-colonnes dark premium',
+    ],
+    style: {
+      primaryColor: '#ffd21d',
+      badge: 'Premium',
+      emoji: '💎',
+    },
+  },
   'single-product': {
     displayName: 'Single Produit',
     tagline: 'Landing page optimisée conversion',
