@@ -61,6 +61,24 @@ export interface ModernStoreConfig {
     ctaText: string
     productId: string | null
   }
+  marquee: {
+    enabled: boolean
+    text: string
+    /** Séparateur entre les éléments, ex: " ★ " */
+    separator: string
+    /** Durée de l'animation en secondes (plus petit = plus rapide) */
+    speed: number
+    /** Couleur de fond, ex: "#000000" */
+    backgroundColor: string
+    /** Couleur du texte, ex: "#ffffff" */
+    textColor: string
+    /** Taille du texte Tailwind, ex: "sm", "base", "lg" */
+    fontSize: string
+    /** Espacement des lettres CSS, ex: "0.25em" */
+    letterSpacing: string
+    /** Padding vertical Tailwind, ex: "py-3", "py-4" */
+    padding: string
+  }
   benefits: { icon: string; title: string; description: string }[]
   newsletter: {
     enabled: boolean
@@ -80,6 +98,17 @@ export const DEFAULT_MODERN_STORE_CONFIG: ModernStoreConfig = {
     ],
     ctaText: 'Voir les produits',
     productId: null,
+  },
+  marquee: {
+    enabled: true,
+    text: 'BIENVENUE DANS NOTRE BOUTIQUE ★ LIVRAISON GRATUITE ★ PAIEMENT À LA LIVRAISON ★ RETOURS SOUS 7 JOURS ★ SERVICE CLIENT 24/7',
+    separator: ' ★ ',
+    speed: 25,
+    backgroundColor: '#000000',
+    textColor: '#ffffff',
+    fontSize: 'sm',
+    letterSpacing: '0.25em',
+    padding: 'py-3.5',
   },
   benefits: [
     { icon: 'Truck', title: 'Livraison rapide', description: 'Partout en Côte d\'Ivoire' },

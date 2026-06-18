@@ -378,13 +378,21 @@ export function CosmikaDarkTemplate() {
 // MARQUEE TOP BAR
 // ═══════════════════════════════════════════════════════════════════════════
 
-function MarqueeBar() {
-  const text = 'BIENVENUE DANS NOTRE BOUTIQUE \u2605 LIVRAISON GRATUITE \u2605 PAIEMENT \u00C0 LA LIVRAISON \u2605 RETOURS SOUS 7 JOURS \u2605 SERVICE CLIENT 24/7'
+function MarqueeBar({ config }: { config: ModernStoreConfig['marquee'] }) {
+  if (!config.enabled) return null
+
+  const fontSizeClass: Record<string, string> = {
+    'xs': 'text-xs',
+    'sm': 'text-sm',
+    'base': 'text-base',
+    'lg': 'text-lg',
+    'xl': 'text-xl',
+  }
 
   return (
     <div
-      className="relative w-full overflow-hidden py-3.5"
-      style={{ backgroundColor: '#000000' }}
+      className={`relative w-full overflow-hidden ${config.padding}`}
+      style={{ backgroundColor: config.backgroundColor }}
       aria-hidden="true"
     >
       <style>{`
@@ -395,13 +403,19 @@ function MarqueeBar() {
       `}</style>
       <div
         className="flex whitespace-nowrap"
-        style={{ animation: 'cosmika-marquee 25s linear infinite' }}
+        style={{ animation: `cosmika-marquee ${config.speed}s linear infinite` }}
       >
-        <span className="mx-6 text-sm uppercase tracking-[0.25em] font-medium" style={{ color: '#ffffff' }}>
-          {text}
+        <span
+          className={`mx-6 uppercase font-medium ${fontSizeClass[config.fontSize] ?? 'text-sm'}`}
+          style={{ color: config.textColor, letterSpacing: config.letterSpacing }}
+        >
+          {config.text}
         </span>
-        <span className="mx-6 text-sm uppercase tracking-[0.25em] font-medium" style={{ color: '#ffffff' }}>
-          {text}
+        <span
+          className={`mx-6 uppercase font-medium ${fontSizeClass[config.fontSize] ?? 'text-sm'}`}
+          style={{ color: config.textColor, letterSpacing: config.letterSpacing }}
+        >
+          {config.text}
         </span>
       </div>
     </div>
@@ -661,7 +675,7 @@ function HomeView(props: HomeViewProps) {
       )}
 
       {/* ─── MARQUEE BAR ─── */}
-      <MarqueeBar />
+      <MarqueeBar config={config.marquee} />
 
       {/* ─── SECTION 2: CATEGORY TABS ─── */}
       {categories.length > 0 && (
