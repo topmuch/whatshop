@@ -1,6 +1,9 @@
 import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
 
+export const dynamic = 'force-dynamic'
+
+// GET /api/shops/[slug]/categories — public, returns all shop categories
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ slug: string }> }
@@ -19,25 +22,13 @@ export async function GET(
 
     const categories = await db.category.findMany({
       where: { shopId: shop.id },
-      include: {
-        _count: {
-          select: { products: { where: { isAvailable: true } } },
-        },
-      },
-      orderBy: { name: 'asc' },
+      orderBy: { createdAt: 'asc' },
+      select: { id: true, name: true },
     })
 
-    const formatted = categories.map((c) => ({
-      id: c.id,
-      name: c.name,
-      description: c.description,
-      image: c.image,
-      productCount: c._count.products,
-    }))
-
-    return NextResponse.json(formatted)
+    return NextResponse.json(categories)
   } catch (error) {
-    console.error('Error fetching categories:', error)
-    return NextResponse.json({ error: 'Erreur interne du serveur' }, { status: 500 })
+    console.error('Shop categories error:', error)
+    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
   }
 }

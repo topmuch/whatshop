@@ -32,8 +32,8 @@ import { StickyCTA } from '@/components/modern-store/sticky-cta'
 // CONSTANTS & TYPES
 // ═══════════════════════════════════════════════════════════════════════════
 
-const ORANGE = '#f97316'
-const ORANGE_HOVER = '#ea580c'
+const ACCENT = '#2563eb'
+const ACCENT_HOVER = '#1d4ed8'
 const BG_MAIN = '#ffffff'
 const BG_SECONDARY = '#f9fafb'
 const BG_CARD = '#ffffff'
@@ -93,6 +93,7 @@ export function CosmikaDarkTemplate() {
   const [loading, setLoading] = useState(true)
   const [testimonials, setTestimonials] = useState<Testimonial[]>([])
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [categories, setCategories] = useState<{ name: string; id: string }[]>([])
 
   // Product view state
   const [detailedProduct, setDetailedProduct] = useState<DetailedProduct | null>(null)
@@ -113,14 +114,16 @@ export function CosmikaDarkTemplate() {
     async function load() {
       setLoading(true)
       try {
-        const [configRes, productsRes, testimonialsRes] = await Promise.all([
+        const [configRes, productsRes, testimonialsRes, categoriesRes] = await Promise.all([
           fetch(`/api/shops/${shop!.slug}/modern-store-config`),
           fetch(`/api/shops/${shop!.slug}/products`),
           fetch(`/api/shops/${shop!.slug}/testimonials`),
+          fetch(`/api/shops/${shop!.slug}/categories`),
         ])
         const configData = await configRes.json()
         const productsData = await productsRes.json()
         const testimonialsData = await testimonialsRes.json()
+        const categoriesData = await categoriesRes.json()
         if (!cancelled) {
           setConfig(
             configData.config
@@ -129,6 +132,7 @@ export function CosmikaDarkTemplate() {
           )
           setProducts(Array.isArray(productsData) ? productsData : [])
           setTestimonials(Array.isArray(testimonialsData) ? testimonialsData : [])
+          setCategories(Array.isArray(categoriesData) ? categoriesData.map((c: { id: string; name: string }) => ({ name: c.name, id: c.id })) : [])
         }
       } catch {
         if (!cancelled) toast.error('Erreur de chargement de la boutique')
@@ -212,16 +216,6 @@ export function CosmikaDarkTemplate() {
     [products],
   )
 
-  const categories = useMemo(() => {
-    const map = new Map<string, string>()
-    for (const p of products) {
-      if (p.categoryName && !map.has(p.categoryName)) {
-        map.set(p.categoryName, p.categoryId || '')
-      }
-    }
-    return Array.from(map.entries()).map(([name, id]) => ({ name, id }))
-  }, [products])
-
   // ─── Cart actions ───
   const handleAddDetailedToCart = useCallback(() => {
     if (!detailedProduct) return
@@ -285,9 +279,6 @@ export function CosmikaDarkTemplate() {
 
   return (
     <div className="flex min-h-screen flex-col" style={{ backgroundColor: BG_MAIN }}>
-      {/* ─── MARQUEE TOP BAR ─── */}
-      <MarqueeBar />
-
       {/* ─── HEADER ─── */}
       <Header
         shop={shop}
@@ -350,7 +341,7 @@ export function CosmikaDarkTemplate() {
             whatsapp={whatsapp}
             shopName={shopName}
             shopId={shopId}
-            accent={ORANGE}
+            accent={ACCENT}
             onBack={() => setView('home')}
             onSuccess={() => { setView('home') }}
           />
@@ -376,7 +367,7 @@ export function CosmikaDarkTemplate() {
         whatsapp={whatsapp}
         shopName={shopName}
         shopId={shopId}
-        accent={ORANGE}
+        accent={ACCENT}
         onCheckout={() => setView('checkout')}
       />
     </div>
@@ -392,8 +383,8 @@ function MarqueeBar() {
 
   return (
     <div
-      className="relative w-full overflow-hidden py-2"
-      style={{ backgroundColor: BG_SECONDARY }}
+      className="relative w-full overflow-hidden py-3.5"
+      style={{ backgroundColor: '#000000' }}
       aria-hidden="true"
     >
       <style>{`
@@ -404,12 +395,12 @@ function MarqueeBar() {
       `}</style>
       <div
         className="flex whitespace-nowrap"
-        style={{ animation: 'cosmika-marquee 30s linear infinite' }}
+        style={{ animation: 'cosmika-marquee 25s linear infinite' }}
       >
-        <span className="mx-4 text-xs uppercase tracking-widest" style={{ color: ORANGE }}>
+        <span className="mx-6 text-sm uppercase tracking-[0.25em] font-medium" style={{ color: '#ffffff' }}>
           {text}
         </span>
-        <span className="mx-4 text-xs uppercase tracking-widest" style={{ color: ORANGE }}>
+        <span className="mx-6 text-sm uppercase tracking-[0.25em] font-medium" style={{ color: '#ffffff' }}>
           {text}
         </span>
       </div>
@@ -511,7 +502,7 @@ function Header({
               <div className="flex items-center gap-2">
                 <div
                   className="flex h-9 w-9 items-center justify-center rounded-lg"
-                  style={{ backgroundColor: ORANGE }}
+                  style={{ backgroundColor: ACCENT }}
                 >
                   <Store className="h-4 w-4 text-white" />
                 </div>
@@ -534,7 +525,7 @@ function Header({
             {itemCount > 0 && (
               <span
                 className="absolute -right-0.5 -top-0.5 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1 text-[10px] font-bold text-white"
-                style={{ backgroundColor: ORANGE }}
+                style={{ backgroundColor: ACCENT }}
               >
                 {itemCount}
               </span>
@@ -669,10 +660,13 @@ function HomeView(props: HomeViewProps) {
         </section>
       )}
 
+      {/* ─── MARQUEE BAR ─── */}
+      <MarqueeBar />
+
       {/* ─── SECTION 2: CATEGORY TABS ─── */}
       {categories.length > 0 && (
         <section id="categories" className="mx-auto max-w-7xl px-5 py-16">
-          <h2 className="mb-5 text-center text-xs font-bold uppercase tracking-[0.2em]" style={{ color: ORANGE }}>
+          <h2 className="mb-5 text-center text-xs font-bold uppercase tracking-[0.2em]" style={{ color: ACCENT }}>
             Cat\u00e9gories
           </h2>
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
@@ -683,9 +677,9 @@ function HomeView(props: HomeViewProps) {
                 onClick={() => setActiveCategory(cat.id)}
                 className="flex-shrink-0 rounded-full px-6 py-2.5 text-sm font-medium transition-all duration-200"
                 style={{
-                  backgroundColor: activeCategory === cat.id ? ORANGE : BG_CARD,
+                  backgroundColor: activeCategory === cat.id ? ACCENT : BG_CARD,
                   color: activeCategory === cat.id ? '#ffffff' : TEXT_MUTED,
-                  border: `1px solid ${activeCategory === cat.id ? ORANGE : BORDER_SUBTLE}`,
+                  border: `1px solid ${activeCategory === cat.id ? ACCENT : BORDER_SUBTLE}`,
                 }}
               >
                 {cat.label}
@@ -725,7 +719,7 @@ function HomeView(props: HomeViewProps) {
           <h2 className="text-2xl font-bold md:text-3xl" style={{ color: TEXT_PRIMARY }}>
             Meilleures ventes
           </h2>
-          <div className="mt-3 h-0.5 w-16 rounded-full" style={{ backgroundColor: ORANGE }} />
+          <div className="mt-3 h-0.5 w-16 rounded-full" style={{ backgroundColor: ACCENT }} />
         </div>
         {(bestSellers.length > 0 ? bestSellers : filteredProducts.slice(0, 8)).length > 0 ? (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-4">
@@ -759,9 +753,9 @@ function HomeView(props: HomeViewProps) {
                   <div key={i} className="flex flex-col items-center text-center gap-3">
                     <div
                       className="flex h-12 w-12 items-center justify-center rounded-xl"
-                      style={{ backgroundColor: `${ORANGE}15` }}
+                      style={{ backgroundColor: `${ACCENT}15` }}
                     >
-                      <Icon className="h-6 w-6" style={{ color: ORANGE }} />
+                      <Icon className="h-6 w-6" style={{ color: ACCENT }} />
                     </div>
                     <h3 className="text-sm font-bold" style={{ color: TEXT_PRIMARY }}>{b.title}</h3>
                     <p className="text-xs leading-relaxed" style={{ color: TEXT_SUBTLE }}>{b.description}</p>
@@ -780,7 +774,7 @@ function HomeView(props: HomeViewProps) {
             <h2 className="text-2xl font-bold md:text-3xl" style={{ color: TEXT_PRIMARY }}>
               Avis clients
             </h2>
-            <div className="mt-3 h-0.5 w-16 rounded-full" style={{ backgroundColor: ORANGE }} />
+            <div className="mt-3 h-0.5 w-16 rounded-full" style={{ backgroundColor: ACCENT }} />
           </div>
           <TestimonialsCarousel testimonials={testimonials} />
         </section>
@@ -792,7 +786,7 @@ function HomeView(props: HomeViewProps) {
           className="px-5 py-20"
           style={{
             backgroundColor: BG_SECONDARY,
-            borderTop: `1px solid ${ORANGE}30`,
+            borderTop: `1px solid ${ACCENT}30`,
           }}
         >
           <div className="mx-auto max-w-lg text-center">
@@ -819,7 +813,7 @@ function HomeView(props: HomeViewProps) {
               <Button
                 type="submit"
                 className="rounded-xl px-6 font-bold text-white transition-colors hover:bg-[#ea580c]"
-                style={{ backgroundColor: ORANGE }}
+                style={{ backgroundColor: ACCENT }}
               >
                 S&apos;abonner
               </Button>
@@ -905,7 +899,7 @@ function DarkProductCard({
           {product.isBestSeller && (
             <span
               className="rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white"
-              style={{ backgroundColor: ORANGE }}
+              style={{ backgroundColor: ACCENT }}
             >
               Best seller
             </span>
@@ -946,7 +940,7 @@ function DarkProductCard({
           {product.name}
         </h3>
         <div className="mt-1.5 flex items-baseline gap-2">
-          <span className="text-base font-bold" style={{ color: ORANGE }}>
+          <span className="text-base font-bold" style={{ color: ACCENT }}>
             {formatPrice(product.price)}
           </span>
           {product.oldPrice && product.oldPrice > product.price && (
@@ -962,7 +956,7 @@ function DarkProductCard({
             <Star
               key={i}
               className="h-3 w-3"
-              style={{ color: ORANGE, fill: ORANGE }}
+              style={{ color: ACCENT, fill: ACCENT }}
             />
           ))}
         </div>
@@ -972,7 +966,7 @@ function DarkProductCard({
           type="button"
           onClick={handleAdd}
           className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl py-3 text-xs font-bold uppercase tracking-wide text-white transition-all duration-200 hover:brightness-110 active:scale-[0.98]"
-          style={{ backgroundColor: ORANGE }}
+          style={{ backgroundColor: ACCENT }}
           aria-label={`Ajouter ${product.name} au panier`}
         >
           <ShoppingBag className="h-4 w-4" />
@@ -1060,7 +1054,7 @@ function PromoDealCard({
         </h3>
 
         <div className="flex items-baseline gap-2">
-          <span className="text-lg font-bold" style={{ color: ORANGE }}>
+          <span className="text-lg font-bold" style={{ color: ACCENT }}>
             {formatPrice(product.price)}
           </span>
           {product.oldPrice && product.oldPrice > product.price && (
@@ -1076,7 +1070,7 @@ function PromoDealCard({
           type="button"
           onClick={handleAdd}
           className="mt-auto flex w-full items-center justify-center gap-2 rounded-xl py-2 text-xs font-bold uppercase tracking-wide text-white transition-all duration-200 hover:brightness-110 active:scale-[0.98]"
-          style={{ backgroundColor: ORANGE }}
+          style={{ backgroundColor: ACCENT }}
           aria-label={`Ajouter ${product.name} au panier`}
         >
           <ShoppingBag className="h-4 w-4" />
@@ -1139,8 +1133,8 @@ function TestimonialsCarousel({
                   key={i}
                   className="h-4 w-4"
                   style={{
-                    color: i < current.rating ? ORANGE : BORDER_SUBTLE,
-                    fill: i < current.rating ? ORANGE : 'transparent',
+                    color: i < current.rating ? ACCENT : BORDER_SUBTLE,
+                    fill: i < current.rating ? ACCENT : 'transparent',
                   }}
                 />
               ))}
@@ -1164,7 +1158,7 @@ function TestimonialsCarousel({
               ) : (
                 <div
                   className="flex h-12 w-12 items-center justify-center rounded-full text-sm font-bold text-white"
-                  style={{ backgroundColor: ORANGE }}
+                  style={{ backgroundColor: ACCENT }}
                 >
                   {current.clientName.charAt(0).toUpperCase()}
                 </div>
@@ -1203,7 +1197,7 @@ function TestimonialsCarousel({
                 className="h-2 rounded-full transition-all"
                 style={{
                   width: i === index ? 24 : 8,
-                  backgroundColor: i === index ? ORANGE : BORDER_SUBTLE,
+                  backgroundColor: i === index ? ACCENT : BORDER_SUBTLE,
                 }}
               />
             ))}
@@ -1332,7 +1326,7 @@ function ProductView(props: ProductViewProps) {
           {/* ─── RIGHT: Product info ─── */}
           <div className="flex flex-col gap-5">
             <div>
-              <p className="mb-2 text-xs font-bold uppercase tracking-widest" style={{ color: ORANGE }}>
+              <p className="mb-2 text-xs font-bold uppercase tracking-widest" style={{ color: ACCENT }}>
                 {product.categoryName || 'Produit'}
               </p>
               <h1 className="text-2xl font-bold leading-tight md:text-4xl" style={{ color: TEXT_PRIMARY }}>
@@ -1352,7 +1346,7 @@ function ProductView(props: ProductViewProps) {
                   <Star
                     key={i}
                     className="h-4 w-4"
-                    style={{ color: ORANGE, fill: ORANGE }}
+                    style={{ color: ACCENT, fill: ACCENT }}
                   />
                 ))}
               </div>
@@ -1361,7 +1355,7 @@ function ProductView(props: ProductViewProps) {
 
             {/* Price */}
             <div className="flex flex-wrap items-baseline gap-3">
-              <span className="text-3xl font-black md:text-4xl" style={{ color: ORANGE }}>
+              <span className="text-3xl font-black md:text-4xl" style={{ color: ACCENT }}>
                 {formatPrice(currentPrice)}
               </span>
               {product.oldPrice && product.oldPrice > currentPrice && (
@@ -1405,7 +1399,7 @@ function ProductView(props: ProductViewProps) {
               <VariantSelector
                 variants={product.variants}
                 basePrice={product.price}
-                accent={ORANGE}
+                accent={ACCENT}
                 onSelectionChange={onSelectionChange}
               />
             )}
@@ -1440,7 +1434,7 @@ function ProductView(props: ProductViewProps) {
                 disabled={!inStock}
                 size="lg"
                 className="gap-2 rounded-xl py-6 text-sm font-bold uppercase tracking-wide text-white transition-colors hover:brightness-110 disabled:opacity-50"
-                style={{ backgroundColor: ORANGE }}
+                style={{ backgroundColor: ACCENT }}
               >
                 <ShoppingBag className="h-5 w-5" />
                 Ajouter au panier
@@ -1476,7 +1470,7 @@ function ProductView(props: ProductViewProps) {
                   color: TEXT_MUTED,
                 }}
               >
-                <RotateCcw className="h-3.5 w-3.5" style={{ color: ORANGE }} /> Retour sous 7 jours
+                <RotateCcw className="h-3.5 w-3.5" style={{ color: ACCENT }} /> Retour sous 7 jours
               </span>
               <span
                 className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium"
@@ -1536,7 +1530,7 @@ function ProductView(props: ProductViewProps) {
             <h2 className="text-xl font-bold md:text-2xl" style={{ color: TEXT_PRIMARY }}>
               Produits similaires
             </h2>
-            <div className="mt-3 h-0.5 w-16 rounded-full" style={{ backgroundColor: ORANGE }} />
+            <div className="mt-3 h-0.5 w-16 rounded-full" style={{ backgroundColor: ACCENT }} />
           </div>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-4">
             {(relatedProducts.length > 0
@@ -1620,7 +1614,7 @@ function CosmikaDarkFooter({
               <div className="mb-4 flex items-center gap-2">
                 <div
                   className="flex h-8 w-8 items-center justify-center rounded-lg"
-                  style={{ backgroundColor: ORANGE }}
+                  style={{ backgroundColor: ACCENT }}
                 >
                   <Store className="h-4 w-4 text-white" />
                 </div>
@@ -1641,7 +1635,7 @@ function CosmikaDarkFooter({
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex h-9 w-9 items-center justify-center rounded-full transition-all duration-200 hover:scale-110"
-                  style={{ backgroundColor: BG_CARD, border: `1px solid ${BORDER_SUBTLE}`, color: ORANGE }}
+                  style={{ backgroundColor: BG_CARD, border: `1px solid ${BORDER_SUBTLE}`, color: ACCENT }}
                   aria-label="WhatsApp"
                 >
                   <MessageCircle className="h-4 w-4" />
@@ -1653,7 +1647,7 @@ function CosmikaDarkFooter({
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex h-9 w-9 items-center justify-center rounded-full transition-all duration-200 hover:scale-110"
-                  style={{ backgroundColor: BG_CARD, border: `1px solid ${BORDER_SUBTLE}`, color: ORANGE }}
+                  style={{ backgroundColor: BG_CARD, border: `1px solid ${BORDER_SUBTLE}`, color: ACCENT }}
                   aria-label="Facebook"
                 >
                   <Facebook className="h-4 w-4" />
@@ -1664,7 +1658,7 @@ function CosmikaDarkFooter({
 
           {/* Column 2: MENU */}
           <div>
-            <h4 className="mb-4 text-xs font-bold uppercase tracking-widest" style={{ color: ORANGE }}>
+            <h4 className="mb-4 text-xs font-bold uppercase tracking-widest" style={{ color: ACCENT }}>
               Menu
             </h4>
             <ul className="space-y-2.5 text-sm">
@@ -1706,7 +1700,7 @@ function CosmikaDarkFooter({
 
           {/* Column 3: CONTACT */}
           <div>
-            <h4 className="mb-4 text-xs font-bold uppercase tracking-widest" style={{ color: ORANGE }}>
+            <h4 className="mb-4 text-xs font-bold uppercase tracking-widest" style={{ color: ACCENT }}>
               Contact
             </h4>
             <ul className="space-y-2.5 text-sm">
@@ -1758,7 +1752,7 @@ function CosmikaDarkFooter({
 
           {/* Column 4: NEWSLETTER */}
           <div>
-            <h4 className="mb-4 text-xs font-bold uppercase tracking-widest" style={{ color: ORANGE }}>
+            <h4 className="mb-4 text-xs font-bold uppercase tracking-widest" style={{ color: ACCENT }}>
               Newsletter
             </h4>
             {config.newsletter.enabled && (
@@ -1783,7 +1777,7 @@ function CosmikaDarkFooter({
               <button
                 type="submit"
                 className="flex h-10 items-center justify-center rounded-r-lg px-3 text-white transition-colors hover:brightness-110"
-                style={{ backgroundColor: ORANGE }}
+                style={{ backgroundColor: ACCENT }}
                 aria-label="S'inscrire"
               >
                 <ChevronRight className="h-4 w-4" />
@@ -1801,7 +1795,7 @@ function CosmikaDarkFooter({
           </p>
           <p>
             Propuls\u00e9 par{' '}
-            <span className="font-bold" style={{ color: ORANGE }}>
+            <span className="font-bold" style={{ color: ACCENT }}>
               Boutiko
             </span>
           </p>
