@@ -11,6 +11,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
 import { ImageWithFallback } from '@/components/ui/image-with-fallback'
 import { generateSlug } from '@/lib/utils'
+import { templateList, type TemplateId } from '@/lib/templates'
+import { getTemplateDisplayInfo } from '@/lib/template-display'
 import {
   ArrowRight,
   ArrowLeft,
@@ -38,7 +40,6 @@ type Sector =
   | 'consulting'
   | 'artisanat'
   | 'sante'
-type TemplateId = 'cosmika-beauty' | 'xstore-electro'
 type Plan = 'TRIAL' | 'PRO'
 
 interface OnboardingFormData {
@@ -71,46 +72,19 @@ const SERVICE_SECTORS: { id: Sector; emoji: string; name: string; subtitle: stri
   { id: 'sante', emoji: '🏥', name: 'Santé', subtitle: 'Pharmacie, clinique, bien-être' },
 ]
 
-const SECTOR_TEMPLATE_MAP: Partial<Record<Sector, TemplateId>> = {
-  beaute: 'cosmika-beauty',
-  mode: 'cosmika-beauty',
+/* Suggested template per sector (used as pre-selection, not filter) */
+const SECTOR_SUGGESTION: Partial<Record<Sector, TemplateId>> = {
+  beaute: 'cosmika-dark',
+  mode: 'cosmika-dark',
   electronique: 'xstore-electro',
-  alimentation: 'xstore-electro',
-  autre: 'xstore-electro',
+  alimentation: 'modern-store',
+  autre: 'modern-store',
   'beaute-service': 'cosmika-beauty',
-  restaurant: 'cosmika-beauty',
-  consulting: 'cosmika-beauty',
-  artisanat: 'cosmika-beauty',
+  restaurant: 'elegance-plus',
+  consulting: 'elegance-plus',
+  artisanat: 'xstore-electro',
   sante: 'cosmika-beauty',
 }
-
-interface TemplateInfo {
-  id: TemplateId
-  emoji: string
-  name: string
-  features: { ecommerce: string[]; service: string[] }
-}
-
-const TEMPLATES: TemplateInfo[] = [
-  {
-    id: 'cosmika-beauty',
-    emoji: '✨',
-    name: 'Élégance',
-    features: {
-      ecommerce: ['Panier WhatsApp intégré', 'Gestion des stocks en temps réel', 'Design élégant & moderne'],
-      service: ['Bouton Demander un devis', 'Formulaire de réservation', 'Design élégant & moderne'],
-    },
-  },
-  {
-    id: 'xstore-electro',
-    emoji: '⚡',
-    name: 'Moderne',
-    features: {
-      ecommerce: ['Catalogue produits avancé', 'Gestion des stocks en temps réel', 'Design tech & épuré'],
-      service: ['Bouton Demander un devis', 'Formulaire de réservation', 'Design tech & épuré'],
-    },
-  },
-]
 
 const TOTAL_STEPS = 5
 
@@ -255,11 +229,6 @@ export function OnboardingWizard() {
 
   /* ──────── Step 3: Template ──────── */
 
-  const availableTemplates = TEMPLATES.filter((t) => {
-    if (form.sector && SECTOR_TEMPLATE_MAP[form.sector] === t.id) return true
-    return false
-  })
-
   const canProceedStep3 = form.template !== null
 
   /* ──────── Step 4: Customization ──────── */
@@ -269,7 +238,8 @@ export function OnboardingWizard() {
 
   /* ──────── Step 5: Plan ──────── */
 
-  const templateEmoji = TEMPLATES.find((t) => t.id === form.template)?.emoji ?? '🏪'
+  const templateEmoji = form.template ? getTemplateDisplayInfo(form.template).style.emoji : '🏪'
+  const templateName = form.template ? getTemplateDisplayInfo(form.template).displayName : 'Template'
 
   /* ──────── File Upload ──────── */
 
@@ -575,11 +545,11 @@ export function OnboardingWizard() {
                     : 'hover:border-rose-300'
                 }`}
                 onClick={() => {
-                  const selectedTemplate = SECTOR_TEMPLATE_MAP[sector.id]
+                  const suggestedTemplate = SECTOR_SUGGESTION[sector.id] ?? null
                   setForm((prev) => ({
                     ...prev,
                     sector: sector.id,
-                    template: selectedTemplate ?? null,
+                    template: suggestedTemplate,
                   }))
                 }}
               >
@@ -629,7 +599,7 @@ export function OnboardingWizard() {
   }
 
   function renderStep3() {
-    const isService = form.businessType === 'SERVICE'
+    const suggestedId = form.sector ? SECTOR_SUGGESTION[form.sector] : null
 
     return (
       <motion.div
@@ -643,89 +613,75 @@ export function OnboardingWizard() {
       >
         <div className="text-center mb-8">
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-            Voici les designs disponibles pour votre activité
+            Choisissez votre design
           </h2>
           <p className="text-muted-foreground">
-            {isService
-              ? 'Un design professionnel adapté aux services'
-              : 'Un design optimisé pour la vente en ligne'}
+            Sélectionnez le template qui correspond le mieux à votre activité
           </p>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          {availableTemplates.map((tpl, index) => (
-            <motion.div
-              key={tpl.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.1 }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Card
-                className={`transition-all duration-200 hover:shadow-xl ${
-                  form.template === tpl.id
-                    ? 'ring-2 ring-rose-600 shadow-lg bg-rose-50/50'
-                    : 'hover:border-rose-300'
-                }`}
+        <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1 custom-scrollbar">
+          {templateList.map((tpl, index) => {
+            const display = getTemplateDisplayInfo(tpl.id)
+            const isSuggested = suggestedId === tpl.id
+            const isSelected = form.template === tpl.id
+
+            return (
+              <motion.div
+                key={tpl.id}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2, delay: index * 0.05 }}
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
               >
-                <CardContent className="p-6 flex flex-col gap-4">
-                  <div className="flex items-center gap-3">
-                    <span className="text-4xl">{tpl.emoji}</span>
-                    <div>
-                      <h3 className="font-bold text-gray-900 text-lg">
-                        {isService ? `${tpl.name} - Services` : tpl.name}
-                      </h3>
-                      {form.template === tpl.id && (
-                        <span className="text-xs font-medium text-rose-600 bg-rose-100 px-2 py-0.5 rounded-full">
-                          Sélectionné
-                        </span>
-                      )}
+                <Card
+                  className={`cursor-pointer transition-all duration-200 hover:shadow-xl ${
+                    isSelected
+                      ? 'ring-2 ring-rose-600 shadow-lg bg-rose-50/50'
+                      : 'hover:border-rose-300'
+                  }`}
+                  onClick={() => {
+                    setForm((prev) => ({ ...prev, template: tpl.id }))
+                  }}
+                >
+                  <CardContent className="p-4 sm:p-5">
+                    <div className="flex items-start gap-3">
+                      <span className="text-3xl shrink-0">{display.style.emoji}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-bold text-gray-900">{display.displayName}</h3>
+                          {isSuggested && (
+                            <span className="text-[10px] font-semibold text-rose-600 bg-rose-100 px-2 py-0.5 rounded-full">
+                              Recommandé
+                            </span>
+                          )}
+                          <span className="text-[10px] font-medium text-muted-foreground bg-gray-100 px-2 py-0.5 rounded-full">
+                            {display.style.badge}
+                          </span>
+                          {isSelected && (
+                            <span className="text-[10px] font-semibold text-rose-600 bg-rose-100 px-2 py-0.5 rounded-full ml-auto">
+                              ✓ Sélectionné
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-1">{display.tagline}</p>
+                        <ul className="mt-2 space-y-1">
+                          {display.features.slice(0, 3).map((f, fi) => (
+                            <li key={fi} className="flex items-start gap-1.5 text-xs text-muted-foreground">
+                              <Check className="w-3 h-3 text-rose-500 mt-0.5 shrink-0" />
+                              {f}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                     </div>
-                  </div>
-
-                  <ul className="space-y-2">
-                    {(isService ? tpl.features.service : tpl.features.ecommerce).map(
-                      (feature, fi) => (
-                        <li key={fi} className="flex items-start gap-2 text-sm text-muted-foreground">
-                          <Check className="w-4 h-4 text-rose-500 mt-0.5 shrink-0" />
-                          {feature}
-                        </li>
-                      ),
-                    )}
-                  </ul>
-
-                  <Button
-                    onClick={() => {
-                      setForm((prev) => ({ ...prev, template: tpl.id }))
-                    }}
-                    variant={form.template === tpl.id ? 'default' : 'outline'}
-                    className={`w-full rounded-xl font-semibold ${
-                      form.template === tpl.id
-                        ? 'bg-gradient-to-r from-rose-600 to-pink-600 text-white hover:from-rose-700 hover:to-pink-700'
-                        : 'hover:border-rose-300 hover:text-rose-600'
-                    }`}
-                  >
-                    {form.template === tpl.id ? (
-                      <>
-                        <Check className="mr-2 w-4 h-4" />
-                        Sélectionné
-                      </>
-                    ) : (
-                      'Sélectionner'
-                    )}
-                  </Button>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )
+          })}
         </div>
-
-        {availableTemplates.length === 0 && (
-          <div className="text-center py-8 text-muted-foreground">
-            Aucun template disponible pour ce secteur.
-          </div>
-        )}
 
         <div className="mt-8 flex justify-between">
           <Button
@@ -995,7 +951,7 @@ export function OnboardingWizard() {
               </div>
               <div className="text-right shrink-0">
                 <span className="text-xs bg-white/10 px-2 py-1 rounded-full text-gray-300">
-                  {TEMPLATES.find((t) => t.id === form.template)?.name ?? 'Template'}
+                  {templateName}
                 </span>
               </div>
             </div>
@@ -1024,7 +980,7 @@ export function OnboardingWizard() {
                     ✓ Sélectionné
                   </span>
                 </div>
-              )
+              )}
               <CardContent className="p-6 flex flex-col h-full">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-2xl">🟢</span>
@@ -1041,7 +997,7 @@ export function OnboardingWizard() {
                   {[
                     '7 jours d\'essai',
                     '1 boutique',
-                    `${TEMPLATES.find((t) => t.id === form.template)?.name ?? 'Template'} inclus`,
+                    `Template ${templateName} inclus`,
                     'Domaine boutiko.pro',
                     'Logo Boutiko',
                   ].map((item, i) => (
@@ -1087,7 +1043,7 @@ export function OnboardingWizard() {
                     ✓ Sélectionné
                   </span>
                 </div>
-              )
+              )}
               {form.plan !== 'PRO' && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
                   <span className="bg-gray-900 text-white text-xs font-semibold px-3 py-1 rounded-full">
