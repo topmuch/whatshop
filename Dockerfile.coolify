@@ -25,11 +25,10 @@ ENV NEXT_PUBLIC_APP_URL=https://boutiko.pro
 ENV NODE_OPTIONS=--max-old-space-size=4096
 RUN bun run build
 
-# Create data + uploads directories
-RUN mkdir -p /app/data /app/uploads && chmod -R 755 /app/uploads
+# Create data + uploads directories with open permissions
+RUN mkdir -p /app/data /app/uploads && chmod -R 777 /app/data /app/uploads
 
 # Declare persistent volumes — Coolify maps these to host paths
-# Without these, container restarts DELETE all uploaded images!
 VOLUME ["/app/data", "/app/uploads"]
 
 EXPOSE 3000
@@ -39,5 +38,10 @@ ENV HOSTNAME="0.0.0.0"
 ENV DATABASE_URL=file:/app/data/boutiko.db
 ENV UPLOADS_DIR=/app/uploads
 
+# Health check so Coolify knows the container is alive
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3000/',r=>{r.statusCode<400?process.exit(0):process.exit(1)}).on('error',()=>process.exit(1))"
+
 # Push DB schema, seed production data, then start server
-CMD ["sh", "-c", "npx prisma db push --skip-generate && bun scripts/seed-production.ts && node .next/standalone/server.js"]
+# Each step uses || true so failures don't prevent the server from starting
+CMD ["sh", "-c", "npx prisma db push --skip-generate || true && bun scripts/seed-production.ts || true && node .next/standalone/server.js"]
