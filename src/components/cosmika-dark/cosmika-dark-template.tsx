@@ -671,17 +671,17 @@ function HomeView(props: HomeViewProps) {
 
       {/* ─── SECTION 2: CATEGORY TABS ─── */}
       {categories.length > 0 && (
-        <section id="categories" className="mx-auto max-w-6xl px-4 py-10">
+        <section id="categories" className="mx-auto max-w-7xl px-5 py-16">
           <h2 className="mb-5 text-center text-xs font-bold uppercase tracking-[0.2em]" style={{ color: ORANGE }}>
             Cat\u00e9gories
           </h2>
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
             {categoryTabs.map((cat) => (
               <button
                 key={cat.id}
                 type="button"
                 onClick={() => setActiveCategory(cat.id)}
-                className="flex-shrink-0 rounded-full px-5 py-2 text-sm font-medium transition-all duration-200"
+                className="flex-shrink-0 rounded-full px-6 py-2.5 text-sm font-medium transition-all duration-200"
                 style={{
                   backgroundColor: activeCategory === cat.id ? ORANGE : BG_CARD,
                   color: activeCategory === cat.id ? '#ffffff' : TEXT_MUTED,
@@ -697,14 +697,14 @@ function HomeView(props: HomeViewProps) {
 
       {/* ─── SECTION 3: SPECIAL OFFERS ─── */}
       {promoProducts.length > 0 && (
-        <section className="mx-auto max-w-6xl px-4 py-10">
-          <div className="mb-6 flex items-center gap-2">
+        <section className="mx-auto max-w-7xl px-5 py-16">
+          <div className="mb-8 flex items-center gap-2">
             <Flame className="h-6 w-6 text-red-500" />
             <h2 className="text-2xl font-bold md:text-3xl" style={{ color: TEXT_PRIMARY }}>
               Offres sp\u00e9ciales
             </h2>
           </div>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             {promoProducts.map((p) => (
               <PromoDealCard
                 key={p.id}
@@ -720,15 +720,15 @@ function HomeView(props: HomeViewProps) {
       )}
 
       {/* ─── SECTION 4: BEST SELLERS ─── */}
-      <section id="best-sellers" className="mx-auto max-w-6xl px-4 py-10">
-        <div className="mb-6">
+      <section id="best-sellers" className="mx-auto max-w-7xl px-5 py-16">
+        <div className="mb-8">
           <h2 className="text-2xl font-bold md:text-3xl" style={{ color: TEXT_PRIMARY }}>
             Meilleures ventes
           </h2>
-          <div className="mt-2 h-0.5 w-16 rounded-full" style={{ backgroundColor: ORANGE }} />
+          <div className="mt-3 h-0.5 w-16 rounded-full" style={{ backgroundColor: ORANGE }} />
         </div>
         {(bestSellers.length > 0 ? bestSellers : filteredProducts.slice(0, 8)).length > 0 ? (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-4">
             {(bestSellers.length > 0 ? bestSellers : filteredProducts.slice(0, 8)).map((p) => (
               <DarkProductCard
                 key={p.id}
@@ -749,9 +749,9 @@ function HomeView(props: HomeViewProps) {
 
       {/* ─── SECTION 5: BENEFITS / TRUST ─── */}
       {config.benefits.length > 0 && (
-        <section className="py-12" style={{ backgroundColor: BG_SECONDARY }}>
-          <div className="mx-auto max-w-6xl px-4">
-            <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
+        <section className="py-20" style={{ backgroundColor: BG_SECONDARY }}>
+          <div className="mx-auto max-w-7xl px-5">
+            <div className="grid grid-cols-2 gap-10 md:grid-cols-4">
               {config.benefits.map((b, i) => {
                 const icons = [Truck, ShieldCheck, RotateCcw, Headphones]
                 const Icon = icons[i % icons.length]
@@ -775,12 +775,12 @@ function HomeView(props: HomeViewProps) {
 
       {/* ─── SECTION 6: TESTIMONIALS ─── */}
       {testimonials.length > 0 && (
-        <section className="mx-auto max-w-6xl px-4 py-12">
-          <div className="mb-6">
+        <section className="mx-auto max-w-7xl px-5 py-16">
+          <div className="mb-8">
             <h2 className="text-2xl font-bold md:text-3xl" style={{ color: TEXT_PRIMARY }}>
               Avis clients
             </h2>
-            <div className="mt-2 h-0.5 w-16 rounded-full" style={{ backgroundColor: ORANGE }} />
+            <div className="mt-3 h-0.5 w-16 rounded-full" style={{ backgroundColor: ORANGE }} />
           </div>
           <TestimonialsCarousel testimonials={testimonials} />
         </section>
@@ -789,13 +789,13 @@ function HomeView(props: HomeViewProps) {
       {/* ─── SECTION 7: NEWSLETTER ─── */}
       {config.newsletter.enabled && (
         <section
-          className="px-4 py-14"
+          className="px-5 py-20"
           style={{
             backgroundColor: BG_SECONDARY,
             borderTop: `1px solid ${ORANGE}30`,
           }}
         >
-          <div className="mx-auto max-w-md text-center">
+          <div className="mx-auto max-w-lg text-center">
             <h3 className="text-xl font-bold md:text-2xl" style={{ color: TEXT_PRIMARY }}>
               {config.newsletter.title || 'Restez inform\u00e9'}
             </h3>
@@ -936,7 +936,7 @@ function DarkProductCard({
       </div>
 
       {/* Info */}
-      <div className="p-3">
+      <div className="p-4">
         {product.categoryName && (
           <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest" style={{ color: TEXT_SUBTLE }}>
             {product.categoryName}
@@ -971,7 +971,7 @@ function DarkProductCard({
         <button
           type="button"
           onClick={handleAdd}
-          className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-bold uppercase tracking-wide text-white transition-all duration-200 hover:brightness-110 active:scale-[0.98]"
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl py-3 text-xs font-bold uppercase tracking-wide text-white transition-all duration-200 hover:brightness-110 active:scale-[0.98]"
           style={{ backgroundColor: ORANGE }}
           aria-label={`Ajouter ${product.name} au panier`}
         >
@@ -1299,7 +1299,7 @@ function ProductView(props: ProductViewProps) {
 
   return (
     <>
-      <section className="mx-auto max-w-6xl px-4 py-6 md:py-10">
+      <section className="mx-auto max-w-7xl px-5 py-8 md:py-14">
         {/* Breadcrumb + back */}
         <div className="mb-4 flex items-center justify-between gap-3">
           <button
@@ -1318,7 +1318,7 @@ function ProductView(props: ProductViewProps) {
           </nav>
         </div>
 
-        <div className="grid gap-8 md:grid-cols-2 md:gap-12">
+        <div className="grid gap-10 md:grid-cols-2 md:gap-16">
           {/* ─── LEFT: Image gallery ─── */}
           <div>
             <ImageGallery
@@ -1532,13 +1532,13 @@ function ProductView(props: ProductViewProps) {
 
         {/* ─── Produits similaires ─── */}
         <section className="mt-12 pt-8" style={{ borderTop: `1px solid ${BORDER_SUBTLE}` }}>
-          <div className="mb-5">
+          <div className="mb-8">
             <h2 className="text-xl font-bold md:text-2xl" style={{ color: TEXT_PRIMARY }}>
               Produits similaires
             </h2>
-            <div className="mt-2 h-0.5 w-16 rounded-full" style={{ backgroundColor: ORANGE }} />
+            <div className="mt-3 h-0.5 w-16 rounded-full" style={{ backgroundColor: ORANGE }} />
           </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-4">
             {(relatedProducts.length > 0
               ? relatedProducts
               : allProducts
@@ -1603,8 +1603,8 @@ function CosmikaDarkFooter({
   return (
     <footer id="footer" className="mt-auto" style={{ backgroundColor: BG_SECONDARY }}>
       {/* ── Top: 4 columns ── */}
-      <div className="mx-auto max-w-6xl px-4 py-12 md:py-16">
-        <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
+      <div className="mx-auto max-w-7xl px-5 py-16 md:py-24">
+        <div className="grid grid-cols-2 gap-10 md:grid-cols-4">
           {/* Column 1: Logo + Description + Social */}
           <div className="col-span-2 md:col-span-1">
             {shop?.logo ? (
@@ -1795,7 +1795,7 @@ function CosmikaDarkFooter({
 
       {/* ── Bottom: Copyright ── */}
       <div style={{ borderTop: `1px solid ${BORDER_SUBTLE}` }}>
-        <div className="mx-auto flex max-w-6xl flex-col items-center gap-2 px-4 py-6 text-center text-xs sm:flex-row sm:justify-between" style={{ color: TEXT_SUBTLE }}>
+        <div className="mx-auto flex max-w-7xl flex-col items-center gap-2 px-5 py-6 text-center text-xs sm:flex-row sm:justify-between" style={{ color: TEXT_SUBTLE }}>
           <p>
             \u00a9 {year} {shopName}. Tous droits r\u00e9serv\u00e9s.
           </p>
