@@ -17,11 +17,19 @@ RUN bunx prisma generate
 # Build Next.js standalone output
 ENV NEXT_PUBLIC_BASE_URL=https://boutiko.pro
 ENV NEXT_PUBLIC_APP_URL=https://boutiko.pro
-ENV DATABASE_URL=file:/dev/null
 ENV NEXT_TELEMETRY_DISABLED=1
-# Webpack build of this large app (90+ routes) needs a generous heap to avoid
-# OOM-kills in memory-constrained Docker builders (e.g. Coolify).
-ENV NODE_OPTIONS=--max-old-space-size=4096
+
+# IMPORTANT: Override ANY env var injected by the host (Coolify, etc.)
+# so the build never tries to touch a real database file.
+# We use ARG which takes precedence over ENV set by the platform.
+ARG DATABASE_URL=file:/dev/null
+ENV DATABASE_URL=file:/dev/null
+
+# Webpack build of this large app (90+ routes) needs a generous heap.
+# Also limit Next.js SSG workers to 1 to avoid OOM in constrained builders.
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+ENV NEXT_PRIVATE_WORKER_COUNT=1
+
 RUN bun run build
 
 # ─── Production stage ───────────────────────────────────────
@@ -48,8 +56,8 @@ COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma/
 COPY --from=builder /app/node_modules/sharp ./node_modules/sharp
 COPY --from=builder /app/node_modules/@img ./node_modules/@img
 
-# Create db + uploads directories
-RUN mkdir -p /app/db /app/uploads && chmod -R 755 /app/uploads
+# Create db + uploads directories with open permissions
+RUN mkdir -p /app/db /app/uploads && chmod -R 777 /app/db /app/uploads
 
 ENV UPLOADS_DIR=/app/uploads
 
@@ -63,4 +71,6 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD bun -e "fetch('http://localhost:3000/').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
 
-CMD ["bun", "server.js"]
+# Push DB schema, seed production data, then start server
+# Each step uses || true so failures don't prevent the server from starting
+CMD ["sh", "-c", "npx prisma db push --skip-generate || true && bun scripts/seed-production.ts || true && bun server.js"]

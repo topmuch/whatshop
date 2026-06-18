@@ -1,4 +1,6 @@
-# Boutiko - Dockerfile for Coolify
+# Boutiko - Dockerfile.coolify (for Coolify git-clone builds)
+# NOTE: Coolify may inject env vars that override Dockerfile ENV directives.
+# We use ARG + inline env in RUN to guarantee build-time values.
 FROM node:20-alpine
 
 # Install required packages
@@ -16,13 +18,22 @@ RUN npm install -g bun && bun install
 RUN bunx prisma generate
 
 # Build the application
+# ARG takes precedence over platform-injected env vars (e.g. Coolify's DATABASE_URL)
+ARG DATABASE_URL=file:/dev/null
+ARG NEXT_TELEMETRY_DISABLED=1
+ARG NEXT_PUBLIC_BASE_URL=https://boutiko.pro
+ARG NEXT_PUBLIC_APP_URL=https://boutiko.pro
+
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV DATABASE_URL=file:/app/data/boutiko.db
 ENV NEXT_PUBLIC_BASE_URL=https://boutiko.pro
 ENV NEXT_PUBLIC_APP_URL=https://boutiko.pro
-# Webpack build of this large app (90+ routes) needs a generous heap to avoid
-# OOM-kills in memory-constrained Docker builders (e.g. Coolify).
-ENV NODE_OPTIONS=--max-old-space-size=4096
+ENV DATABASE_URL=file:/dev/null
+
+# Webpack build of this large app (90+ routes) needs a generous heap.
+# Also limit Next.js SSG workers to 1 to avoid OOM in constrained builders.
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+ENV NEXT_PRIVATE_WORKER_COUNT=1
+
 RUN bun run build
 
 # Create data + uploads directories with open permissions
