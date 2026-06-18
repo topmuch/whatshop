@@ -153,13 +153,9 @@ export default function OnboardingPage() {
     })
   }, [])
 
-  const handleTemplateConfirm = useCallback(() => {
-    if (form.sector) {
-      const template = getTemplateForSector(form.sector)
-      setForm((prev) => ({ ...prev, template }))
-    }
-    goNext()
-  }, [form.sector, goNext])
+  const handleTemplateSelect = useCallback((templateId: string) => {
+    setForm((prev) => ({ ...prev, template: templateId }))
+  }, [])
 
   const handlePlanSelect = useCallback((plan: Plan) => {
     setForm((prev) => ({ ...prev, plan }))
@@ -309,7 +305,8 @@ export default function OnboardingPage() {
                     sector={form.sector}
                     businessType={form.businessType!}
                     template={form.template}
-                    onConfirm={handleTemplateConfirm}
+                    onSelect={handleTemplateSelect}
+                    onConfirm={goNext}
                   />
                 )}
 
