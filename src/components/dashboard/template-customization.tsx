@@ -26,7 +26,9 @@ import {
   ChevronUp,
   ChevronDown,
   Upload,
+  Type,
 } from 'lucide-react'
+import { MarqueeConfigTab } from './marquee-config-tab'
 import { toast } from 'sonner'
 import type { Testimonial, TrustBadge } from '@/lib/store'
 
@@ -352,9 +354,13 @@ export function TemplateCustomization({ shopSlug }: TemplateCustomizationProps) 
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="hero" className="space-y-6">
-            <TabsList className="grid grid-cols-2 sm:grid-cols-5 w-full">
+            <TabsList className="grid grid-cols-3 sm:grid-cols-6 w-full">
               <TabsTrigger value="hero" className="text-xs sm:text-sm">Hero</TabsTrigger>
               <TabsTrigger value="sections" className="text-xs sm:text-sm">Sections</TabsTrigger>
+              <TabsTrigger value="marquee" className="text-xs sm:text-sm gap-1.5">
+                <Type className="h-3.5 w-3.5 hidden sm:inline-block" />
+                Bande défilante
+              </TabsTrigger>
               <TabsTrigger value="badges" className="text-xs sm:text-sm">Badges</TabsTrigger>
               <TabsTrigger value="testimonials" className="text-xs sm:text-sm">Avis</TabsTrigger>
               <TabsTrigger value="footer" className="text-xs sm:text-sm">Footer</TabsTrigger>
@@ -616,6 +622,11 @@ export function TemplateCustomization({ shopSlug }: TemplateCustomizationProps) 
                 <Plus className="h-4 w-4" />
                 Ajouter un témoignage
               </Button>
+            </TabsContent>
+
+            {/* ─── MARQUEE TAB ─── */}
+            <TabsContent value="marquee" className="space-y-4">
+              <MarqueeConfigTab shopSlug={shopSlug} />
             </TabsContent>
 
             {/* ─── FOOTER LINKS TAB ─── */}
