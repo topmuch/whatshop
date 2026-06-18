@@ -910,7 +910,7 @@ function DarkProductCard({
               Best seller
             </span>
           )}
-          {product.isNew && (
+          {(product as any).isNew && (
             <span className="rounded-md bg-emerald-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
               Nouveau
             </span>
@@ -1647,9 +1647,9 @@ function CosmikaDarkFooter({
                   <MessageCircle className="h-4 w-4" />
                 </a>
               )}
-              {shop?.facebookUrl && (
+              {(shop as any)?.facebookUrl && (
                 <a
-                  href={shop.facebookUrl}
+                  href={(shop as any).facebookUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex h-9 w-9 items-center justify-center rounded-full transition-all duration-200 hover:scale-110"
