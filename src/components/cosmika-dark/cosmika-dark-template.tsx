@@ -32,16 +32,16 @@ import { StickyCTA } from '@/components/modern-store/sticky-cta'
 // CONSTANTS & TYPES
 // ═══════════════════════════════════════════════════════════════════════════
 
-const GOLDEN = '#ffd21d'
-const GOLDEN_HOVER = '#e7ba0a'
-const BG_MAIN = '#181818'
-const BG_DARKER = '#0f0f0f'
-const BG_CARD = '#212121'
-const BORDER_SUBTLE = '#333333'
-const BORDER_HOVER = '#444444'
-const TEXT_PRIMARY = '#f8f9fb'
-const TEXT_MUTED = '#d9d9d9'
-const TEXT_SUBTLE = '#999999'
+const ORANGE = '#f97316'
+const ORANGE_HOVER = '#ea580c'
+const BG_MAIN = '#ffffff'
+const BG_SECONDARY = '#f9fafb'
+const BG_CARD = '#ffffff'
+const BORDER_SUBTLE = '#e5e5e5'
+const BORDER_HOVER = '#d4d4d4'
+const TEXT_PRIMARY = '#111827'
+const TEXT_MUTED = '#4b5563'
+const TEXT_SUBTLE = '#9ca3af'
 
 type View = 'home' | 'product' | 'checkout'
 
@@ -276,7 +276,7 @@ export function CosmikaDarkTemplate() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: BG_MAIN }}>
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-[#333] border-t-[#ffd21d]" />
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-[#e5e5e5] border-t-[#f97316]" />
       </div>
     )
   }
@@ -350,7 +350,7 @@ export function CosmikaDarkTemplate() {
             whatsapp={whatsapp}
             shopName={shopName}
             shopId={shopId}
-            accent={GOLDEN}
+            accent={ORANGE}
             onBack={() => setView('home')}
             onSuccess={() => { setView('home') }}
           />
@@ -376,7 +376,7 @@ export function CosmikaDarkTemplate() {
         whatsapp={whatsapp}
         shopName={shopName}
         shopId={shopId}
-        accent={GOLDEN}
+        accent={ORANGE}
         onCheckout={() => setView('checkout')}
       />
     </div>
@@ -393,7 +393,7 @@ function MarqueeBar() {
   return (
     <div
       className="relative w-full overflow-hidden py-2"
-      style={{ backgroundColor: BG_DARKER }}
+      style={{ backgroundColor: BG_SECONDARY }}
       aria-hidden="true"
     >
       <style>{`
@@ -406,10 +406,10 @@ function MarqueeBar() {
         className="flex whitespace-nowrap"
         style={{ animation: 'cosmika-marquee 30s linear infinite' }}
       >
-        <span className="mx-4 text-xs uppercase tracking-widest" style={{ color: GOLDEN }}>
+        <span className="mx-4 text-xs uppercase tracking-widest" style={{ color: ORANGE }}>
           {text}
         </span>
-        <span className="mx-4 text-xs uppercase tracking-widest" style={{ color: GOLDEN }}>
+        <span className="mx-4 text-xs uppercase tracking-widest" style={{ color: ORANGE }}>
           {text}
         </span>
       </div>
@@ -481,7 +481,7 @@ function Header({
                   key={link.label}
                   type="button"
                   onClick={() => { link.action(); onNavClick() }}
-                  className="text-sm font-medium transition-colors hover:text-[#ffd21d]"
+                  className="text-sm font-medium transition-colors hover:text-[#f97316]"
                   style={{ color: TEXT_MUTED }}
                 >
                   {link.label}
@@ -511,9 +511,9 @@ function Header({
               <div className="flex items-center gap-2">
                 <div
                   className="flex h-9 w-9 items-center justify-center rounded-lg"
-                  style={{ backgroundColor: GOLDEN }}
+                  style={{ backgroundColor: ORANGE }}
                 >
-                  <Store className="h-4 w-4 text-black" />
+                  <Store className="h-4 w-4 text-white" />
                 </div>
                 <span className="text-base font-bold" style={{ color: TEXT_PRIMARY }}>
                   {shop.name}
@@ -527,14 +527,14 @@ function Header({
             type="button"
             onClick={onCartClick}
             aria-label={`Voir le panier (${itemCount} article${itemCount > 1 ? 's' : ''})`}
-            className="relative flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-white/5"
+            className="relative flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-gray-100"
             style={{ color: TEXT_PRIMARY }}
           >
             <ShoppingBag className="h-5 w-5" />
             {itemCount > 0 && (
               <span
-                className="absolute -right-0.5 -top-0.5 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1 text-[10px] font-bold text-black"
-                style={{ backgroundColor: GOLDEN }}
+                className="absolute -right-0.5 -top-0.5 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1 text-[10px] font-bold text-white"
+                style={{ backgroundColor: ORANGE }}
               >
                 {itemCount}
               </span>
@@ -555,7 +555,7 @@ function Header({
           >
             {/* Backdrop */}
             <div
-              className="absolute inset-0 bg-black/60"
+              className="absolute inset-0 bg-black/40"
               onClick={onMobileMenuToggle}
             />
 
@@ -566,14 +566,14 @@ function Header({
               exit={{ x: '100%' }}
               transition={{ type: 'tween', duration: 0.3, ease: 'easeInOut' }}
               className="absolute inset-y-0 right-0 w-72 flex flex-col"
-              style={{ backgroundColor: BG_DARKER }}
+              style={{ backgroundColor: BG_SECONDARY }}
             >
               {/* Close button */}
               <div className="flex items-center justify-end p-4">
                 <button
                   type="button"
                   onClick={onMobileMenuToggle}
-                  className="flex h-10 w-10 items-center justify-center rounded-lg transition-colors hover:bg-white/5"
+                  className="flex h-10 w-10 items-center justify-center rounded-lg transition-colors hover:bg-gray-100"
                   style={{ color: TEXT_PRIMARY }}
                   aria-label="Fermer le menu"
                 >
@@ -588,7 +588,7 @@ function Header({
                     key={link.label}
                     type="button"
                     onClick={() => { link.action(); onNavClick() }}
-                    className="rounded-lg px-4 py-3 text-left text-lg font-medium transition-colors hover:text-[#ffd21d] hover:bg-white/5"
+                    className="rounded-lg px-4 py-3 text-left text-lg font-medium transition-colors hover:text-[#f97316] hover:bg-gray-100"
                     style={{ color: TEXT_PRIMARY }}
                   >
                     {link.label}
@@ -664,7 +664,7 @@ function HomeView(props: HomeViewProps) {
               style={{ maxHeight: '600px' }}
               sizes="100vw"
             />
-            <div className="absolute inset-0 bg-black/0 transition-all duration-700 group-hover:bg-black/20" />
+            <div className="absolute inset-0 bg-black/0 transition-all duration-700 group-hover:bg-black/10" />
           </div>
         </section>
       )}
@@ -672,7 +672,7 @@ function HomeView(props: HomeViewProps) {
       {/* ─── SECTION 2: CATEGORY TABS ─── */}
       {categories.length > 0 && (
         <section id="categories" className="mx-auto max-w-6xl px-4 py-10">
-          <h2 className="mb-5 text-center text-xs font-bold uppercase tracking-[0.2em]" style={{ color: GOLDEN }}>
+          <h2 className="mb-5 text-center text-xs font-bold uppercase tracking-[0.2em]" style={{ color: ORANGE }}>
             Cat\u00e9gories
           </h2>
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
@@ -683,9 +683,9 @@ function HomeView(props: HomeViewProps) {
                 onClick={() => setActiveCategory(cat.id)}
                 className="flex-shrink-0 rounded-full px-5 py-2 text-sm font-medium transition-all duration-200"
                 style={{
-                  backgroundColor: activeCategory === cat.id ? GOLDEN : BG_CARD,
-                  color: activeCategory === cat.id ? '#000' : TEXT_MUTED,
-                  border: `1px solid ${activeCategory === cat.id ? GOLDEN : BORDER_SUBTLE}`,
+                  backgroundColor: activeCategory === cat.id ? ORANGE : BG_CARD,
+                  color: activeCategory === cat.id ? '#ffffff' : TEXT_MUTED,
+                  border: `1px solid ${activeCategory === cat.id ? ORANGE : BORDER_SUBTLE}`,
                 }}
               >
                 {cat.label}
@@ -725,10 +725,10 @@ function HomeView(props: HomeViewProps) {
           <h2 className="text-2xl font-bold md:text-3xl" style={{ color: TEXT_PRIMARY }}>
             Meilleures ventes
           </h2>
-          <div className="mt-2 h-0.5 w-16 rounded-full" style={{ backgroundColor: GOLDEN }} />
+          <div className="mt-2 h-0.5 w-16 rounded-full" style={{ backgroundColor: ORANGE }} />
         </div>
         {(bestSellers.length > 0 ? bestSellers : filteredProducts.slice(0, 8)).length > 0 ? (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
             {(bestSellers.length > 0 ? bestSellers : filteredProducts.slice(0, 8)).map((p) => (
               <DarkProductCard
                 key={p.id}
@@ -749,7 +749,7 @@ function HomeView(props: HomeViewProps) {
 
       {/* ─── SECTION 5: BENEFITS / TRUST ─── */}
       {config.benefits.length > 0 && (
-        <section className="py-12" style={{ backgroundColor: BG_DARKER }}>
+        <section className="py-12" style={{ backgroundColor: BG_SECONDARY }}>
           <div className="mx-auto max-w-6xl px-4">
             <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
               {config.benefits.map((b, i) => {
@@ -759,9 +759,9 @@ function HomeView(props: HomeViewProps) {
                   <div key={i} className="flex flex-col items-center text-center gap-3">
                     <div
                       className="flex h-12 w-12 items-center justify-center rounded-xl"
-                      style={{ backgroundColor: `${GOLDEN}15` }}
+                      style={{ backgroundColor: `${ORANGE}15` }}
                     >
-                      <Icon className="h-6 w-6" style={{ color: GOLDEN }} />
+                      <Icon className="h-6 w-6" style={{ color: ORANGE }} />
                     </div>
                     <h3 className="text-sm font-bold" style={{ color: TEXT_PRIMARY }}>{b.title}</h3>
                     <p className="text-xs leading-relaxed" style={{ color: TEXT_SUBTLE }}>{b.description}</p>
@@ -780,7 +780,7 @@ function HomeView(props: HomeViewProps) {
             <h2 className="text-2xl font-bold md:text-3xl" style={{ color: TEXT_PRIMARY }}>
               Avis clients
             </h2>
-            <div className="mt-2 h-0.5 w-16 rounded-full" style={{ backgroundColor: GOLDEN }} />
+            <div className="mt-2 h-0.5 w-16 rounded-full" style={{ backgroundColor: ORANGE }} />
           </div>
           <TestimonialsCarousel testimonials={testimonials} />
         </section>
@@ -791,8 +791,8 @@ function HomeView(props: HomeViewProps) {
         <section
           className="px-4 py-14"
           style={{
-            backgroundColor: BG_MAIN,
-            borderTop: `1px solid ${GOLDEN}30`,
+            backgroundColor: BG_SECONDARY,
+            borderTop: `1px solid ${ORANGE}30`,
           }}
         >
           <div className="mx-auto max-w-md text-center">
@@ -814,12 +814,12 @@ function HomeView(props: HomeViewProps) {
                 type="email"
                 placeholder="Votre email"
                 required
-                className="flex-1 rounded-xl border-[#333] bg-[#212121] text-white placeholder:text-[#666] focus-visible:ring-[#ffd21d] focus-visible:border-[#ffd21d]"
+                className="flex-1 rounded-xl border-[#e5e5e5] bg-white text-gray-900 placeholder:text-[#9ca3af] focus-visible:ring-[#f97316] focus-visible:border-[#f97316]"
               />
               <Button
                 type="submit"
-                className="rounded-xl px-6 font-bold text-black transition-colors hover:bg-[#e7ba0a]"
-                style={{ backgroundColor: GOLDEN }}
+                className="rounded-xl px-6 font-bold text-white transition-colors hover:bg-[#ea580c]"
+                style={{ backgroundColor: ORANGE }}
               >
                 S&apos;abonner
               </Button>
@@ -883,7 +883,7 @@ function DarkProductCard({
       {/* Image */}
       <div
         className="relative aspect-square overflow-hidden"
-        style={{ backgroundColor: '#1a1a1a' }}
+        style={{ backgroundColor: '#f3f4f6' }}
       >
         {image ? (
           <Image
@@ -892,7 +892,7 @@ function DarkProductCard({
             fill
             unoptimized
             className="object-cover transition-transform duration-500 group-hover:scale-105"
-            sizes="(max-width: 768px) 50vw, 25vw"
+            sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 25vw"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center">
@@ -904,8 +904,8 @@ function DarkProductCard({
         <div className="absolute top-2 left-2 flex flex-col gap-1.5">
           {product.isBestSeller && (
             <span
-              className="rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-black"
-              style={{ backgroundColor: GOLDEN }}
+              className="rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white"
+              style={{ backgroundColor: ORANGE }}
             >
               Best seller
             </span>
@@ -923,11 +923,11 @@ function DarkProductCard({
         )}
 
         {/* Hover overlay with eye icon */}
-        <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-all duration-300 group-hover:bg-black/40">
+        <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-all duration-300 group-hover:bg-black/15">
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); onQuickView(product) }}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-white opacity-0 backdrop-blur-sm transition-all duration-300 group-hover:opacity-100 hover:bg-white/30"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-gray-800 opacity-0 backdrop-blur-sm transition-all duration-300 group-hover:opacity-100 hover:bg-white/90"
             aria-label="Voir le produit"
           >
             <Eye className="h-5 w-5" />
@@ -946,7 +946,7 @@ function DarkProductCard({
           {product.name}
         </h3>
         <div className="mt-1.5 flex items-baseline gap-2">
-          <span className="text-base font-bold" style={{ color: GOLDEN }}>
+          <span className="text-base font-bold" style={{ color: ORANGE }}>
             {formatPrice(product.price)}
           </span>
           {product.oldPrice && product.oldPrice > product.price && (
@@ -962,7 +962,7 @@ function DarkProductCard({
             <Star
               key={i}
               className="h-3 w-3"
-              style={{ color: GOLDEN, fill: GOLDEN }}
+              style={{ color: ORANGE, fill: ORANGE }}
             />
           ))}
         </div>
@@ -971,8 +971,8 @@ function DarkProductCard({
         <button
           type="button"
           onClick={handleAdd}
-          className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-bold uppercase tracking-wide text-black transition-all duration-200 hover:brightness-110 active:scale-[0.98]"
-          style={{ backgroundColor: GOLDEN }}
+          className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-bold uppercase tracking-wide text-white transition-all duration-200 hover:brightness-110 active:scale-[0.98]"
+          style={{ backgroundColor: ORANGE }}
           aria-label={`Ajouter ${product.name} au panier`}
         >
           <ShoppingBag className="h-4 w-4" />
@@ -1026,13 +1026,13 @@ function PromoDealCard({
   return (
     <article
       onClick={onClick}
-      className="group relative flex cursor-pointer gap-4 overflow-hidden rounded-2xl p-4 transition-all duration-300 hover:border-[#ffd21d]/30"
+      className="group relative flex cursor-pointer gap-4 overflow-hidden rounded-2xl p-4 transition-all duration-300 hover:border-[#f97316]/30"
       style={{
         backgroundColor: BG_CARD,
         border: `1px solid ${BORDER_SUBTLE}`,
       }}
     >
-      <div className="relative h-28 w-28 flex-shrink-0 overflow-hidden rounded-xl" style={{ backgroundColor: '#1a1a1a' }}>
+      <div className="relative h-28 w-28 flex-shrink-0 overflow-hidden rounded-xl" style={{ backgroundColor: '#f3f4f6' }}>
         {image ? (
           <Image
             src={image}
@@ -1060,7 +1060,7 @@ function PromoDealCard({
         </h3>
 
         <div className="flex items-baseline gap-2">
-          <span className="text-lg font-bold" style={{ color: GOLDEN }}>
+          <span className="text-lg font-bold" style={{ color: ORANGE }}>
             {formatPrice(product.price)}
           </span>
           {product.oldPrice && product.oldPrice > product.price && (
@@ -1075,8 +1075,8 @@ function PromoDealCard({
         <button
           type="button"
           onClick={handleAdd}
-          className="mt-auto flex w-full items-center justify-center gap-2 rounded-xl py-2 text-xs font-bold uppercase tracking-wide text-black transition-all duration-200 hover:brightness-110 active:scale-[0.98]"
-          style={{ backgroundColor: GOLDEN }}
+          className="mt-auto flex w-full items-center justify-center gap-2 rounded-xl py-2 text-xs font-bold uppercase tracking-wide text-white transition-all duration-200 hover:brightness-110 active:scale-[0.98]"
+          style={{ backgroundColor: ORANGE }}
           aria-label={`Ajouter ${product.name} au panier`}
         >
           <ShoppingBag className="h-4 w-4" />
@@ -1139,8 +1139,8 @@ function TestimonialsCarousel({
                   key={i}
                   className="h-4 w-4"
                   style={{
-                    color: i < current.rating ? GOLDEN : BORDER_SUBTLE,
-                    fill: i < current.rating ? GOLDEN : 'transparent',
+                    color: i < current.rating ? ORANGE : BORDER_SUBTLE,
+                    fill: i < current.rating ? ORANGE : 'transparent',
                   }}
                 />
               ))}
@@ -1163,8 +1163,8 @@ function TestimonialsCarousel({
                 />
               ) : (
                 <div
-                  className="flex h-12 w-12 items-center justify-center rounded-full text-sm font-bold text-black"
-                  style={{ backgroundColor: GOLDEN }}
+                  className="flex h-12 w-12 items-center justify-center rounded-full text-sm font-bold text-white"
+                  style={{ backgroundColor: ORANGE }}
                 >
                   {current.clientName.charAt(0).toUpperCase()}
                 </div>
@@ -1188,7 +1188,7 @@ function TestimonialsCarousel({
             type="button"
             onClick={prev}
             aria-label="T\u00e9moignage pr\u00e9c\u00e9dent"
-            className="flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-white/5"
+            className="flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-gray-100"
             style={{ border: `1px solid ${BORDER_SUBTLE}`, color: TEXT_MUTED }}
           >
             <ChevronRight className="h-4 w-4 rotate-180" />
@@ -1203,7 +1203,7 @@ function TestimonialsCarousel({
                 className="h-2 rounded-full transition-all"
                 style={{
                   width: i === index ? 24 : 8,
-                  backgroundColor: i === index ? GOLDEN : BORDER_SUBTLE,
+                  backgroundColor: i === index ? ORANGE : BORDER_SUBTLE,
                 }}
               />
             ))}
@@ -1212,7 +1212,7 @@ function TestimonialsCarousel({
             type="button"
             onClick={next}
             aria-label="T\u00e9moignage suivant"
-            className="flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-white/5"
+            className="flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-gray-100"
             style={{ border: `1px solid ${BORDER_SUBTLE}`, color: TEXT_MUTED }}
           >
             <ChevronRight className="h-4 w-4" />
@@ -1262,7 +1262,7 @@ function ProductView(props: ProductViewProps) {
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-[#333] border-t-[#ffd21d]" />
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-[#e5e5e5] border-t-[#f97316]" />
       </div>
     )
   }
@@ -1275,7 +1275,7 @@ function ProductView(props: ProductViewProps) {
         <Button
           variant="outline"
           onClick={onBack}
-          className="gap-2 border-[#333] text-white hover:bg-white/5"
+          className="gap-2 border-[#e5e5e5] text-gray-700 hover:bg-gray-50"
         >
           <ArrowLeft className="h-4 w-4" />
           Retour \u00e0 la boutique
@@ -1305,7 +1305,7 @@ function ProductView(props: ProductViewProps) {
           <button
             type="button"
             onClick={onBack}
-            className="inline-flex items-center gap-1.5 text-sm font-medium transition-colors hover:text-[#ffd21d]"
+            className="inline-flex items-center gap-1.5 text-sm font-medium transition-colors hover:text-[#f97316]"
             style={{ color: TEXT_SUBTLE }}
           >
             <ArrowLeft className="h-4 w-4" />
@@ -1332,7 +1332,7 @@ function ProductView(props: ProductViewProps) {
           {/* ─── RIGHT: Product info ─── */}
           <div className="flex flex-col gap-5">
             <div>
-              <p className="mb-2 text-xs font-bold uppercase tracking-widest" style={{ color: GOLDEN }}>
+              <p className="mb-2 text-xs font-bold uppercase tracking-widest" style={{ color: ORANGE }}>
                 {product.categoryName || 'Produit'}
               </p>
               <h1 className="text-2xl font-bold leading-tight md:text-4xl" style={{ color: TEXT_PRIMARY }}>
@@ -1352,7 +1352,7 @@ function ProductView(props: ProductViewProps) {
                   <Star
                     key={i}
                     className="h-4 w-4"
-                    style={{ color: GOLDEN, fill: GOLDEN }}
+                    style={{ color: ORANGE, fill: ORANGE }}
                   />
                 ))}
               </div>
@@ -1361,7 +1361,7 @@ function ProductView(props: ProductViewProps) {
 
             {/* Price */}
             <div className="flex flex-wrap items-baseline gap-3">
-              <span className="text-3xl font-black md:text-4xl" style={{ color: GOLDEN }}>
+              <span className="text-3xl font-black md:text-4xl" style={{ color: ORANGE }}>
                 {formatPrice(currentPrice)}
               </span>
               {product.oldPrice && product.oldPrice > currentPrice && (
@@ -1405,7 +1405,7 @@ function ProductView(props: ProductViewProps) {
               <VariantSelector
                 variants={product.variants}
                 basePrice={product.price}
-                accent={GOLDEN}
+                accent={ORANGE}
                 onSelectionChange={onSelectionChange}
               />
             )}
@@ -1439,8 +1439,8 @@ function ProductView(props: ProductViewProps) {
                 onClick={onAddToCart}
                 disabled={!inStock}
                 size="lg"
-                className="gap-2 rounded-xl py-6 text-sm font-bold uppercase tracking-wide text-black transition-colors hover:brightness-110 disabled:opacity-50"
-                style={{ backgroundColor: GOLDEN }}
+                className="gap-2 rounded-xl py-6 text-sm font-bold uppercase tracking-wide text-white transition-colors hover:brightness-110 disabled:opacity-50"
+                style={{ backgroundColor: ORANGE }}
               >
                 <ShoppingBag className="h-5 w-5" />
                 Ajouter au panier
@@ -1476,7 +1476,7 @@ function ProductView(props: ProductViewProps) {
                   color: TEXT_MUTED,
                 }}
               >
-                <RotateCcw className="h-3.5 w-3.5" style={{ color: GOLDEN }} /> Retour sous 7 jours
+                <RotateCcw className="h-3.5 w-3.5" style={{ color: ORANGE }} /> Retour sous 7 jours
               </span>
               <span
                 className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium"
@@ -1536,9 +1536,9 @@ function ProductView(props: ProductViewProps) {
             <h2 className="text-xl font-bold md:text-2xl" style={{ color: TEXT_PRIMARY }}>
               Produits similaires
             </h2>
-            <div className="mt-2 h-0.5 w-16 rounded-full" style={{ backgroundColor: GOLDEN }} />
+            <div className="mt-2 h-0.5 w-16 rounded-full" style={{ backgroundColor: ORANGE }} />
           </div>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
             {(relatedProducts.length > 0
               ? relatedProducts
               : allProducts
@@ -1601,7 +1601,7 @@ function CosmikaDarkFooter({
   const year = new Date().getFullYear()
 
   return (
-    <footer id="footer" className="mt-auto" style={{ backgroundColor: BG_DARKER }}>
+    <footer id="footer" className="mt-auto" style={{ backgroundColor: BG_SECONDARY }}>
       {/* ── Top: 4 columns ── */}
       <div className="mx-auto max-w-6xl px-4 py-12 md:py-16">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
@@ -1620,9 +1620,9 @@ function CosmikaDarkFooter({
               <div className="mb-4 flex items-center gap-2">
                 <div
                   className="flex h-8 w-8 items-center justify-center rounded-lg"
-                  style={{ backgroundColor: GOLDEN }}
+                  style={{ backgroundColor: ORANGE }}
                 >
-                  <Store className="h-4 w-4 text-black" />
+                  <Store className="h-4 w-4 text-white" />
                 </div>
                 <span className="text-sm font-bold" style={{ color: TEXT_PRIMARY }}>
                   {shopName}
@@ -1641,7 +1641,7 @@ function CosmikaDarkFooter({
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex h-9 w-9 items-center justify-center rounded-full transition-all duration-200 hover:scale-110"
-                  style={{ backgroundColor: BG_CARD, border: `1px solid ${BORDER_SUBTLE}`, color: GOLDEN }}
+                  style={{ backgroundColor: BG_CARD, border: `1px solid ${BORDER_SUBTLE}`, color: ORANGE }}
                   aria-label="WhatsApp"
                 >
                   <MessageCircle className="h-4 w-4" />
@@ -1653,7 +1653,7 @@ function CosmikaDarkFooter({
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex h-9 w-9 items-center justify-center rounded-full transition-all duration-200 hover:scale-110"
-                  style={{ backgroundColor: BG_CARD, border: `1px solid ${BORDER_SUBTLE}`, color: GOLDEN }}
+                  style={{ backgroundColor: BG_CARD, border: `1px solid ${BORDER_SUBTLE}`, color: ORANGE }}
                   aria-label="Facebook"
                 >
                   <Facebook className="h-4 w-4" />
@@ -1664,7 +1664,7 @@ function CosmikaDarkFooter({
 
           {/* Column 2: MENU */}
           <div>
-            <h4 className="mb-4 text-xs font-bold uppercase tracking-widest" style={{ color: GOLDEN }}>
+            <h4 className="mb-4 text-xs font-bold uppercase tracking-widest" style={{ color: ORANGE }}>
               Menu
             </h4>
             <ul className="space-y-2.5 text-sm">
@@ -1672,7 +1672,7 @@ function CosmikaDarkFooter({
                 <button
                   type="button"
                   onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                  className="transition-colors hover:text-[#ffd21d]"
+                  className="transition-colors hover:text-[#f97316]"
                   style={{ color: TEXT_SUBTLE }}
                 >
                   Accueil
@@ -1684,7 +1684,7 @@ function CosmikaDarkFooter({
                   onClick={() =>
                     document.getElementById('best-sellers')?.scrollIntoView({ behavior: 'smooth' })
                   }
-                  className="transition-colors hover:text-[#ffd21d]"
+                  className="transition-colors hover:text-[#f97316]"
                   style={{ color: TEXT_SUBTLE }}
                 >
                   Produits
@@ -1694,7 +1694,7 @@ function CosmikaDarkFooter({
                 <li>
                   <a
                     href={`mailto:${contactEmail}`}
-                    className="transition-colors hover:text-[#ffd21d]"
+                    className="transition-colors hover:text-[#f97316]"
                     style={{ color: TEXT_SUBTLE }}
                   >
                     Contact
@@ -1706,7 +1706,7 @@ function CosmikaDarkFooter({
 
           {/* Column 3: CONTACT */}
           <div>
-            <h4 className="mb-4 text-xs font-bold uppercase tracking-widest" style={{ color: GOLDEN }}>
+            <h4 className="mb-4 text-xs font-bold uppercase tracking-widest" style={{ color: ORANGE }}>
               Contact
             </h4>
             <ul className="space-y-2.5 text-sm">
@@ -1714,7 +1714,7 @@ function CosmikaDarkFooter({
                 <li>
                   <a
                     href={`tel:${phone.replace(/\D/g, '')}`}
-                    className="flex items-center gap-2 transition-colors hover:text-[#ffd21d]"
+                    className="flex items-center gap-2 transition-colors hover:text-[#f97316]"
                     style={{ color: TEXT_SUBTLE }}
                   >
                     <Phone className="h-3.5 w-3.5" />
@@ -1728,7 +1728,7 @@ function CosmikaDarkFooter({
                     href={`https://wa.me/${whatsapp.replace(/\D/g, '')}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 transition-colors hover:text-[#ffd21d]"
+                    className="flex items-center gap-2 transition-colors hover:text-[#f97316]"
                     style={{ color: TEXT_SUBTLE }}
                   >
                     <MessageCircle className="h-3.5 w-3.5" />
@@ -1746,7 +1746,7 @@ function CosmikaDarkFooter({
                 <li>
                   <a
                     href={`mailto:${contactEmail}`}
-                    className="transition-colors hover:text-[#ffd21d]"
+                    className="transition-colors hover:text-[#f97316]"
                     style={{ color: TEXT_SUBTLE }}
                   >
                     {contactEmail}
@@ -1758,7 +1758,7 @@ function CosmikaDarkFooter({
 
           {/* Column 4: NEWSLETTER */}
           <div>
-            <h4 className="mb-4 text-xs font-bold uppercase tracking-widest" style={{ color: GOLDEN }}>
+            <h4 className="mb-4 text-xs font-bold uppercase tracking-widest" style={{ color: ORANGE }}>
               Newsletter
             </h4>
             {config.newsletter.enabled && (
@@ -1778,12 +1778,12 @@ function CosmikaDarkFooter({
                 type="email"
                 placeholder="Votre email"
                 required
-                className="h-10 flex-1 rounded-l-lg rounded-r-none border-[#333] bg-[#1a1a1a] text-sm text-white placeholder:text-[#666] focus:ring-0 focus:border-[#ffd21d]"
+                className="h-10 flex-1 rounded-l-lg rounded-r-none border-[#e5e5e5] bg-white text-sm text-gray-900 placeholder:text-[#9ca3af] focus:ring-0 focus:border-[#f97316]"
               />
               <button
                 type="submit"
-                className="flex h-10 items-center justify-center rounded-r-lg px-3 text-black transition-colors hover:brightness-110"
-                style={{ backgroundColor: GOLDEN }}
+                className="flex h-10 items-center justify-center rounded-r-lg px-3 text-white transition-colors hover:brightness-110"
+                style={{ backgroundColor: ORANGE }}
                 aria-label="S'inscrire"
               >
                 <ChevronRight className="h-4 w-4" />
@@ -1801,7 +1801,7 @@ function CosmikaDarkFooter({
           </p>
           <p>
             Propuls\u00e9 par{' '}
-            <span className="font-bold" style={{ color: GOLDEN }}>
+            <span className="font-bold" style={{ color: ORANGE }}>
               Boutiko
             </span>
           </p>
