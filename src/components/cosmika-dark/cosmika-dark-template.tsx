@@ -37,6 +37,8 @@ const ACCENT_HOVER = '#1d4ed8'
 const BG_MAIN = '#ffffff'
 const BG_SECONDARY = '#f9fafb'
 const BG_CARD = '#ffffff'
+const CONTAINER_WIDE = 'max-w-[1440px]'
+const CONTAINER_NARROW = 'max-w-7xl'
 const BORDER_SUBTLE = '#e5e5e5'
 const BORDER_HOVER = '#d4d4d4'
 const TEXT_PRIMARY = '#111827'
@@ -692,7 +694,7 @@ function HomeView(props: HomeViewProps) {
 
       {/* ─── PROMO BANNERS ─── */}
       {promoBanners.length > 0 && (
-        <section className="mx-auto max-w-7xl px-5 py-6">
+        <section className="mx-auto max-w-[1440px] px-5 py-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {promoBanners.slice(0, 2).map((banner: { id?: string; image: string; title?: string; link?: string }, idx: number) => (
               <a
@@ -731,7 +733,7 @@ function HomeView(props: HomeViewProps) {
 
       {/* ─── SECTION 2: CATEGORY TABS ─── */}
       {categories.length > 0 && (
-        <section id="categories" className="mx-auto max-w-7xl px-5 py-16">
+        <section id="categories" className="mx-auto max-w-[1440px] px-5 py-16">
           <h2 className="mb-5 text-center text-xs font-bold uppercase tracking-[0.2em]" style={{ color: ACCENT }}>
             Cat\u00e9gories
           </h2>
@@ -757,7 +759,7 @@ function HomeView(props: HomeViewProps) {
 
       {/* ─── SECTION 3: SPECIAL OFFERS ─── */}
       {promoProducts.length > 0 && (
-        <section className="mx-auto max-w-7xl px-5 py-16">
+        <section className="mx-auto max-w-[1440px] px-5 py-16">
           <div className="mb-8 flex items-center gap-2">
             <Flame className="h-6 w-6 text-red-500" />
             <h2 className="text-2xl font-bold md:text-3xl" style={{ color: TEXT_PRIMARY }}>
@@ -780,7 +782,7 @@ function HomeView(props: HomeViewProps) {
       )}
 
       {/* ─── SECTION 4: BEST SELLERS ─── */}
-      <section id="best-sellers" className="mx-auto max-w-7xl px-5 py-16">
+      <section id="best-sellers" className="mx-auto max-w-[1440px] px-5 py-16">
         <div className="mb-8">
           <h2 className="text-2xl font-bold md:text-3xl" style={{ color: TEXT_PRIMARY }}>
             Meilleures ventes
