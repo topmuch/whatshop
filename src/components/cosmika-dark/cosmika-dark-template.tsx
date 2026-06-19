@@ -701,7 +701,7 @@ function HomeView(props: HomeViewProps) {
                 target={banner.link ? '_blank' : undefined}
                 rel={banner.link ? 'noopener noreferrer' : undefined}
                 className="block relative rounded-xl overflow-hidden group cursor-pointer"
-                style={{ aspectRatio: '1 / 1', border: `1px solid ${BORDER_SUBTLE}` }}
+                style={{ aspectRatio: '698 / 423', border: `1px solid ${BORDER_SUBTLE}` }}
                 onClick={(e) => { if (!banner.link) e.preventDefault() }}
               >
                 <Image
