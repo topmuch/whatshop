@@ -318,6 +318,7 @@ export function CosmikaDarkTemplate() {
             bestSellers={bestSellers}
             testimonials={testimonials}
             categories={categories}
+            promoBanners={promoBanners}
             onProductClick={handleProductClick}
             onSeeProducts={() => {
               document.getElementById('best-sellers')?.scrollIntoView({ behavior: 'smooth' })
@@ -635,6 +636,7 @@ interface HomeViewProps {
   bestSellers: ModernStoreProduct[]
   testimonials: Testimonial[]
   categories: { name: string; id: string }[]
+  promoBanners: { id?: string; image: string; title?: string; link?: string }[]
   onProductClick: (p: ModernStoreProduct) => void
   onSeeProducts: () => void
 }
@@ -643,7 +645,7 @@ function HomeView(props: HomeViewProps) {
   const {
     shop, config, whatsapp, shopId, shopName,
     products, heroProduct, promoProducts, bestSellers,
-    testimonials, categories, onProductClick, onSeeProducts,
+    testimonials, categories, promoBanners, onProductClick, onSeeProducts,
   } = props
 
   const [activeCategory, setActiveCategory] = useState('all')
