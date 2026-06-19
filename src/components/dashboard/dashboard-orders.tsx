@@ -164,7 +164,8 @@ export function DashboardOrders() {
 
       const res = await fetch(`/api/orders?${params}`)
       if (res.ok) {
-        setOrders(await res.json())
+        const data = await res.json()
+        setOrders(Array.isArray(data.orders) ? data.orders : [])
       }
     } catch {
       toast.error(`Erreur de chargement des ${labels.ordersTitle.toLowerCase()}`)
