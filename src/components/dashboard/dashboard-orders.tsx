@@ -166,6 +166,8 @@ export function DashboardOrders() {
       if (res.ok) {
         const data = await res.json()
         setOrders(Array.isArray(data.orders) ? data.orders : [])
+      } else {
+        toast.error('Erreur de chargement des commandes')
       }
     } catch {
       toast.error(`Erreur de chargement des ${labels.ordersTitle.toLowerCase()}`)
@@ -207,7 +209,8 @@ export function DashboardOrders() {
       })
 
       if (!res.ok) {
-        toast.error('Erreur lors de la mise à jour')
+        const err = await res.json().catch(() => ({}))
+        toast.error(err.error || 'Erreur lors de la mise à jour')
         return
       }
 

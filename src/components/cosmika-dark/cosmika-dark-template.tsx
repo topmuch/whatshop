@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback, useMemo } from 'react'
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -107,6 +107,17 @@ export function CosmikaDarkTemplate() {
       return []
     }
   }, [shop?.promoBanners])
+
+  // ─── Brands ───
+  const brands = useMemo(() => {
+    if (!shop?.brands) return []
+    try {
+      const parsed = JSON.parse(shop.brands)
+      return Array.isArray(parsed) ? parsed : []
+    } catch {
+      return []
+    }
+  }, [shop?.brands])
 
   // Product view state
   const [detailedProduct, setDetailedProduct] = useState<DetailedProduct | null>(null)
@@ -321,6 +332,7 @@ export function CosmikaDarkTemplate() {
             testimonials={testimonials}
             categories={categories}
             promoBanners={promoBanners}
+            brands={brands}
             onProductClick={handleProductClick}
             onSeeProducts={() => {
               document.getElementById('best-sellers')?.scrollIntoView({ behavior: 'smooth' })
@@ -639,6 +651,7 @@ interface HomeViewProps {
   testimonials: Testimonial[]
   categories: { name: string; id: string }[]
   promoBanners: { id?: string; image: string; title?: string; link?: string }[]
+  brands: { id?: string; name: string; image: string; link?: string }[]
   onProductClick: (p: ModernStoreProduct) => void
   onSeeProducts: () => void
 }
@@ -647,7 +660,7 @@ function HomeView(props: HomeViewProps) {
   const {
     shop, config, whatsapp, shopId, shopName,
     products, heroProduct, promoProducts, bestSellers,
-    testimonials, categories, promoBanners, onProductClick, onSeeProducts,
+    testimonials, categories, promoBanners, brands, onProductClick, onSeeProducts,
   } = props
 
   const [activeCategory, setActiveCategory] = useState('all')
@@ -847,6 +860,9 @@ function HomeView(props: HomeViewProps) {
           <TestimonialsCarousel testimonials={testimonials} />
         </section>
       )}
+
+      {/* ─── SECTION 6.5: BRAND CAROUSEL ─── */}
+      <BrandCarousel brands={brands} />
 
       {/* ─── SECTION 7: NEWSLETTER ─── */}
       {config.newsletter.enabled && (
@@ -1282,6 +1298,96 @@ function TestimonialsCarousel({
         </div>
       )}
     </div>
+  )
+}
+
+function BrandCarousel({
+  brands,
+}: {
+  brands: { id?: string; name: string; image: string; link?: string }[]
+}) {
+  const carouselRef = useRef<HTMLDivElement>(null)
+
+  // Auto-scroll (infinite loop)
+  const scrollOffsetRef = useRef(0)
+
+  useEffect(() => {
+    if (brands.length === 0) return
+    const itemWidth = 160
+    const totalWidth = brands.length * itemWidth
+    if (totalWidth === 0) return
+
+    const interval = setInterval(() => {
+      scrollOffsetRef.current += 1
+      if (scrollOffsetRef.current >= totalWidth) {
+        scrollOffsetRef.current = 0
+        carouselRef.current?.scrollTo({ left: 0, behavior: 'instant' as ScrollBehavior })
+      } else if (carouselRef.current) {
+        carouselRef.current.scrollLeft = scrollOffsetRef.current
+      }
+    }, 30)
+    return () => clearInterval(interval)
+  }, [brands.length])
+
+  if (brands.length === 0) return null
+
+  const displayBrands = [...brands, ...brands]
+
+  return (
+    <section
+      className="w-full"
+      style={{
+        backgroundColor: BG_SECONDARY,
+        borderTop: `1px solid ${BORDER_SUBTLE}`,
+        borderBottom: `1px solid ${BORDER_SUBTLE}`,
+      }}
+    >
+      <div className={`mx-auto ${CONTAINER_WIDE} px-5 py-8 md:py-10`}>
+        <div className="mb-5">
+          <h2 className="text-lg font-bold md:text-xl" style={{ color: TEXT_PRIMARY }}>
+            Nos marques
+          </h2>
+          <div className="mt-2 h-0.5 w-12 rounded-full" style={{ backgroundColor: ACCENT }} />
+        </div>
+
+        <div
+          ref={carouselRef}
+          className="flex gap-4 md:gap-6 overflow-x-auto pb-2"
+          style={{ scrollbarWidth: 'none' }}
+        >
+          {displayBrands.map((brand, idx) => {
+            const realIdx = idx % brands.length
+            return (
+              <a
+                key={(brand.id || realIdx) + '-' + idx}
+                href={brand.link || '#'}
+                target={brand.link ? '_blank' : undefined}
+                rel={brand.link ? 'noopener noreferrer' : undefined}
+                className="shrink-0 flex flex-col items-center gap-2 group cursor-pointer"
+                onClick={(e) => {
+                  if (!brand.link) e.preventDefault()
+                }}
+              >
+                <div
+                  className="flex items-center justify-center w-[120px] h-[60px] md:w-[140px] md:h-[70px] rounded-xl bg-white p-3 transition-all duration-200 group-hover:shadow-md group-hover:scale-105"
+                  style={{ border: `1px solid ${BORDER_SUBTLE}` }}
+                >
+                  <img
+                    src={brand.image}
+                    alt={brand.name}
+                    className="max-w-full max-h-full object-contain grayscale group-hover:grayscale-0 transition-all duration-300"
+                    loading="lazy"
+                  />
+                </div>
+                <span className="text-xs font-medium truncate max-w-[140px]" style={{ color: TEXT_SUBTLE }}>
+                  {brand.name}
+                </span>
+              </a>
+            )
+          })}
+        </div>
+      </div>
+    </section>
   )
 }
 

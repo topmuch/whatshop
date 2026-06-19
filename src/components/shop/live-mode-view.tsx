@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useAppStore, type Product } from '@/lib/store'
 import { formatPrice } from '@/lib/shared'
 import { openWhatsApp } from '@/lib/shared'
@@ -15,10 +15,13 @@ import {
   CheckCircle2,
   Loader2,
   Store,
-  Clock,
+  Timer,
 } from 'lucide-react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
+
+const TIKTOK_COLORS = ['#FF0050', '#25F4EE', '#FE2C55', '#00F2EA', '#FF6B35', '#7C3AED']
+const DEFAULT_LIVE_DURATION_MINUTES = 30
 
 interface LiveModeViewProps {
   shopId: string
@@ -52,6 +55,12 @@ export function LiveModeView({ shopId, shopSlug, shopName, whatsapp, primaryColo
   const [viewers, setViewers] = useState(0)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [ordered, setOrdered] = useState(false)
+  const [liveStartedAt, setLiveStartedAt] = useState<string | null>(null)
+  const [durationMinutes] = useState(DEFAULT_LIVE_DURATION_MINUTES)
+  const [countdownSeconds, setCountdownSeconds] = useState<number | null>(null)
+  const [glowColor, setGlowColor] = useState(TIKTOK_COLORS[0])
+  const [liveEnded, setLiveEnded] = useState(false)
+  const colorIndexRef = useRef(0)
 
   const accent = accentColor || primaryColor || '#EC4899'
 
@@ -72,6 +81,11 @@ export function LiveModeView({ shopId, shopSlug, shopName, whatsapp, primaryColo
         if (!shopData.isLiveMode) {
           setError('LIVE_OFF')
           return
+        }
+
+        // Capture liveStartedAt from shop data
+        if (shopData.liveStartedAt && !cancelled) {
+          setLiveStartedAt(shopData.liveStartedAt)
         }
 
         if (!shopData.liveProductId) {
@@ -122,6 +136,31 @@ export function LiveModeView({ shopId, shopSlug, shopName, whatsapp, primaryColo
     return () => clearInterval(t)
   }, [])
 
+  // Countdown timer based on liveStartedAt + duration
+  useEffect(() => {
+    if (!liveStartedAt) return
+    const endTime = new Date(liveStartedAt).getTime() + durationMinutes * 60 * 1000
+
+    const tick = () => {
+      const remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000))
+      setCountdownSeconds(remaining)
+      if (remaining <= 0) setLiveEnded(true)
+    }
+
+    tick() // initial
+    const t = setInterval(tick, 1000)
+    return () => clearInterval(t)
+  }, [liveStartedAt, durationMinutes])
+
+  // Color cycling animation for TikTok-style glow
+  useEffect(() => {
+    const interval = setInterval(() => {
+      colorIndexRef.current = (colorIndexRef.current + 1) % TIKTOK_COLORS.length
+      setGlowColor(TIKTOK_COLORS[colorIndexRef.current])
+    }, 3500)
+    return () => clearInterval(interval)
+  }, [])
+
   // Viewers count (social proof) — random refresh every 30s
   useEffect(() => {
     const update = () => setViewers(Math.floor(Math.random() * (150 - 15 + 1)) + 15)
@@ -154,6 +193,14 @@ export function LiveModeView({ shopId, shopSlug, shopName, whatsapp, primaryColo
     return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
   }
 
+  const formatCountdown = (s: number) => {
+    const m = Math.floor(s / 60)
+    const sec = s % 60
+    return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
+  }
+
+  const isUrgent = countdownSeconds !== null && countdownSeconds > 0 && countdownSeconds < 300 // < 5 min
+
   // Shop rating from testimonials
   const avgRating = testimonials.length > 0
     ? testimonials.reduce((sum, t) => sum + t.rating, 0) / testimonials.length
@@ -183,10 +230,35 @@ export function LiveModeView({ shopId, shopSlug, shopName, whatsapp, primaryColo
     )
   }
 
+  // ─── LIVE TERMINÉ ─────────────────────────────────────────────
+  if (liveEnded && !error) {
+    return (
+      <div className="fixed inset-0 flex flex-col items-center justify-center gap-4 bg-gray-950 text-white">
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="flex flex-col items-center gap-4"
+        >
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gray-800">
+            <span className="text-4xl">🔴</span>
+          </div>
+          <h2 className="text-2xl font-black tracking-wide">LIVE TERMINÉ</h2>
+          <p className="text-sm text-gray-400">Merci d'avoir suivi ! Ce live est maintenant terminé.</p>
+        </motion.div>
+      </div>
+    )
+  }
+
   // ─── NO PRODUCT PINNED YET ──────────────────────────────────────────
   if (!product) {
     return (
       <div className="fixed inset-0 flex flex-col bg-gray-950">
+        {/* Animated top glow bar */}
+        <div
+          className="h-1 w-full"
+          style={{ backgroundColor: glowColor, transition: 'background-color 1s ease' }}
+        />
         {/* Live banner */}
         <div className="bg-red-600 px-4 py-3 shadow-lg">
           <div className="mx-auto flex max-w-md items-center justify-center gap-2.5 text-white">
@@ -196,6 +268,12 @@ export function LiveModeView({ shopId, shopSlug, shopName, whatsapp, primaryColo
             </span>
             <span className="text-sm font-bold tracking-wide">EN DIRECT</span>
             <span className="text-sm font-medium opacity-90">— {shopName}</span>
+            {countdownSeconds !== null && countdownSeconds > 0 && (
+              <span className={`ml-2 flex items-center gap-1 rounded-full bg-black/20 px-2.5 py-1 text-xs font-bold tabular-nums ${isUrgent ? 'animate-pulse text-yellow-200' : ''}`}>
+                <Timer className="h-3 w-3" />
+                {formatCountdown(countdownSeconds)}
+              </span>
+            )}
           </div>
         </div>
 
@@ -231,6 +309,12 @@ export function LiveModeView({ shopId, shopSlug, shopName, whatsapp, primaryColo
   // ─── LIVE VIEW: PRODUCT SPOTLIGHT ───────────────────────────────────
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden bg-gray-950 text-white">
+      {/* ─── Animated top glow bar ─── */}
+      <div
+        className="z-50 h-1 w-full"
+        style={{ backgroundColor: glowColor, transition: 'background-color 1s ease' }}
+      />
+
       {/* ─── 1. HEADER LIVE ─── */}
       <header className="z-40 flex flex-shrink-0 items-center justify-center gap-2 bg-red-600 px-4 py-3 text-white shadow-lg">
         <div className="relative flex items-center gap-2">
@@ -239,14 +323,39 @@ export function LiveModeView({ shopId, shopSlug, shopName, whatsapp, primaryColo
         </div>
         <span className="mx-2 text-white/80">—</span>
         <span className="truncate text-sm font-medium">{shopName}</span>
-        <div className="ml-auto flex items-center gap-1.5 rounded-full bg-black/20 px-2.5 py-1">
-          <Clock className="h-3 w-3" />
-          <span className="text-xs font-semibold tabular-nums">{formatElapsed(elapsed)}</span>
-        </div>
+        {/* Countdown Timer */}
+        {countdownSeconds !== null && countdownSeconds > 0 && (
+          <div
+            className={`ml-auto flex items-center gap-1.5 rounded-full px-2.5 py-1 tabular-nums ${
+              isUrgent
+                ? 'animate-pulse bg-yellow-500 text-black'
+                : 'bg-black/20 text-white'
+            }`}
+          >
+            <Timer className={`h-3.5 w-3.5 ${isUrgent ? 'text-black' : ''}`} />
+            <span className={`text-xs font-bold ${isUrgent ? 'text-sm' : ''}`}>{formatCountdown(countdownSeconds)}</span>
+          </div>
+        )}
+        {/* Fallback to elapsed timer when no liveStartedAt */}
+        {countdownSeconds === null && (
+          <div className="ml-auto flex items-center gap-1.5 rounded-full bg-black/20 px-2.5 py-1">
+            <Timer className="h-3.5 w-3.5" />
+            <span className="text-xs font-semibold tabular-nums">{formatElapsed(elapsed)}</span>
+          </div>
+        )}
       </header>
 
       {/* ─── 2. CONTENU PRINCIPAL (responsive 2 colonnes sur desktop) ─── */}
       <main className="flex-1 overflow-y-auto bg-gray-900">
+        {/* Subtle side glow effect */}
+        <div
+          className="pointer-events-none fixed left-0 top-0 h-full w-1 opacity-40"
+          style={{ backgroundColor: glowColor, transition: 'background-color 1s ease' }}
+        />
+        <div
+          className="pointer-events-none fixed right-0 top-0 h-full w-1 opacity-40"
+          style={{ backgroundColor: glowColor, transition: 'background-color 1s ease' }}
+        />
         <div className="mx-auto flex w-full max-w-6xl flex-col md:flex-row">
           {/* IMAGE PRODUIT — 100% mobile, 50% desktop */}
           <motion.div
@@ -425,6 +534,12 @@ export function LiveModeView({ shopId, shopSlug, shopName, whatsapp, primaryColo
           </motion.div>
         </div>
       </main>
+
+      {/* ─── Animated bottom glow bar ─── */}
+      <div
+        className="h-1 w-full"
+        style={{ backgroundColor: glowColor, transition: 'background-color 1s ease' }}
+      />
 
       {/* ─── 3. MODALE DES DÉTAILS ─── */}
       <AnimatePresence>

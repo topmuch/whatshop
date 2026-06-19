@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import {
   Loader2,
   CheckCircle2,
@@ -21,6 +21,14 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { toast } from 'sonner'
+import { useAppStore, type ShippingZone } from '@/lib/store'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 interface CheckoutFormProps {
   whatsapp: string
@@ -50,6 +58,35 @@ export function CheckoutForm({
   const [serverError, setServerError] = useState<string | null>(null)
   const [orderId, setOrderId] = useState<string | null>(null)
   const [deliveryFee, setDeliveryFee] = useState(0)
+  const [shippingZones, setShippingZones] = useState<ShippingZone[]>([])
+  const [zonesLoading, setZonesLoading] = useState(true)
+  const [selectedZoneId, setSelectedZoneId] = useState<string>('')
+
+  const shopSlug = useAppStore((s) => s.shopSlug)
+
+  // Fetch shipping zones on mount
+  useEffect(() => {
+    if (!shopSlug) return
+    let cancelled = false
+    async function fetchZones() {
+      try {
+        const res = await fetch(`/api/shops/${shopSlug}/public-shipping-zones`)
+        if (!res.ok) return
+        const data = await res.json()
+        if (!cancelled) {
+          setShippingZones(data.zones ?? [])
+        }
+      } catch {
+        // Shipping zones are optional
+      } finally {
+        if (!cancelled) setZonesLoading(false)
+      }
+    }
+    fetchZones()
+    return () => {
+      cancelled = true
+    }
+  }, [shopSlug])
 
   // Form fields
   const [fullName, setFullName] = useState('')
@@ -393,21 +430,80 @@ export function CheckoutForm({
             ))}
           </ul>
 
-          {/* Delivery fee input */}
+          {/* Shipping zone selector or manual delivery fee */}
           <div className="space-y-1.5 border-t border-gray-200 pt-3">
-            <Label htmlFor="ck-delivery" className="text-xs text-gray-600">
-              Frais de livraison (FCFA)
+            <Label className="text-xs text-gray-600 flex items-center gap-1">
+              <MapPin className="h-3 w-3" />
+              Zone de livraison
             </Label>
-            <Input
-              id="ck-delivery"
-              type="number"
-              min={0}
-              value={deliveryFee || ''}
-              onChange={(e) =>
-                setDeliveryFee(Math.max(0, parseInt(e.target.value) || 0))
-              }
-              placeholder="0"
-            />
+            {zonesLoading ? (
+              <div className="flex items-center gap-2 py-2 text-sm text-gray-500">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Chargement des zones…
+              </div>
+            ) : shippingZones.length > 0 ? (
+              <div className="space-y-2">
+                <Select
+                  value={selectedZoneId}
+                  onValueChange={(value) => {
+                    setSelectedZoneId(value)
+                    const zone = shippingZones.find((z) => z.id === value)
+                    setDeliveryFee(zone?.price ?? 0)
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choisir une zone de livraison" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {shippingZones.map((zone) => (
+                      <SelectItem key={zone.id} value={zone.id}>
+                        <span className="flex items-center justify-between gap-4 w-full">
+                          <span>{zone.name}</span>
+                          <span className="text-gray-400 text-xs ml-auto">
+                            {zone.price.toLocaleString('fr-FR')} FCFA
+                          </span>
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Input
+                  id="ck-delivery"
+                  type="number"
+                  min={0}
+                  value={deliveryFee || ''}
+                  onChange={(e) => {
+                    setDeliveryFee(Math.max(0, parseInt(e.target.value) || 0))
+                    // Clear zone selection if user manually edits fee
+                    const matched = shippingZones.find(
+                      (z) => z.price === (parseInt(e.target.value) || 0)
+                    )
+                    setSelectedZoneId(matched?.id ?? '')
+                  }}
+                  placeholder="0"
+                  className="text-sm"
+                />
+                <p className="text-[11px] text-gray-400">
+                  Sélectionnez une zone ou saisissez un montant manuellement.
+                </p>
+              </div>
+            ) : (
+              <>
+                <Input
+                  id="ck-delivery"
+                  type="number"
+                  min={0}
+                  value={deliveryFee || ''}
+                  onChange={(e) =>
+                    setDeliveryFee(Math.max(0, parseInt(e.target.value) || 0))
+                  }
+                  placeholder="0"
+                />
+                <p className="text-[11px] text-gray-400">
+                  Frais de livraison (FCFA)
+                </p>
+              </>
+            )}
           </div>
 
           <div className="space-y-1.5 border-t border-gray-200 pt-3">
