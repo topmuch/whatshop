@@ -14,6 +14,7 @@ import { logger } from '@/lib/logger'
 import {
   welcomeEmail,
   newOrderEmail,
+  customerOrderConfirmationEmail,
   domainApprovedEmail,
   domainRejectedEmail,
   shopActivatedEmail,
@@ -21,6 +22,7 @@ import {
   adminNewOrderEmail,
   type WelcomeEmailData,
   type NewOrderEmailData,
+  type CustomerOrderConfirmationData,
   type DomainApprovedEmailData,
   type DomainRejectedEmailData,
   type ShopActivatedEmailData,
@@ -145,6 +147,27 @@ export async function dispatchNewOrderEmail(
     })
   } catch (error) {
     logger.error('Failed to dispatch new order email', 'EmailDispatch', error)
+  }
+}
+
+/**
+ * Send order confirmation email to the CUSTOMER.
+ */
+export async function dispatchCustomerOrderConfirmationEmail(
+  data: CustomerOrderConfirmationData,
+): Promise<void> {
+  if (!(await isEmailConfigured())) return
+  try {
+    if (!data.customerEmail) return
+
+    const html = customerOrderConfirmationEmail(data)
+    await sendEmail({
+      to: data.customerEmail,
+      subject: `✅ Commande confirmée — ${data.shopName}`,
+      html,
+    })
+  } catch (error) {
+    logger.error('Failed to dispatch customer order confirmation email', 'EmailDispatch', error)
   }
 }
 

@@ -385,6 +385,109 @@ export function dailyRecapEmail(data: DailyRecapData): string {
   return wrap('Récapitulatif quotidien', data.shopName, body)
 }
 
+// ─── CUSTOMER ORDER CONFIRMATION ─────────────────────────────────
+
+export interface CustomerOrderConfirmationData {
+  customerName: string
+  customerPhone: string
+  customerEmail?: string | null
+  shopName: string
+  shopUrl: string
+  shopPhone?: string | null
+  shopWhatsapp?: string | null
+  orderId: string
+  total: number
+  shippingFee: number
+  customerAddress?: string | null
+  customerCity?: string | null
+  customerNotes?: string | null
+  items: { name: string; quantity: number; price: number }[]
+  createdAt: string
+}
+
+export function customerOrderConfirmationEmail(data: CustomerOrderConfirmationData): string {
+  const itemsHtml = data.items
+    .map(item => `<tr><td style="padding:8px 10px; border-bottom:1px solid #f3f4f6; font-size:14px;">${esc(item.name)}</td><td style="padding:8px 10px; border-bottom:1px solid #f3f4f6; font-size:14px; text-align:center;">${item.quantity}</td><td style="padding:8px 10px; border-bottom:1px solid #f3f4f6; font-size:14px; text-align:right;">${item.price.toLocaleString('fr-FR')} FCFA</td><td style="padding:8px 10px; border-bottom:1px solid #f3f4f6; font-size:14px; text-align:right;">${(item.price * item.quantity).toLocaleString('fr-FR')} FCFA</td></tr>`)
+    .join('')
+
+  const itemsTotal = data.items.reduce((s, i) => s + i.price * i.quantity, 0)
+  const orderDate = new Date(data.createdAt).toLocaleDateString('fr-FR', {
+    day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
+  })
+
+  return wrap(
+    'Commande confirmée ! ✅',
+    data.shopName,
+    `
+      <p>Bonjour <strong>${esc(data.customerName)}</strong>,</p>
+      <p>Nous vous confirmons la bonne réception de votre commande chez <strong>${esc(data.shopName)}</strong>.</p>
+
+      <div class="highlight">
+        <p><strong>📋 Référence : ${esc(data.orderId)}</strong><br>
+        Passée le ${esc(orderDate)}</p>
+      </div>
+
+      <div class="details">
+        <table>
+          <tr><td>Nom</td><td>${esc(data.customerName)}</td></tr>
+          <tr><td>Téléphone</td><td>${esc(data.customerPhone)}</td></tr>
+          ${data.customerAddress ? `<tr><td>Adresse</td><td>${esc(data.customerAddress)}</td></tr>` : ''}
+          ${data.customerCity ? `<tr><td>Ville</td><td>${esc(data.customerCity)}</td></tr>` : ''}
+        </table>
+      </div>
+
+      <h2>Votre commande</h2>
+      <table style="width:100%; border-collapse:collapse; margin:12px 0; border-radius:8px; overflow:hidden; border:1px solid #e5e7eb;">
+        <thead>
+          <tr style="background:#f9fafb;">
+            <th style="padding:10px; text-align:left; font-size:13px; color:#6b7280; font-weight:600;">Produit</th>
+            <th style="padding:10px; text-align:center; font-size:13px; color:#6b7280; font-weight:600;">Qté</th>
+            <th style="padding:10px; text-align:right; font-size:13px; color:#6b7280; font-weight:600;">Prix unit.</th>
+            <th style="padding:10px; text-align:right; font-size:13px; color:#6b7280; font-weight:600;">Sous-total</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${itemsHtml}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="3" style="padding:10px; text-align:right; font-size:14px;">Sous-total articles</td>
+            <td style="padding:10px; text-align:right; font-size:14px;">${itemsTotal.toLocaleString('fr-FR')} FCFA</td>
+          </tr>
+          ${data.shippingFee > 0 ? `
+          <tr>
+            <td colspan="3" style="padding:10px; text-align:right; font-size:14px;">Frais de livraison</td>
+            <td style="padding:10px; text-align:right; font-size:14px;">${data.shippingFee.toLocaleString('fr-FR')} FCFA</td>
+          </tr>
+          ` : ''}
+          <tr style="background:#f0fdf4;">
+            <td colspan="3" style="padding:12px 10px; text-align:right; font-size:15px; font-weight:700;">Total</td>
+            <td style="padding:12px 10px; text-align:right; font-size:15px; font-weight:700; color:#166534;">${data.total.toLocaleString('fr-FR')} FCFA</td>
+          </tr>
+        </tfoot>
+      </table>
+
+      ${data.customerNotes ? `
+      <div class="warning">
+        <p><strong>📝 Vos notes :</strong> ${esc(data.customerNotes)}</p>
+      </div>
+      ` : ''}
+
+      <div class="highlight">
+        <p><strong>📞 Besoin d'aide ?</strong> Contactez le vendeur directement :</p>
+        <p>${data.shopWhatsapp ? `<a href="https://wa.me/${data.shopWhatsapp.replace(/[^\\d+]/g, '').replace(/^\\+/, '')}" style="color:#166534; font-weight:600;">WhatsApp</a>` : ''}
+        ${data.shopPhone ? ` — ${esc(data.shopPhone)}` : ''}</p>
+      </div>
+
+      <p>Merci pour votre confiance ! Le vendeur vous contactera très bientôt pour finaliser votre livraison.</p>
+
+      <p style="text-align:center; margin-top:20px;">
+        <a href="${esc(data.shopUrl)}" class="button">Visiter la boutique</a>
+      </p>
+    `
+  )
+}
+
 // ─── HELPERS ────────────────────────────────────────────────────────────
 
 function esc(str: string): string {

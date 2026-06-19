@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { createNotification } from '@/lib/notifications'
 import { rateLimit, getClientIp, RATE_LIMITS } from '@/lib/rate-limit'
-import { dispatchNewOrderEmail, dispatchAdminNewOrderEmail } from '@/lib/email-dispatch'
+import { dispatchNewOrderEmail, dispatchAdminNewOrderEmail, dispatchCustomerOrderConfirmationEmail } from '@/lib/email-dispatch'
 import { createOrderSchema, type CreateOrderInput } from '@/lib/order-schemas'
 import { requireShopOwner } from '@/lib/auth'
 
@@ -44,6 +44,8 @@ export async function POST(request: NextRequest) {
       select: {
         id: true,
         name: true,
+        slug: true,
+        phone: true,
         whatsapp: true,
         ownerId: true,
       },
@@ -217,6 +219,25 @@ export async function POST(request: NextRequest) {
         // Fire-and-forget: we don't await this fetch on purpose
         fetch(waUrl).catch(() => { /* ignore */ })
       }
+
+      // Email confirmation to customer
+      dispatchCustomerOrderConfirmationEmail({
+        customerName: `${customer.firstName} ${customer.lastName}`,
+        customerPhone: customer.phone,
+        customerEmail: customer.email?.trim() || null,
+        shopName: shop.name,
+        shopUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://boutiko.pro'}/${shop.slug}`,
+        shopPhone: shop.phone,
+        shopWhatsapp: shop.whatsapp,
+        orderId: order.id,
+        total,
+        shippingFee: shippingFee ?? 0,
+        customerAddress: customer.address,
+        customerCity: customer.city,
+        customerNotes: customer.notes?.trim() || null,
+        items: orderItems,
+        createdAt: order.createdAt.toISOString(),
+      })
     } catch {
       // Notification/email failure must not break order creation
     }
