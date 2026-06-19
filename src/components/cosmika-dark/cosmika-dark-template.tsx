@@ -95,6 +95,17 @@ export function CosmikaDarkTemplate() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [categories, setCategories] = useState<{ name: string; id: string }[]>([])
 
+  // ─── Promo banners ───
+  const promoBanners = useMemo(() => {
+    if (!shop?.promoBanners) return []
+    try {
+      const parsed = JSON.parse(shop.promoBanners)
+      return Array.isArray(parsed) ? parsed : []
+    } catch {
+      return []
+    }
+  }, [shop?.promoBanners])
+
   // Product view state
   const [detailedProduct, setDetailedProduct] = useState<DetailedProduct | null>(null)
   const [relatedProducts, setRelatedProducts] = useState<ModernStoreProduct[]>([])
@@ -676,6 +687,45 @@ function HomeView(props: HomeViewProps) {
 
       {/* ─── MARQUEE BAR ─── */}
       <MarqueeBar config={config.marquee} />
+
+      {/* ─── PROMO BANNERS ─── */}
+      {promoBanners.length > 0 && (
+        <section className="mx-auto max-w-7xl px-5 py-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {promoBanners.slice(0, 2).map((banner: { id?: string; image: string; title?: string; link?: string }, idx: number) => (
+              <a
+                key={banner.id || idx}
+                href={banner.link || '#'}
+                target={banner.link ? '_blank' : undefined}
+                rel={banner.link ? 'noopener noreferrer' : undefined}
+                className="block relative rounded-xl overflow-hidden group cursor-pointer"
+                style={{ aspectRatio: '1 / 1', border: `1px solid ${BORDER_SUBTLE}` }}
+                onClick={(e) => { if (!banner.link) e.preventDefault() }}
+              >
+                <Image
+                  src={banner.image}
+                  alt={banner.title || `Promo ${idx + 1}`}
+                  fill
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  sizes="(max-width: 640px) 100vw, 50vw"
+                />
+                {banner.title && (
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end">
+                    <div className="px-5 pb-4">
+                      <span
+                        className="inline-block px-4 py-1.5 rounded-lg text-white text-sm font-bold uppercase tracking-wider"
+                        style={{ backgroundColor: ACCENT }}
+                      >
+                        {banner.title}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ─── SECTION 2: CATEGORY TABS ─── */}
       {categories.length > 0 && (
