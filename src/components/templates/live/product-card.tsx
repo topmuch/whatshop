@@ -150,9 +150,7 @@ function LiveProductCard({ product, shop }: LiveProductCardProps) {
           type="button"
           onClick={handleWhatsApp}
           disabled={!inStock || !whatsapp}
-          className={`mt-1 flex items-center justify-center gap-2 w-full rounded-xl bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white font-bold text-sm min-h-[44px] transition-all duration-200 hover:brightness-105 hover:shadow-lg active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed ${
-            isNew ? 'wa-btn-pulse' : ''
-          }`}
+          className={`mt-1 flex items-center justify-center gap-2 w-full rounded-xl bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white font-bold text-sm min-h-[44px] transition-all duration-200 hover:brightness-105 hover:shadow-lg active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed wa-btn-blink`}
         >
           <MessageCircle className="size-4 shrink-0" />
           Commander

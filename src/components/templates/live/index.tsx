@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, X, ShoppingBag, SlidersHorizontal, ArrowUp, MessageCircle, Flame } from 'lucide-react'
+import { Search, X, ShoppingBag, SlidersHorizontal, ArrowUp, MessageCircle } from 'lucide-react'
 import { useAppStore, type Product, type Category } from '@/lib/store'
 import LiveHeader from './header'
 import LiveHero from './hero'
@@ -22,18 +22,47 @@ const gridContainerVariants = {
   },
 }
 
-// ─── Decorative background blobs ───
-function PageBackground() {
+// ─── Scrolling Marquee Banner ───
+function LiveMarqueeBanner({
+  isLive,
+  products,
+  shopName,
+}: {
+  isLive: boolean
+  products: Product[]
+  shopName: string
+}) {
+  const items = isLive
+    ? products
+        .filter((p) => p.isAvailable)
+        .map((p) => `🔴 LIVE en cours — Promo : ${p.name} — ${p.price.toLocaleString('fr-FR')} FCFA`)
+    : [`\u{1F525} Prochain live bientôt sur ${shopName} — Restez connectés !`]
+
+  // Fallback if no products or not live
+  const marqueeItems = items.length > 0
+    ? items
+    : [`\u{1F525} Prochain live bientôt sur ${shopName} — Restez connectés !`]
+
+  // Duplicate for seamless loop
+  const doubled = [...marqueeItems, ...marqueeItems]
+
   return (
-    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden" aria-hidden="true">
-      {/* Large gradient blob — top right, coral */}
-      <div className="live-blob live-blob-1" />
-      {/* Medium blob — bottom left, amber */}
-      <div className="live-blob live-blob-2" />
-      {/* Small blob — center right, soft pink */}
-      <div className="live-blob live-blob-3" />
-      {/* Dot grid pattern overlay */}
-      <div className="live-dot-pattern" />
+    <div className="relative overflow-hidden bg-gradient-to-r from-[#FF6154] via-[#FF7E5F] to-[#FF9A44]">
+      {/* Shimmer overlay */}
+      <div className="live-marquee-shimmer" />
+      <div className="py-3.5 md:py-4.5">
+        <div className="live-marquee-track">
+          {doubled.map((text, i) => (
+            <span
+              key={i}
+              className="mx-6 md:mx-10 text-sm md:text-base font-bold text-white whitespace-nowrap tracking-wide"
+            >
+              {text}
+              <span className="inline-block mx-4 md:mx-6 text-white/40">✦</span>
+            </span>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }
@@ -50,9 +79,7 @@ export function LivePulseTemplate() {
   const categoryScrollRef = useRef<HTMLDivElement>(null)
 
   const isLive = publicShop?.isLiveMode === true
-  const hasLiveUrl = !!publicShop?.liveUrl
   const whatsapp = publicShop?.whatsapp || ''
-  const showUpcomingBanner = !isLive && hasLiveUrl
 
   // ── Scroll-to-top visibility ──
   useEffect(() => {
@@ -138,9 +165,6 @@ export function LivePulseTemplate() {
 
   return (
     <div className="min-h-screen flex flex-col live-page-bg">
-      {/* ── Decorative background ── */}
-      <PageBackground />
-
       {/* ── All content above background ── */}
       <div className="relative z-10 flex flex-col min-h-screen">
         {/* ── Header ── */}
@@ -152,53 +176,19 @@ export function LivePulseTemplate() {
         {/* ── Hero ── */}
         <LiveHero shop={publicShop} />
 
-        {/* ── Wave divider between hero and content ── */}
+        {/* ── Wave divider between hero and marquee ── */}
         <div className="relative -mt-1" aria-hidden="true">
           <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-8 md:h-12 block">
-            <path d="M0 60V20C240 0 480 40 720 30C960 20 1200 0 1440 20V60H0Z" fill="#FAFAFA" fillOpacity="0.85" />
+            <path d="M0 60V20C240 0 480 40 720 30C960 20 1200 0 1440 20V60H0Z" fill="#FFF0F3" fillOpacity="0.85" />
           </svg>
         </div>
 
-        {/* ── Upcoming Live Teaser Banner ── */}
-        {showUpcomingBanner && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="relative overflow-hidden bg-gradient-to-r from-[#FF6154] via-[#FF7E5F] to-[#FF9A44]"
-          >
-            <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-              <div
-                className="absolute inset-0"
-                style={{
-                  background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.08) 50%, transparent 60%)',
-                  backgroundSize: '200% 100%',
-                  animation: 'hero-shimmer 4s ease-in-out infinite',
-                }}
-              />
-            </div>
-            <div className="relative z-10 flex items-center justify-center gap-3 px-4 py-3.5 md:py-4 text-white">
-              <Flame className="size-5 md:size-6 shrink-0 animate-pulse" />
-              <p className="text-sm md:text-base font-bold tracking-wide">
-                🔥 Prochain live bientôt — <span className="hidden sm:inline">Rejoignez-nous !</span>
-                <span className="sm:hidden">Rejoignez !</span>
-              </p>
-              <motion.a
-                href={publicShop.liveUrl!}
-                target="_blank"
-                rel="noopener noreferrer"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.97 }}
-                className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white text-[#FF6154] font-bold text-xs md:text-sm shadow-lg hover:shadow-xl transition-shadow min-h-[40px]"
-              >
-                Rejoindre
-                <svg className="size-3.5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </motion.a>
-            </div>
-          </motion.div>
-        )}
+        {/* ── Scrolling Marquee Banner ── */}
+        <LiveMarqueeBanner
+          isLive={isLive}
+          products={publicProducts}
+          shopName={publicShop.name ?? 'Ma Boutique'}
+        />
 
         {/* ── Main Content ── */}
         <main className="flex-1 max-w-7xl mx-auto w-full px-4 lg:px-6 py-8 md:py-12">
