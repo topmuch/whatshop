@@ -508,12 +508,10 @@ function AdminSidebarContent() {
             </div>
           ))}
         </nav>
-      </ScrollArea>
 
-      <Separator className="bg-white/15" />
+        <Separator className="bg-white/15 my-3" />
 
-      {/* Theme Toggle */}
-      <div className="px-3 py-2">
+        {/* Theme Toggle */}
         <Button
           variant="ghost"
           className="w-full justify-start gap-3 h-10 px-3 text-white/70 hover:text-white hover:bg-white/10"
@@ -522,12 +520,8 @@ function AdminSidebarContent() {
           {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
           <span className="text-sm">{isDark ? 'Mode clair' : 'Mode sombre'}</span>
         </Button>
-      </div>
 
-      <Separator className="bg-white/15" />
-
-      {/* Logout */}
-      <div className="px-3 py-4">
+        {/* Logout */}
         <Button
           variant="ghost"
           className="w-full justify-start gap-3 h-10 px-3 text-white/70 hover:text-blue-200 hover:bg-white/10"
@@ -536,7 +530,7 @@ function AdminSidebarContent() {
           <LogOut className="h-5 w-5" />
           <span className="text-sm">Déconnexion</span>
         </Button>
-      </div>
+      </ScrollArea>
     </div>
   )
 }
