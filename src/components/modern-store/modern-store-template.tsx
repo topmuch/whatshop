@@ -45,6 +45,23 @@ import { ImageGallery } from './image-gallery'
 
 type View = 'home' | 'product' | 'checkout'
 
+/** Extract YouTube video ID from various URL formats */
+function extractYouTubeId(url: string): string | null {
+  if (!url) return null
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/,
+    /(?:youtu\.be\/)([a-zA-Z0-9_-]{11})/,
+    /(?:youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+    /(?:youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/,
+  ]
+  for (const p of patterns) {
+    const match = url.match(p)
+    if (match) return match[1]
+  }
+  if (/^[a-zA-Z0-9_-]{11}$/.test(url)) return url
+  return null
+}
+
 interface DetailedProduct extends ModernStoreProduct {
   variants: ModernStoreVariant[]
 }
@@ -502,31 +519,80 @@ function HomeView(props: HomeViewProps) {
     onSeeProducts,
   } = props
 
+  // YouTube video hero (when configured)
+  const videoId = config.heroVideo?.enabled && config.heroVideo?.youtubeUrl
+    ? extractYouTubeId(config.heroVideo.youtubeUrl)
+    : null
+
   return (
     <>
-      {/* ─── SECTION A: HERO — Full-width featured image only ─── */}
-      {(heroProduct?.images?.[0] || heroProduct?.image || shop.heroImageUrl || shop.coverImageUrl || shop.banner) && (
-        <section className="w-full bg-gray-50 overflow-hidden">
-          <div className="relative w-full" style={{ maxHeight: '600px' }}>
-            <Image
-              src={
-                heroProduct?.images?.[0] ||
-                heroProduct?.image ||
-                shop.heroImageUrl ||
-                shop.coverImageUrl ||
-                shop.banner!
-              }
-              alt="Produit vedette"
-              width={1400}
-              height={600}
-              unoptimized
-              priority
-              className="w-full h-auto object-cover"
-              style={{ maxHeight: '600px' }}
-              sizes="100vw"
+      {/* ─── SECTION A: HERO — YouTube Video or fallback to image ─── */}
+      {videoId ? (
+        <section className="w-full overflow-hidden">
+          <div className="relative w-full aspect-video bg-black">
+            <iframe
+              src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&controls=0&showinfo=0&rel=0&playlist=${videoId}&modestbranding=1&playsinline=1`}
+              title={config.heroVideo?.title || 'Hero Video'}
+              allow="autoplay; encrypted-media"
+              allowFullScreen
+              className="absolute inset-0 w-full h-full"
             />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: 'easeOut' }}
+              className="absolute inset-0 flex items-center left-0 top-0 bottom-0 px-6 md:px-12 lg:px-20"
+            >
+              <div className="max-w-lg flex flex-col gap-4">
+                {config.heroVideo?.title && (
+                  <h1 className="text-3xl md:text-5xl font-bold text-white leading-tight">
+                    {config.heroVideo.title}
+                  </h1>
+                )}
+                {config.heroVideo?.subtitle && (
+                  <p className="text-base md:text-xl text-white/80">
+                    {config.heroVideo.subtitle}
+                  </p>
+                )}
+                {config.heroVideo?.ctaText && (
+                  <button
+                    type="button"
+                    onClick={onSeeProducts}
+                    className="mt-2 inline-flex items-center justify-center rounded-xl py-3 px-8 font-semibold text-white shadow-lg transition-all hover:brightness-110"
+                    style={{ backgroundColor: accent }}
+                  >
+                    {config.heroVideo.ctaText}
+                  </button>
+                )}
+              </div>
+            </motion.div>
           </div>
         </section>
+      ) : (
+        (heroProduct?.images?.[0] || heroProduct?.image || shop.heroImageUrl || shop.coverImageUrl || shop.banner) && (
+          <section className="w-full bg-gray-50 overflow-hidden">
+            <div className="relative w-full" style={{ maxHeight: '600px' }}>
+              <Image
+                src={
+                  heroProduct?.images?.[0] ||
+                  heroProduct?.image ||
+                  shop.heroImageUrl ||
+                  shop.coverImageUrl ||
+                  shop.banner!
+                }
+                alt="Produit vedette"
+                width={1400}
+                height={600}
+                unoptimized
+                priority
+                className="w-full h-auto object-cover"
+                style={{ maxHeight: '600px' }}
+                sizes="100vw"
+              />
+            </div>
+          </section>
+        )
       )}
 
       {/* ─── SECTION B: EXCLUSIVE DEALS ─── */}

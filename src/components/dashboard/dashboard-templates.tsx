@@ -159,8 +159,8 @@ export function DashboardTemplates() {
       {/* Template-specific customization */}
       <TemplateCustomization shopSlug={shop.slug} />
 
-      {/* Video Hero config for Modern Store 2 */}
-      {(shop.template === 'modern-store-2' || (shop as unknown as Record<string, unknown>).templateType === 'MODERN_STORE_2') && (
+      {/* Video Hero config for Modern Store / Modern Store 2 */}
+      {(shop.template === 'modern-store' || shop.template === 'modern-store-2' || (shop as unknown as Record<string, unknown>).templateType === 'MODERN_STORE' || (shop as unknown as Record<string, unknown>).templateType === 'MODERN_STORE_2') && (
         <VideoHeroConfig shopSlug={shop.slug} />
       )}
 
