@@ -59,7 +59,9 @@ export function LiveModeView({ shopId, shopSlug, shopName, whatsapp, primaryColo
   const [durationMinutes] = useState(DEFAULT_LIVE_DURATION_MINUTES)
   const [countdownSeconds, setCountdownSeconds] = useState<number | null>(null)
   const [glowColor, setGlowColor] = useState(TIKTOK_COLORS[0])
+  const [nextGlowColor, setNextGlowColor] = useState(TIKTOK_COLORS[1])
   const [liveEnded, setLiveEnded] = useState(false)
+  const [bgColorIndex, setBgColorIndex] = useState(0)
   const colorIndexRef = useRef(0)
 
   const accent = accentColor || primaryColor || '#EC4899'
@@ -152,12 +154,14 @@ export function LiveModeView({ shopId, shopSlug, shopName, whatsapp, primaryColo
     return () => clearInterval(t)
   }, [liveStartedAt, durationMinutes])
 
-  // Color cycling animation for TikTok-style glow
+  // Color cycling animation for TikTok-style glow (fast for full page effect)
   useEffect(() => {
     const interval = setInterval(() => {
       colorIndexRef.current = (colorIndexRef.current + 1) % TIKTOK_COLORS.length
       setGlowColor(TIKTOK_COLORS[colorIndexRef.current])
-    }, 3500)
+      setNextGlowColor(TIKTOK_COLORS[(colorIndexRef.current + 1) % TIKTOK_COLORS.length])
+      setBgColorIndex(colorIndexRef.current)
+    }, 2000) // Faster cycling for full page effect
     return () => clearInterval(interval)
   }, [])
 
@@ -199,6 +203,12 @@ export function LiveModeView({ shopId, shopSlug, shopName, whatsapp, primaryColo
     return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
   }
 
+  const formatCountdownBig = (s: number) => {
+    const m = Math.floor(s / 60)
+    const sec = s % 60
+    return { minutes: String(m).padStart(2, '0'), seconds: String(sec).padStart(2, '0') }
+  }
+
   const isUrgent = countdownSeconds !== null && countdownSeconds > 0 && countdownSeconds < 300 // < 5 min
 
   // Shop rating from testimonials
@@ -211,6 +221,12 @@ export function LiveModeView({ shopId, shopSlug, shopName, whatsapp, primaryColo
   const discount = product?.oldPrice && product.oldPrice > product.price
     ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
     : 0
+
+  // Full-page animated gradient background
+  const bgGradientStyle = {
+    background: `linear-gradient(135deg, ${TIKTOK_COLORS[bgColorIndex]}22 0%, ${TIKTOK_COLORS[(bgColorIndex + 1) % TIKTOK_COLORS.length]}33 25%, ${TIKTOK_COLORS[(bgColorIndex + 2) % TIKTOK_COLORS.length]}22 50%, ${TIKTOK_COLORS[(bgColorIndex + 3) % TIKTOK_COLORS.length]}33 75%, ${TIKTOK_COLORS[(bgColorIndex + 4) % TIKTOK_COLORS.length]}22 100%)`,
+    transition: 'background 2s ease-in-out',
+  }
 
   // ─── LIVE OFF → return null so parent renders normal shop ───────────
   if (error === 'LIVE_OFF') {
@@ -253,14 +269,15 @@ export function LiveModeView({ shopId, shopSlug, shopName, whatsapp, primaryColo
   // ─── NO PRODUCT PINNED YET ──────────────────────────────────────────
   if (!product) {
     return (
-      <div className="fixed inset-0 flex flex-col bg-gray-950">
+      <div className="fixed inset-0 flex flex-col" style={bgGradientStyle}>
+        <div className="absolute inset-0 bg-gray-950/90" />
         {/* Animated top glow bar */}
         <div
-          className="h-1 w-full"
+          className="relative z-10 h-1.5 w-full"
           style={{ backgroundColor: glowColor, transition: 'background-color 1s ease' }}
         />
         {/* Live banner */}
-        <div className="bg-red-600 px-4 py-3 shadow-lg">
+        <div className="relative z-10 bg-red-600 px-4 py-3 shadow-lg">
           <div className="mx-auto flex max-w-md items-center justify-center gap-2.5 text-white">
             <span className="relative flex h-2.5 w-2.5">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
@@ -277,8 +294,36 @@ export function LiveModeView({ shopId, shopSlug, shopName, whatsapp, primaryColo
           </div>
         </div>
 
+        {/* BIG COUNTDOWN TIMER */}
+        {countdownSeconds !== null && countdownSeconds > 0 && (
+          <div className="relative z-10 flex flex-col items-center pt-16">
+            <p className="text-sm font-semibold tracking-widest text-gray-400 uppercase mb-6">Le live commence bientôt</p>
+            <div className="flex items-center gap-4">
+              <div className={`flex flex-col items-center ${isUrgent ? 'animate-pulse' : ''}`}>
+                <div
+                  className="flex h-24 w-24 sm:h-32 sm:w-32 items-center justify-center rounded-2xl font-black text-white text-5xl sm:text-7xl tabular-nums shadow-2xl"
+                  style={{ backgroundColor: glowColor, transition: 'background-color 1s ease' }}
+                >
+                  {formatCountdownBig(countdownSeconds).minutes}
+                </div>
+                <span className="mt-2 text-xs font-semibold tracking-wider text-gray-500 uppercase">Minutes</span>
+              </div>
+              <span className={`text-4xl sm:text-6xl font-black tabular-nums ${isUrgent ? 'animate-pulse text-yellow-300' : 'text-gray-600'}`}>:</span>
+              <div className={`flex flex-col items-center ${isUrgent ? 'animate-pulse' : ''}`}>
+                <div
+                  className="flex h-24 w-24 sm:h-32 sm:w-32 items-center justify-center rounded-2xl font-black text-white text-5xl sm:text-7xl tabular-nums shadow-2xl"
+                  style={{ backgroundColor: nextGlowColor, transition: 'background-color 1s ease' }}
+                >
+                  {formatCountdownBig(countdownSeconds).seconds}
+                </div>
+                <span className="mt-2 text-xs font-semibold tracking-wider text-gray-500 uppercase">Secondes</span>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Waiting state */}
-        <div className="flex flex-1 flex-col items-center justify-center gap-4 px-4">
+        <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-4 px-4">
           <motion.div
             animate={{ scale: [1, 1.15, 1] }}
             transition={{ duration: 1.5, repeat: Infinity }}
@@ -305,25 +350,37 @@ export function LiveModeView({ shopId, shopSlug, shopName, whatsapp, primaryColo
 
   const shortName = product.shortDescription || product.name
   const fullDescription = product.description || product.shortDescription || ''
+  const countdown = countdownSeconds !== null && countdownSeconds > 0 ? formatCountdownBig(countdownSeconds) : null
 
   // ─── LIVE VIEW: PRODUCT SPOTLIGHT ───────────────────────────────────
   return (
-    <div className="fixed inset-0 flex flex-col overflow-hidden bg-gray-950 text-white">
+    <div className="fixed inset-0 flex flex-col overflow-hidden text-white">
+      {/* ─── FULL PAGE MULTICOLOR ANIMATED BACKGROUND ─── */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: `linear-gradient(${135 + bgColorIndex * 30}deg, ${TIKTOK_COLORS[bgColorIndex]}18 0%, ${TIKTOK_COLORS[(bgColorIndex + 1) % TIKTOK_COLORS.length]}28 20%, ${TIKTOK_COLORS[(bgColorIndex + 2) % TIKTOK_COLORS.length]}18 40%, ${TIKTOK_COLORS[(bgColorIndex + 3) % TIKTOK_COLORS.length]}28 60%, ${TIKTOK_COLORS[(bgColorIndex + 4) % TIKTOK_COLORS.length]}18 80%, ${TIKTOK_COLORS[(bgColorIndex + 5) % TIKTOK_COLORS.length]}28 100%)`,
+          transition: 'background 2s ease-in-out',
+        }}
+      />
+      {/* Dark overlay for readability */}
+      <div className="absolute inset-0 bg-gray-950/80" />
+
       {/* ─── Animated top glow bar ─── */}
       <div
-        className="z-50 h-1 w-full"
+        className="relative z-50 h-1.5 w-full"
         style={{ backgroundColor: glowColor, transition: 'background-color 1s ease' }}
       />
 
       {/* ─── 1. HEADER LIVE ─── */}
-      <header className="z-40 flex flex-shrink-0 items-center justify-center gap-2 bg-red-600 px-4 py-3 text-white shadow-lg">
+      <header className="relative z-40 flex flex-shrink-0 items-center justify-center gap-2 bg-red-600 px-4 py-3 text-white shadow-lg">
         <div className="relative flex items-center gap-2">
           <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-white" />
           <span className="text-sm font-bold tracking-wider">EN DIRECT</span>
         </div>
         <span className="mx-2 text-white/80">—</span>
         <span className="truncate text-sm font-medium">{shopName}</span>
-        {/* Countdown Timer */}
+        {/* Countdown Timer in header */}
         {countdownSeconds !== null && countdownSeconds > 0 && (
           <div
             className={`ml-auto flex items-center gap-1.5 rounded-full px-2.5 py-1 tabular-nums ${
@@ -346,23 +403,14 @@ export function LiveModeView({ shopId, shopSlug, shopName, whatsapp, primaryColo
       </header>
 
       {/* ─── 2. CONTENU PRINCIPAL (responsive 2 colonnes sur desktop) ─── */}
-      <main className="flex-1 overflow-y-auto bg-gray-900">
-        {/* Subtle side glow effect */}
-        <div
-          className="pointer-events-none fixed left-0 top-0 h-full w-1 opacity-40"
-          style={{ backgroundColor: glowColor, transition: 'background-color 1s ease' }}
-        />
-        <div
-          className="pointer-events-none fixed right-0 top-0 h-full w-1 opacity-40"
-          style={{ backgroundColor: glowColor, transition: 'background-color 1s ease' }}
-        />
+      <main className="relative z-10 flex-1 overflow-y-auto">
         <div className="mx-auto flex w-full max-w-6xl flex-col md:flex-row">
           {/* IMAGE PRODUIT — 100% mobile, 50% desktop */}
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: 'easeOut' }}
-            className="relative w-full overflow-hidden bg-gray-800 aspect-[4/3] md:aspect-auto md:min-h-[600px] md:w-1/2"
+            className="relative w-full overflow-hidden bg-gray-800/80 backdrop-blur-sm aspect-[4/3] md:aspect-auto md:min-h-[600px] md:w-1/2"
           >
             {productImage ? (
               <Image
@@ -403,7 +451,7 @@ export function LiveModeView({ shopId, shopSlug, shopName, whatsapp, primaryColo
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.1, ease: 'easeOut' }}
-            className="relative z-10 flex w-full flex-col gap-4 rounded-t-3xl bg-gray-900 p-5 -mt-6 md:mt-0 md:w-1/2 md:rounded-none md:p-10"
+            className="relative z-10 flex w-full flex-col gap-4 rounded-t-3xl bg-gray-900/90 backdrop-blur-sm p-5 -mt-6 md:mt-0 md:w-1/2 md:rounded-none md:p-10"
           >
             {/* Contenu centré sur desktop */}
             <div className="mx-auto w-full max-w-lg space-y-6">
@@ -518,13 +566,82 @@ export function LiveModeView({ shopId, shopSlug, shopName, whatsapp, primaryColo
                   <span>Voir les détails du produit</span>
                 </button>
 
-                <button
+                {/* ─── BIG COUNTDOWN TIMER (below "voir les détails") ─── */}
+                {countdown && (
+                  <div className="flex flex-col items-center py-2">
+                    <p className="text-xs font-semibold tracking-widest text-gray-500 uppercase mb-3">⏱ Temps restant du live</p>
+                    <div className="flex items-center gap-3">
+                      <div className={`flex flex-col items-center ${isUrgent ? 'animate-pulse' : ''}`}>
+                        <div
+                          className="flex h-20 w-20 sm:h-24 sm:w-24 items-center justify-center rounded-2xl font-black text-white text-4xl sm:text-5xl tabular-nums shadow-2xl"
+                          style={{ backgroundColor: glowColor, transition: 'background-color 1s ease' }}
+                        >
+                          {countdown.minutes}
+                        </div>
+                        <span className="mt-1.5 text-[10px] font-semibold tracking-wider text-gray-500 uppercase">Min</span>
+                      </div>
+                      <span className={`text-3xl sm:text-4xl font-black tabular-nums ${isUrgent ? 'text-yellow-300 animate-pulse' : 'text-gray-600'}`}>:</span>
+                      <div className={`flex flex-col items-center ${isUrgent ? 'animate-pulse' : ''}`}>
+                        <div
+                          className="flex h-20 w-20 sm:h-24 sm:w-24 items-center justify-center rounded-2xl font-black text-white text-4xl sm:text-5xl tabular-nums shadow-2xl"
+                          style={{ backgroundColor: nextGlowColor, transition: 'background-color 1s ease' }}
+                        >
+                          {countdown.seconds}
+                        </div>
+                        <span className="mt-1.5 text-[10px] font-semibold tracking-wider text-gray-500 uppercase">Sec</span>
+                      </div>
+                    </div>
+                    {isUrgent && (
+                      <motion.p
+                        animate={{ opacity: [1, 0.3, 1] }}
+                        transition={{ duration: 1, repeat: Infinity }}
+                        className="mt-3 text-sm font-bold text-red-400 tracking-wide"
+                      >
+                        🔥 Le live se termine bientôt !
+                      </motion.p>
+                    )}
+                  </div>
+                )}
+
+                {/* ─── BIG FLASHY BLINKING "PARTAGER CE LIVE" BUTTON ─── */}
+                <motion.button
                   onClick={handleShare}
-                  className="flex w-full items-center justify-center gap-2 py-2 text-sm text-gray-500 transition-colors hover:text-white"
+                  className="relative w-full overflow-hidden rounded-2xl py-5 text-lg font-black tracking-wide text-white shadow-2xl transition-transform active:scale-95"
+                  animate={{
+                    background: [
+                      `linear-gradient(135deg, ${TIKTOK_COLORS[0]}, ${TIKTOK_COLORS[1]})`,
+                      `linear-gradient(135deg, ${TIKTOK_COLORS[1]}, ${TIKTOK_COLORS[2]})`,
+                      `linear-gradient(135deg, ${TIKTOK_COLORS[2]}, ${TIKTOK_COLORS[3]})`,
+                      `linear-gradient(135deg, ${TIKTOK_COLORS[3]}, ${TIKTOK_COLORS[4]})`,
+                      `linear-gradient(135deg, ${TIKTOK_COLORS[4]}, ${TIKTOK_COLORS[5]})`,
+                      `linear-gradient(135deg, ${TIKTOK_COLORS[5]}, ${TIKTOK_COLORS[0]})`,
+                    ],
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: 'linear',
+                  }}
                 >
-                  <Share2 size={16} />
-                  <span>Partager ce live</span>
-                </button>
+                  {/* Blinking overlay shimmer */}
+                  <motion.div
+                    className="absolute inset-0"
+                    animate={{ opacity: [0, 0.4, 0] }}
+                    transition={{ duration: 0.8, repeat: Infinity, ease: 'easeInOut' }}
+                    style={{
+                      background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.5) 50%, transparent 100%)',
+                    }}
+                  />
+                  <div className="relative flex items-center justify-center gap-3">
+                    <motion.span
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 0.6, repeat: Infinity }}
+                    >
+                      <Share2 size={24} />
+                    </motion.span>
+                    <span>PARTAGER CE LIVE</span>
+                  </div>
+                </motion.button>
               </div>
 
               <div className="pt-4 text-center text-xs text-gray-600">
@@ -537,7 +654,7 @@ export function LiveModeView({ shopId, shopSlug, shopName, whatsapp, primaryColo
 
       {/* ─── Animated bottom glow bar ─── */}
       <div
-        className="h-1 w-full"
+        className="relative z-50 h-1.5 w-full"
         style={{ backgroundColor: glowColor, transition: 'background-color 1s ease' }}
       />
 

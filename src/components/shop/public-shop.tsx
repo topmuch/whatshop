@@ -437,6 +437,24 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
     fetchShop()
   }, [fetchShop])
 
+  // ── Poll for live mode activation ──
+  // When the seller activates TikTok live mode, automatically re-fetch
+  // shop data so the LiveModeView renders without the user having to refresh.
+  useEffect(() => {
+    if (publicShop?.isLiveMode) return // already in live mode, skip polling
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/shops/${shopSlug}`)
+        if (!res.ok) return
+        const data = await res.json()
+        if (data.isLiveMode) {
+          setPublicShop(data) // triggers re-render → LiveModeView takes over
+        }
+      } catch { /* silent */ }
+    }, 8000) // check every 8s
+    return () => clearInterval(interval)
+  }, [shopSlug, publicShop?.isLiveMode, setPublicShop])
+
   const filteredProducts = useMemo(() => {
     let products = publicProducts.filter((p) => p.isAvailable)
     if (activeCategory) products = products.filter((p) => p.categoryId === activeCategory)
