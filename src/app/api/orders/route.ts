@@ -229,6 +229,21 @@ export async function POST(request: NextRequest) {
         fetch(waUrl).catch(() => { /* ignore */ })
       }
 
+      // If customer left notes, create a message in the shop's inbox
+      if (customer.notes && customer.notes.trim()) {
+        db.contactMessage.create({
+          data: {
+            shopId: shop.id,
+            name: `${customer.firstName} ${customer.lastName}`,
+            email: customer.email?.trim() || '',
+            phone: customer.phone,
+            message: `📋 Notes de commande #${order.id} :\n\n${customer.notes.trim()}`,
+            status: 'NEW',
+            source: 'ORDER',
+          },
+        }).catch(() => {})
+      }
+
       // Email confirmation to customer
       dispatchCustomerOrderConfirmationEmail({
         customerName: `${customer.firstName} ${customer.lastName}`,

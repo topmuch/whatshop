@@ -109,6 +109,23 @@ export async function PATCH(request: NextRequest) {
         // Non-critical
       }
 
+      // System message: subscription activated
+      try {
+        await db.contactMessage.create({
+          data: {
+            shopId: shop.id,
+            name: 'Boutiko',
+            email: 'support@boutiko.pro',
+            phone: null,
+            message: `✅ Abonnement activé !\n\nVotre abonnement ${shop.plan} a été validé avec succès. Votre boutique "${shop.name}" est active pour 1 an (jusqu'au ${annualEndDate.toLocaleDateString('fr-FR')}).\n\nMerci de votre confiance !`,
+            status: 'NEW',
+            source: 'SYSTEM',
+          },
+        })
+      } catch {
+        // Non-critical
+      }
+
       return NextResponse.json({
         message: `Paiement validé pour "${shop.name}" — Abonnement annuel actif jusqu'au ${annualEndDate.toLocaleDateString('fr-FR')}`,
         newStatus: 'ACTIVE',
@@ -139,6 +156,23 @@ export async function PATCH(request: NextRequest) {
           isActive: true,
         },
       })
+
+      // System message: trial extended
+      try {
+        await db.contactMessage.create({
+          data: {
+            shopId: shop.id,
+            name: 'Boutiko',
+            email: 'support@boutiko.pro',
+            phone: null,
+            message: `⏳ Essai prolongé\n\nVotre période d'essai pour la boutique "${shop.name}" a été prolongée de ${extraDays} jours.\n\nNouvelle date de fin d'essai : ${newTrialEnd.toLocaleDateString('fr-FR')}.\n\nProfitez-en pour finaliser votre abonnement !`,
+            status: 'NEW',
+            source: 'SYSTEM',
+          },
+        })
+      } catch {
+        // Non-critical
+      }
 
       return NextResponse.json({
         message: `Essai prolongé de ${extraDays} jours pour "${shop.name}" — Nouvelle fin: ${newTrialEnd.toLocaleDateString('fr-FR')}`,

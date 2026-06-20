@@ -29,6 +29,7 @@ interface MessagesResponse {
 
 const VALID_STATUSES = ['NEW', 'READ', 'REPLIED'] as const
 const VALID_UPDATE_STATUSES = ['READ', 'REPLIED'] as const
+const VALID_SOURCES = ['ALL', 'FORM', 'ORDER', 'SYSTEM', 'WHATSAPP', 'CALL'] as const
 
 // ─── GET HANDLER ───────────────────────────────────────────────────────────────
 
@@ -46,6 +47,7 @@ export async function GET(request: NextRequest) {
     const pageParam = searchParams.get('page')
     const limitParam = searchParams.get('limit')
     const search = searchParams.get('search')
+    const sourceParam = searchParams.get('source')
 
     // Validate shopId
     if (!shopId || typeof shopId !== 'string' || shopId.trim().length === 0) {
@@ -82,6 +84,13 @@ export async function GET(request: NextRequest) {
         { name: { contains: term } },
         { email: { contains: term } },
       ]
+    }
+
+    if (sourceParam && sourceParam !== 'ALL') {
+      if (!VALID_SOURCES.includes(sourceParam as typeof VALID_SOURCES[number])) {
+        return NextResponse.json({ error: 'Source invalide' }, { status: 400 })
+      }
+      where.source = sourceParam
     }
 
     // Get total count

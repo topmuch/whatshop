@@ -18,6 +18,9 @@ import {
   MessageCircle,
   Inbox,
   Eye,
+  ShoppingCart,
+  Bot,
+  FileText,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -47,6 +50,7 @@ interface MessagesResponse {
 }
 
 type FilterStatus = 'ALL' | 'NEW' | 'READ' | 'REPLIED'
+type FilterSource = 'ALL' | 'FORM' | 'ORDER' | 'SYSTEM'
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -85,13 +89,49 @@ function getStatusBadge(status: string) {
   }
 }
 
-function getAvatarColor(status: string): string {
-  switch (status) {
+function getSourceBadge(source: string) {
+  switch (source) {
+    case 'FORM':
+      return (
+        <Badge className="bg-violet-100 text-violet-700 hover:bg-violet-100 dark:bg-violet-900/40 dark:text-violet-300 shrink-0 gap-1">
+          <FileText className="h-3 w-3" />
+          Contact
+        </Badge>
+      )
+    case 'ORDER':
+      return (
+        <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 dark:bg-amber-900/40 dark:text-amber-300 shrink-0 gap-1">
+          <ShoppingCart className="h-3 w-3" />
+          Commande
+        </Badge>
+      )
+    case 'SYSTEM':
+      return (
+        <Badge className="bg-teal-100 text-teal-700 hover:bg-teal-100 dark:bg-teal-900/40 dark:text-teal-300 shrink-0 gap-1">
+          <Bot className="h-3 w-3" />
+          Système
+        </Badge>
+      )
+    default:
+      return null
+  }
+}
+
+function getAvatarColor(msg: Message): string {
+  if (msg.source === 'SYSTEM') return 'bg-teal-500 text-white'
+  if (msg.source === 'ORDER') return 'bg-amber-500 text-white'
+  switch (msg.status) {
     case 'NEW': return 'bg-sky-500 text-white'
     case 'READ': return 'bg-gray-400 text-white dark:bg-gray-500'
     case 'REPLIED': return 'bg-emerald-500 text-white'
     default: return 'bg-gray-400 text-white'
   }
+}
+
+function getAvatarIcon(source: string) {
+  if (source === 'SYSTEM') return <Bot className="h-5 w-5" />
+  if (source === 'ORDER') return <ShoppingCart className="h-5 w-5" />
+  return null
 }
 
 function getFilterCounts(
@@ -124,6 +164,13 @@ const FILTER_TABS: { status: FilterStatus; label: string; icon: React.ReactNode 
   { status: 'REPLIED', label: 'Répondus', icon: <CheckCircle2 className="h-4 w-4" /> },
 ]
 
+const SOURCE_TABS: { source: FilterSource; label: string; icon: React.ReactNode }[] = [
+  { source: 'ALL', label: 'Tous', icon: <Inbox className="h-4 w-4" /> },
+  { source: 'FORM', label: 'Contact', icon: <FileText className="h-4 w-4" /> },
+  { source: 'ORDER', label: 'Commandes', icon: <ShoppingCart className="h-4 w-4" /> },
+  { source: 'SYSTEM', label: 'Système', icon: <Bot className="h-4 w-4" /> },
+]
+
 /* ------------------------------------------------------------------ */
 /*  Main Component                                                     */
 /* ------------------------------------------------------------------ */
@@ -133,6 +180,7 @@ export function DashboardMessages() {
   const [messages, setMessages] = useState<Message[]>([])
   const [loading, setLoading] = useState(true)
   const [activeFilter, setActiveFilter] = useState<FilterStatus>('ALL')
+  const [activeSource, setActiveSource] = useState<FilterSource>('ALL')
   const [searchQuery, setSearchQuery] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [page, setPage] = useState(1)
@@ -162,6 +210,7 @@ export function DashboardMessages() {
       const params = new URLSearchParams({
         shopId: shop.id,
         status: activeFilter,
+        source: activeSource,
         page: String(page),
         limit: '20',
       })
@@ -179,7 +228,7 @@ export function DashboardMessages() {
     } finally {
       setLoading(false)
     }
-  }, [shop?.id, activeFilter, page, debouncedSearch])
+  }, [shop?.id, activeFilter, activeSource, page, debouncedSearch])
 
   useEffect(() => {
     fetchMessages()
@@ -189,7 +238,7 @@ export function DashboardMessages() {
   useEffect(() => {
     setPage(1)
     setSelectedIds(new Set())
-  }, [activeFilter])
+  }, [activeFilter, activeSource])
 
   /* ---- Mark as read ---- */
   async function markAsRead(messageId: string) {
@@ -315,7 +364,30 @@ export function DashboardMessages() {
         </div>
       </div>
 
-      {/* Filter Tabs */}
+      {/* Source filter tabs */}
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        {SOURCE_TABS.map((tab) => {
+          const isActive = activeSource === tab.source
+          return (
+            <Button
+              key={tab.source}
+              variant={isActive ? 'default' : 'outline'}
+              size="sm"
+              className={`shrink-0 gap-1.5 text-sm ${
+                isActive
+                  ? ''
+                  : 'text-muted-foreground'
+              }`}
+              onClick={() => setActiveSource(tab.source)}
+            >
+              {tab.icon}
+              {tab.label}
+            </Button>
+          )
+        })}
+      </div>
+
+      {/* Status filter tabs */}
       <div className="flex gap-2 overflow-x-auto pb-1">
         {FILTER_TABS.map((tab) => {
           const isActive = activeFilter === tab.status
@@ -345,15 +417,17 @@ export function DashboardMessages() {
       </div>
 
       {/* Search Bar */}
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Rechercher par nom ou email..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-9 h-10"
-        />
-      </div>
+      {activeSource !== 'SYSTEM' && (
+        <div className="relative max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Rechercher par nom ou email..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 h-10"
+          />
+        </div>
+      )}
 
       {/* Bulk Actions */}
       {selectedIds.size > 0 && (
@@ -391,12 +465,18 @@ export function DashboardMessages() {
           <h3 className="text-base font-medium mb-1">
             {debouncedSearch
               ? 'Aucun message ne correspond à ce filtre'
-              : 'Aucun message reçu pour le moment'}
+              : activeSource !== 'ALL'
+                ? `Aucun message de type "${SOURCE_TABS.find(t => t.source === activeSource)?.label}"`
+                : 'Aucun message reçu pour le moment'}
           </h3>
           <p className="text-sm text-muted-foreground max-w-sm">
-            {debouncedSearch
-              ? 'Essayez de modifier vos critères de recherche ou de filtre.'
-              : 'Les messages envoyés via le formulaire de contact de votre boutique apparaîtront ici.'}
+            {activeSource === 'SYSTEM'
+              ? 'Les messages automatiques de la plateforme (essai, abonnement) apparaîtront ici.'
+              : activeSource === 'ORDER'
+                ? 'Les notes laissées par vos clients lors de leurs commandes apparaîtront ici.'
+                : debouncedSearch
+                  ? 'Essayez de modifier vos critères de recherche ou de filtre.'
+                  : 'Les messages de contact, notes de commande et annonces système apparaîtront ici.'}
           </p>
         </div>
       ) : (
@@ -413,6 +493,7 @@ export function DashboardMessages() {
 
           {messages.map((msg) => {
             const isSelected = selectedIds.has(msg.id)
+            const avatarIcon = getAvatarIcon(msg.source)
             return (
               <Card
                 key={msg.id}
@@ -433,26 +514,29 @@ export function DashboardMessages() {
 
                     {/* Avatar */}
                     <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${getAvatarColor(msg.status)}`}
+                      className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${getAvatarColor(msg)}`}
                     >
-                      {msg.name.charAt(0).toUpperCase()}
+                      {avatarIcon || msg.name.charAt(0).toUpperCase()}
                     </div>
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                         <span className="text-sm font-semibold truncate">{msg.name}</span>
-                        <span className="text-xs text-muted-foreground truncate">
-                          {msg.email}
-                        </span>
+                        {msg.source !== 'SYSTEM' && msg.email && (
+                          <span className="text-xs text-muted-foreground truncate">
+                            {msg.email}
+                          </span>
+                        )}
                       </div>
-                      <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
+                      <p className="text-sm text-muted-foreground whitespace-pre-line line-clamp-3 mb-2">
                         {msg.message}
                       </p>
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-xs text-muted-foreground">
                           {formatMessageDate(msg.createdAt)}
                         </span>
+                        {getSourceBadge(msg.source)}
                         {getStatusBadge(msg.status)}
                       </div>
                     </div>
@@ -471,7 +555,7 @@ export function DashboardMessages() {
                           <span className="sm:hidden">Lu</span>
                         </Button>
                       )}
-                      {msg.phone && (
+                      {msg.phone && msg.source !== 'SYSTEM' && (
                         <Button
                           variant="ghost"
                           size="sm"

@@ -218,6 +218,23 @@ export async function POST(request: NextRequest) {
       } catch {
         // Non-critical
       }
+
+      // System message in shop's inbox about trial
+      try {
+        await db.contactMessage.create({
+          data: {
+            shopId: shop.id,
+            name: 'Boutiko',
+            email: 'support@boutiko.pro',
+            phone: null,
+            message: `🎉 Bienvenue sur Boutiko !\n\nVotre boutique "${shop.name}" est active avec le plan ${finalPlan}.\n\nVous disposez de ${TRIAL_DAYS} jours d'essai gratuit. Pour continuer à utiliser votre boutique après cette période, contactez le support pour valider votre abonnement.\n\nN'hésitez pas à nous écrire si vous avez des questions !`,
+            status: 'NEW',
+            source: 'SYSTEM',
+          },
+        })
+      } catch {
+        // Non-critical
+      }
     }
 
     return NextResponse.json({
