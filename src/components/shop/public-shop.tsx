@@ -555,13 +555,13 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
     return icons[template.id] || <Store className="h-5 w-5" />
   }, [template.id])
 
-  // ── Live Mode takes priority over ALL templates ──
-  // When the seller activates TikTok live mode, the public shop must show
-  // the single-product spotlight (LiveModeView) regardless of which template
-  // the shop uses. This check MUST come before the template early returns
-  // below, otherwise custom templates (xstore-electro, cosmika-dark)
-  // would render their normal layout and ignore live mode.
-  if (publicShop?.isLiveMode) {
+  // ── Live Mode takes priority over non-live templates ──
+  // When the seller activates TikTok live mode on a NON-live-template shop,
+  // show the single-product spotlight (LiveModeView).
+  // IMPORTANT: Shops using the 'live-template' handle live mode internally
+  // (header badge, hero, product spotlight, marquee), so we skip LiveModeView
+  // for them and let the template render its full live experience.
+  if (publicShop?.isLiveMode && template.id !== 'live-template') {
     return (
       <LiveModeView
         shopId={publicShop.id}
