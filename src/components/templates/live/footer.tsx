@@ -13,7 +13,11 @@ function LiveFooter({ shop }: LiveFooterProps) {
   const description = shop?.description ?? 'Votre destination shopping en direct.'
 
   return (
-    <footer className="bg-[#1A1A2E] text-white" role="contentinfo">
+    <footer className="relative overflow-hidden bg-[#1A1A2E] text-white" role="contentinfo">
+      {/* Decorative gradient glow at top of footer */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-px bg-gradient-to-r from-transparent via-[#FF6154]/40 to-transparent" aria-hidden="true" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[300px] h-24 bg-[#FF6154]/5 blur-3xl rounded-full" aria-hidden="true" />
+
       <div className="max-w-7xl mx-auto px-4 lg:px-6 py-12 md:py-16">
         {/* ── Main content ── */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8 mb-10">
@@ -25,6 +29,22 @@ function LiveFooter({ shop }: LiveFooterProps) {
             <p className="text-sm text-gray-400 leading-relaxed max-w-xs">
               {description}
             </p>
+            {/* Trust indicator */}
+            <div className="flex items-center gap-2 mt-1">
+              <div className="flex -space-x-2">
+                {['bg-[#FF6154]', 'bg-[#FF9A44]', 'bg-amber-400'].map((bg, i) => (
+                  <div
+                    key={i}
+                    className={`w-6 h-6 rounded-full ${bg} border-2 border-[#1A1A2E] flex items-center justify-center`}
+                  >
+                    <span className="text-[8px] font-bold text-white">
+                      {['★', '★', '★'][i]}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <span className="text-xs text-gray-500">Clients satisfaits</span>
+            </div>
           </div>
 
           {/* Contact */}
@@ -41,7 +61,9 @@ function LiveFooter({ shop }: LiveFooterProps) {
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2.5 text-sm text-gray-400 hover:text-[#25D366] transition-colors duration-200 min-h-[44px]"
                   >
-                    <MessageCircle className="size-4 shrink-0" />
+                    <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
+                      <MessageCircle className="size-4 shrink-0" />
+                    </div>
                     WhatsApp
                   </a>
                 </li>
@@ -52,7 +74,9 @@ function LiveFooter({ shop }: LiveFooterProps) {
                     href={`tel:${shop.phone.replace(/\D/g, '')}`}
                     className="inline-flex items-center gap-2.5 text-sm text-gray-400 hover:text-white transition-colors duration-200 min-h-[44px]"
                   >
-                    <Phone className="size-4 shrink-0" />
+                    <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
+                      <Phone className="size-4 shrink-0" />
+                    </div>
                     {shop.phone}
                   </a>
                 </li>
@@ -63,7 +87,9 @@ function LiveFooter({ shop }: LiveFooterProps) {
                     href={`mailto:${shop.contactEmail}`}
                     className="inline-flex items-center gap-2.5 text-sm text-gray-400 hover:text-white transition-colors duration-200 min-h-[44px]"
                   >
-                    <Mail className="size-4 shrink-0" />
+                    <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
+                      <Mail className="size-4 shrink-0" />
+                    </div>
                     {shop.contactEmail}
                   </a>
                 </li>
@@ -77,21 +103,24 @@ function LiveFooter({ shop }: LiveFooterProps) {
               Suivez-nous
             </h4>
             <div className="flex items-center gap-3">
-              <a
-                href="#"
-                className="flex items-center justify-center w-11 h-11 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-all duration-200 min-h-[44px] min-w-[44px]"
-                aria-label="Instagram"
-              >
-                <Instagram className="size-5" />
-              </a>
-              <a
-                href="#"
-                className="flex items-center justify-center w-11 h-11 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-all duration-200 min-h-[44px] min-w-[44px]"
-                aria-label="TikTok"
-              >
-                <Heart className="size-5" />
-              </a>
+              {[
+                { icon: Instagram, label: 'Instagram' },
+                { icon: Heart, label: 'TikTok' },
+              ].map(({ icon: Icon, label }) => (
+                <a
+                  key={label}
+                  href="#"
+                  className="group flex items-center justify-center w-11 h-11 rounded-xl bg-white/5 hover:bg-gradient-to-br hover:from-[#FF6154] hover:to-[#FF9A44] text-gray-400 hover:text-white transition-all duration-300 min-h-[44px] min-w-[44px] hover:shadow-lg hover:shadow-[#FF6154]/20"
+                  aria-label={label}
+                >
+                  <Icon className="size-5" />
+                </a>
+              ))}
             </div>
+            {/* Newsletter tease */}
+            <p className="text-xs text-gray-500 mt-2 leading-relaxed">
+              Rejoignez nos lives pour des offres exclusives !
+            </p>
           </div>
         </div>
 
