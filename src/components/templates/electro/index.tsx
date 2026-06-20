@@ -40,6 +40,7 @@ import {
   MessageCircle,
   ArrowDown,
   SlidersHorizontal,
+  ShoppingBag,
 } from 'lucide-react'
 import { useAppStore, type Product, type Category, type Shop } from '@/lib/store'
 import { formatPrice, openWhatsApp } from '@/lib/shared'
@@ -96,75 +97,101 @@ function CategoriesSection({
 }: CategoriesSectionProps) {
   if (categories.length === 0) return null
 
+  const catsWithCount = categories
+    .map((cat) => ({
+      ...cat,
+      count: products.filter((p) => p.categoryId === cat.id && p.isAvailable).length,
+    }))
+    .filter((c) => c.count > 0)
+
+  if (catsWithCount.length === 0) return null
+
   return (
-    <section className="w-full py-8 md:py-12" style={{ background: colors.background }}>
+    <section className="w-full py-10 md:py-14" style={{ background: colors.background }}>
       <div className="max-w-[1400px] mx-auto px-4 lg:px-6">
-        <div className="flex items-center gap-3 mb-6">
+        <div className="flex items-center gap-3 mb-8">
           <div className="w-1 h-6 rounded-full" style={{ background: colors.primary }} />
-          <h2 className="text-lg font-bold" style={{ color: colors.text }}>
+          <h2 className="text-xl font-bold" style={{ color: colors.text }}>
             Catégories
           </h2>
         </div>
 
-        {/* Horizontal scroll on mobile, wrap on desktop */}
-        <div className="flex gap-3 overflow-x-auto pb-2 md:flex-wrap md:overflow-visible scrollbar-hide">
+        {/* Category cards grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
+          {/* "All" button */}
           <button
             onClick={() => onCategoryClick(null)}
-            className="shrink-0 px-4 py-2.5 rounded-full text-sm font-semibold min-h-[44px] transition-all duration-200 border"
+            className="relative flex flex-col items-center justify-center gap-2 p-4 md:p-5 rounded-2xl min-h-[140px] md:min-h-[170px] transition-all duration-200 border-2"
             style={{
               background: !activeCategory ? colors.primary : 'transparent',
-              color: !activeCategory ? colors.ctaText : colors.text,
               borderColor: !activeCategory ? colors.primary : colors.primaryLight,
             }}
           >
-            Tout voir
+            <div
+              className="w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center"
+              style={{
+                background: !activeCategory ? 'rgba(255,255,255,0.2)' : colors.primaryBg,
+              }}
+            >
+              <ShoppingBag className="w-7 h-7 md:w-8 md:h-8" style={{ color: !activeCategory ? colors.ctaText : colors.primary }} />
+            </div>
+            <span className="text-sm font-semibold" style={{ color: !activeCategory ? colors.ctaText : colors.text }}>
+              Tout voir
+            </span>
+            <span
+              className="text-xs px-2 py-0.5 rounded-full"
+              style={{
+                background: !activeCategory ? 'rgba(255,255,255,0.2)' : colors.primaryBg,
+                color: !activeCategory ? colors.ctaText : colors.primary,
+              }}
+            >
+              {products.filter((p) => p.isAvailable).length}
+            </span>
           </button>
-          {categories.map((cat) => {
-            const count = products.filter(
-              (p) => p.categoryId === cat.id && p.isAvailable
-            ).length
-            if (count === 0) return null
-            return (
-              <button
-                key={cat.id}
-                onClick={() =>
-                  onCategoryClick(activeCategory === cat.id ? null : cat.id)
-                }
-                className="shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold min-h-[44px] transition-all duration-200 border"
+
+          {/* Category cards */}
+          {catsWithCount.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => onCategoryClick(activeCategory === cat.id ? null : cat.id)}
+              className="relative flex flex-col items-center justify-center gap-2 p-4 md:p-5 rounded-2xl min-h-[140px] md:min-h-[170px] transition-all duration-200 border-2 group overflow-hidden"
+              style={{
+                background: activeCategory === cat.id ? colors.primary : 'transparent',
+                borderColor: activeCategory === cat.id ? colors.primary : colors.primaryLight,
+              }}
+            >
+              {cat.image ? (
+                <div className="relative w-14 h-14 md:w-16 md:h-16 rounded-2xl overflow-hidden shrink-0 ring-2 transition-all duration-200" style={{ ringColor: activeCategory === cat.id ? 'rgba(255,255,255,0.3)' : colors.primaryLight }}>
+                  <Image
+                    src={cat.image}
+                    alt={cat.name}
+                    fill
+                    className="object-cover"
+                    sizes="80px"
+                  />
+                </div>
+              ) : (
+                <div
+                  className="w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center shrink-0"
+                  style={{ background: activeCategory === cat.id ? 'rgba(255,255,255,0.2)' : colors.primaryBg }}
+                >
+                  <ShoppingBag className="w-7 h-7 md:w-8 md:h-8" style={{ color: activeCategory === cat.id ? colors.ctaText : colors.primary }} />
+                </div>
+              )}
+              <span className="text-sm font-semibold text-center leading-tight line-clamp-2" style={{ color: activeCategory === cat.id ? colors.ctaText : colors.text }}>
+                {cat.name}
+              </span>
+              <span
+                className="text-xs px-2 py-0.5 rounded-full"
                 style={{
-                  background: activeCategory === cat.id ? colors.primary : 'transparent',
-                  color: activeCategory === cat.id ? colors.ctaText : colors.text,
-                  borderColor:
-                    activeCategory === cat.id ? colors.primary : colors.primaryLight,
+                  background: activeCategory === cat.id ? 'rgba(255,255,255,0.2)' : colors.primaryBg,
+                  color: activeCategory === cat.id ? colors.ctaText : colors.primary,
                 }}
               >
-                {cat.image ? (
-                  <div className="relative w-6 h-6 rounded-full overflow-hidden shrink-0">
-                    <Image
-                      src={cat.image}
-                      alt={cat.name}
-                      fill
-                      className="object-cover"
-                      sizes="24px"
-                    />
-                  </div>
-                ) : null}
-                <span>{cat.name}</span>
-                <span
-                  className="text-xs px-1.5 py-0.5 rounded-full"
-                  style={{
-                    background:
-                      activeCategory === cat.id
-                        ? 'rgba(255,255,255,0.25)'
-                        : colors.primaryBg,
-                    color: activeCategory === cat.id ? colors.ctaText : colors.primary,
-                  }}
-                >
-                  {count}
-                </span>
-              </button>
-            )
-          })}
+                {cat.count}
+              </span>
+            </button>
+          ))}
         </div>
       </div>
     </section>

@@ -365,7 +365,7 @@ export default function OnboardingPage() {
                   <Step5Offer
                     shopName={form.name}
                     sector={form.sector || ''}
-                    template={form.template || 'cosmika-beauty'}
+                    template={form.template || 'xstore-electro'}
                     selectedPlan={form.plan}
                     onPlanSelect={handlePlanSelect}
                     onConfirm={handleSubmit}

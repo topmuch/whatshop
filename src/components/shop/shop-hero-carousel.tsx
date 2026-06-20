@@ -91,9 +91,7 @@ export function ShopHeroCarousel({ slides, shopName, whatsapp, heroImages }: Sho
     : 'h-52 sm:h-64 md:h-80 lg:h-96'
 
   // Template-specific overlay styles
-  const overlayStyle = template.id === 'cosmika-beauty'
-    ? 'bg-black/50'
-    : 'bg-gradient-to-r from-black/70 via-black/40 to-black/20'
+  const overlayStyle = 'bg-gradient-to-r from-black/70 via-black/40 to-black/20'
 
   // Template-specific CTA style
   const ctaStyle = template.layout.buttonStyle === 'rounded'
@@ -135,7 +133,7 @@ export function ShopHeroCarousel({ slides, shopName, whatsapp, heroImages }: Sho
                     <h2
                       className={cn(
                         'font-bold leading-tight drop-shadow-lg',
-                          template.id === 'cosmika-beauty' ? 'text-base sm:text-lg md:text-xl' : 'text-xl sm:text-2xl md:text-4xl'
+                          'text-xl sm:text-2xl md:text-4xl'
                       )}
                       style={{ color: 'var(--tpl-hero-text)' }}
                     >
@@ -144,7 +142,7 @@ export function ShopHeroCarousel({ slides, shopName, whatsapp, heroImages }: Sho
                     <p
                       className={cn(
                         'mt-2 line-clamp-2 drop-shadow-md',
-                        template.id === 'cosmika-beauty' ? 'text-[11px] sm:text-xs' : 'text-xs sm:text-sm md:text-base'
+                        'text-xs sm:text-sm md:text-base'
                       )}
                       style={{ color: 'var(--tpl-hero-text)', opacity: 0.8 }}
                     >
@@ -153,7 +151,7 @@ export function ShopHeroCarousel({ slides, shopName, whatsapp, heroImages }: Sho
                     <div className="flex items-center gap-3 mt-4 sm:mt-6">
                       {slide.cta && (
                         <Button
-                          size={template.id === 'cosmika-beauty' ? 'sm' : 'default'}
+                          size='default'
                           className={cn('h-9 sm:h-10 px-4 sm:px-6 gap-2 text-xs sm:text-sm font-semibold shadow-lg', ctaStyle)}
                           style={{ background: 'var(--tpl-cta-bg)', color: 'var(--tpl-cta-fg)' }}
                           onClick={() => handleCtaClick(slide)}

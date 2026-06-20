@@ -81,11 +81,11 @@ const SECTOR_SUGGESTION: Partial<Record<Sector, TemplateId>> = {
   electronique: 'xstore-electro',
   alimentation: 'modern-store',
   autre: 'modern-store',
-  'beaute-service': 'cosmika-beauty',
-  restaurant: 'elegance-plus',
-  consulting: 'elegance-plus',
+  'beaute-service': 'cosmika-dark',
+  restaurant: 'modern-store',
+  consulting: 'xstore-electro',
   artisanat: 'xstore-electro',
-  sante: 'cosmika-beauty',
+  sante: 'cosmika-dark',
 }
 
 const TOTAL_STEPS = 5

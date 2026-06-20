@@ -8,17 +8,17 @@ import { dispatchWelcomeEmail, dispatchAdminNewShopEmail } from '@/lib/email-dis
 // Sector → Template mapping
 const sectorTemplateMap: Record<string, string> = {
   // ECOMMERCE sectors
-  beaute: 'cosmika-beauty',
-  mode: 'cosmika-beauty',
+  beaute: 'xstore-electro',
+  mode: 'xstore-electro',
   electronique: 'xstore-electro',
   alimentation: 'xstore-electro',
   autre: 'xstore-electro',
   // SERVICE sectors
-  'beaute-service': 'cosmika-beauty',
-  restaurant: 'cosmika-beauty',
+  'beaute-service': 'xstore-electro',
+  restaurant: 'xstore-electro',
   consulting: 'xstore-electro',
   artisanat: 'xstore-electro',
-  sante: 'cosmika-beauty',
+  sante: 'xstore-electro',
 }
 
 // Sector → Default categories

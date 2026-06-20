@@ -41,14 +41,11 @@ import { LiveShopFeatures } from './live-shop-features'
 import { LiveModeView } from './live-mode-view'
 import { ElectroShopPage } from './themes/electro-grid'
 import { ElectroTemplate } from '@/components/templates/electro'
-import { CosmikaTemplate } from '@/components/templates/cosmika'
-import { ElegancePlusTemplate } from '@/components/templates/elegance-plus'
 import { SingleProductTemplate } from '@/components/single-product/single-product-template'
 import { ModernStoreTemplate } from '@/components/modern-store/modern-store-template'
 import { ModernStore2Template } from '@/components/modern-store/modern-store-2-template'
 import { CosmikaDarkTemplate } from '@/components/cosmika-dark/cosmika-dark-template'
 import JsonLd from '@/components/seo/json-ld'
-import { CosmikaBeautyShopPage } from './themes/cosmika-beauty-grid'
 import { ShippingZoneSelector } from './shipping-zone-selector'
 import { ImageWithFallback } from '@/components/ui/image-with-fallback'
 import { FacebookPixel } from '@/components/integrations/facebook-pixel'
@@ -561,8 +558,8 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
   // When the seller activates TikTok live mode, the public shop must show
   // the single-product spotlight (LiveModeView) regardless of which template
   // the shop uses. This check MUST come before the template early returns
-  // below, otherwise custom templates (xstore-electro, cosmika-beauty,
-  // elegance-plus) would render their normal layout and ignore live mode.
+  // below, otherwise custom templates (xstore-electro, cosmika-dark)
+  // would render their normal layout and ignore live mode.
   if (publicShop?.isLiveMode) {
     return (
       <LiveModeView
@@ -615,29 +612,6 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
       )
     }
     return <ElectroShopPage />
-  }
-  if (template.id === 'cosmika-beauty') {
-    if (publicShop?.sector) {
-      return (
-        <>
-          <JsonLd shop={publicShop} products={publicProducts} categories={publicCategories} />
-          <CosmikaTemplate />
-        </>
-      )
-    }
-    return <CosmikaBeautyShopPage />
-  }
-  if (template.id === 'elegance-plus') {
-    if (publicShop?.sector) {
-      return (
-        <>
-          <JsonLd shop={publicShop} products={publicProducts} categories={publicCategories} />
-          <ElegancePlusTemplate />
-        </>
-      )
-    }
-    // Fallback: if no sector, use cosmika legacy page
-    return <CosmikaBeautyShopPage />
   }
 
   // ── Loading state: minimal spinner instead of visible skeleton ──

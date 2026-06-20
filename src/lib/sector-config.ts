@@ -14,7 +14,7 @@
 // ─── ENUMS ────────────────────────────────────────────────────────────────────
 
 export type BusinessType = 'ECOMMERCE' | 'SERVICE'
-export type TemplateEngine = 'cosmika-beauty' | 'xstore-electro' | 'elegance-plus' | 'modern-store' | 'cosmika-dark' | 'single-product'
+export type TemplateEngine = 'xstore-electro' | 'modern-store' | 'cosmika-dark' | 'single-product'
 
 export type EcommerceSector = 'beaute' | 'mode' | 'electronique' | 'alimentation' | 'autre' | 'auto-moto' | 'quincaillerie'
 export type ServiceSector = 'beaute-service' | 'restaurant' | 'consulting' | 'artisanat' | 'sante' | 'formation'
@@ -425,7 +425,7 @@ export const SECTORS: SectorDefinition[] = [
     emoji: '💄',
     name: 'Beauté & Cosmétiques',
     subtitle: 'Maquillage, soins, parfums',
-    template: 'cosmika-beauty',
+    template: 'xstore-electro',
     accentColor: '#EC4899',
     defaultCategories: ['Sérums', 'Crèmes', 'Maquillage', 'Soins', 'Parfums'],
     labels: BEAUTE_LABELS,
@@ -436,7 +436,7 @@ export const SECTORS: SectorDefinition[] = [
     emoji: '👗',
     name: 'Mode & Vêtements',
     subtitle: 'Vêtements, accessoires, chaussures',
-    template: 'cosmika-beauty',
+    template: 'xstore-electro',
     accentColor: '#F472B6',
     defaultCategories: ['Robes', 'Accessoires', 'Chaussures', 'Hauts'],
     labels: MODE_LABELS,
@@ -480,7 +480,7 @@ export const SECTORS: SectorDefinition[] = [
     emoji: '🍔',
     name: 'Alimentation & Restaurant',
     subtitle: 'Boissons, snacks, épices',
-    template: 'cosmika-beauty',
+    template: 'xstore-electro',
     accentColor: '#F59E0B',
     defaultCategories: ['Boissons', 'Snacks', 'Conserves', 'Épices'],
     labels: ALIMENTATION_LABELS,
@@ -491,7 +491,7 @@ export const SECTORS: SectorDefinition[] = [
     emoji: '🛍️',
     name: 'Autre / Généraliste',
     subtitle: 'Autres produits',
-    template: 'cosmika-beauty',
+    template: 'xstore-electro',
     accentColor: '#8B5CF6',
     defaultCategories: ['Produits', 'Divers'],
     labels: AUTRE_ECOMMERCE_LABELS,
@@ -504,7 +504,7 @@ export const SECTORS: SectorDefinition[] = [
     emoji: '💇',
     name: 'Beauté & Bien-être',
     subtitle: 'Salon, spa, coiffure, esthétique',
-    template: 'cosmika-beauty',
+    template: 'xstore-electro',
     accentColor: '#EC4899',
     defaultCategories: ['Maquillage', 'Coiffure', 'Soins', 'Ongles'],
     labels: BEAUTE_SERVICE_LABELS,
@@ -515,7 +515,7 @@ export const SECTORS: SectorDefinition[] = [
     emoji: '🍽️',
     name: 'Restaurant & Hôtel',
     subtitle: 'Restaurant, bar, traiteur, hôtel',
-    template: 'cosmika-beauty',
+    template: 'xstore-electro',
     accentColor: '#F59E0B',
     defaultCategories: ['Entrées', 'Plats', 'Desserts', 'Boissons', 'Menus spéciaux'],
     labels: RESTAURANT_LABELS,
@@ -526,7 +526,7 @@ export const SECTORS: SectorDefinition[] = [
     emoji: '💼',
     name: 'Professionnel & Consulting',
     subtitle: 'Conseil, formation, coaching',
-    template: 'cosmika-beauty',
+    template: 'xstore-electro',
     accentColor: '#6366F1',
     defaultCategories: ['Consultation', 'Formation', 'Audit', 'Accompagnement'],
     labels: CONSULTING_LABELS,
@@ -548,7 +548,7 @@ export const SECTORS: SectorDefinition[] = [
     emoji: '🏥',
     name: 'Santé & Médical',
     subtitle: 'Pharmacie, clinique, bien-être',
-    template: 'cosmika-beauty',
+    template: 'xstore-electro',
     accentColor: '#10B981',
     defaultCategories: ['Consultations', 'Coaching', 'Soins', 'Programmes'],
     labels: SANTE_LABELS,
@@ -559,7 +559,7 @@ export const SECTORS: SectorDefinition[] = [
     emoji: '🎓',
     name: 'Formation & Éducation',
     subtitle: 'Cours, ateliers, certifications',
-    template: 'cosmika-beauty',
+    template: 'xstore-electro',
     accentColor: '#3B82F6',
     defaultCategories: ['Cours en ligne', 'Ateliers', 'Certifications', 'Coaching'],
     labels: FORMATION_LABELS,
@@ -609,7 +609,7 @@ export function getSectorsByBusinessType(businessType: BusinessType): SectorDefi
  */
 export function getTemplateForSector(sector: string | undefined | null): TemplateEngine {
   const config = getSectorConfig(sector)
-  return config?.template ?? 'cosmika-beauty'
+  return config?.template ?? 'xstore-electro'
 }
 
 /**
