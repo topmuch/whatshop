@@ -80,7 +80,7 @@ interface PublicShopData extends ShopType {
   templateType?: string
 }
 
-export function ModernStoreTemplate() {
+export function ModernStoreTemplate({ videoHero: forceVideoHero }: { videoHero?: boolean } = {}) {
   const { publicShop } = useAppStore()
   const shop = publicShop as PublicShopData | null
 
@@ -342,6 +342,7 @@ export function ModernStoreTemplate() {
               .getElementById('best-sellers')
               ?.scrollIntoView({ behavior: 'smooth' })
           }}
+          forceVideoHero={forceVideoHero}
         />
       )}
 
@@ -500,6 +501,7 @@ interface HomeViewProps {
   testimonials: Testimonial[]
   onProductClick: (p: ModernStoreProduct) => void
   onSeeProducts: () => void
+  forceVideoHero?: boolean
 }
 
 function HomeView(props: HomeViewProps) {
@@ -517,16 +519,18 @@ function HomeView(props: HomeViewProps) {
     testimonials,
     onProductClick,
     onSeeProducts,
+    forceVideoHero,
   } = props
 
-  // YouTube video hero (when configured)
-  const videoId = config.heroVideo?.enabled && config.heroVideo?.youtubeUrl
+  // YouTube video hero: either forced (Modern Store 2) or configured via dashboard
+  const isVideoMode = forceVideoHero || config.heroVideo?.enabled
+  const videoId = isVideoMode && config.heroVideo?.youtubeUrl
     ? extractYouTubeId(config.heroVideo.youtubeUrl)
     : null
 
   return (
     <>
-      {/* ─── SECTION A: HERO — YouTube Video or fallback to image ─── */}
+      {/* ─── SECTION A: HERO — YouTube Video, placeholder, or fallback to image ─── */}
       {videoId ? (
         <section className="w-full overflow-hidden">
           <div className="relative w-full aspect-video bg-black">
@@ -565,6 +569,45 @@ function HomeView(props: HomeViewProps) {
                     {config.heroVideo.ctaText}
                   </button>
                 )}
+              </div>
+            </motion.div>
+          </div>
+        </section>
+      ) : isVideoMode ? (
+        /* Placeholder when video mode is on but no YouTube URL configured yet */
+        <section className="w-full overflow-hidden">
+          <div className="relative w-full aspect-video bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+            {/* Animated background pattern */}
+            <div className="absolute inset-0 opacity-10" style={{
+              backgroundImage: 'radial-gradient(circle at 25% 25%, white 1px, transparent 1px), radial-gradient(circle at 75% 75%, white 1px, transparent 1px)',
+              backgroundSize: '50px 50px',
+            }} />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent" />
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: 'easeOut' }}
+              className="absolute inset-0 flex items-center left-0 top-0 bottom-0 px-6 md:px-12 lg:px-20"
+            >
+              <div className="max-w-lg flex flex-col gap-4">
+                <h1 className="text-3xl md:text-5xl font-bold text-white leading-tight">
+                  {config.heroVideo?.title || shop.name || 'Bienvenue'}
+                </h1>
+                <p className="text-base md:text-xl text-white/80">
+                  {config.heroVideo?.subtitle || 'Découvrez notre collection exclusive'}
+                </p>
+                <button
+                  type="button"
+                  onClick={onSeeProducts}
+                  className="mt-2 inline-flex items-center justify-center rounded-xl py-3 px-8 font-semibold text-white shadow-lg transition-all hover:brightness-110"
+                  style={{ backgroundColor: accent }}
+                >
+                  {config.heroVideo?.ctaText || 'Découvrir'}
+                </button>
+                <p className="mt-4 text-xs text-white/40 flex items-center gap-1.5">
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                  Configurez votre vidéo YouTube dans le dashboard
+                </p>
               </div>
             </motion.div>
           </div>

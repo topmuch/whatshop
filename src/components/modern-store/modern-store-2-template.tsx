@@ -1,10 +1,13 @@
 'use client'
 
 /**
- * Modern Store 2 Template — lightweight wrapper.
- * The video hero logic is embedded in the original ModernStoreTemplate
- * and activates automatically when config.heroVideo.enabled is true.
- * This wrapper simply re-exports the original template so the router
- * has a distinct entry point without duplicating any code.
+ * Modern Store 2 Template — Video Hero variant.
+ * Re-uses ModernStoreTemplate with forceVideoHero=true so the
+ * YouTube video hero is active by default (shows a dark placeholder
+ * with overlay text until a YouTube URL is configured in the dashboard).
  */
-export { ModernStoreTemplate as ModernStore2Template } from './modern-store-template'
+import { ModernStoreTemplate } from './modern-store-template'
+
+export function ModernStore2Template() {
+  return <ModernStoreTemplate videoHero />
+}
