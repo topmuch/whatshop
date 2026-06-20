@@ -4,6 +4,7 @@ import { useAppStore } from '@/lib/store'
 import { templates, type TemplateId } from '@/lib/templates'
 import { TemplateSelector } from './template-selector'
 import { TemplateCustomization } from './template-customization'
+import { VideoHeroConfig } from './video-hero-config'
 import { ThemeCustomization } from './theme-customization'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -16,8 +17,9 @@ import { useState, useEffect } from 'react'
  * Modern Store and Single Produit are special templates that change the
  * entire page structure, not just the visual theme.
  */
-function templateIdToType(templateId: TemplateId): 'STANDARD' | 'MODERN_STORE' | 'SINGLE_PRODUCT' | 'COSMIKA_DARK' {
+function templateIdToType(templateId: TemplateId): 'STANDARD' | 'MODERN_STORE' | 'MODERN_STORE_2' | 'SINGLE_PRODUCT' | 'COSMIKA_DARK' {
   if (templateId === 'modern-store') return 'MODERN_STORE'
+  if (templateId === 'modern-store-2') return 'MODERN_STORE_2'
   if (templateId === 'single-product') return 'SINGLE_PRODUCT'
   if (templateId === 'cosmika-dark') return 'COSMIKA_DARK'
   return 'STANDARD'
@@ -156,6 +158,11 @@ export function DashboardTemplates() {
 
       {/* Template-specific customization */}
       <TemplateCustomization shopSlug={shop.slug} />
+
+      {/* Video Hero config for Modern Store 2 */}
+      {(shop.template === 'modern-store-2' || (shop as unknown as Record<string, unknown>).templateType === 'MODERN_STORE_2') && (
+        <VideoHeroConfig shopSlug={shop.slug} />
+      )}
 
       {/* Color customization */}
       <ThemeCustomization />

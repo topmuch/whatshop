@@ -53,6 +53,19 @@ export interface CartItem {
   slug?: string | null
 }
 
+export interface HeroVideoConfig {
+  /** YouTube video URL or ID, e.g. "https://youtube.com/watch?v=xxxxx" or just "xxxxx" */
+  youtubeUrl: string
+  /** Overlay title displayed on top of the video */
+  title: string
+  /** Overlay subtitle */
+  subtitle: string
+  /** CTA button text */
+  ctaText: string
+  /** Whether to show the video hero (fallback to image if false) */
+  enabled: boolean
+}
+
 export interface ModernStoreConfig {
   hero: {
     title: string
@@ -61,6 +74,7 @@ export interface ModernStoreConfig {
     ctaText: string
     productId: string | null
   }
+  heroVideo: HeroVideoConfig
   marquee: {
     enabled: boolean
     text: string
@@ -98,6 +112,13 @@ export const DEFAULT_MODERN_STORE_CONFIG: ModernStoreConfig = {
     ],
     ctaText: 'Voir les produits',
     productId: null,
+  },
+  heroVideo: {
+    youtubeUrl: '',
+    title: 'Bienvenue dans notre boutique',
+    subtitle: 'Découvrez notre collection exclusive',
+    ctaText: 'Découvrir',
+    enabled: false,
   },
   marquee: {
     enabled: true,

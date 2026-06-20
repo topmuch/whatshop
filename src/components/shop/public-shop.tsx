@@ -45,6 +45,7 @@ import { CosmikaTemplate } from '@/components/templates/cosmika'
 import { ElegancePlusTemplate } from '@/components/templates/elegance-plus'
 import { SingleProductTemplate } from '@/components/single-product/single-product-template'
 import { ModernStoreTemplate } from '@/components/modern-store/modern-store-template'
+import { ModernStore2Template } from '@/components/modern-store/modern-store-2-template'
 import { CosmikaDarkTemplate } from '@/components/cosmika-dark/cosmika-dark-template'
 import JsonLd from '@/components/seo/json-ld'
 import { CosmikaBeautyShopPage } from './themes/cosmika-beauty-grid'
@@ -588,6 +589,11 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
   // Full e-commerce template with cart, checkout, and BUY IT NOW (WhatsApp).
   if (publicShop?.templateType === 'MODERN_STORE') {
     return <ModernStoreTemplate />
+  }
+
+  // ── Modern Store 2 template (YouTube video hero) ──
+  if (publicShop?.templateType === 'MODERN_STORE_2') {
+    return <ModernStore2Template />
   }
 
   // ── Cosmika Dark template ──
