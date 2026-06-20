@@ -94,6 +94,8 @@ export interface Shop {
   isLiveMode?: boolean
   liveProductId?: string
   liveStartedAt?: string
+  liveUrl?: string | null
+  ownerId?: string | null
   // Single Product Landing Page template
   templateType?: string // STANDARD | SINGLE_PRODUCT | MODERN_STORE
   singleProductConfig?: string | null // JSON string
@@ -132,6 +134,8 @@ export interface Product {
   categoryId?: string
   categoryName?: string
   createdAt?: string
+  isFeatured?: boolean
+  isBestSeller?: boolean
 }
 
 export interface Category {

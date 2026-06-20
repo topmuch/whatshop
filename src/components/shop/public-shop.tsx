@@ -41,6 +41,7 @@ import { LiveShopFeatures } from './live-shop-features'
 import { LiveModeView } from './live-mode-view'
 import { ElectroShopPage } from './themes/electro-grid'
 import { ElectroTemplate } from '@/components/templates/electro'
+import { LivePulseTemplate } from '@/components/templates/live'
 import { SingleProductTemplate } from '@/components/single-product/single-product-template'
 import { ModernStoreTemplate } from '@/components/modern-store/modern-store-template'
 import { ModernStore2Template } from '@/components/modern-store/modern-store-2-template'
@@ -597,6 +598,17 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
   // Dark luxury e-commerce template with golden accents, marquee, and premium design.
   if (publicShop?.templateType === 'COSMIKA_DARK') {
     return <CosmikaDarkTemplate />
+  }
+
+  // ── Live template ──
+  // Live commerce template with animated LIVE badge, gradient hero, WhatsApp direct.
+  if (template.id === 'live-template') {
+    return (
+      <>
+        <JsonLd shop={publicShop} products={publicProducts} categories={publicCategories} />
+        <LivePulseTemplate />
+      </>
+    )
   }
 
   // ── Full-page custom templates render their own complete layout ──

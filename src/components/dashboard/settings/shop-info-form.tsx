@@ -23,6 +23,7 @@ export function ShopInfoForm({ shop }: { shop: Shop | null }) {
   const [logo, setLogo] = useState('')
   const [logoUrlInput, setLogoUrlInput] = useState('')
   const [banner, setBanner] = useState('')
+  const [liveUrl, setLiveUrl] = useState('')
   const [saving, setSaving] = useState(false)
   const [logoUploading, setLogoUploading] = useState(false)
   const [bannerUploading, setBannerUploading] = useState(false)
@@ -39,6 +40,7 @@ export function ShopInfoForm({ shop }: { shop: Shop | null }) {
       setPhone(shop.phone || '')
       setLogo(shop.logo || '')
       setBanner(shop.banner || '')
+      setLiveUrl((shop as Record<string, unknown>).liveUrl as string || '')
     }
   }, [shop])
 
@@ -97,7 +99,8 @@ export function ShopInfoForm({ shop }: { shop: Shop | null }) {
           name: name.trim(),
           description,
           whatsapp: whatsapp.trim(),
-          address,
+          address: address.trim() || null,
+          liveUrl: liveUrl.trim() || null,
           phone,
           logo,
           banner,
@@ -185,6 +188,17 @@ export function ShopInfoForm({ shop }: { shop: Shop | null }) {
             />
           </div>
         </div>
+        <div className="space-y-2">
+            <Label htmlFor="shop-live-url">Lien du live (TikTok, YouTube, Instagram)</Label>
+            <Input
+              id="shop-live-url"
+              type="url"
+              value={liveUrl}
+              onChange={(e) => setLiveUrl(e.target.value)}
+              placeholder="https://www.tiktok.com/@votre_compte/live"
+            />
+            <p className="text-xs text-muted-foreground">Ce lien sera affiché dans le template Live quand vous n'êtes pas en direct.</p>
+          </div>
         <div className="space-y-2">
           <Label htmlFor="shop-address">Adresse</Label>
           <Input

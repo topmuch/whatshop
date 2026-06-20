@@ -21,6 +21,26 @@ export interface TemplateDisplayInfo {
 }
 
 export const TEMPLATE_DISPLAY: Record<string, TemplateDisplayInfo> = {
+  'live-template': {
+    displayName: 'Live',
+    tagline: 'Live commerce avec effet waouh',
+    description:
+      "Template pensé pour les vendeurs en live shopping (TikTok, Instagram, YouTube). Hero gradient animé, badge LIVE pulsant, bouton WhatsApp direct, design mobile-first. Parfait pour les forfaits LIVE et LIVE PRO.",
+    features: [
+      'Badge EN DIRECT animé avec pulsation rouge',
+      'Hero gradient coral-orange style TikTok',
+      'Bouton "Rejoindre le live" configurable',
+      'Produits avec WhatsApp direct (sans panier)',
+      'Animations Framer Motion fluides',
+      'Design mobile-first ultra responsive',
+      'Sélecteur multi-boutiques (LIVE PRO)',
+    ],
+    style: {
+      primaryColor: '#FF6154',
+      badge: 'Live',
+      emoji: '🎬',
+    },
+  },
   'xstore-electro': {
     displayName: 'Moderne',
     tagline: 'Design tech et épuré',

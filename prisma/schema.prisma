@@ -205,6 +205,7 @@ model Shop {
   isLiveMode            Boolean  @default(false)
   liveProductId         String?
   liveStartedAt         DateTime?
+  liveUrl               String?   // External live stream URL (TikTok, YouTube, Instagram)
 
   // Tracking configuration
   trackPageViews        Boolean   @default(true)

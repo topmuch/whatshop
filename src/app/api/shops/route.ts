@@ -57,7 +57,7 @@ export async function PUT(request: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
 
     const body = await request.json()
-    const { id, name, description, whatsapp, address, phone, logo, banner, template, accentColor, heroImages, promoBanners, brands, customColors, isRestaurant } = body
+    const { id, name, description, whatsapp, address, phone, logo, banner, template, accentColor, heroImages, promoBanners, brands, customColors, isRestaurant, liveUrl } = body
 
     if (!id) {
       return NextResponse.json({ error: 'ID requis' }, { status: 400 })
@@ -87,6 +87,7 @@ export async function PUT(request: NextRequest) {
     if (accentColor !== undefined) data.accentColor = accentColor || '#25D366'
     if (customColors !== undefined) data.customColors = customColors || '{}'
     if (isRestaurant !== undefined) data.isRestaurant = !!isRestaurant
+    if (liveUrl !== undefined) data.liveUrl = liveUrl || null
 
     const updatedShop = await db.shop.update({
       where: { id },

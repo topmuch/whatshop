@@ -57,6 +57,8 @@ export async function GET(
         // Live mode (safe for public)
         isLiveMode: true,
         liveProductId: true,
+        liveUrl: true,
+        ownerId: true,
         // Single Product Landing Page template (safe for public)
         templateType: true,
         singleProductConfig: true,
