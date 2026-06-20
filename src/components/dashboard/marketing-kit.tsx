@@ -2,6 +2,7 @@
 
 import { useAppStore } from '@/lib/store'
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { motion } from 'framer-motion'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -24,6 +25,7 @@ import {
   CreditCard,
   Sparkles,
   UtensilsCrossed,
+  Wand2,
 } from 'lucide-react'
 import { QRCodeDisplay } from './qr-code-display'
 
@@ -1379,6 +1381,162 @@ function adjustColor(hex: string, amount: number): string {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Affiche Live Tab                                                  */
+/* ------------------------------------------------------------------ */
+
+function AfficheLiveTab() {
+  const { shop, products } = useAppStore()
+  const [selectedProductId, setSelectedProductId] = useState('')
+  const [posterBase64, setPosterBase64] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const posterRef = useRef<HTMLImageElement>(null)
+
+  const availableProducts = (products || []).filter((p) => p.isAvailable)
+
+  const handleGenerate = useCallback(async () => {
+    if (!selectedProductId) {
+      toast.error('Veuillez sélectionner un produit')
+      return
+    }
+    setLoading(true)
+    setPosterBase64(null)
+    try {
+      const res = await fetch('/api/marketing/generate-poster', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId: selectedProductId }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        toast.error(data.error || 'Erreur lors de la génération')
+        return
+      }
+      setPosterBase64(data.image)
+      toast.success('Affiche générée avec succès !')
+    } catch {
+      toast.error('Erreur réseau')
+    } finally {
+      setLoading(false)
+    }
+  }, [selectedProductId])
+
+  const handleDownload = useCallback(() => {
+    if (!posterBase64) return
+    const link = document.createElement('a')
+    link.href = `data:image/png;base64,${posterBase64}`
+    const productName = availableProducts.find((p) => p.id === selectedProductId)?.name || 'produit'
+    link.download = `affiche-live-${productName.replace(/\s+/g, '-').toLowerCase()}.png`
+    link.click()
+  }, [posterBase64, selectedProductId, availableProducts])
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Wand2 className="h-5 w-5 text-pink-500" />
+            Affiche Live Shopping
+          </CardTitle>
+          <CardDescription>
+            Générez automatiquement une affiche promotionnelle premium pour vos lives TikTok et Facebook.
+            Format vertical 9:16, prêt à poster.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          {/* Product selector */}
+          <div className="space-y-2">
+            <Label>Choisir un produit</Label>
+            <Select value={selectedProductId} onValueChange={setSelectedProductId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionnez un produit..." />
+              </SelectTrigger>
+              <SelectContent>
+                {availableProducts.length === 0 && (
+                  <div className="px-3 py-6 text-center text-sm text-muted-foreground">
+                    Aucun produit disponible
+                  </div>
+                )}
+                {availableProducts.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    <div className="flex items-center gap-2">
+                      <span className="truncate max-w-[200px]">{p.name}</span>
+                      <span className="text-xs text-muted-foreground ml-auto">
+                        {formatPrice(p.price)}
+                      </span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Generate button */}
+          <Button
+            onClick={handleGenerate}
+            disabled={!selectedProductId || loading}
+            className="w-full bg-gradient-to-r from-pink-500 to-orange-500 hover:from-pink-600 hover:to-orange-600 text-white font-bold min-h-[48px]"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Génération en cours (10-15s)...
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-4 w-4" />
+                Générer l&apos;affiche
+              </>
+            )}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Preview & Download */}
+      {posterBase64 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="space-y-4"
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Aperçu de l&apos;affiche</CardTitle>
+              <CardDescription>
+                Votre affiche est prête ! Téléchargez-la et postez-la sur TikTok, Facebook ou Instagram.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Image preview */}
+              <div className="flex justify-center">
+                <div className="relative w-full max-w-[320px] rounded-xl overflow-hidden shadow-lg border">
+                  <img
+                    ref={posterRef}
+                    src={`data:image/png;base64,${posterBase64}`}
+                    alt="Affiche live shopping générée"
+                    className="w-full h-auto"
+                  />
+                </div>
+              </div>
+
+              {/* Download button */}
+              <Button
+                onClick={handleDownload}
+                className="w-full min-h-[48px] font-bold"
+                size="lg"
+              >
+                <Download className="h-4 w-4" />
+                Télécharger l&apos;affiche (PNG)
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
 /*  Main Exported Component                                            */
 /* ------------------------------------------------------------------ */
 
@@ -1406,6 +1564,10 @@ export function MarketingKit() {
             <ImageIcon className="h-4 w-4" />
             <span className="hidden sm:inline">Stories</span>
           </TabsTrigger>
+          <TabsTrigger value="poster" className="flex items-center gap-2">
+            <Wand2 className="h-4 w-4" />
+            <span className="hidden sm:inline">Affiche Live</span>
+          </TabsTrigger>
           <TabsTrigger value="card" className="flex items-center gap-2">
             <CreditCard className="h-4 w-4" />
             <span className="hidden sm:inline">Carte de visite</span>
@@ -1422,6 +1584,10 @@ export function MarketingKit() {
 
         <TabsContent value="stories" className="mt-6">
           <StoriesTab />
+        </TabsContent>
+
+        <TabsContent value="poster" className="mt-6">
+          <AfficheLiveTab />
         </TabsContent>
 
         <TabsContent value="card" className="mt-6">

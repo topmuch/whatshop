@@ -451,6 +451,23 @@
   }
 }
 
+/* Spotlight giant WhatsApp button — aggressive pulse */
+.spotlight-wa-btn {
+  animation: spotlight-wa-pulse 2s ease-in-out infinite;
+}
+
+@keyframes spotlight-wa-pulse {
+  0%, 100% {
+    box-shadow: 0 6px 30px rgba(37, 211, 102, 0.4);
+  }
+  50% {
+    box-shadow:
+      0 6px 30px rgba(37, 211, 102, 0.4),
+      0 0 0 8px rgba(37, 211, 102, 0.15),
+      0 0 0 16px rgba(37, 211, 102, 0.05);
+  }
+}
+
 /* Shimmer on marquee */
 .live-marquee-shimmer {
   position: absolute;

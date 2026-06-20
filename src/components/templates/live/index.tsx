@@ -8,6 +8,7 @@ import LiveHeader from './header'
 import LiveHero from './hero'
 import LiveProductCard from './product-card'
 import LiveFooter from './footer'
+import ProductSpotlight from './product-spotlight'
 import ShopSwitcher from './shop-switcher'
 import { Skeleton } from '@/components/ui/skeleton'
 
@@ -189,6 +190,17 @@ export function LivePulseTemplate() {
           products={publicProducts}
           shopName={publicShop.name ?? 'Ma Boutique'}
         />
+
+        {/* ── PRODUCT SPOTLIGHT — shown when seller selects a live product ── */}
+        {publicShop.liveProductId && (() => {
+          const spotlightProduct = publicProducts.find((p) => p.id === publicShop.liveProductId)
+          if (!spotlightProduct) return null
+          return (
+            <div className="max-w-7xl mx-auto w-full px-0 sm:px-4 lg:px-6 -mt-0">
+              <ProductSpotlight product={spotlightProduct} shop={publicShop} />
+            </div>
+          )
+        })()}
 
         {/* ── Main Content ── */}
         <main className="flex-1 max-w-7xl mx-auto w-full px-4 lg:px-6 py-8 md:py-12">
