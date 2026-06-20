@@ -36,14 +36,14 @@ const sectorCategoriesMap: Record<string, string[]> = {
 }
 
 // Plan configuration: maps onboarding plan to subscription details
-const PLAN_CONFIG: Record<string, { planType: string; maxShops: number; isNewPlan: boolean }> = {
-  TRIAL: { planType: 'STARTER', maxShops: 1, isNewPlan: false },
-  PRO: { planType: 'PRO', maxShops: 3, isNewPlan: false },
-  LIVE: { planType: 'LIVE', maxShops: 1, isNewPlan: true },
-  LIVE_PRO: { planType: 'LIVE_PRO', maxShops: 2, isNewPlan: true },
-  BOUTIQUE_PRO: { planType: 'BOUTIQUE_PRO', maxShops: 1, isNewPlan: true },
+const PLAN_CONFIG: Record<string, { planType: string; maxShops: number }> = {
+  TRIAL: { planType: 'LIVE', maxShops: 1 },
+  LIVE: { planType: 'LIVE', maxShops: 1 },
+  LIVE_PRO: { planType: 'LIVE_PRO', maxShops: 2 },
+  BOUTIQUE_PRO: { planType: 'BOUTIQUE_PRO', maxShops: 1 },
 }
 
+const TRIAL_DAYS = 7
 
 export async function POST(request: NextRequest) {
   try {
@@ -95,14 +95,11 @@ export async function POST(request: NextRequest) {
 
     const finalPlan = plan || 'TRIAL'
     const planConfig = PLAN_CONFIG[finalPlan] || PLAN_CONFIG['TRIAL']
-    const isPaidPlan = finalPlan !== 'TRIAL'
 
-    // Calculate trial end date if TRIAL plan
-    const trialEndDate = finalPlan === 'TRIAL'
-      ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
-      : null
+    // ALL plans start with a 7-day trial
+    const trialEndDate = new Date(Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000)
 
-    // Create the shop — inactive if old paid plan (needs admin validation), active for new plans
+    // Create the shop — all plans active during trial
     const shop = await db.shop.create({
       data: {
         name,
@@ -116,8 +113,8 @@ export async function POST(request: NextRequest) {
         sector: sector || null,
         template,
         ownerId: user.id,
-        isActive: planConfig.isNewPlan || !isPaidPlan,
-        subscriptionStatus: planConfig.isNewPlan ? 'ACTIVE' : (isPaidPlan ? 'PENDING_ACTIVATION' : 'TRIAL'),
+        isActive: true,
+        subscriptionStatus: 'TRIAL',
       },
     })
 
@@ -130,25 +127,21 @@ export async function POST(request: NextRequest) {
       })),
     })
 
-    // Create or update subscription for the user
+    // Create or update subscription for the user — always TRIAL status
     const subPlanType = planConfig.planType
-    const subscriptionEndDate = isPaidPlan
-      ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // Annual for paid plans
-      : null
-
     await db.subscription.upsert({
       where: { userId: user.id },
       create: {
         userId: user.id,
         planType: subPlanType,
-        status: planConfig.isNewPlan ? 'ACTIVE' : 'TRIAL',
+        status: 'TRIAL',
         maxShops: planConfig.maxShops,
-        ...(subscriptionEndDate ? { endDate: subscriptionEndDate } : {}),
       },
       update: {
         planType: subPlanType,
+        status: 'TRIAL',
         maxShops: planConfig.maxShops,
-        ...(planConfig.isNewPlan ? { status: 'ACTIVE', endDate: subscriptionEndDate! } : {}),
+        endDate: null,
       },
     })
 
@@ -157,7 +150,7 @@ export async function POST(request: NextRequest) {
       await createNotification(
         'NEW_SHOP',
         'Nouvelle boutique créée',
-        `La boutique "${shop.name}" (${businessType}) a été créée par ${user.name}.`,
+        `La boutique "${shop.name}" (${businessType}) a été créée par ${user.name}. Plan: ${finalPlan} — Essai ${TRIAL_DAYS} jours.`,
         { shopId: shop.id, shopName: shop.name, ownerId: user.id, ownerName: user.name }
       )
 
@@ -170,7 +163,7 @@ export async function POST(request: NextRequest) {
         shopSlug: shop.slug,
         shopUrl,
         plan: finalPlan,
-        isPaidPlan,
+        isPaidPlan: finalPlan !== 'TRIAL',
       })
       dispatchAdminNewShopEmail({
         shopName: shop.name,
@@ -184,8 +177,8 @@ export async function POST(request: NextRequest) {
       // Notification/email failure must not break onboarding
     }
 
-    // If paid plan: create upgrade request + notify admin + notify user
-    if (isPaidPlan) {
+    // ALL plans (except bare TRIAL) create an upgrade request for admin validation
+    if (finalPlan !== 'TRIAL') {
       // Create upgrade request for admin validation
       try {
         await db.upgradeRequest.create({
@@ -203,23 +196,23 @@ export async function POST(request: NextRequest) {
       try {
         await createNotification(
           'UPGRADE_REQUEST',
-          `Nouvelle demande de plan ${finalPlan}`,
-          `${user.name} a choisi le plan ${finalPlan} pour la boutique "${shop.name}". Validation requise.`,
+          `Nouvelle inscription — Plan ${finalPlan} (essai ${TRIAL_DAYS}j)`,
+          `${user.name} a choisi le plan ${finalPlan} pour "${shop.name}". Essai de ${TRIAL_DAYS} jours — en attente de validation de paiement.`,
           { shopId: shop.id, shopName: shop.name, ownerId: user.id, ownerName: user.name, requestedPlan: subPlanType }
         )
       } catch {
         // Non-critical
       }
 
-      // Notify user that their request is being processed
+      // Notify user about their trial period
       try {
         await db.notification.create({
           data: {
             type: 'SHOP_LIVE',
-            title: `Demande de plan ${finalPlan} en cours`,
-            message: `Votre demande de plan ${finalPlan} a été transmise à nos services. Votre site sera activé sous 1H après validation.`,
+            title: `Bienvenue ! Votre essai de ${TRIAL_DAYS} jours commence`,
+            message: `Votre boutique "${shop.name}" est active avec le plan ${finalPlan}. Vous avez ${TRIAL_DAYS} jours pour valider votre abonnement. Au-delà, votre site sera désactivé. Contactez le support pour valider votre offre.`,
             userId: user.id,
-            metadata: JSON.stringify({ shopId: shop.id, shopName: shop.name, requestedPlan: subPlanType }),
+            metadata: JSON.stringify({ shopId: shop.id, shopName: shop.name, requestedPlan: subPlanType, trialEndsAt: trialEndDate.toISOString() }),
           },
         })
       } catch {
@@ -229,7 +222,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       ...shop,
-      _pendingActivation: isPaidPlan,
+      _trialDays: TRIAL_DAYS,
     })
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Erreur serveur'

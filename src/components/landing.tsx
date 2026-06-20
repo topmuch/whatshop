@@ -1125,7 +1125,7 @@ function Pricing() {
             custom={0.1}
             className="mt-5 text-gray-500 text-xl sm:text-2xl max-w-2xl mx-auto"
           >
-            Choisissez l'offre qui correspond à vos besoins. Facturation annuelle.
+            Choisissez l'offre qui correspond à vos besoins. Facturation annuelle. 7 jours d&apos;essai inclus.
           </motion.p>
         </motion.div>
         <div className="grid md:grid-cols-3 gap-8 lg:gap-10 max-w-5xl mx-auto">
@@ -1160,12 +1160,18 @@ function Pricing() {
                     </h3>
                     <p className="text-base text-gray-500 mt-1.5">{p.desc}</p>
                   </div>
-                  <div className="mb-8">
+                  <div className="mb-4">
                     <span className="text-5xl font-extrabold text-gray-900">
                       {p.price}
                     </span>
                     <span className="text-gray-400 font-medium text-lg ml-1.5">
                       {p.period}
+                    </span>
+                  </div>
+                  <div className="mb-6">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 text-amber-700 text-sm font-semibold px-3.5 py-1.5">
+                      <span className="w-2 h-2 rounded-full bg-amber-500" />
+                      7 jours d&apos;essai inclus
                     </span>
                   </div>
                   <ul className="space-y-4 mb-10 flex-1">

@@ -43,6 +43,8 @@ import {
   Mail,
   Plug,
   Target,
+  Clock,
+  AlertTriangle,
 } from 'lucide-react'
 import { useThemeMode } from '@/lib/use-theme'
 import { isSimplifiedPlan } from '@/lib/permissions'
@@ -80,6 +82,8 @@ interface MyShop {
   template: string
   isActive: boolean
   sector?: string
+  subscriptionStatus?: string | null
+  trialEndDate?: string | null
   createdAt: string
   primaryColor?: string
   secondaryColor?: string
@@ -371,6 +375,8 @@ function SidebarContent({
         sector: selected.sector,
         primaryColor: selected.primaryColor,
         secondaryColor: selected.secondaryColor,
+        subscriptionStatus: selected.subscriptionStatus,
+        trialEndDate: selected.trialEndDate,
       })
     }
   }
@@ -470,6 +476,52 @@ function SidebarContent({
 }
 
 /* ------------------------------------------------------------------ */
+/*  Trial Warning Banner (shows when ≤ 2 days remain in trial)        */
+/* ------------------------------------------------------------------ */
+
+function TrialWarningBanner({ trialEndDate }: { trialEndDate: string }) {
+  const end = new Date(trialEndDate)
+  const now = new Date()
+  const diffMs = end.getTime() - now.getTime()
+  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24))
+
+  // Show banner when there are 2 or fewer days left (i.e., day 5+ after signup)
+  if (diffDays > 2 || diffDays < 0) return null
+
+  const isUrgent = diffDays <= 0
+  const remainingText = diffDays <= 0 ? 'Votre période d\'essai est terminée' : `Il reste ${diffDays} jour${diffDays > 1 ? 's' : ''} avant la désactivation`
+
+  return (
+    <div className={`rounded-xl border p-4 flex items-start gap-3 mb-6 ${
+      isUrgent
+        ? 'bg-red-50 border-red-200'
+        : 'bg-amber-50 border-amber-200'
+    }`}>
+      <div className="shrink-0 mt-0.5">
+        {isUrgent ? (
+          <AlertTriangle className="h-5 w-5 text-red-600" />
+        ) : (
+          <Clock className="h-5 w-5 text-amber-600" />
+        )}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className={`text-sm font-semibold ${isUrgent ? 'text-red-900' : 'text-amber-900'}`}>
+          {isUrgent ? '⚠️ Période d\'essai expirée' : '⏰ Période d\'essai bientôt terminée'}
+        </p>
+        <p className={`text-sm mt-1 ${isUrgent ? 'text-red-700' : 'text-amber-700'}`}>
+          {remainingText}. Contactez le support pour valider votre abonnement et continuer à utiliser votre boutique.
+        </p>
+      </div>
+      <div className="shrink-0">
+        <Badge variant={isUrgent ? 'destructive' : 'secondary'} className="text-xs whitespace-nowrap">
+          {isUrgent ? 'Expiré' : `${diffDays}j restant${diffDays > 1 ? 's' : ''}`}
+        </Badge>
+      </div>
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
 /*  Dashboard Content (tab rendering)                                   */
 /* ------------------------------------------------------------------ */
 
@@ -480,6 +532,18 @@ function DashboardContent({ consolidatedStats }: { consolidatedStats: Consolidat
     return null
   }
 
+  // Trial warning: show banner if in TRIAL status and trialEndDate is within 2 days
+  const showTrialBanner = shop.subscriptionStatus === 'TRIAL' && shop.trialEndDate
+
+  return (
+    <>
+      {showTrialBanner && <TrialWarningBanner trialEndDate={shop.trialEndDate} />}
+      {renderTabContent(dashboardTab, shop, consolidatedStats)}
+    </>
+  )
+}
+
+function renderTabContent(dashboardTab: DashboardTab, shop: { sector?: string | null }, consolidatedStats: ConsolidatedStats | null) {
   switch (dashboardTab) {
     case 'overview':
       return (
@@ -688,6 +752,8 @@ export function SellerDashboard() {
       sector: newShop.sector,
       primaryColor: newShop.primaryColor,
       secondaryColor: newShop.secondaryColor,
+      subscriptionStatus: newShop.subscriptionStatus,
+      trialEndDate: newShop.trialEndDate,
     })
   }
 
@@ -753,6 +819,8 @@ export function SellerDashboard() {
                       sector: selected.sector,
                       primaryColor: selected.primaryColor,
                       secondaryColor: selected.secondaryColor,
+                      subscriptionStatus: selected.subscriptionStatus,
+                      trialEndDate: selected.trialEndDate,
                     })
                   }
                 }}

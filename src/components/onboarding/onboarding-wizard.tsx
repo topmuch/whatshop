@@ -24,6 +24,8 @@ import {
   Loader2,
   ShoppingCart,
   ConciergeBell,
+  Clock,
+  AlertTriangle,
 } from 'lucide-react'
 
 /* ──────────────────────── TYPES ──────────────────────── */
@@ -336,14 +338,11 @@ export function OnboardingWizard() {
         // Clear onboarding data from localStorage
         try { localStorage.removeItem('boutiko-onboarding') } catch { /* ignore */ }
 
-        // Show appropriate success message
-        if (form.plan === 'PRO') {
-          toast.success('Votre demande est transmise à nos services pour traitement sous 1H. Vous recevrez une notification une fois votre site activé. 🚀', {
-            duration: 8000,
-          })
-        } else {
-          toast.success('Votre boutique a été créée avec succès ! 🎉')
-        }
+        // Show trial success message
+        toast.success('Votre boutique est active ! Vous avez 7 jours d\'essai pour valider votre offre. 🎉', {
+          description: 'Contactez le support pour valider votre abonnement et éviter la désactivation.',
+          duration: 8000,
+        })
 
         // Redirect to dashboard
         setView('dashboard')
@@ -1021,6 +1020,21 @@ export function OnboardingWizard() {
           </CardContent>
         </Card>
 
+        {/* Trial Warning Banner */}
+        <div className="mb-4 rounded-xl bg-amber-50 border border-amber-200 p-4 flex items-start gap-3">
+          <div className="shrink-0 mt-0.5">
+            <Clock className="h-5 w-5 text-amber-600" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-amber-900">
+              ⏰ Période d&apos;essai de 7 jours
+            </p>
+            <p className="text-sm text-amber-700 mt-1">
+              Vous avez <strong>7 jours</strong> pour valider votre offre auprès de notre équipe. Au-delà de ce délai, votre site sera désactivé.
+            </p>
+          </div>
+        </div>
+
         {/* Plan Cards */}
         <div className="grid gap-4 sm:grid-cols-3">
           {plans.map((p) => (
@@ -1054,6 +1068,9 @@ export function OnboardingWizard() {
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-xl">{p.emoji}</span>
                     <h3 className="font-bold text-base text-gray-900">{p.name}</h3>
+                    <span className="ml-auto text-[10px] font-semibold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
+                      7 jours essai
+                    </span>
                   </div>
                   <div className="mb-3">
                     <span className="text-2xl font-bold text-gray-900">{p.price}</span>

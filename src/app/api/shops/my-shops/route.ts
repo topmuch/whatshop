@@ -25,6 +25,8 @@ export async function GET(request: NextRequest) {
         isActive: true,
         sector: true,
         createdAt: true,
+        subscriptionStatus: true,
+        trialEndDate: true,
         _count: {
           select: {
             products: true,
@@ -36,7 +38,13 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     })
 
-    return NextResponse.json({ shops })
+    return NextResponse.json({
+      shops: shops.map(s => ({
+        ...s,
+        trialEndDate: s.trialEndDate?.toISOString() ?? null,
+        createdAt: s.createdAt.toISOString(),
+      }))
+    })
   } catch (error) {
     console.error('My shops GET error:', error)
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })

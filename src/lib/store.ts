@@ -46,6 +46,7 @@ export interface Shop {
   customDomainStatus?: string
   subscriptionStatus?: string
   subscriptionEndDate?: string
+  trialEndDate?: string
   heroImages?: string
   promoBanners?: string
   brands?: string

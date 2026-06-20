@@ -189,6 +189,7 @@ interface AdminSubscription {
   plan: string
   status: string
   endDate: string
+  trialEndDate: string
 }
 
 interface AdminDomain {
@@ -296,6 +297,9 @@ const planVariant = (plan: string) => {
     case 'BUSINESS': return 'outline' as const
     case 'STANDARD': return 'default' as const
     case 'PREMIUM': return 'outline' as const
+    case 'LIVE': return 'outline' as const
+    case 'LIVE_PRO': return 'outline' as const
+    case 'BOUTIQUE_PRO': return 'default' as const
     default: return 'secondary' as const
   }
 }
@@ -319,6 +323,8 @@ const subscriptionStatusBadge = (status: string) => {
       return <Badge variant="secondary" className="bg-gray-100 text-gray-700 hover:bg-gray-100">Annulé</Badge>
     case 'TRIAL':
       return <Badge variant="outline" className="border-sky-500 text-sky-700 bg-sky-50">Essai</Badge>
+    case 'PENDING_ACTIVATION':
+      return <Badge variant="secondary" className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100">En attente</Badge>
     default:
       return <Badge variant="secondary">{status}</Badge>
   }
@@ -1567,7 +1573,8 @@ function AdminSubscriptions() {
         body: JSON.stringify({ shopId, action }),
       })
       if (res.ok) {
-        toast.success(`Action "${action}" effectuée avec succès`)
+        const data = await res.json().catch(() => ({}))
+        toast.success(data.message || `Action "${action}" effectuée avec succès`)
         loadSubscriptions(statusFilter)
       } else {
         const data = await res.json()
@@ -1628,6 +1635,7 @@ function AdminSubscriptions() {
                   <TableHead>Plan</TableHead>
                   <TableHead>Statut</TableHead>
                   <TableHead>Date fin</TableHead>
+                  <TableHead className="hidden md:table-cell">Fin essai</TableHead>
                   <TableHead className="text-center">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -1642,54 +1650,81 @@ function AdminSubscriptions() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={planVariant(sub.plan)}>{sub.plan}</Badge>
+                      <Badge variant={planVariant(sub.plan)}>{sub.plan.replace(/_/g, ' ')}</Badge>
                     </TableCell>
                     <TableCell>{subscriptionStatusBadge(sub.status)}</TableCell>
                     <TableCell className="text-muted-foreground">
                       {sub.endDate ? formatDate(sub.endDate) : '—'}
                     </TableCell>
+                    <TableCell className="text-muted-foreground hidden md:table-cell">
+                      {sub.trialEndDate ? (
+                        <span className={sub.status === 'TRIAL' ? 'text-amber-600 font-medium' : ''}>
+                          {formatDate(sub.trialEndDate)}
+                        </span>
+                      ) : '—'}
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1 flex-wrap">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
-                          onClick={() => handleAction(sub.shopId, 'activate')}
-                          disabled={actionLoading === `${sub.shopId}-activate`}
-                        >
-                          {actionLoading === `${sub.shopId}-activate` ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Check className="h-3 w-3 mr-1" />}
-                          Activer
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 text-xs text-amber-600 hover:text-amber-700 hover:bg-amber-50"
-                          onClick={() => handleAction(sub.shopId, 'suspend')}
-                          disabled={actionLoading === `${sub.shopId}-suspend`}
-                        >
-                          {actionLoading === `${sub.shopId}-suspend` ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <XCircle className="h-3 w-3 mr-1" />}
-                          Suspendre
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
-                          onClick={() => handleAction(sub.shopId, 'cancel')}
-                          disabled={actionLoading === `${sub.shopId}-cancel`}
-                        >
-                          {actionLoading === `${sub.shopId}-cancel` ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <XCircle className="h-3 w-3 mr-1" />}
-                          Annuler
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 text-xs text-sky-600 hover:text-sky-700 hover:bg-sky-50"
-                          onClick={() => handleAction(sub.shopId, 'extend')}
-                          disabled={actionLoading === `${sub.shopId}-extend`}
-                        >
-                          {actionLoading === `${sub.shopId}-extend` ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Plus className="h-3 w-3 mr-1" />}
-                          +1 mois
-                        </Button>
+                        {/* Trial-specific actions */}
+                        {sub.status === 'TRIAL' && (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 font-semibold"
+                              onClick={() => handleAction(sub.shopId, 'validate_payment')}
+                              disabled={actionLoading === `${sub.shopId}-validate_payment`}
+                            >
+                              {actionLoading === `${sub.shopId}-validate_payment` ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Check className="h-3 w-3 mr-1" />}
+                              Valider
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 text-xs text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                              onClick={() => handleAction(sub.shopId, 'extend_trial')}
+                              disabled={actionLoading === `${sub.shopId}-extend_trial`}
+                            >
+                              {actionLoading === `${sub.shopId}-extend_trial` ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Plus className="h-3 w-3 mr-1" />}
+                              +7j essai
+                            </Button>
+                          </>
+                        )}
+                        {/* Active subscription actions */}
+                        {sub.status !== 'TRIAL' && (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 text-xs text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                              onClick={() => handleAction(sub.shopId, 'suspend')}
+                              disabled={actionLoading === `${sub.shopId}-suspend`}
+                            >
+                              {actionLoading === `${sub.shopId}-suspend` ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <XCircle className="h-3 w-3 mr-1" />}
+                              Suspendre
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                              onClick={() => handleAction(sub.shopId, 'cancel')}
+                              disabled={actionLoading === `${sub.shopId}-cancel`}
+                            >
+                              {actionLoading === `${sub.shopId}-cancel` ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <XCircle className="h-3 w-3 mr-1" />}
+                              Annuler
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 text-xs text-sky-600 hover:text-sky-700 hover:bg-sky-50"
+                              onClick={() => handleAction(sub.shopId, 'extend')}
+                              disabled={actionLoading === `${sub.shopId}-extend`}
+                            >
+                              {actionLoading === `${sub.shopId}-extend` ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Plus className="h-3 w-3 mr-1" />}
+                              +1 an
+                            </Button>
+                          </>
+                        )}
                         <Button
                           variant="ghost"
                           size="sm"
@@ -1697,7 +1732,7 @@ function AdminSubscriptions() {
                           onClick={() => setUpgradeDialog({ open: true, shopId: sub.shopId, shopName: sub.shopName, currentPlan: sub.plan })}
                         >
                           <ArrowUpRight className="h-3 w-3" />
-                          Upgrade
+                          Plan
                         </Button>
                         <Button
                           variant="ghost"
@@ -1731,11 +1766,11 @@ function AdminSubscriptions() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 py-2">
-            {(['STARTER', 'PRO', 'BUSINESS'] as const).map((plan) => {
-              const info: Record<string, { label: string; price: string; shops: string; color: string }> = {
-                STARTER: { label: 'Starter', price: '5 000', shops: '1 boutique', color: 'border-gray-300 hover:border-gray-400' },
-                PRO: { label: 'Pro', price: '8 000', shops: '3 boutiques', color: 'border-cyan-400 hover:border-cyan-500' },
-                BUSINESS: { label: 'Business', price: '20 000', shops: '10 boutiques', color: 'border-amber-400 hover:border-amber-500' },
+            {(['LIVE', 'BOUTIQUE_PRO', 'LIVE_PRO'] as const).map((plan) => {
+              const info: Record<string, { label: string; emoji: string; price: string; shops: string; products: string; color: string }> = {
+                LIVE: { label: 'Live', emoji: '🔴', price: '20 000', shops: '1 boutique', products: '20 produits', color: 'border-rose-400 hover:border-rose-500' },
+                BOUTIQUE_PRO: { label: 'Boutique Pro', emoji: '🟣', price: '30 000', shops: '1 boutique', products: '40 produits', color: 'border-purple-400 hover:border-purple-500' },
+                LIVE_PRO: { label: 'Live Pro', emoji: '🔵', price: '35 000', shops: '2 boutiques', products: '25 prod./boutique', color: 'border-gray-400 hover:border-gray-500' },
               }
               const p = info[plan]
               const isCurrent = upgradeDialog.currentPlan === plan
@@ -1747,12 +1782,12 @@ function AdminSubscriptions() {
                   className={`w-full flex items-center justify-between rounded-xl border-2 p-4 transition-all text-left ${isCurrent ? 'border-primary bg-primary/5 opacity-60 cursor-not-allowed' : p.color + ' hover:shadow-md cursor-pointer'}`}
                 >
                   <div>
-                    <p className="font-bold text-sm">{p.label}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{p.shops}</p>
+                    <p className="font-bold text-sm">{p.emoji} {p.label}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{p.shops} · {p.products}</p>
                   </div>
                   <div className="text-right">
                     <p className="font-bold text-sm">{p.price} FCFA</p>
-                    <p className="text-[10px] text-muted-foreground">/mois</p>
+                    <p className="text-[10px] text-muted-foreground">/an</p>
                   </div>
                   {isCurrent && (
                     <Badge variant="secondary" className="ml-2 text-[10px]">Actuel</Badge>

@@ -128,6 +128,7 @@ export interface AuthShop {
   customDomainStatus?: string | null
   subscriptionStatus?: string | null
   subscriptionEndDate?: string | null
+  trialEndDate?: string | null
   heroImages?: string
   promoBanners?: string
   brands?: string
@@ -371,6 +372,7 @@ export function mapShopToAuthShop(shop: Record<string, unknown>): AuthShop {
     customDomainStatus: (shop.customDomainStatus as string) ?? null,
     subscriptionStatus: (shop.subscriptionStatus as string) ?? null,
     subscriptionEndDate: shop.subscriptionEndDate ? new Date(shop.subscriptionEndDate as string).toISOString() : null,
+    trialEndDate: shop.trialEndDate ? new Date(shop.trialEndDate as string).toISOString() : null,
     heroImages: (shop.heroImages as string) ?? '[]',
     promoBanners: (shop.promoBanners as string) ?? '[]',
     brands: (shop.brands as string) ?? '[]',
