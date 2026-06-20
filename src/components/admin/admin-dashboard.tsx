@@ -906,6 +906,23 @@ export function AdminDashboard() {
     }
   }, [])
 
+  async function handleAdminLogout() {
+    try {
+      const res = await fetch('/api/auth/logout', { method: 'POST' })
+      if (res.ok) {
+        setUser(null)
+        setShop(null)
+        setView('login')
+        window.location.replace('/login')
+        return
+      }
+    } catch { /* ignore */ }
+    setUser(null)
+    setShop(null)
+    setView('login')
+    window.location.replace('/login')
+  }
+
   async function exitGodMode() {
     try {
       await fetch('/api/admin/god-mode', { method: 'DELETE' })
@@ -1020,6 +1037,17 @@ export function AdminDashboard() {
 
           {/* Spacer */}
           <div className="flex-1" />
+
+          {/* Logout button (always visible) */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 text-muted-foreground hover:text-red-600"
+            onClick={handleAdminLogout}
+            title="Déconnexion"
+          >
+            <LogOut className="h-5 w-5" />
+          </Button>
 
           {/* Notification Bell */}
           <div className="relative" ref={notifRef}>
@@ -2838,13 +2866,13 @@ function AdminConfig() {
                           </div>
 
                           {/* Send test email */}
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                             <Input
                               type="email"
                               placeholder="votre@email.com"
                               value={testEmailTo}
                               onChange={(e) => setTestEmailTo(e.target.value)}
-                              className="h-9 max-w-[240px]"
+                              className="h-9 w-full sm:max-w-[240px]"
                             />
                             <Button
                               variant="default"
@@ -3824,7 +3852,7 @@ function AdminUsers() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <h2 className="text-2xl font-bold">Utilisateurs</h2>
         <Button onClick={() => setShowCreateUser(true)} className="bg-blue-600 hover:bg-blue-700">
           <UserPlus className="h-4 w-4 mr-2" />
@@ -3866,13 +3894,13 @@ function AdminUsers() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Nom</TableHead>
-                  <TableHead>Email</TableHead>
+                  <TableHead className="hidden sm:table-cell">Email</TableHead>
                   <TableHead>Rôle</TableHead>
                   <TableHead>Boutique</TableHead>
-                  <TableHead>Plan</TableHead>
-                  <TableHead className="text-center">Produits</TableHead>
-                  <TableHead className="text-center">Commandes</TableHead>
-                  <TableHead>Date</TableHead>
+                  <TableHead className="hidden md:table-cell">Plan</TableHead>
+                  <TableHead className="hidden md:table-cell text-center">Produits</TableHead>
+                  <TableHead className="hidden md:table-cell text-center">Commandes</TableHead>
+                  <TableHead className="hidden lg:table-cell">Date</TableHead>
                   <TableHead className="text-center">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -3885,19 +3913,19 @@ function AdminUsers() {
                         {u.isSuspended && <Badge variant="destructive" className="bg-red-100 text-red-700 hover:bg-red-100 text-[10px]">Suspendu</Badge>}
                       </div>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{u.email}</TableCell>
+                    <TableCell className="text-muted-foreground hidden sm:table-cell">{u.email}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className="text-[10px]">{u.role}</Badge>
                     </TableCell>
                     <TableCell>{u.shop?.name || <span className="text-muted-foreground">—</span>}</TableCell>
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                       {u.shop ? (
                         <Badge variant={planVariant(u.shop.plan)}>{u.shop.plan}</Badge>
                       ) : <span className="text-muted-foreground">—</span>}
                     </TableCell>
-                    <TableCell className="text-center">{u.shop?.productCount ?? '—'}</TableCell>
-                    <TableCell className="text-center">{(u.shop?.orderCount ?? u.orderCount) ?? '—'}</TableCell>
-                    <TableCell className="text-muted-foreground">{formatDate(u.createdAt)}</TableCell>
+                    <TableCell className="hidden md:table-cell text-center">{u.shop?.productCount ?? '—'}</TableCell>
+                    <TableCell className="hidden md:table-cell text-center">{(u.shop?.orderCount ?? u.orderCount) ?? '—'}</TableCell>
+                    <TableCell className="hidden lg:table-cell text-muted-foreground">{formatDate(u.createdAt)}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1 flex-wrap justify-center">
                         <Button
@@ -4202,7 +4230,7 @@ function AdminShops() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <h2 className="text-2xl font-bold">Boutiques</h2>
         <Button onClick={() => setShowCreateShop(true)} className="bg-blue-600 hover:bg-blue-700">
           <Plus className="h-4 w-4 mr-2" />
@@ -4258,31 +4286,31 @@ function AdminShops() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Boutique</TableHead>
-                  <TableHead>Propriétaire</TableHead>
-                  <TableHead>Plan</TableHead>
-                  <TableHead className="text-center">Produits</TableHead>
-                  <TableHead className="text-center">Commandes</TableHead>
-                  <TableHead className="text-center">Visites</TableHead>
+                  <TableHead className="hidden sm:table-cell">Propriétaire</TableHead>
+                  <TableHead className="hidden md:table-cell">Plan</TableHead>
+                  <TableHead className="hidden md:table-cell text-center">Produits</TableHead>
+                  <TableHead className="hidden lg:table-cell text-center">Commandes</TableHead>
+                  <TableHead className="hidden lg:table-cell text-center">Visites</TableHead>
                   <TableHead>Statut</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {shops.map((s) => (
                   <TableRow key={s.id}>
                     <TableCell className="font-medium">{s.name}</TableCell>
-                    <TableCell>
+                    <TableCell className="hidden sm:table-cell">
                       <div>
                         <p className="text-sm">{s.owner.name}</p>
                         <p className="text-xs text-muted-foreground">{s.owner.email}</p>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                       <Badge variant={planVariant(s.plan)}>{s.plan}</Badge>
                     </TableCell>
-                    <TableCell className="text-center">{s.productCount}</TableCell>
-                    <TableCell className="text-center">{s.orderCount}</TableCell>
-                    <TableCell className="text-center">{s.visitCount}</TableCell>
+                    <TableCell className="hidden md:table-cell text-center">{s.productCount}</TableCell>
+                    <TableCell className="hidden lg:table-cell text-center">{s.orderCount}</TableCell>
+                    <TableCell className="hidden lg:table-cell text-center">{s.visitCount}</TableCell>
                     <TableCell>
                       <Badge variant={s.isActive ? 'outline' : 'destructive'} className={s.isActive ? 'border-emerald-500 text-emerald-700 bg-emerald-50' : ''}>
                         {s.isActive ? 'Active' : 'Suspendue'}
@@ -4606,12 +4634,12 @@ function AdminOrders() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>ID</TableHead>
+                  <TableHead className="font-mono text-xs">ID</TableHead>
                   <TableHead>Boutique</TableHead>
-                  <TableHead>Client</TableHead>
+                  <TableHead className="hidden sm:table-cell">Client</TableHead>
                   <TableHead>Total</TableHead>
                   <TableHead>Statut</TableHead>
-                  <TableHead>Date</TableHead>
+                  <TableHead className="hidden md:table-cell">Date</TableHead>
                   <TableHead className="text-center">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -4622,7 +4650,7 @@ function AdminOrders() {
                     <TableRow key={o.id}>
                       <TableCell className="font-mono text-xs">#{o.id.slice(-8)}</TableCell>
                       <TableCell className="font-medium">{o.shop.name}</TableCell>
-                      <TableCell>
+                      <TableCell className="hidden sm:table-cell">
                         {o.customerName || (
                           <span className="text-muted-foreground">—</span>
                         )}
@@ -4637,7 +4665,7 @@ function AdminOrders() {
                           {cfg.label}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-muted-foreground">{formatDate(o.createdAt)}</TableCell>
+                      <TableCell className="hidden md:table-cell text-muted-foreground">{formatDate(o.createdAt)}</TableCell>
                       <TableCell className="text-center">
                         <Select
                           value={o.status}
@@ -5062,7 +5090,7 @@ function AdminResellers() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <h2 className="text-2xl font-bold">Revendeurs</h2>
         <Button onClick={() => setShowCreateDialog(true)} className="bg-blue-600 hover:bg-blue-700">
           <UserPlus className="h-4 w-4 mr-2" />
@@ -5147,12 +5175,12 @@ function AdminResellers() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Nom</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Entreprise</TableHead>
-                  <TableHead className="text-center">Commission</TableHead>
-                  <TableHead className="text-center">Clients</TableHead>
+                  <TableHead className="hidden sm:table-cell">Email</TableHead>
+                  <TableHead className="hidden md:table-cell">Entreprise</TableHead>
+                  <TableHead className="hidden md:table-cell text-center">Commission</TableHead>
+                  <TableHead className="hidden lg:table-cell text-center">Clients</TableHead>
                   <TableHead>Statut</TableHead>
-                  <TableHead>Date</TableHead>
+                  <TableHead className="hidden lg:table-cell">Date</TableHead>
                   <TableHead className="text-center">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -5160,16 +5188,16 @@ function AdminResellers() {
                 {filteredResellers.map((r) => (
                   <TableRow key={r.id}>
                     <TableCell className="font-medium">{r.name}</TableCell>
-                    <TableCell className="text-muted-foreground">{r.email}</TableCell>
-                    <TableCell>{r.companyName}</TableCell>
-                    <TableCell className="text-center">{r.commission}%</TableCell>
-                    <TableCell className="text-center">{r.clientCount || 0}</TableCell>
+                    <TableCell className="hidden sm:table-cell text-muted-foreground">{r.email}</TableCell>
+                    <TableCell className="hidden md:table-cell">{r.companyName}</TableCell>
+                    <TableCell className="hidden md:table-cell text-center">{r.commission}%</TableCell>
+                    <TableCell className="hidden lg:table-cell text-center">{r.clientCount || 0}</TableCell>
                     <TableCell>
                       <Badge variant={r.isActive ? 'outline' : 'secondary'} className={r.isActive ? 'border-emerald-500 text-emerald-700 bg-emerald-50' : ''}>
                         {r.isActive ? 'Actif' : 'Inactif'}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{formatDate(r.createdAt)}</TableCell>
+                    <TableCell className="hidden lg:table-cell text-muted-foreground">{formatDate(r.createdAt)}</TableCell>
                     <TableCell>
                       <div className="flex items-center justify-center gap-1">
                         <Button
