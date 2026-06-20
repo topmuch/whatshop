@@ -898,8 +898,16 @@ export function OnboardingWizard() {
   }
 
   function renderStep5() {
+    const LIVE_ALLOWED_TEMPLATES = new Set(['live-template', 'xstore-electro'])
+
     const selectPlan = (plan: Plan) => {
-      setForm((prev) => ({ ...prev, plan }))
+      setForm((prev) => {
+        // LIVE/LIVE_PRO plans only allow live-template and xstore-electro
+        if ((plan === 'LIVE' || plan === 'LIVE_PRO') && prev.template && !LIVE_ALLOWED_TEMPLATES.has(prev.template)) {
+          return { ...prev, plan, template: 'live-template' as TemplateId }
+        }
+        return { ...prev, plan }
+      })
     }
 
     const plans: { id: Plan; emoji: string; name: string; price: string; priceNote: string; recommended?: boolean; features: string[]; btnClass: string; selectedClass: string; btnText: string }[] = [
@@ -915,7 +923,7 @@ export function OnboardingWizard() {
           'Live TikTok',
           'Posts Facebook',
           'Commandes WhatsApp',
-          '1 thème inclus',
+          '2 thèmes (Live + Moderne)',
           'Dashboard simplifié',
         ],
         btnClass: 'bg-gradient-to-r from-rose-600 to-pink-600 text-white hover:from-rose-700 hover:to-pink-700',
@@ -956,7 +964,7 @@ export function OnboardingWizard() {
           'Live TikTok',
           'Posts Facebook',
           'Commandes WhatsApp',
-          '1 thème inclus',
+          '2 thèmes (Live + Moderne)',
           'Dashboard simplifié',
         ],
         btnClass: 'bg-gray-900 text-white hover:bg-gray-800',

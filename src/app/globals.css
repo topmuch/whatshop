@@ -161,3 +161,252 @@
   background-size: 200% 200%;
   animation: gradient-shift 8s ease infinite;
 }
+
+/* ────────────────────────────────────────────
+   LIVE Template: Hero Effects
+   ──────────────────────────────────────────── */
+
+/* Shimmer sweep across hero */
+.hero-shimmer-sweep {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.06) 45%,
+    rgba(255, 255, 255, 0.12) 50%,
+    rgba(255, 255, 255, 0.06) 55%,
+    transparent 60%
+  );
+  animation: hero-shimmer 6s ease-in-out infinite;
+}
+
+@keyframes hero-shimmer {
+  0% { left: -100%; }
+  100% { left: 200%; }
+}
+
+/* Floating particles */
+.hero-particle {
+  position: absolute;
+  left: var(--particle-x);
+  top: var(--particle-y);
+  width: var(--particle-size);
+  height: var(--particle-size);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.35);
+  animation: particle-float var(--particle-duration) ease-in-out var(--particle-delay) infinite;
+  pointer-events: none;
+}
+
+@keyframes particle-float {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.3;
+  }
+  25% {
+    transform: translate(10px, -20px) scale(1.2);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translate(-5px, -40px) scale(0.8);
+    opacity: 0.5;
+  }
+  75% {
+    transform: translate(15px, -20px) scale(1.1);
+    opacity: 0.6;
+  }
+}
+
+/* Mesh gradient orb animations */
+@keyframes meshOrb1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(60px, 40px) scale(1.1); }
+  66% { transform: translate(-30px, 80px) scale(0.9); }
+}
+
+@keyframes meshOrb2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(-50px, -30px) scale(1.15); }
+  66% { transform: translate(40px, -60px) scale(0.85); }
+}
+
+@keyframes meshOrb3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -50px) scale(1.05); }
+  66% { transform: translate(-60px, 20px) scale(1.1); }
+}
+
+/* Live glow effect around hero */
+.hero-live-glow {
+  box-shadow:
+    0 0 30px rgba(239, 68, 68, 0.25),
+    0 0 60px rgba(239, 68, 68, 0.15),
+    0 0 100px rgba(239, 68, 68, 0.08);
+  animation: hero-glow-pulse 2s ease-in-out infinite;
+}
+
+@keyframes hero-glow-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 30px rgba(239, 68, 68, 0.25),
+      0 0 60px rgba(239, 68, 68, 0.15),
+      0 0 100px rgba(239, 68, 68, 0.08);
+  }
+  50% {
+    box-shadow:
+      0 0 40px rgba(239, 68, 68, 0.35),
+      0 0 80px rgba(239, 68, 68, 0.25),
+      0 0 120px rgba(239, 68, 68, 0.12);
+  }
+}
+
+/* Pulsing red glow border at bottom of hero when live */
+.hero-live-bottom-glow {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(239, 68, 68, 0.6) 20%,
+    rgba(239, 68, 68, 1) 50%,
+    rgba(239, 68, 68, 0.6) 80%,
+    transparent 100%
+  );
+  animation: bottom-glow-pulse 2s ease-in-out infinite;
+  z-index: 15;
+}
+
+.hero-live-bottom-glow::after {
+  content: '';
+  position: absolute;
+  bottom: -12px;
+  left: 10%;
+  right: 10%;
+  height: 24px;
+  background: radial-gradient(ellipse at center, rgba(239, 68, 68, 0.3) 0%, transparent 70%);
+  filter: blur(8px);
+  animation: bottom-glow-spread 2s ease-in-out infinite;
+}
+
+@keyframes bottom-glow-pulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+@keyframes bottom-glow-spread {
+  0%, 100% { opacity: 0.5; transform: scaleX(0.95); }
+  50% { opacity: 0.9; transform: scaleX(1.05); }
+}
+
+/* ────────────────────────────────────────────
+   LIVE Template: Header Effects
+   ──────────────────────────────────────────── */
+
+.header-live-border {
+  border-top: 2px solid rgba(239, 68, 68, 0.8);
+  animation: header-border-pulse 2s ease-in-out infinite;
+  position: relative;
+}
+
+.header-live-border::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(239, 68, 68, 0.3) 10%,
+    rgba(255, 100, 100, 0.8) 30%,
+    rgba(255, 200, 200, 1) 50%,
+    rgba(255, 100, 100, 0.8) 70%,
+    rgba(239, 68, 68, 0.3) 90%,
+    transparent 100%
+  );
+  animation: header-border-shimmer 3s linear infinite;
+  background-size: 200% 100%;
+}
+
+@keyframes header-border-pulse {
+  0%, 100% { border-top-color: rgba(239, 68, 68, 0.6); }
+  50% { border-top-color: rgba(239, 68, 68, 1); }
+}
+
+@keyframes header-border-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ────────────────────────────────────────────
+   LIVE Template: Product Card Effects
+   ──────────────────────────────────────────── */
+
+/* Shimmer sweep on hover */
+.product-card-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.product-card-shimmer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.15) 40%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0.15) 60%,
+    transparent 70%
+  );
+  z-index: 5;
+  pointer-events: none;
+  transition: left 0.6s ease;
+  border-radius: inherit;
+}
+
+.product-card-shimmer:hover::before {
+  left: 200%;
+}
+
+/* Live badge dramatic glow */
+@keyframes liveBadgeGlow {
+  0%, 100% {
+    box-shadow:
+      0 0 15px rgba(239, 68, 68, 0.5),
+      0 0 35px rgba(239, 68, 68, 0.25),
+      0 0 55px rgba(239, 68, 68, 0.1);
+  }
+  50% {
+    box-shadow:
+      0 0 25px rgba(239, 68, 68, 0.7),
+      0 0 50px rgba(239, 68, 68, 0.35),
+      0 0 80px rgba(239, 68, 68, 0.15);
+  }
+}
+
+/* WhatsApp button pulse for new products */
+.wa-btn-pulse {
+  animation: wa-pulse 2s ease-in-out infinite;
+}
+
+@keyframes wa-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(37, 211, 102, 0);
+  }
+}

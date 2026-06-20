@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, X, ShoppingBag, SlidersHorizontal, ArrowUp } from 'lucide-react'
+import { Search, X, ShoppingBag, SlidersHorizontal, ArrowUp, MessageCircle, Flame } from 'lucide-react'
 import { useAppStore, type Product, type Category } from '@/lib/store'
 import LiveHeader from './header'
 import LiveHero from './hero'
@@ -32,6 +32,11 @@ export function LivePulseTemplate() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [showScrollTop, setShowScrollTop] = useState(false)
   const categoryScrollRef = useRef<HTMLDivElement>(null)
+
+  const isLive = publicShop?.isLiveMode === true
+  const hasLiveUrl = !!publicShop?.liveUrl
+  const whatsapp = publicShop?.whatsapp || ''
+  const showUpcomingBanner = !isLive && hasLiveUrl
 
   // ── Scroll-to-top visibility ──
   useEffect(() => {
@@ -128,6 +133,48 @@ export function LivePulseTemplate() {
 
       {/* ── Hero ── */}
       <LiveHero shop={publicShop} />
+
+      {/* ── Upcoming Live Teaser Banner ── */}
+      {showUpcomingBanner && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="relative overflow-hidden bg-gradient-to-r from-[#FF6154] via-[#FF7E5F] to-[#FF9A44]"
+        >
+          {/* Animated background shimmer */}
+          <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+            <div
+              className="absolute inset-0"
+              style={{
+                background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.08) 50%, transparent 60%)',
+                backgroundSize: '200% 100%',
+                animation: 'hero-shimmer 4s ease-in-out infinite',
+              }}
+            />
+          </div>
+          <div className="relative z-10 flex items-center justify-center gap-3 px-4 py-3.5 md:py-4 text-white">
+            <Flame className="size-5 md:size-6 shrink-0 animate-pulse" />
+            <p className="text-sm md:text-base font-bold tracking-wide">
+              🔥 Prochain live bientôt — <span className="hidden sm:inline">Rejoignez-nous !</span>
+              <span className="sm:hidden">Rejoignez !</span>
+            </p>
+            <motion.a
+              href={publicShop.liveUrl!}
+              target="_blank"
+              rel="noopener noreferrer"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.97 }}
+              className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white text-[#FF6154] font-bold text-xs md:text-sm shadow-lg hover:shadow-xl transition-shadow min-h-[40px]"
+            >
+              Rejoindre
+              <svg className="size-3.5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </motion.a>
+          </div>
+        </motion.div>
+      )}
 
       {/* ── Main Content ── */}
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 lg:px-6 py-8 md:py-12">
@@ -269,6 +316,28 @@ export function LivePulseTemplate() {
 
       {/* ── Footer ── */}
       <LiveFooter shop={publicShop} />
+
+      {/* ── Floating WhatsApp Button (always visible, bottom-left) ── */}
+      {whatsapp && (
+        <motion.a
+          href={`https://wa.me/${whatsapp.replace(/[^0-9]/g, '')}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.8 }}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+          className="fixed bottom-6 left-6 z-50 w-14 h-14 rounded-full bg-gradient-to-br from-[#25D366] to-[#128C7E] text-white shadow-[0_4px_20px_rgba(37,211,102,0.45)] hover:shadow-[0_4px_28px_rgba(37,211,102,0.65)] flex items-center justify-center transition-shadow duration-300 min-w-[56px] min-h-[56px]"
+          aria-label="Contacter sur WhatsApp"
+        >
+          <MessageCircle className="size-6" />
+          <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-50" />
+            <span className="relative inline-flex h-3 w-3 rounded-full bg-[#25D366] border-2 border-white" />
+          </span>
+        </motion.a>
+      )}
 
       {/* ── Scroll to top ── */}
       <AnimatePresence>

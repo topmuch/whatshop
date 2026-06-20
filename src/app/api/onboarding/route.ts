@@ -83,18 +83,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Auto-assign template based on sector, or use override
-    const template = templateOverride || sectorTemplateMap[sector] || 'xstore-electro'
-
-    // Generate slug from name, ensure uniqueness
-    let slug = generateSlug(name)
-    const slugExists = await db.shop.findUnique({ where: { slug } })
-    if (slugExists) {
-      slug = `${slug}-${Date.now().toString(36)}`
-    }
-
     const finalPlan = plan || 'TRIAL'
     const planConfig = PLAN_CONFIG[finalPlan] || PLAN_CONFIG['TRIAL']
+
+    // Auto-assign template based on plan, then sector, then override
+    const LIVE_ALLOWED = new Set(['live-template', 'xstore-electro'])
+    let template = templateOverride || sectorTemplateMap[sector] || 'xstore-electro'
+    // LIVE/LIVE_PRO plans: enforce allowed templates, default to live-template
+    if ((finalPlan === 'LIVE' || finalPlan === 'LIVE_PRO') && !LIVE_ALLOWED.has(template)) {
+      template = 'live-template'
+    }
 
     // ALL plans start with a 7-day trial
     const trialEndDate = new Date(Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000)

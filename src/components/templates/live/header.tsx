@@ -16,7 +16,9 @@ function LiveHeader({ shop }: LiveHeaderProps) {
 
   return (
     <header
-      className="sticky top-0 z-50 backdrop-blur-xl bg-white/80 border-b border-white/20 shadow-sm"
+      className={`sticky top-0 z-50 backdrop-blur-xl bg-white/80 border-b border-white/20 shadow-sm ${
+        isLive ? 'header-live-border' : ''
+      }`}
       role="banner"
     >
       <div className="max-w-7xl mx-auto px-4 lg:px-6">
@@ -52,7 +54,7 @@ function LiveHeader({ shop }: LiveHeaderProps) {
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.8, opacity: 0 }}
                   transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                  className="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-red-500 shadow-[0_0_20px_rgba(239,68,68,0.4)] min-h-[44px]"
+                  className="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-red-500 shadow-[0_0_20px_rgba(239,68,68,0.4),0_0_40px_rgba(239,68,68,0.2),0_0_60px_rgba(239,68,68,0.1)] min-h-[44px] animate-[liveBadgeGlow_2s_ease-in-out_infinite]"
                 >
                   <span className="relative flex h-2.5 w-2.5">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />

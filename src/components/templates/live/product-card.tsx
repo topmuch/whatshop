@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import { memo, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { MessageCircle } from 'lucide-react'
+import { MessageCircle, Star } from 'lucide-react'
 import type { Product, Shop } from '@/lib/store'
 import { formatPrice, openWhatsApp, PLATFORM_CONFIG } from '@/lib/shared'
 
@@ -53,7 +53,7 @@ function LiveProductCard({ product, shop }: LiveProductCardProps) {
       initial="hidden"
       transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
       whileHover={{ y: -4 }}
-      className="group relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-[0_2px_12px_rgba(0,0,0,0.06)] transition-shadow duration-300 hover:shadow-[0_8px_30px_rgba(0,0,0,0.1)]"
+      className="product-card-shimmer group relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-[0_2px_12px_rgba(0,0,0,0.06)] transition-shadow duration-300 hover:shadow-[0_8px_30px_rgba(0,0,0,0.1)]"
     >
       {/* ── Image ── */}
       <div className="relative w-full aspect-square overflow-hidden bg-[#FAFAFA]">
@@ -91,6 +91,18 @@ function LiveProductCard({ product, shop }: LiveProductCardProps) {
             <span className="inline-block rounded-lg bg-red-500 px-2.5 py-1 text-[10px] font-extrabold text-white shadow-sm">
               -{discount}%
             </span>
+          )}
+          {/* ⭐ Populaire badge for featured/best-seller products */}
+          {product.isBestSeller && (
+            <motion.span
+              initial={{ opacity: 0, x: -8 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2, duration: 0.3 }}
+              className="inline-flex items-center gap-1 rounded-lg bg-gradient-to-r from-amber-400 to-yellow-500 px-2.5 py-1 text-[10px] font-extrabold text-amber-900 shadow-sm"
+            >
+              <Star className="size-3 fill-current text-amber-900" />
+              Populaire
+            </motion.span>
           )}
         </div>
 
@@ -138,7 +150,9 @@ function LiveProductCard({ product, shop }: LiveProductCardProps) {
           type="button"
           onClick={handleWhatsApp}
           disabled={!inStock || !whatsapp}
-          className="mt-1 flex items-center justify-center gap-2 w-full rounded-xl bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white font-bold text-sm min-h-[44px] transition-all duration-200 hover:brightness-105 hover:shadow-lg active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
+          className={`mt-1 flex items-center justify-center gap-2 w-full rounded-xl bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white font-bold text-sm min-h-[44px] transition-all duration-200 hover:brightness-105 hover:shadow-lg active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed ${
+            isNew ? 'wa-btn-pulse' : ''
+          }`}
         >
           <MessageCircle className="size-4 shrink-0" />
           Commander

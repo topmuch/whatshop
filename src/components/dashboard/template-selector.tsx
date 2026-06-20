@@ -10,7 +10,17 @@ import { Check } from 'lucide-react'
 interface TemplateSelectorProps {
   currentTemplate: string
   onSelect: (template: TemplateId) => void
+  /** If provided, only show templates allowed for this plan */
+  plan?: string | null
 }
+
+/** Templates allowed per plan. LIVE/LIVE_PRO get only Live + Moderne */
+const PLAN_TEMPLATES: Record<string, TemplateId[]> = {
+  LIVE: ['live-template', 'xstore-electro'],
+  LIVE_PRO: ['live-template', 'xstore-electro'],
+}
+
+const LIVE_ALLOWED = new Set(['live-template', 'xstore-electro'])
 
 function getPreviewGradient(_templateId: string, colors: ShopTemplate['colors']): string {
   if (colors.primary.startsWith('linear')) return colors.primary
@@ -74,11 +84,23 @@ function TemplatePreviewMini({ templateId }: { templateId: TemplateId }) {
   )
 }
 
-export function TemplateSelector({ currentTemplate, onSelect }: TemplateSelectorProps) {
+export function TemplateSelector({ currentTemplate, onSelect, plan }: TemplateSelectorProps) {
+  // Filter templates based on plan
+  const allowedTemplates = plan && PLAN_TEMPLATES[plan]
+    ? PLAN_TEMPLATES[plan]
+    : null
+
+  const visibleTemplates = allowedTemplates
+    ? Object.values(templates).filter((t) => allowedTemplates.includes(t.id))
+    : Object.values(templates)
+
+  // If current template is not in allowed list, pick the first allowed
+  const isActive = (tId: string) => currentTemplate === tId
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {Object.values(templates).map((t) => {
-        const isActive = currentTemplate === t.id
+      {visibleTemplates.map((t) => {
+        const active = isActive(t.id)
         const display = getTemplateDisplayInfo(t.id)
 
         return (
@@ -89,9 +111,9 @@ export function TemplateSelector({ currentTemplate, onSelect }: TemplateSelector
           >
             <Card
               className={`cursor-pointer transition-all duration-300 overflow-hidden ${
-                isActive ? 'ring-2 shadow-lg' : 'hover:shadow-md'
+                active ? 'ring-2 shadow-lg' : 'hover:shadow-md'
               }`}
-              style={isActive ? { '--tw-ring-color': display.style.primaryColor } as React.CSSProperties : undefined}
+              style={active ? { '--tw-ring-color': display.style.primaryColor } as React.CSSProperties : undefined}
               onClick={() => onSelect(t.id)}
             >
               {/* Template preview */}
@@ -106,7 +128,7 @@ export function TemplateSelector({ currentTemplate, onSelect }: TemplateSelector
                     <span className="text-lg">{display.style.emoji}</span>
                     <span className="font-semibold text-sm">Template {display.displayName}</span>
                   </div>
-                  {isActive ? (
+                  {active ? (
                     <Badge
                       className="text-[10px] px-2 py-0.5 text-white border-0"
                       style={{ backgroundColor: display.style.primaryColor }}

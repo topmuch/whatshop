@@ -2,11 +2,62 @@
 
 import { memo } from 'react'
 import { motion } from 'framer-motion'
-import { Radio, Play } from 'lucide-react'
+import { Radio, Play, MessageCircle } from 'lucide-react'
 import type { Shop } from '@/lib/store'
 
 interface LiveHeroProps {
   shop: Shop | null
+}
+
+/** Animated mesh gradient background */
+function MeshGradient() {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+      {/* Mesh gradient orbs */}
+      <div
+        className="absolute w-[500px] h-[500px] -top-40 -left-40 rounded-full opacity-30 animate-[meshOrb1_12s_ease-in-out_infinite]"
+        style={{
+          background: 'radial-gradient(circle, rgba(255,107,107,0.8) 0%, transparent 70%)',
+        }}
+      />
+      <div
+        className="absolute w-[400px] h-[400px] top-1/3 -right-32 rounded-full opacity-25 animate-[meshOrb2_15s_ease-in-out_infinite]"
+        style={{
+          background: 'radial-gradient(circle, rgba(255,200,87,0.8) 0%, transparent 70%)',
+        }}
+      />
+      <div
+        className="absolute w-[450px] h-[450px] -bottom-32 left-1/4 rounded-full opacity-20 animate-[meshOrb3_18s_ease-in-out_infinite]"
+        style={{
+          background: 'radial-gradient(circle, rgba(255,140,50,0.8) 0%, transparent 70%)',
+        }}
+      />
+    </div>
+  )
+}
+
+/** CSS-based shimmer / particle effect */
+function ShimmerParticles() {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+      {/* Shimmer sweep */}
+      <div className="hero-shimmer-sweep" />
+      {/* Floating particles */}
+      {Array.from({ length: 20 }).map((_, i) => (
+        <div
+          key={i}
+          className="hero-particle"
+          style={{
+            '--particle-x': `${Math.random() * 100}%`,
+            '--particle-y': `${Math.random() * 100}%`,
+            '--particle-delay': `${Math.random() * 6}s`,
+            '--particle-duration': `${4 + Math.random() * 6}s`,
+            '--particle-size': `${2 + Math.random() * 4}px`,
+          } as React.CSSProperties}
+        />
+      ))}
+    </div>
+  )
 }
 
 /** Decorative floating circles for background */
@@ -20,16 +71,90 @@ function DecorativeCircles() {
   )
 }
 
+/** Animated countdown-style visual teaser (not a real countdown) */
+function CountdownTeaser() {
+  return (
+    <div className="flex items-center gap-3 mt-2">
+      {['--', '--', ':', '--', '--'].map((char, i) => (
+        <motion.div
+          key={i}
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 + i * 0.08, duration: 0.4 }}
+          className={`flex items-center justify-center font-extrabold text-xl md:text-2xl tracking-widest ${
+            char === ':' ? 'w-4 text-white/50' : 'w-12 md:w-14 h-12 md:h-14 rounded-xl bg-white/20 backdrop-blur-sm text-white border border-white/20'
+          }`}
+        >
+          {char !== ':' && (
+            <motion.span
+              animate={{ opacity: [1, 0.4, 1] }}
+              transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
+            >
+              {char}
+            </motion.span>
+          )}
+          {char === ':' && (
+            <motion.span
+              animate={{ opacity: [1, 0.3, 1] }}
+              transition={{ duration: 1, repeat: Infinity }}
+            >
+              :
+            </motion.span>
+          )}
+        </motion.div>
+      ))}
+    </div>
+  )
+}
+
+/** Floating WhatsApp FAB in hero */
+function HeroWhatsAppFab({ whatsapp }: { whatsapp: string }) {
+  const href = `https://wa.me/${whatsapp.replace(/[^0-9]/g, '')}`
+  return (
+    <motion.a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      initial={{ scale: 0, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 20, delay: 0.6 }}
+      whileHover={{ scale: 1.1 }}
+      whileTap={{ scale: 0.95 }}
+      className="absolute bottom-5 right-5 z-20 w-14 h-14 rounded-full bg-[#25D366] flex items-center justify-center shadow-[0_4px_20px_rgba(37,211,102,0.5)] hover:shadow-[0_4px_28px_rgba(37,211,102,0.7)] transition-shadow duration-300"
+      aria-label="Contacter sur WhatsApp"
+    >
+      <MessageCircle className="size-6 text-white" />
+      <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-white rounded-full flex items-center justify-center">
+        <span className="absolute w-3.5 h-3.5 rounded-full bg-[#25D366] animate-ping opacity-40" />
+        <span className="w-2 h-2 bg-[#25D366] rounded-full" />
+      </span>
+    </motion.a>
+  )
+}
+
 function LiveHero({ shop }: LiveHeroProps) {
   const isLive = shop?.isLiveMode === true
   const hasLiveUrl = !!shop?.liveUrl
+  const whatsapp = shop?.whatsapp || ''
 
   return (
     <section
-      className="relative overflow-hidden bg-gradient-to-br from-[#FF6154] via-[#FF7E5F] to-[#FF9A44]"
+      className={`relative overflow-hidden bg-gradient-to-br from-[#FF6154] via-[#FF7E5F] to-[#FF9A44] ${
+        isLive ? 'hero-live-glow' : ''
+      }`}
       aria-label="Bannière"
     >
+      {/* Shimmer & particle effects */}
+      <ShimmerParticles />
+      {/* Mesh gradient background */}
+      <MeshGradient />
+      {/* Original decorative circles */}
       <DecorativeCircles />
+
+      {/* Pulsing red glow border at bottom when live */}
+      {isLive && (
+        <div className="hero-live-bottom-glow" aria-hidden="true" />
+      )}
 
       <div className="relative z-10 flex flex-col items-center justify-center px-4 py-16 md:py-24 lg:py-28 text-center text-white min-h-[280px] md:min-h-[340px]">
         {isLive ? (
@@ -136,7 +261,7 @@ function LiveHero({ shop }: LiveHeroProps) {
             </motion.a>
           </motion.div>
         ) : (
-          /* ── Default: No live ── */
+          /* ── Default: No live — add "prochain live" teaser ── */
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -149,8 +274,28 @@ function LiveHero({ shop }: LiveHeroProps) {
             <p className="text-white/90 text-sm md:text-base font-medium leading-relaxed">
               {shop?.description ?? 'Découvrez nos produits exclusifs et commandez directement sur WhatsApp.'}
             </p>
+
+            {/* Prochain live teaser */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3, duration: 0.5 }}
+              className="mt-2 flex flex-col items-center gap-3"
+            >
+              <div className="flex items-center gap-2 text-sm font-bold text-white/80 tracking-wide uppercase">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-300 opacity-75" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-300" />
+                </span>
+                Prochain live
+              </div>
+              <CountdownTeaser />
+            </motion.div>
           </motion.div>
         )}
+
+        {/* WhatsApp FAB — always visible in hero */}
+        {whatsapp && <HeroWhatsAppFab whatsapp={whatsapp} />}
       </div>
     </section>
   )
