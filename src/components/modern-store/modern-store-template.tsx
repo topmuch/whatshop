@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback, useMemo } from 'react'
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -527,6 +527,30 @@ function HomeView(props: HomeViewProps) {
   const videoId = isVideoMode && config.heroVideo?.youtubeUrl
     ? extractYouTubeId(config.heroVideo.youtubeUrl)
     : null
+  const videoIframeRef = useRef<HTMLIFrameElement>(null)
+
+  // Force YouTube video to loop by listening for the 'ended' state via postMessage
+  // and sending a seekTo(0) + playVideo command back to the iframe
+  useEffect(() => {
+    if (!videoId) return
+    const handler = (event: MessageEvent) => {
+      if (event.origin !== 'https://www.youtube.com') return
+      try {
+        const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data
+        // playerState 0 = YT.PlayerState.ENDED
+        if (data.event === 'infoDelivery' && data.info?.playerState === 0) {
+          const win = videoIframeRef.current?.contentWindow
+          if (!win) return
+          win.postMessage(JSON.stringify({ event: 'command', func: 'seekTo', args: [0, true] }), '*')
+          win.postMessage(JSON.stringify({ event: 'command', func: 'playVideo' }), '*')
+        }
+      } catch {
+        // ignore non-JSON messages
+      }
+    }
+    window.addEventListener('message', handler)
+    return () => window.removeEventListener('message', handler)
+  }, [videoId])
 
   return (
     <>
@@ -535,7 +559,8 @@ function HomeView(props: HomeViewProps) {
         <section className="w-full overflow-hidden">
           <div className="relative w-full aspect-video bg-black">
             <iframe
-              src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&controls=0&showinfo=0&rel=0&playlist=${videoId}&modestbranding=1&playsinline=1`}
+              ref={videoIframeRef}
+              src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&controls=0&showinfo=0&rel=0&playlist=${videoId}&modestbranding=1&playsinline=1&enablejsapi=1`}
               title={config.heroVideo?.title || 'Hero Video'}
               allow="autoplay; encrypted-media"
               allowFullScreen
