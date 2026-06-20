@@ -374,10 +374,10 @@ function Hero() {
               custom={0.1}
               className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-gray-900 leading-[1.05]"
             >
-              Vendez sur WhatsApp
+              Vendez partout
               <br />
               <span className="bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent">
-                comme un pro
+                en ligne comme un pro
               </span>
             </motion.h1>
             <motion.p
@@ -385,8 +385,9 @@ function Hero() {
               custom={0.2}
               className="mt-8 text-xl sm:text-2xl text-gray-600 max-w-lg leading-relaxed"
             >
-              Créez votre boutique en ligne en 2 minutes. Recevez des commandes
-              directement sur WhatsApp et développez votre activité.
+              Créez votre boutique en ligne en 2 minutes. Vendez sur WhatsApp,
+              Facebook, Instagram, en Live et bien plus. Développez votre activité
+              sur tous les canaux.
             </motion.p>
             {/* Boutique name form — Linktree style */}
             <motion.div
@@ -505,9 +506,9 @@ const steps = [
 const bannerWords = [
   'Multi-Boutiques',
   'Commandes WhatsApp',
-  'Commandes directement sur WhatsApp',
-  'Mode Live',
-  'Vendez en direct avec le mode TikTok Live',
+  'Live Shopping',
+  'Posts Facebook automatiques',
+  'IA pour vos produits',
   'Statistiques',
   'Domaine personnalisé',
   'Analytics',
@@ -655,8 +656,8 @@ function SocialSelling() {
               className="text-4xl sm:text-5xl font-extrabold text-gray-900 leading-tight"
             >
               Vendez partout,{' '}
-              <span className="text-pink-500">sur WhatsApp</span>, Instagram,
-              TikTok...
+              <span className="text-pink-500">en ligne</span>, sur WhatsApp,
+              Facebook, Instagram...
             </motion.h2>
             <motion.p
               variants={fadeUp}
@@ -664,8 +665,8 @@ function SocialSelling() {
               className="mt-6 text-gray-600 text-xl leading-relaxed"
             >
               Partagez vos produits en un clic sur tous vos canaux de vente.
-              Vos clients commandent directement et vous recevez les commandes
-              sur WhatsApp, automatiquement.
+              Créez des posts Facebook automatiques, vendez en Live Shopping
+              et recevez les commandes sur WhatsApp, automatiquement.
             </motion.p>
             <motion.ul
               variants={fadeUp}
@@ -675,7 +676,8 @@ function SocialSelling() {
               {[
                 'Partagez vos liens produit partout',
                 'Commandes automatiques sur WhatsApp',
-                'Compatible Instagram, TikTok, Facebook',
+                'Posts Facebook automatiques avec vos produits',
+                'Live Shopping : vendez en direct',
                 'Catalogue en ligne professionnel',
               ].map((item, i) => (
                 <li key={i} className="flex items-start gap-4">
@@ -716,12 +718,12 @@ const features = [
     image: '/landing/feature-whatsapp-orders.png',
   },
   {
-    title: 'Mode Live',
-    desc: 'Vendez en direct avec le mode TikTok Live.',
+    title: 'Live Shopping',
+    desc: 'Vendez en direct pendant vos lives sur toutes les plateformes.',
     bullets: [
       'Affichez vos produits en temps réel',
       'Vos viewers commandent instantanément',
-      'Boostez vos ventes pendant le live',
+      'Compatible TikTok, Facebook, Instagram Live',
     ],
     image: '/landing/feature-live-mode.png',
   },
@@ -746,14 +748,14 @@ const features = [
     image: '/landing/feature-statistiques.png',
   },
   {
-    title: 'Domaine personnalisé',
-    desc: 'Votre propre nom de domaine professionnel.',
+    title: 'IA & Automatisation',
+    desc: "Générez des descriptions, du texte marketing et optimisez vos produits avec l'IA.",
     bullets: [
-      'www.votrenom.com au lieu d\'un sous-domaine',
-      'Plus de confiance pour vos clients',
-      'Configuration simple en quelques clics',
+      "Descriptions de produits auto-générées",
+      'Textes marketing optimisés',
+      'Gagnez des heures de travail',
     ],
-    image: '/landing/feature-domaine.png',
+    image: '/landing/feature-ia.png',
   },
 ]
 
@@ -945,9 +947,9 @@ function ShareYourShop() {
               className="mt-6 text-gray-600 text-lg sm:text-xl leading-relaxed"
             >
               Ajoutez votre URL Boutiko unique à toutes les plateformes —
-              WhatsApp, Facebook, TikTok, Instagram — et tous les endroits où
-              vous trouvez votre public. Utilisez ensuite votre code QR pour
-              rediriger votre trafic hors ligne vers votre lien dans la bio.
+              WhatsApp, Facebook, Instagram, TikTok — et tous les endroits où
+              vous trouvez votre public. Créez des posts Facebook avec vos produits,
+              partagez en stories et redirigez votre trafic hors ligne grâce au QR code.
             </motion.p>
             <motion.div variants={fadeUp} custom={0.2} className="mt-10">
               <Button
@@ -1359,11 +1361,11 @@ function SocialProof() {
 const faqItems = [
   {
     q: "Qu'est-ce que Boutiko ?",
-    a: "Boutiko est une plateforme e-commerce conçue spécialement pour les vendeurs africains. Elle vous permet de créer une boutique en ligne en quelques minutes et de recevoir des commandes directement sur WhatsApp. Pas besoin de compétences techniques.",
+    a: "Boutiko est la plateforme tout-en-un pour les vendeurs africains. Créez votre boutique en ligne, vendez sur WhatsApp, Facebook, Instagram, faites du Live Shopping et automatisez vos posts sur les réseaux sociaux. Pas besoin de compétences techniques.",
   },
   {
     q: 'Comment fonctionne la commande sur WhatsApp ?',
-    a: "Vos clients parcourent votre boutique en ligne, ajoutent des produits au panier et passent commande. La commande est automatiquement envoyée sur votre WhatsApp avec tous les détails : produits, quantités, prix et informations de livraison.",
+    a: "Vos clients parcourent votre boutique en ligne, ajoutent des produits au panier et passent commande. La commande est automatiquement envoyée sur votre WhatsApp avec tous les détails : produits, quantités, prix et informations de livraison. Vous pouvez aussi recevoir des commandes pendant vos lives.",
   },
   {
     q: 'Puis-je avoir plusieurs boutiques ?',
@@ -1490,8 +1492,8 @@ function Footer() {
           <div className="col-span-2 md:col-span-1">
             <Logo />
             <p className="mt-5 text-base text-gray-500 leading-relaxed max-w-xs">
-              La plateforme e-commerce #1 pour les vendeurs africains. Vendez
-              sur WhatsApp comme un pro.
+              La plateforme tout-en-un pour vendre en ligne en Afrique.
+              WhatsApp, Facebook, Live Shopping, IA — tout est inclus.
             </p>
           </div>
 
