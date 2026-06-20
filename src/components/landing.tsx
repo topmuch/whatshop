@@ -485,19 +485,19 @@ const steps = [
     num: 1,
     title: 'Créez votre boutique',
     desc: 'Inscrivez-vous et configurez votre boutique en quelques clics. Pas de compétences techniques requises.',
-    icon: Store,
+    image: '/landing/step-create-shop.png',
   },
   {
     num: 2,
     title: 'Ajoutez vos produits',
     desc: 'Importez vos produits avec photos, prix et descriptions. Organisez-les par catégories.',
-    icon: PackagePlus,
+    image: '/landing/step-add-products.png',
   },
   {
     num: 3,
     title: 'Recevez des commandes sur WhatsApp',
     desc: 'Partagez votre lien et recevez automatiquement des commandes via WhatsApp.',
-    icon: ShoppingCart,
+    image: '/landing/step-whatsapp-orders.png',
   },
 ]
 
@@ -575,7 +575,6 @@ function HowItWorks() {
           <div className="hidden md:block absolute top-12 left-[20%] right-[20%] h-px bg-gradient-to-r from-pink-200 via-pink-300 to-pink-200" />
 
           {steps.map((step, i) => {
-            const IconComp = step.icon
             return (
               <motion.div
                 key={i}
@@ -587,8 +586,14 @@ function HowItWorks() {
                 className="text-center relative"
               >
                 <div className="inline-flex flex-col items-center">
-                  <div className="w-28 h-28 rounded-full bg-gradient-to-br from-pink-50 to-rose-50 border-2 border-pink-200 flex items-center justify-center mb-8 relative z-10">
-                    <IconComp className="w-10 h-10 text-pink-500" />
+                  <div className="w-28 h-28 rounded-full overflow-hidden border-2 border-pink-200 mb-8 relative z-10 shadow-md">
+                    <Image
+                      src={step.image}
+                      alt={step.title}
+                      width={112}
+                      height={112}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                   <div className="absolute -top-1 -right-1 md:right-auto md:-top-1 w-9 h-9 rounded-full bg-gradient-to-br from-pink-500 to-rose-500 text-white text-base font-bold flex items-center justify-center z-20">
                     {step.num}

@@ -139,10 +139,10 @@ export function QRCodeDisplay() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <QrCode className="h-5 w-5" style={{ color: accentColor }} />
-          QR Code Menu Restaurant
+          QR Code de votre boutique
         </CardTitle>
         <CardDescription>
-          Générez un QR code unique que vos clients peuvent scanner pour voir votre menu et commander via WhatsApp.
+          Générez un QR code que vos clients peuvent scanner pour accéder directement à votre boutique.
         </CardDescription>
       </CardHeader>
 
@@ -168,7 +168,7 @@ export function QRCodeDisplay() {
               <div className="bg-white p-6 rounded-2xl shadow-sm border">
                 <img
                   src={qrData!.qrCodeUrl!}
-                  alt={`QR Code Menu - ${qrData!.shopName}`}
+                  alt={`QR Code - ${qrData!.shopName}`}
                   className="w-56 h-56 sm:w-64 sm:h-64"
                 />
               </div>
@@ -252,7 +252,7 @@ export function QRCodeDisplay() {
               <Button variant="ghost" size="sm" asChild>
                 <a href={qrData!.menuUrl} target="_blank" rel="noopener noreferrer">
                   <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
-                  Voir le menu
+                  Voir ma boutique
                 </a>
               </Button>
             </>

@@ -8,6 +8,8 @@ interface MenuQRRequestBody {
   format?: 'svg' | 'png'
   size?: number
   color?: string
+  /** 'shop' for homepage (/${slug}), 'menu' for menu page (/menu/${slug}) */
+  target?: 'shop' | 'menu'
 }
 
 export async function POST(request: NextRequest) {
@@ -19,7 +21,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body: MenuQRRequestBody = await request.json()
-    const { shopId, format = 'svg', size = 1000, color } = body
+    const { shopId, format = 'svg', size = 1000, color, target = 'shop' } = body
 
     if (!shopId) {
       return NextResponse.json({ error: 'shopId requis' }, { status: 400 })
@@ -48,7 +50,9 @@ export async function POST(request: NextRequest) {
       ? `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('x-forwarded-host')}`
       : 'https://boutiko.pro'
 
-    const menuUrl = `${origin}/menu/${shop.slug}`
+    const menuUrl = target === 'menu'
+      ? `${origin}/menu/${shop.slug}`
+      : `${origin}/${shop.slug}`
     const qrColor = color || shop.accentColor || shop.primaryColor || '#10B981'
     const validSize = Math.min(Math.max(Number(size) || 1000, 200), 2000)
 
@@ -84,7 +88,8 @@ export async function POST(request: NextRequest) {
       format,
       menuUrl,
       shopName: shop.name,
-      isRestaurant: true,
+      isRestaurant: target === 'menu',
+      target,
     })
   } catch (error) {
     console.error('Menu QR code generation error:', error)
@@ -141,7 +146,7 @@ export async function GET(request: NextRequest) {
       shopSlug: shop.slug,
       isRestaurant: shop.isRestaurant,
       qrCodeUrl: shop.qrCodeUrl,
-      menuUrl: `${origin}/menu/${shop.slug}`,
+      menuUrl: `${origin}/${shop.slug}`,
       accentColor: shop.accentColor || shop.primaryColor || '#10B981',
       logo: shop.logo,
     })
