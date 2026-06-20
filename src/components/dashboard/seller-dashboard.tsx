@@ -45,6 +45,7 @@ import {
   Target,
 } from 'lucide-react'
 import { useThemeMode } from '@/lib/use-theme'
+import { isSimplifiedPlan } from '@/lib/permissions'
 import { getBusinessLabels } from '@/lib/business-labels'
 import { DashboardOverview } from './dashboard-overview'
 import { DashboardAnalytics } from './dashboard-analytics'
@@ -104,23 +105,27 @@ interface ConsolidatedStats {
 /*  Nav items (unchanged)                                              */
 /* ------------------------------------------------------------------ */
 
-function getNavItems(businessType?: string | null, sector?: string | null): { id: DashboardTab; label: string; icon: React.ReactNode }[] {
+function getNavItems(businessType?: string | null, sector?: string | null, planType?: string | null): { id: DashboardTab; label: string; icon: React.ReactNode }[] {
   const labels = getBusinessLabels(businessType, sector)
-  return [
+  const simplified = planType ? isSimplifiedPlan(planType) : false
+
+  const allItems: { id: DashboardTab; label: string; icon: React.ReactNode; hidden?: boolean }[] = [
     { id: 'overview', label: "Vue d'ensemble", icon: <LayoutDashboard className="h-5 w-5" /> },
-    { id: 'analytics', label: 'Analytics', icon: <BarChart3 className="h-5 w-5" /> },
-    { id: 'stats', label: 'Statistiques', icon: <TrendingUp className="h-5 w-5" /> },
+    { id: 'analytics', label: 'Analytics', icon: <BarChart3 className="h-5 w-5" />, hidden: simplified },
+    { id: 'stats', label: 'Statistiques', icon: <TrendingUp className="h-5 w-5" />, hidden: simplified },
     { id: 'messages', label: 'Messages', icon: <Mail className="h-5 w-5" /> },
     { id: 'products', label: labels.navProducts, icon: <Package className="h-5 w-5" /> },
     { id: 'categories', label: labels.navCategories, icon: <Tags className="h-5 w-5" /> },
     { id: 'orders', label: labels.navOrders, icon: <ShoppingCart className="h-5 w-5" /> },
     { id: 'live', label: 'Live TikTok', icon: <Radio className="h-5 w-5" /> },
-    { id: 'marketing-kit', label: 'Kit Marketing', icon: <Megaphone className="h-5 w-5" /> },
-    { id: 'integrations', label: 'Intégrations', icon: <Plug className="h-5 w-5" /> },
-    { id: 'templates', label: 'Templates', icon: <Palette className="h-5 w-5" /> },
-    { id: 'single-product', label: 'Single Produit', icon: <Target className="h-5 w-5" /> },
+    { id: 'marketing-kit', label: 'Kit Marketing', icon: <Megaphone className="h-5 w-5" />, hidden: simplified },
+    { id: 'integrations', label: 'Intégrations', icon: <Plug className="h-5 w-5" />, hidden: simplified },
+    { id: 'templates', label: 'Templates', icon: <Palette className="h-5 w-5" />, hidden: simplified },
+    { id: 'single-product', label: 'Single Produit', icon: <Target className="h-5 w-5" />, hidden: simplified },
     { id: 'settings', label: 'Paramètres', icon: <Settings className="h-5 w-5" /> },
   ]
+
+  return allItems.filter(item => !item.hidden).map(({ hidden, ...rest }) => rest)
 }
 
 /* ------------------------------------------------------------------ */
@@ -326,7 +331,7 @@ function SidebarContent({
   const { dashboardTab, setDashboardTab, setUser, setShop, setShops, setView, shop } = useAppStore()
   const { isDark, toggleTheme } = useThemeMode()
 
-  const navItems = getNavItems(shop?.businessType, shop?.sector)
+  const navItems = getNavItems(shop?.businessType, shop?.sector, shop?.plan)
 
   async function handleLogout() {
     try {

@@ -60,6 +60,7 @@ import { ProductWizard } from './product-wizard'
 import { toast } from 'sonner'
 import { formatPrice } from '@/lib/shared'
 import { getBusinessLabels } from '@/lib/business-labels'
+import { getPlanConfig } from '@/lib/permissions'
 
 interface Product {
   id: string
@@ -206,9 +207,9 @@ export function DashboardProducts() {
   }, [fetchProducts, fetchCategories])
 
   function openAddDialog() {
-    if (shop?.plan === 'FREE' && products.length >= 10) {
-      toast.error('Limite atteinte ! Passez au plan Standard pour ajouter plus de produits.', {
-        description: 'Le plan gratuit est limité à 10 produits.',
+    const maxProducts = shop ? getPlanConfig(shop.plan).maxProducts : 20
+    if (products.length >= maxProducts) {
+      toast.error(`Limite atteinte (${products.length}/${maxProducts} produits). Passez à un plan supérieur pour ajouter plus de produits.`, {
         duration: 5000,
       })
       return
@@ -334,8 +335,9 @@ export function DashboardProducts() {
         <h1 className="text-2xl font-bold">{labels.productsTitle}</h1>
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={() => {
-            if (shop?.plan === 'FREE' && products.length >= 10) {
-              toast.error('Limite atteinte ! Passez au plan Standard.', { duration: 5000 })
+            const maxProducts = shop ? getPlanConfig(shop.plan).maxProducts : 20
+            if (products.length >= maxProducts) {
+              toast.error(`Limite atteinte (${products.length}/${maxProducts} produits). Passez à un plan supérieur.`, { duration: 5000 })
               return
             }
             setWizardOpen(true)
@@ -351,22 +353,30 @@ export function DashboardProducts() {
       </div>
 
       {/* Plan limit warning */}
-      {shop?.plan === 'FREE' && products.length >= 10 && (
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4">
-          <div className="flex items-start gap-3 flex-1">
-            <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <p className="text-sm font-medium text-amber-800">Limite du plan gratuit atteinte</p>
-              <p className="text-sm text-amber-700">
-                Vous avez {products.length}/10 produits. Passez au plan Standard pour des produits illimités.
-              </p>
+      {(() => {
+        const maxProducts = shop ? getPlanConfig(shop.plan).maxProducts : 20
+        const nearLimit = products.length >= maxProducts - 2 && products.length < maxProducts
+        const atLimit = products.length >= maxProducts
+        if (!nearLimit && !atLimit) return null
+        return (
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4">
+            <div className="flex items-start gap-3 flex-1">
+              <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-amber-800">Limite de produits{atLimit ? ' atteinte' : ''}</p>
+                <p className="text-sm text-amber-700">
+                  {atLimit
+                    ? `Vous avez ${products.length}/${maxProducts} produits. Passez à un plan supérieur pour ajouter plus de produits.`
+                    : `Vous avez ${products.length}/${maxProducts} produits. ${maxProducts - products.length} reste${maxProducts - products.length > 1 ? 'nt' : ''} avant la limite.`}
+                </p>
+              </div>
             </div>
+            <Button size="sm" variant="outline" className="border-amber-300 text-amber-800 hover:bg-amber-100 w-full sm:w-fit">
+              Mettre à niveau
+            </Button>
           </div>
-          <Button size="sm" variant="outline" className="border-amber-300 text-amber-800 hover:bg-amber-100 w-full sm:w-fit">
-            Mettre à niveau
-          </Button>
-        </div>
-      )}
+        )
+      })()}
 
       {/* Search and filters */}
       <div className="flex flex-col sm:flex-row gap-3">

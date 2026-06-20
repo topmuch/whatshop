@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { requireShopOwner } from '@/lib/auth'
 import { slugify } from '@/lib/slugify'
+import { getPlanConfig } from '@/lib/permissions'
 
 export const dynamic = 'force-dynamic'
 
@@ -97,15 +98,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Champs requis manquants ou prix invalide' }, { status: 400 })
     }
 
-    // Check plan limits
-    if (user.shop.plan === 'FREE') {
-      const productCount = await db.product.count({ where: { shopId: user.shop.id } })
-      if (productCount >= 10) {
-        return NextResponse.json(
-          { error: 'Limite atteinte. Passez au plan Standard pour plus de produits.' },
-          { status: 403 }
-        )
-      }
+    // Check plan product limits
+    const planConfig = getPlanConfig(user.shop.plan)
+    const productCount = await db.product.count({ where: { shopId: user.shop.id } })
+    if (productCount >= planConfig.maxProducts) {
+      return NextResponse.json(
+        { error: `Limite atteinte (${productCount}/${planConfig.maxProducts} produits). Passez à un plan supérieur pour ajouter plus de produits.` },
+        { status: 403 }
+      )
     }
 
     const parsedImages = Array.isArray(images) ? images : []

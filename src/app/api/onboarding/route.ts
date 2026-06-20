@@ -35,10 +35,13 @@ const sectorCategoriesMap: Record<string, string[]> = {
   sante: ['Consultations', 'Coaching', 'Soins', 'Programmes'],
 }
 
-// Onboarding PRO plan maps to STARTER subscription (user can upgrade later)
-const PLAN_TO_SUBSCRIPTION: Record<string, 'STARTER' | 'PRO' | 'BUSINESS'> = {
-  TRIAL: 'STARTER',
-  PRO: 'PRO',
+// Plan configuration: maps onboarding plan to subscription details
+const PLAN_CONFIG: Record<string, { planType: string; maxShops: number; isNewPlan: boolean }> = {
+  TRIAL: { planType: 'STARTER', maxShops: 1, isNewPlan: false },
+  PRO: { planType: 'PRO', maxShops: 3, isNewPlan: false },
+  LIVE: { planType: 'LIVE', maxShops: 1, isNewPlan: true },
+  LIVE_PRO: { planType: 'LIVE_PRO', maxShops: 2, isNewPlan: true },
+  BOUTIQUE_PRO: { planType: 'BOUTIQUE_PRO', maxShops: 1, isNewPlan: true },
 }
 
 
@@ -91,14 +94,15 @@ export async function POST(request: NextRequest) {
     }
 
     const finalPlan = plan || 'TRIAL'
-    const isPaidPlan = finalPlan === 'PRO'
+    const planConfig = PLAN_CONFIG[finalPlan] || PLAN_CONFIG['TRIAL']
+    const isPaidPlan = finalPlan !== 'TRIAL'
 
     // Calculate trial end date if TRIAL plan
     const trialEndDate = finalPlan === 'TRIAL'
       ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
       : null
 
-    // Create the shop — inactive if paid plan (needs admin validation)
+    // Create the shop — inactive if old paid plan (needs admin validation), active for new plans
     const shop = await db.shop.create({
       data: {
         name,
@@ -112,8 +116,8 @@ export async function POST(request: NextRequest) {
         sector: sector || null,
         template,
         ownerId: user.id,
-        isActive: !isPaidPlan,
-        subscriptionStatus: isPaidPlan ? 'PENDING_ACTIVATION' : 'TRIAL',
+        isActive: planConfig.isNewPlan || !isPaidPlan,
+        subscriptionStatus: planConfig.isNewPlan ? 'ACTIVE' : (isPaidPlan ? 'PENDING_ACTIVATION' : 'TRIAL'),
       },
     })
 
@@ -127,18 +131,24 @@ export async function POST(request: NextRequest) {
     })
 
     // Create or update subscription for the user
-    const subPlanType = PLAN_TO_SUBSCRIPTION[finalPlan] || 'STARTER'
+    const subPlanType = planConfig.planType
+    const subscriptionEndDate = isPaidPlan
+      ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // Annual for paid plans
+      : null
+
     await db.subscription.upsert({
       where: { userId: user.id },
       create: {
         userId: user.id,
         planType: subPlanType,
-        status: isPaidPlan ? 'TRIAL' : 'TRIAL',
-        maxShops: subPlanType === 'PRO' ? 3 : 1,
+        status: planConfig.isNewPlan ? 'ACTIVE' : 'TRIAL',
+        maxShops: planConfig.maxShops,
+        ...(subscriptionEndDate ? { endDate: subscriptionEndDate } : {}),
       },
       update: {
         planType: subPlanType,
-        maxShops: subPlanType === 'PRO' ? 3 : 1,
+        maxShops: planConfig.maxShops,
+        ...(planConfig.isNewPlan ? { status: 'ACTIVE', endDate: subscriptionEndDate! } : {}),
       },
     })
 
@@ -193,8 +203,8 @@ export async function POST(request: NextRequest) {
       try {
         await createNotification(
           'UPGRADE_REQUEST',
-          'Nouvelle demande de plan Pro',
-          `${user.name} a choisi le plan Pro pour la boutique "${shop.name}". Validation requise.`,
+          `Nouvelle demande de plan ${finalPlan}`,
+          `${user.name} a choisi le plan ${finalPlan} pour la boutique "${shop.name}". Validation requise.`,
           { shopId: shop.id, shopName: shop.name, ownerId: user.id, ownerName: user.name, requestedPlan: subPlanType }
         )
       } catch {
@@ -206,8 +216,8 @@ export async function POST(request: NextRequest) {
         await db.notification.create({
           data: {
             type: 'SHOP_LIVE',
-            title: 'Demande de plan Pro en cours',
-            message: 'Votre demande de plan Pro a été transmise à nos services. Votre site sera activé sous 1H après validation.',
+            title: `Demande de plan ${finalPlan} en cours`,
+            message: `Votre demande de plan ${finalPlan} a été transmise à nos services. Votre site sera activé sous 1H après validation.`,
             userId: user.id,
             metadata: JSON.stringify({ shopId: shop.id, shopName: shop.name, requestedPlan: subPlanType }),
           },

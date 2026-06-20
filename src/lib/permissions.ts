@@ -3,7 +3,7 @@
  *
  * Ce module centralise toute la logique de vérification des permissions :
  * - Vérification de rôle (SUPER_ADMIN, ADMIN, RESELLER, SELLER)
- * - Vérification des limites d'abonnement (nombre max de boutiques)
+ * - Vérification des limites d'abonnement (nombre max de boutiques, produits)
  * - Accès aux données d'abonnement d'un utilisateur
  */
 
@@ -12,12 +12,17 @@ import { PlanType, SubStatus, Role } from '@prisma/client'
 
 // ─── TYPES ─────────────────────────────────────────────────────────────────────
 
+export type NewPlanType = 'LIVE' | 'LIVE_PRO' | 'BOUTIQUE_PRO'
+export type AnyPlanType = PlanType | NewPlanType
+
 export interface PlanConfig {
-  type: PlanType
+  type: PlanType | NewPlanType
   label: string
-  price: number        // Prix en FCFA
-  maxShops: number     // Nombre max de boutiques
+  price: number          // Prix en FCFA (annuel)
+  maxShops: number       // Nombre max de boutiques
+  maxProducts: number    // Nombre max de produits (par boutique pour LIVE_PRO)
   customDomain: boolean
+  fullDashboard: boolean // true = toutes les features visibles
   features: string[]
 }
 
@@ -25,13 +30,20 @@ export interface ShopLimitResult {
   allowed: boolean
   currentCount: number
   maxAllowed: number
-  planType: PlanType
+  planType: string
+  message: string
+}
+
+export interface ProductLimitResult {
+  allowed: boolean
+  currentCount: number
+  maxAllowed: number
   message: string
 }
 
 export interface SubscriptionInfo {
   id: string
-  planType: PlanType
+  planType: string
   status: SubStatus
   maxShops: number
   startDate: Date
@@ -40,55 +52,106 @@ export interface SubscriptionInfo {
 
 // ─── PLAN CONFIGURATION ────────────────────────────────────────────────────────
 
-export const PLAN_CONFIGS: Record<PlanType, PlanConfig> = {
-  STARTER: {
-    type: 'STARTER',
-    label: 'Starter',
-    price: 5000,
+export const NEW_PLAN_CONFIGS: Record<NewPlanType, PlanConfig> = {
+  LIVE: {
+    type: 'LIVE',
+    label: 'Live',
+    price: 20000,
     maxShops: 1,
+    maxProducts: 20,
     customDomain: false,
+    fullDashboard: false,
     features: [
       '1 boutique',
-      'Produits illimités',
+      '20 produits',
+      'Live TikTok',
+      'Posts Facebook',
       'Commandes WhatsApp',
-      'Statistiques de base',
-      'Thèmes gratuits',
+      '1 thème inclus',
+      'Dashboard simplifié',
     ],
   },
-  PRO: {
-    type: 'PRO',
-    label: 'Pro',
-    price: 8000,
-    maxShops: 3,
+  LIVE_PRO: {
+    type: 'LIVE_PRO',
+    label: 'Live Pro',
+    price: 35000,
+    maxShops: 2,
+    maxProducts: 25, // par boutique
     customDomain: false,
+    fullDashboard: false,
     features: [
-      'Jusqu\'à 3 boutiques',
-      'Produits illimités',
-      'Commandes WhatsApp',
-      'Statistiques avancées',
-      'Tous les thèmes',
+      '2 boutiques',
+      '25 produits / boutique',
       'Live TikTok',
-      'Outils IA',
+      'Posts Facebook',
+      'Commandes WhatsApp',
+      '1 thème inclus',
+      'Dashboard simplifié',
     ],
   },
-  BUSINESS: {
-    type: 'BUSINESS',
-    label: 'Business',
-    price: 20000,
-    maxShops: 10,
+  BOUTIQUE_PRO: {
+    type: 'BOUTIQUE_PRO',
+    label: 'Boutique Pro',
+    price: 30000,
+    maxShops: 1,
+    maxProducts: 40,
     customDomain: true,
+    fullDashboard: true,
     features: [
-      'Jusqu\'à 10 boutiques',
-      'Produits illimités',
-      'Commandes WhatsApp',
-      'Statistiques avancées',
-      'Tous les thèmes',
+      '1 boutique',
+      '40 produits',
+      'Toutes les fonctionnalités',
       'Live TikTok',
-      'Outils IA',
+      'Posts Facebook',
+      'Commandes WhatsApp',
+      'Tous les thèmes premium',
       'Domaine personnalisé',
-      'Support prioritaire',
+      'Statistiques avancées',
+      'Outils IA',
+      'Dashboard complet',
     ],
   },
+}
+
+// Legacy plans — mapped to new system for backward compatibility
+export const PLAN_CONFIGS: Record<PlanType, PlanConfig> = {
+  STARTER: { ...NEW_PLAN_CONFIGS.LIVE, type: 'STARTER', label: 'Starter', price: 20000, maxProducts: 20, features: ['1 boutique', '20 produits', 'Commandes WhatsApp'] },
+  PRO: { ...NEW_PLAN_CONFIGS.BOUTIQUE_PRO, type: 'PRO', label: 'Pro', price: 30000, maxProducts: 40, features: ['1 boutique', '40 produits', 'Toutes les fonctionnalités'] },
+  BUSINESS: { ...NEW_PLAN_CONFIGS.BOUTIQUE_PRO, type: 'BUSINESS', label: 'Business', price: 30000, maxProducts: 40, maxShops: 10, features: ['10 boutiques', '40 produits', 'Toutes les fonctionnalités'] },
+  LIVE: NEW_PLAN_CONFIGS.LIVE,
+  LIVE_PRO: NEW_PLAN_CONFIGS.LIVE_PRO,
+  BOUTIQUE_PRO: NEW_PLAN_CONFIGS.BOUTIQUE_PRO,
+}
+
+/** Get config for any plan string (handles legacy + new) */
+export function getPlanConfig(plan: string): PlanConfig {
+  return (PLAN_CONFIGS as Record<string, PlanConfig>)[plan] ?? NEW_PLAN_CONFIGS.LIVE
+}
+
+/** Check if a plan is a "simplified dashboard" plan */
+export function isSimplifiedPlan(plan: string): boolean {
+  const cfg = getPlanConfig(plan)
+  return !cfg.fullDashboard
+}
+
+// ─── PLAN ORDER (for upgrade checks) ───────────────────────────────────────────
+
+const PLAN_ORDER: Record<string, number> = {
+  LIVE: 0,
+  LIVE_PRO: 1,
+  BOUTIQUE_PRO: 2,
+  STARTER: 0, // legacy → maps to LIVE
+  PRO: 2,      // legacy → maps to BOUTIQUE_PRO
+  BUSINESS: 3, // legacy
+}
+
+export function isPlanUpgrade(currentPlan: string, newPlan: string): boolean {
+  return (PLAN_ORDER[newPlan] ?? 0) > (PLAN_ORDER[currentPlan] ?? 0)
+}
+
+export function getNextPlans(currentPlan: string): PlanConfig[] {
+  const currentLevel = PLAN_ORDER[currentPlan] ?? 0
+  return Object.values(NEW_PLAN_CONFIGS).filter(p => (PLAN_ORDER[p.type] ?? 0) > currentLevel)
 }
 
 // ─── ROLE HIERARCHY ────────────────────────────────────────────────────────────
@@ -100,34 +163,21 @@ const ROLE_HIERARCHY: Record<Role, number> = {
   SUPER_ADMIN: 3,
 }
 
-/**
- * Check if a user's role meets the minimum required level.
- */
 export function hasMinimumRole(userRole: string, requiredRole: Role): boolean {
   const userLevel = ROLE_HIERARCHY[userRole as Role] ?? -1
   const requiredLevel = ROLE_HIERARCHY[requiredRole] ?? 999
   return userLevel >= requiredLevel
 }
 
-/**
- * Check if a user has one of the allowed roles.
- */
 export function hasRole(userRole: string, allowedRoles: Role[]): boolean {
   return allowedRoles.includes(userRole as Role)
 }
 
 // ─── SUBSCRIPTION HELPERS ──────────────────────────────────────────────────────
 
-/**
- * Get the subscription info for a user. Returns null if no subscription exists.
- */
 export async function getSubscription(userId: string): Promise<SubscriptionInfo | null> {
-  const sub = await db.subscription.findUnique({
-    where: { userId },
-  })
-
+  const sub = await db.subscription.findUnique({ where: { userId } })
   if (!sub) return null
-
   return {
     id: sub.id,
     planType: sub.planType,
@@ -138,15 +188,8 @@ export async function getSubscription(userId: string): Promise<SubscriptionInfo 
   }
 }
 
-/**
- * Get or create a default subscription for a user.
- * New users get a STARTER plan in TRIAL status.
- */
 export async function getOrCreateSubscription(userId: string): Promise<SubscriptionInfo> {
-  const existing = await db.subscription.findUnique({
-    where: { userId },
-  })
-
+  const existing = await db.subscription.findUnique({ where: { userId } })
   if (existing) {
     return {
       id: existing.id,
@@ -157,17 +200,15 @@ export async function getOrCreateSubscription(userId: string): Promise<Subscript
       endDate: existing.endDate,
     }
   }
-
-  const planConfig = PLAN_CONFIGS.STARTER
+  const planConfig = NEW_PLAN_CONFIGS.LIVE
   const created = await db.subscription.create({
     data: {
       userId,
-      planType: 'STARTER',
+      planType: 'LIVE',
       status: 'TRIAL',
       maxShops: planConfig.maxShops,
     },
   })
-
   return {
     id: created.id,
     planType: created.planType,
@@ -178,27 +219,19 @@ export async function getOrCreateSubscription(userId: string): Promise<Subscript
   }
 }
 
-/**
- * Check if a user can create a new shop based on their subscription.
- * Returns an object with allowed status and details.
- */
 export async function checkShopLimit(userId: string): Promise<ShopLimitResult> {
   const subscription = await getOrCreateSubscription(userId)
-  const shopCount = await db.shop.count({
-    where: { ownerId: userId },
-  })
-
-  const planConfig = PLAN_CONFIGS[subscription.planType]
+  const shopCount = await db.shop.count({ where: { ownerId: userId } })
+  const planConfig = getPlanConfig(subscription.planType)
   const maxAllowed = Math.max(subscription.maxShops, planConfig.maxShops)
 
-  // Check subscription status
   if (subscription.status === 'EXPIRED' || subscription.status === 'CANCELLED' || subscription.status === 'SUSPENDED') {
     return {
       allowed: false,
       currentCount: shopCount,
       maxAllowed,
       planType: subscription.planType,
-      message: `Votre abonnement ${subscription.status === 'EXPIRED' ? 'a expiré' : 'est ' + subscription.status.toLowerCase()}. Veuillez le renouveler pour créer de nouvelles boutiques.`,
+      message: `Votre abonnement ${subscription.status === 'EXPIRED' ? 'a expiré' : 'est ' + subscription.status.toLowerCase()}. Veuillez le renouveler.`,
     }
   }
 
@@ -208,46 +241,58 @@ export async function checkShopLimit(userId: string): Promise<ShopLimitResult> {
       currentCount: shopCount,
       maxAllowed,
       planType: subscription.planType,
-      message: `Limite atteinte (${shopCount}/${maxAllowed}). Passez au plan ${getNextPlanLabel(subscription.planType)} pour créer plus de boutiques.`,
+      message: `Limite atteinte (${shopCount}/${maxAllowed} boutiques). Passez à un plan supérieur.`,
     }
   }
 
-  return {
-    allowed: true,
-    currentCount: shopCount,
-    maxAllowed,
-    planType: subscription.planType,
-    message: '',
-  }
+  return { allowed: true, currentCount: shopCount, maxAllowed, planType: subscription.planType, message: '' }
 }
 
 /**
- * Upgrade a user's subscription to a new plan.
+ * Check product limit for a specific shop.
+ * For LIVE_PRO: maxProducts per boutique (25)
+ * For others: maxProducts total for the shop
  */
+export async function checkProductLimit(shopId: string, userId: string): Promise<ProductLimitResult> {
+  const subscription = await getOrCreateSubscription(userId)
+  const planConfig = getPlanConfig(subscription.planType)
+  const currentCount = await db.product.count({ where: { shopId } })
+  const maxAllowed = planConfig.maxProducts
+
+  if (currentCount >= maxAllowed) {
+    return {
+      allowed: false,
+      currentCount,
+      maxAllowed,
+      message: `Limite atteinte (${currentCount}/${maxAllowed} produits). Passez à un plan supérieur pour ajouter plus de produits.`,
+    }
+  }
+
+  return { allowed: true, currentCount, maxAllowed, message: '' }
+}
+
 export async function upgradeSubscription(
   userId: string,
-  newPlan: PlanType,
+  newPlan: string,
   endDate?: Date
 ): Promise<SubscriptionInfo> {
-  const planConfig = PLAN_CONFIGS[newPlan]
-
+  const planConfig = getPlanConfig(newPlan)
   const updated = await db.subscription.upsert({
     where: { userId },
     create: {
       userId,
-      planType: newPlan,
+      planType: newPlan as PlanType,
       status: 'ACTIVE',
       maxShops: planConfig.maxShops,
       endDate: endDate ?? null,
     },
     update: {
-      planType: newPlan,
+      planType: newPlan as PlanType,
       status: 'ACTIVE',
       maxShops: planConfig.maxShops,
       endDate: endDate ?? null,
     },
   })
-
   return {
     id: updated.id,
     planType: updated.planType,
@@ -260,37 +305,22 @@ export async function upgradeSubscription(
 
 // ─── RESELLER HELPERS ──────────────────────────────────────────────────────────
 
-/**
- * Get the reseller profile for a user. Returns null if not a reseller.
- */
 export async function getResellerProfile(userId: string) {
-  return db.reseller.findUnique({
-    where: { userId },
-  })
+  return db.reseller.findUnique({ where: { userId } })
 }
 
-/**
- * Get all clients (sellers) for a given reseller.
- */
 export async function getResellerClients(resellerId: string) {
   return db.user.findMany({
     where: { resellerId },
     include: {
       subscription: true,
-      shops: {
-        select: { id: true, name: true, slug: true, isActive: true, plan: true },
-      },
-      _count: {
-        select: { shops: true, orders: true },
-      },
+      shops: { select: { id: true, name: true, slug: true, isActive: true, plan: true } },
+      _count: { select: { shops: true, orders: true } },
     },
     orderBy: { createdAt: 'desc' },
   })
 }
 
-/**
- * Create a new reseller profile for a user.
- */
 export async function createResellerProfile(
   userId: string,
   data: { companyName?: string; logoUrl?: string; primaryColor?: string; commission?: number }
@@ -306,61 +336,28 @@ export async function createResellerProfile(
   })
 }
 
-/**
- * Update a reseller's white-label settings.
- */
 export async function updateResellerProfile(
   userId: string,
   data: { companyName?: string; logoUrl?: string; primaryColor?: string; commission?: number }
 ) {
-  return db.reseller.update({
-    where: { userId },
-    data,
-  })
+  return db.reseller.update({ where: { userId }, data })
 }
 
-// ─── INTERNAL HELPERS ──────────────────────────────────────────────────────────
+// ─── CONSOLIDATED STATS ────────────────────────────────────────────────────────
 
-function getNextPlanLabel(currentPlan: PlanType): string {
-  switch (currentPlan) {
-    case 'STARTER': return 'Pro'
-    case 'PRO': return 'Business'
-    case 'BUSINESS': return 'Business (max)'
-  }
-}
-
-/**
- * Get consolidated stats across all shops for a user.
- */
 export async function getConsolidatedStats(userId: string) {
   const shops = await db.shop.findMany({
     where: { ownerId: userId, isActive: true },
     select: { id: true },
   })
-
   const shopIds = shops.map(s => s.id)
 
   const [totalProducts, totalOrders, totalVisits, pendingOrders] = await Promise.all([
-    db.product.count({
-      where: { shopId: { in: shopIds }, isAvailable: true },
-    }),
-    db.order.count({
-      where: { shopId: { in: shopIds } },
-    }),
-    db.visit.count({
-      where: { shopId: { in: shopIds } },
-    }),
-    db.order.count({
-      where: { shopId: { in: shopIds }, status: 'PENDING' },
-    }),
+    db.product.count({ where: { shopId: { in: shopIds }, isAvailable: true } }),
+    db.order.count({ where: { shopId: { in: shopIds } } }),
+    db.visit.count({ where: { shopId: { in: shopIds } } }),
+    db.order.count({ where: { shopId: { in: shopIds }, status: 'PENDING' } }),
   ])
 
-  return {
-    shopCount: shops.length,
-    totalProducts,
-    totalOrders,
-    totalVisits,
-    pendingOrders,
-    shops,
-  }
+  return { shopCount: shops.length, totalProducts, totalOrders, totalVisits, pendingOrders, shops }
 }

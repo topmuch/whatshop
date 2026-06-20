@@ -20,9 +20,14 @@ enum Role {
 }
 
 enum PlanType {
-  STARTER  // 5000F — 1 boutique
-  PRO      // 8000F — 3 boutiques
-  BUSINESS // 20000F — 10 boutiques + domaine personnalisé
+  // Legacy plans (backward compat)
+  STARTER
+  PRO
+  BUSINESS
+  // New plans
+  LIVE        // 20 000F/an — 1 boutique, 20 produits
+  LIVE_PRO    // 35 000F/an — 2 boutiques, 25 produits/boutique
+  BOUTIQUE_PRO // 30 000F/an — 1 boutique, 40 produits, toutes features
 }
 
 enum SubStatus {

@@ -1047,43 +1047,56 @@ function CustomizeYourShop() {
 /* ── PRICING ── */
 const plans = [
   {
-    name: 'STARTER',
-    price: '5 000',
-    desc: 'Idéal pour démarrer',
+    name: 'LIVE',
+    emoji: '🔴',
+    price: '20 000',
+    period: 'FCFA / an',
+    desc: 'Idéal pour les vendeurs en live',
     popular: false,
     features: [
       '1 boutique',
-      '10 produits',
+      '20 produits',
+      'Live TikTok',
+      'Posts Facebook',
       'Commandes WhatsApp',
-      'Design responsive',
+      '1 thème inclus',
+      'Dashboard simplifié',
     ],
   },
   {
-    name: 'PRO',
-    price: '8 000',
-    desc: 'Pour les vendeurs ambitieux',
+    name: 'BOUTIQUE PRO',
+    emoji: '🟣',
+    price: '30 000',
+    period: 'FCFA / an',
+    desc: 'Toutes les fonctionnalités',
     popular: true,
     features: [
-      '3 boutiques',
-      '100 produits',
+      '1 boutique',
+      '40 produits',
+      'Toutes les fonctionnalités',
+      'Live TikTok + Facebook',
+      'Tous les thèmes premium',
+      'Domaine personnalisé',
       'Statistiques avancées',
-      '12 thèmes premium',
-      'Support prioritaire',
-      'Logo personnalisé',
+      'Outils IA',
+      'Dashboard complet',
     ],
   },
   {
-    name: 'BUSINESS',
-    price: '20 000',
-    desc: 'Pour les professionnels',
+    name: 'LIVE PRO',
+    emoji: '🔵',
+    price: '35 000',
+    period: 'FCFA / an',
+    desc: 'Pour les vendeurs multi-activités',
     popular: false,
     features: [
-      '10 boutiques',
-      'Produits illimités',
-      'Domaine personnalisé',
-      'Support 24/7',
-      'API & intégrations',
-      'Marque blanche',
+      '2 boutiques',
+      '25 produits / boutique',
+      'Live TikTok',
+      'Posts Facebook',
+      'Commandes WhatsApp',
+      '1 thème inclus',
+      'Dashboard simplifié',
     ],
   },
 ]
@@ -1112,8 +1125,7 @@ function Pricing() {
             custom={0.1}
             className="mt-5 text-gray-500 text-xl sm:text-2xl max-w-2xl mx-auto"
           >
-            Choisissez le plan qui correspond à votre activité. Changez à tout
-            moment.
+            Choisissez l'offre qui correspond à vos besoins. Facturation annuelle.
           </motion.p>
         </motion.div>
         <div className="grid md:grid-cols-3 gap-8 lg:gap-10 max-w-5xl mx-auto">
@@ -1144,7 +1156,7 @@ function Pricing() {
                 <CardContent className="pt-10 pb-10 px-7 flex flex-col flex-1">
                   <div className="mb-8">
                     <h3 className="text-base font-bold tracking-wider text-gray-400 uppercase">
-                      {p.name}
+                      {p.emoji} {p.name}
                     </h3>
                     <p className="text-base text-gray-500 mt-1.5">{p.desc}</p>
                   </div>
@@ -1153,7 +1165,7 @@ function Pricing() {
                       {p.price}
                     </span>
                     <span className="text-gray-400 font-medium text-lg ml-1.5">
-                      FCFA/mois
+                      {p.period}
                     </span>
                   </div>
                   <ul className="space-y-4 mb-10 flex-1">

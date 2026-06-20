@@ -40,7 +40,7 @@ type Sector =
   | 'consulting'
   | 'artisanat'
   | 'sante'
-type Plan = 'TRIAL' | 'PRO'
+type Plan = 'LIVE' | 'LIVE_PRO' | 'BOUTIQUE_PRO'
 
 interface OnboardingFormData {
   businessType: BusinessType | null
@@ -899,9 +899,72 @@ export function OnboardingWizard() {
   }
 
   function renderStep5() {
-    const selectPlan = (plan: 'TRIAL' | 'PRO') => {
+    const selectPlan = (plan: Plan) => {
       setForm((prev) => ({ ...prev, plan }))
     }
+
+    const plans: { id: Plan; emoji: string; name: string; price: string; priceNote: string; recommended?: boolean; features: string[]; btnClass: string; selectedClass: string; btnText: string }[] = [
+      {
+        id: 'LIVE',
+        emoji: '🔴',
+        name: 'LIVE',
+        price: '20 000',
+        priceNote: 'FCFA / an',
+        features: [
+          '1 boutique',
+          '20 produits',
+          'Live TikTok',
+          'Posts Facebook',
+          'Commandes WhatsApp',
+          '1 thème inclus',
+          'Dashboard simplifié',
+        ],
+        btnClass: 'bg-gradient-to-r from-rose-600 to-pink-600 text-white hover:from-rose-700 hover:to-pink-700',
+        selectedClass: 'ring-2 ring-rose-600 shadow-lg bg-rose-50/50 border-rose-600',
+        btnText: 'Commencer avec Live',
+      },
+      {
+        id: 'BOUTIQUE_PRO',
+        emoji: '🟣',
+        name: 'BOUTIQUE PRO',
+        price: '30 000',
+        priceNote: 'FCFA / an',
+        recommended: true,
+        features: [
+          '1 boutique',
+          '40 produits',
+          'Toutes les fonctionnalités',
+          'Live TikTok + Facebook',
+          'Tous les thèmes premium',
+          'Domaine personnalisé',
+          'Statistiques avancées',
+          'Outils IA',
+          'Dashboard complet',
+        ],
+        btnClass: 'bg-gradient-to-r from-purple-700 to-indigo-700 text-white hover:from-purple-800 hover:to-indigo-800',
+        selectedClass: 'ring-2 ring-purple-700 shadow-lg bg-purple-50/50 border-purple-700',
+        btnText: 'Choisir Boutique Pro',
+      },
+      {
+        id: 'LIVE_PRO',
+        emoji: '🔵',
+        name: 'LIVE PRO',
+        price: '35 000',
+        priceNote: 'FCFA / an',
+        features: [
+          '2 boutiques',
+          '25 produits / boutique',
+          'Live TikTok',
+          'Posts Facebook',
+          'Commandes WhatsApp',
+          '1 thème inclus',
+          'Dashboard simplifié',
+        ],
+        btnClass: 'bg-gray-900 text-white hover:bg-gray-800',
+        selectedClass: 'ring-2 ring-gray-900 shadow-lg bg-gray-50 border-gray-900',
+        btnText: 'Choisir Live Pro',
+      },
+    ]
 
     return (
       <motion.div
@@ -918,10 +981,10 @@ export function OnboardingWizard() {
             <Sparkles className="w-8 h-8 text-rose-600" />
           </div>
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-            Votre site est prêt ! Choisissez votre formule
+            Votre boutique est prête ! Choisissez votre offre
           </h2>
           <p className="text-muted-foreground">
-            Sélectionnez le plan qui vous convient
+            Sélectionnez l'offre qui correspond à vos besoins
           </p>
         </div>
 
@@ -959,138 +1022,63 @@ export function OnboardingWizard() {
         </Card>
 
         {/* Plan Cards */}
-        <div className="grid gap-4 sm:grid-cols-2">
-          {/* Trial Plan */}
-          <div
-            role="button"
-            tabIndex={0}
-            onClick={() => selectPlan('TRIAL')}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') selectPlan('TRIAL') }}
-          >
-            <Card
-              className={`cursor-pointer transition-all duration-200 hover:shadow-xl h-full relative overflow-hidden ${
-                form.plan === 'TRIAL'
-                  ? 'ring-2 ring-rose-600 shadow-lg bg-rose-50/50 border-rose-600'
-                  : 'hover:border-rose-300'
-              }`}
+        <div className="grid gap-4 sm:grid-cols-3">
+          {plans.map((p) => (
+            <div
+              key={p.id}
+              role="button"
+              tabIndex={0}
+              onClick={() => selectPlan(p.id)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') selectPlan(p.id) }}
             >
-              {form.plan === 'TRIAL' && (
-                <div className="absolute top-3 right-3 z-10">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-600 px-3 py-1 text-xs font-bold text-white shadow-md">
-                    ✓ Sélectionné
-                  </span>
-                </div>
-              )}
-              <CardContent className="p-6 flex flex-col h-full">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-2xl">🟢</span>
-                  <h3 className="font-bold text-lg text-gray-900">ESSAI GRATUIT</h3>
-                  {form.plan === 'TRIAL' && (
-                    <span className="ml-auto text-xs font-semibold text-rose-600 bg-rose-100 px-2 py-0.5 rounded-full">Sélectionné</span>
-                  )}
-                </div>
-                <div className="mb-4">
-                  <span className="text-3xl font-bold text-gray-900">0</span>
-                  <span className="text-muted-foreground ml-1">FCFA</span>
-                </div>
-                <ul className="space-y-2.5 flex-1">
-                  {[
-                    '7 jours d\'essai',
-                    '1 boutique',
-                    `Template ${templateName} inclus`,
-                    'Domaine boutiko.pro',
-                    'Logo Boutiko',
-                  ].map((item, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
-                      <Check className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-                <Button
-                  type="button"
-                  onClick={() => selectPlan('TRIAL')}
-                  className={`w-full mt-5 rounded-xl font-semibold ${
-                    form.plan === 'TRIAL'
-                      ? 'bg-gradient-to-r from-rose-600 to-pink-600 text-white hover:from-rose-700 hover:to-pink-700'
-                      : 'bg-gradient-to-r from-rose-500 to-pink-500 text-white hover:from-rose-600 hover:to-pink-600'
-                  }`}
-                  size="lg"
-                >
-                  {form.plan === 'TRIAL' ? '✓ Essai gratuit choisi' : 'Commencer gratuit →'}
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Pro Plan */}
-          <div
-            role="button"
-            tabIndex={0}
-            onClick={() => selectPlan('PRO')}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') selectPlan('PRO') }}
-          >
-            <Card
-              className={`cursor-pointer transition-all duration-200 hover:shadow-xl h-full relative overflow-hidden ${
-                form.plan === 'PRO'
-                  ? 'ring-2 ring-gray-900 shadow-lg bg-gray-50 border-gray-900'
-                  : 'hover:border-gray-400'
-              }`}
-            >
-              {form.plan === 'PRO' && (
-                <div className="absolute top-3 right-3 z-10">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-900 px-3 py-1 text-xs font-bold text-white shadow-md">
-                    ✓ Sélectionné
-                  </span>
-                </div>
-              )}
-              {form.plan !== 'PRO' && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-                  <span className="bg-gray-900 text-white text-xs font-semibold px-3 py-1 rounded-full">
-                    Recommandé
-                  </span>
-                </div>
-              )}
-              <CardContent className="p-6 flex flex-col h-full">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-2xl">🔵</span>
-                  <h3 className="font-bold text-lg text-gray-900">PRO</h3>
-                  <span className="text-xs bg-rose-100 text-rose-600 px-2 py-0.5 rounded-full font-medium">
-                    Recommandé
-                  </span>
-                  {form.plan === 'PRO' && (
-                    <span className="ml-auto text-xs font-semibold text-gray-900 bg-gray-200 px-2 py-0.5 rounded-full">Sélectionné</span>
-                  )}
-                </div>
-                <div className="mb-4">
-                  <span className="text-3xl font-bold text-gray-900">5 000</span>
-                  <span className="text-muted-foreground ml-1">FCFA/mois</span>
-                </div>
-                <ul className="space-y-2.5 flex-1">
-                  {[
-                    'Domaine personnalisé',
-                    'Boutiques illimitées',
-                    'Live TikTok intégré',
-                    'Kit Marketing complet',
-                    'Sans logo Boutiko',
-                  ].map((item, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
-                      <Check className="w-4 h-4 text-gray-900 mt-0.5 shrink-0" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-                <Button
-                  type="button"
-                  onClick={() => selectPlan('PRO')}
-                  className="w-full mt-5 rounded-xl font-semibold bg-gray-900 text-white hover:bg-gray-800"
-                  size="lg"
-                >
-                  {form.plan === 'PRO' ? '✓ Plan Pro choisi' : 'Choisir Pro →'}
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+              <Card
+                className={`cursor-pointer transition-all duration-200 hover:shadow-xl h-full relative overflow-hidden ${
+                  form.plan === p.id ? p.selectedClass : 'hover:border-gray-300'
+                }`}
+              >
+                {form.plan === p.id && (
+                  <div className="absolute top-3 right-3 z-10">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-600 px-3 py-1 text-xs font-bold text-white shadow-md">
+                      ✓ Sélectionné
+                    </span>
+                  </div>
+                )}
+                {p.recommended && form.plan !== p.id && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+                    <span className="bg-purple-700 text-white text-xs font-semibold px-3 py-1 rounded-full">
+                      Populaire
+                    </span>
+                  </div>
+                )}
+                <CardContent className="p-5 flex flex-col h-full">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xl">{p.emoji}</span>
+                    <h3 className="font-bold text-base text-gray-900">{p.name}</h3>
+                  </div>
+                  <div className="mb-3">
+                    <span className="text-2xl font-bold text-gray-900">{p.price}</span>
+                    <span className="text-muted-foreground ml-1 text-sm">{p.priceNote}</span>
+                  </div>
+                  <ul className="space-y-2 flex-1">
+                    {p.features.map((item, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                        <Check className="w-4 h-4 text-rose-500 mt-0.5 shrink-0" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                  <Button
+                    type="button"
+                    onClick={() => selectPlan(p.id)}
+                    className={`w-full mt-4 rounded-xl font-semibold ${p.btnClass}`}
+                    size="sm"
+                  >
+                    {form.plan === p.id ? `✓ ${p.name} choisi` : `${p.btnText} →`}
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          ))}
         </div>
 
         <div className="mt-8 flex justify-between">
@@ -1110,9 +1098,11 @@ export function OnboardingWizard() {
             className={`rounded-xl px-8 font-semibold transition-all duration-200 ${
               !form.plan
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : form.plan === 'PRO'
-                  ? 'bg-gray-900 text-white hover:bg-gray-800'
-                  : 'bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white'
+                : form.plan === 'BOUTIQUE_PRO'
+                  ? 'bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-800 hover:to-indigo-800 text-white'
+                  : form.plan === 'LIVE_PRO'
+                    ? 'bg-gray-900 text-white hover:bg-gray-800'
+                    : 'bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white'
             }`}
             size="lg"
           >
@@ -1121,14 +1111,9 @@ export function OnboardingWizard() {
                 <Loader2 className="mr-2 w-4 h-4 animate-spin" />
                 Création en cours...
               </>
-            ) : form.plan === 'PRO' ? (
-              <>
-                Demander le plan Pro
-                <ArrowRight className="ml-2 w-4 h-4" />
-              </>
             ) : (
               <>
-                Créer mon site
+                {form.plan === 'LIVE' ? 'Créer avec Live' : form.plan === 'BOUTIQUE_PRO' ? 'Créer avec Boutique Pro' : 'Créer avec Live Pro'}
                 <ArrowRight className="ml-2 w-4 h-4" />
               </>
             )}
