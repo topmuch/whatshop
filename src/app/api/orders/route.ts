@@ -183,18 +183,27 @@ export async function POST(request: NextRequest) {
         items: orderItems,
       })
 
-      const ownerName = (
+      const owner = (
         await db.user.findUnique({
           where: { id: shop.ownerId },
-          select: { name: true },
+          select: { name: true, email: true },
         })
-      )?.name || ''
+      )
 
       dispatchAdminNewOrderEmail({
         shopName: shop.name,
-        ownerName,
+        shopSlug: shop.slug,
+        ownerName: owner?.name || '',
+        ownerEmail: owner?.email || '',
         total,
         customerName: `${customer.firstName} ${customer.lastName}`,
+        customerPhone: customer.phone,
+        customerEmail: customer.email?.trim() || null,
+        customerCity: customer.city,
+        customerAddress: customer.address,
+        customerNotes: customer.notes,
+        items: orderItems,
+        orderId: order.id,
       })
 
       // WhatsApp notification to seller

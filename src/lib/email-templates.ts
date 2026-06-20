@@ -276,25 +276,80 @@ export function adminNewShopEmail(data: AdminNewShopEmailData): string {
 
 export interface AdminNewOrderEmailData {
   shopName: string
+  shopSlug: string
   ownerName: string
+  ownerEmail: string
   total: number
   customerName: string | null
+  customerPhone: string | null
+  customerEmail: string | null
+  customerCity: string | null
+  customerAddress: string | null
+  customerNotes: string | null
+  items: { name: string; quantity: number; price: number }[]
+  orderId: string
 }
 
 export function adminNewOrderEmail(data: AdminNewOrderEmailData): string {
+  const itemsRows = data.items
+    .map(
+      (item) =>
+        `<tr>
+          <td style="padding:8px 10px;border-bottom:1px solid #f3f4f6;font-size:13px;">${esc(item.name)}</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #f3f4f6;font-size:13px;text-align:center;">${item.quantity}</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #f3f4f6;font-size:13px;text-align:right;">${(item.price * item.quantity).toLocaleString('fr-FR')} FCFA</td>
+        </tr>`
+    )
+    .join('')
+
+  const notesBlock = data.customerNotes?.trim()
+    ? `<p style="margin-top:12px;"><strong>📝 Notes :</strong> ${esc(data.customerNotes.trim())}</p>`
+    : ''
+
   return wrap(
-    'Nouvelle commande',
-    'Notification admin',
+    'Nouvelle commande reçue',
+    `Commande #${data.orderId.slice(-6)}`,
     `
-      <p>Une nouvelle commande a été passée :</p>
+      <p>Une nouvelle commande a été passée sur la plateforme.</p>
+
       <div class="details">
         <table>
-          <tr><td>Boutique</td><td>${esc(data.shopName)}</td></tr>
-          <tr><td>Vendeur</td><td>${esc(data.ownerName)}</td></tr>
-          <tr><td>Client</td><td>${esc(data.customerName || 'Non renseigné')}</td></tr>
-          <tr><td>Montant</td><td><strong>${data.total.toLocaleString('fr-FR')} FCFA</strong></td></tr>
+          <tr><td>Boutique</td><td><a href="https://boutiko.pro/${esc(data.shopSlug)}" style="color:#EC4899;text-decoration:none;">${esc(data.shopName)}</a></td></tr>
+          <tr><td>Vendeur</td><td>${esc(data.ownerName)} (${esc(data.ownerEmail)})</td></tr>
+          <tr><td>Montant</td><td><strong style="color:#059669;">${data.total.toLocaleString('fr-FR')} FCFA</strong></td></tr>
         </table>
       </div>
+
+      <h3 style="margin:20px 0 8px;font-size:15px;">👤 Client</h3>
+      <div class="details">
+        <table>
+          <tr><td>Nom</td><td>${esc(data.customerName || 'Non renseigné')}</td></tr>
+          ${data.customerPhone ? `<tr><td>Téléphone</td><td><a href="tel:${esc(data.customerPhone)}">${esc(data.customerPhone)}</a></td></tr>` : ''}
+          ${data.customerEmail ? `<tr><td>Email</td><td><a href="mailto:${esc(data.customerEmail)}">${esc(data.customerEmail)}</a></td></tr>` : ''}
+          ${data.customerCity ? `<tr><td>Ville</td><td>${esc(data.customerCity)}</td></tr>` : ''}
+          ${data.customerAddress ? `<tr><td>Adresse</td><td>${esc(data.customerAddress)}</td></tr>` : ''}
+        </table>
+      </div>
+
+      <h3 style="margin:20px 0 8px;font-size:15px;">📋 Articles commandés</h3>
+      <table style="width:100%;border-collapse:collapse;margin:0;">
+        <tr style="background:#f9fafb;">
+          <th style="padding:8px 10px;font-size:12px;font-weight:600;text-align:left;border-bottom:2px solid #e5e7eb;">Produit</th>
+          <th style="padding:8px 10px;font-size:12px;font-weight:600;text-align:center;border-bottom:2px solid #e5e7eb;">Qté</th>
+          <th style="padding:8px 10px;font-size:12px;font-weight:600;text-align:right;border-bottom:2px solid #e5e7eb;">Sous-total</th>
+        </tr>
+        ${itemsRows}
+        <tr>
+          <td colspan="2" style="padding:10px;font-size:14px;font-weight:700;text-align:right;border-top:2px solid #111827;">Total</td>
+          <td style="padding:10px;font-size:14px;font-weight:700;text-align:right;border-top:2px solid #111827;color:#059669;">${data.total.toLocaleString('fr-FR')} FCFA</td>
+        </tr>
+      </table>
+
+      ${notesBlock}
+
+      <p style="margin-top:24px;font-size:13px;color:#6b7280;">
+        <a href="https://boutiko.pro/admin" style="color:#EC4899;">Ouvrir le dashboard admin →</a>
+      </p>
     `
   )
 }

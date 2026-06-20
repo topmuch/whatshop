@@ -172,19 +172,34 @@ export async function dispatchCustomerOrderConfirmationEmail(
 }
 
 /**
- * Send new order email to admin (if notifyNewOrder is enabled).
+ * Send new order email to ALL superadmins.
+ * This is NOT gated by the notifyNewOrder toggle — admins always receive order emails.
  */
 export async function dispatchAdminNewOrderEmail(data: AdminNewOrderEmailData): Promise<void> {
   if (!(await isEmailConfigured())) return
   try {
-    const flags = await getSaaSConfigFlags()
-    if (!flags.notifyNewOrder) return
-
-    const supportEmail = await getSupportEmail()
     const html = adminNewOrderEmail(data)
+
+    // Collect all recipient emails: superadmins + supportEmail
+    const recipients = new Set<string>()
+
+    // Get all SUPER_ADMIN users
+    const superAdmins = await db.user.findMany({
+      where: { role: 'SUPER_ADMIN' },
+      select: { email: true },
+    })
+    superAdmins.forEach((u) => recipients.add(u.email))
+
+    // Also add support email as fallback
+    const supportEmail = await getSupportEmail()
+    recipients.add(supportEmail)
+
+    const toList = Array.from(recipients).filter(Boolean)
+    if (toList.length === 0) return
+
     await sendEmail({
-      to: supportEmail,
-      subject: `📦 Nouvelle commande — ${data.shopName}`,
+      to: toList,
+      subject: `🛒 Nouvelle commande — ${data.total.toLocaleString('fr-FR')} FCFA — ${data.shopName}`,
       html,
     })
   } catch (error) {
