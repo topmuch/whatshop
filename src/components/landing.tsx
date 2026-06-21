@@ -635,18 +635,21 @@ const steps = [
     title: 'Créez votre boutique',
     desc: 'Inscrivez-vous et configurez votre boutique en quelques clics. Pas de compétences techniques requises.',
     image: '/landing/step-create-shop.png',
+    highlight: 'Gratuit · 2 min',
   },
   {
     num: 2,
     title: 'Ajoutez vos produits',
     desc: 'Importez vos produits avec photos, prix et descriptions. Organisez-les par catégories.',
     image: '/landing/step-add-products.png',
+    highlight: 'IA · Photos auto',
   },
   {
     num: 3,
     title: 'Recevez des commandes sur WhatsApp',
     desc: 'Partagez votre lien et recevez automatiquement des commandes via WhatsApp.',
     image: '/landing/step-whatsapp-orders.png',
+    highlight: 'WhatsApp · Live',
   },
 ]
 
@@ -695,18 +698,22 @@ function ScrollingBanner() {
 
 function HowItWorks() {
   return (
-    <section id="how-it-works" className="py-24 md:py-32 bg-white">
+    <section id="how-it-works" className="py-24 md:py-32 bg-gradient-to-b from-white via-pink-50/30 to-white overflow-hidden">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <motion.div
           initial="hidden"
           whileInView="visible"
           viewport={vp}
           variants={stagger}
-          className="text-center mb-20"
+          className="text-center mb-16 md:mb-20"
         >
+          <motion.div variants={fadeUp} custom={0} className="inline-flex items-center gap-2 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60 px-5 py-2 text-base font-medium mb-6">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+            Simple et rapide
+          </motion.div>
           <motion.h2
             variants={fadeUp}
-            custom={0}
+            custom={0.05}
             className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900"
           >
             Comment ça marche ?
@@ -720,43 +727,65 @@ function HowItWorks() {
           </motion.p>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-10 md:gap-14 relative">
-          <div className="hidden md:block absolute top-12 left-[20%] right-[20%] h-px bg-gradient-to-r from-pink-200 via-pink-300 to-pink-200" />
+        <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
+          {steps.map((step, i) => (
+            <motion.div
+              key={i}
+              initial="hidden"
+              whileInView="visible"
+              viewport={vp}
+              variants={fadeUp}
+              custom={i * 0.12}
+              className="group relative"
+            >
+              {/* Connector line (desktop) */}
+              {i < steps.length - 1 && (
+                <div className="hidden md:block absolute top-1/3 -right-4 lg:-right-5 w-8 lg:w-10 z-10">
+                  <div className="w-full h-px bg-gradient-to-r from-pink-300 to-pink-100" />
+                  <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-0 h-0 border-l-[6px] border-l-pink-300 border-y-[4px] border-y-transparent" />
+                </div>
+              )}
 
-          {steps.map((step, i) => {
-            return (
-              <motion.div
-                key={i}
-                initial="hidden"
-                whileInView="visible"
-                viewport={vp}
-                variants={fadeUp}
-                custom={i * 0.15}
-                className="text-center relative"
-              >
-                <div className="inline-flex flex-col items-center">
-                  <div className="w-28 h-28 rounded-full overflow-hidden border-2 border-pink-200 mb-8 relative z-10 shadow-md">
-                    <Image
-                      src={step.image}
-                      alt={step.title}
-                      width={112}
-                      height={112}
-                      className="w-full h-full object-cover"
-                    />
+              <div className="relative rounded-3xl overflow-hidden bg-white border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-pink-500/10 transition-all duration-500 group-hover:-translate-y-2">
+                {/* Image area */}
+                <div className="relative aspect-[4/3] overflow-hidden">
+                  <Image
+                    src={step.image}
+                    alt={step.title}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-700"
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+
+                  {/* Step number */}
+                  <div className="absolute top-4 left-4 w-12 h-12 rounded-2xl bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center">
+                    <span className="text-xl font-extrabold bg-gradient-to-br from-pink-500 to-rose-500 bg-clip-text text-transparent">
+                      {step.num}
+                    </span>
                   </div>
-                  <div className="absolute -top-1 -right-1 md:right-auto md:-top-1 w-9 h-9 rounded-full bg-gradient-to-br from-pink-500 to-rose-500 text-white text-base font-bold flex items-center justify-center z-20">
-                    {step.num}
+
+                  {/* Highlight badge */}
+                  <div className="absolute top-4 right-4">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/90 backdrop-blur-sm text-gray-700 text-xs font-bold px-3 py-1.5 shadow-md">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      {step.highlight}
+                    </span>
                   </div>
                 </div>
-                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">
-                  {step.title}
-                </h3>
-                <p className="text-gray-500 text-base sm:text-lg leading-relaxed max-w-xs mx-auto">
-                  {step.desc}
-                </p>
-              </motion.div>
-            )
-          })}
+
+                {/* Text area */}
+                <div className="p-6 lg:p-8">
+                  <h3 className="text-xl lg:text-2xl font-bold text-gray-900 mb-3 leading-tight">
+                    {step.title}
+                  </h3>
+                  <p className="text-gray-500 text-base lg:text-lg leading-relaxed">
+                    {step.desc}
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          ))}
         </div>
       </div>
     </section>
@@ -1841,41 +1870,76 @@ function Testimonials() {
 /* ── FINAL CTA ── */
 function FinalCTA() {
   return (
-    <section className="py-24 md:py-32 bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 relative overflow-hidden">
+    <section className="py-24 md:py-36 bg-gradient-to-br from-pink-500 via-rose-500 to-purple-600 relative overflow-hidden">
+      {/* Decorative shapes */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(255,255,255,0.15),transparent_50%)]" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(255,255,255,0.1),transparent_40%)]" />
+      <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-white/5 blur-3xl" />
+      <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-purple-400/20 blur-3xl" />
+
       <motion.div
         initial="hidden"
         whileInView="visible"
         viewport={vp}
         variants={stagger}
-        className="relative mx-auto max-w-7xl px-5 sm:px-8 text-center"
+        className="relative mx-auto max-w-4xl px-5 sm:px-8 text-center"
       >
+        {/* Trust badge */}
+        <motion.div variants={fadeUp} custom={0} className="inline-flex items-center gap-2 rounded-full bg-white/15 backdrop-blur-sm text-white border border-white/20 px-5 py-2 text-sm font-semibold mb-8">
+          <svg className="w-4 h-4 text-yellow-300 fill-yellow-300" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
+          4.9/5 · 500+ vendeurs satisfaits
+        </motion.div>
+
         <motion.h2
           variants={fadeUp}
-          custom={0}
-          className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-white leading-tight"
+          custom={0.05}
+          className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white leading-[1.1]"
         >
-          Prêt à lancer votre boutique
-          <br className="hidden sm:block" /> en ligne ?
+          Prêt à lancer votre
+          <br className="hidden sm:block" />
+          {' '}boutique en ligne ?
         </motion.h2>
         <motion.p
           variants={fadeUp}
           custom={0.1}
-          className="mt-6 text-xl text-white/80 max-w-2xl mx-auto"
+          className="mt-6 text-lg sm:text-xl text-white/80 max-w-2xl mx-auto leading-relaxed"
         >
           Rejoignez des centaines de vendeurs africains qui font confiance à
-          Boutiko pour développer leur activité.
+          Boutiko. Créez votre boutique gratuitement en 2 minutes.
         </motion.p>
-        <motion.div variants={fadeUp} custom={0.2} className="mt-12">
+
+        {/* CTA Buttons */}
+        <motion.div variants={fadeUp} custom={0.15} className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
           <Button
             size="lg"
             onClick={() => navigateTo('register')}
-            className="text-lg px-12 py-7 h-auto font-semibold rounded-full bg-white text-pink-600 hover:bg-white/90 shadow-2xl shadow-black/20"
+            className="text-lg px-10 py-7 h-auto font-bold rounded-full bg-white text-pink-600 hover:bg-white/90 shadow-2xl shadow-black/20 hover:shadow-2xl hover:shadow-black/30 transition-all duration-300 hover:scale-[1.02]"
           >
-            Créer ma boutique gratuitement{' '}
+            Créer ma boutique gratuitement
             <ArrowRight className="w-5 h-5 ml-2" />
           </Button>
+          <Button
+            variant="ghost"
+            size="lg"
+            onClick={() => navigateTo('contact')}
+            className="text-lg px-8 py-7 h-auto font-semibold rounded-full text-white hover:bg-white/10 hover:text-white border border-white/30"
+          >
+            Nous contacter
+          </Button>
+        </motion.div>
+
+        {/* Social proof micro */}
+        <motion.div variants={fadeUp} custom={0.2} className="mt-12 flex items-center justify-center gap-3">
+          <div className="flex -space-x-3">
+            {['/landing/testimonials/mariama.png', '/landing/testimonials/ibrahima.png', '/landing/testimonials/ady.png'].map((img, i) => (
+              <div key={i} className="w-10 h-10 rounded-full border-2 border-white overflow-hidden">
+                <Image src={img} alt="" width={40} height={40} className="w-full h-full object-cover" />
+              </div>
+            ))}
+          </div>
+          <p className="text-white/70 text-sm font-medium">
+            Rejoignez <span className="text-white font-bold">500+</span> vendeurs
+          </p>
         </motion.div>
       </motion.div>
     </section>
