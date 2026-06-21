@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic'
 import { useAppStore, AppView } from '@/lib/store'
 import { useEffect, useState, useCallback, useSyncExternalStore } from 'react'
 import { ErrorBoundary } from '@/components/error-boundary'
+import { NAVIGATE_EVENT } from '@/lib/navigation'
 import { LandingPage } from '@/components/landing'
 import { AuthLogin } from '@/components/auth/auth-login'
 import { AuthRegister } from '@/components/auth/auth-register'
@@ -65,7 +66,11 @@ function useClientPathname() {
   useEffect(() => {
     update()
     window.addEventListener('popstate', update)
-    return () => window.removeEventListener('popstate', update)
+    window.addEventListener(NAVIGATE_EVENT, update)
+    return () => {
+      window.removeEventListener('popstate', update)
+      window.removeEventListener(NAVIGATE_EVENT, update)
+    }
   }, [update])
 
   return realPath

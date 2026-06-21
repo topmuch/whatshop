@@ -204,50 +204,199 @@ function Header() {
   )
 }
 
-/* ── STORY CIRCLES (6 visibles, sous le hero) ── */
-const stories = [
-  { label: 'Boutiques', image: '/landing/story-boutique.png' },
-  { label: 'Clients', image: '/landing/story-cliente.png' },
-  { label: 'Vendeuses', image: '/landing/story-vendeuse.png' },
-  { label: 'Paiements', image: '/landing/story-paiement.png' },
-  { label: 'Produits', image: '/landing/story-produits.png' },
-  { label: 'Live', image: '/landing/story-live.png' },
+/* ── STORY CARDS (6 cards interactives sous le hero) ── */
+const storyCards = [
+  {
+    label: 'Boutiques',
+    desc: 'Multi-boutiques en un clic',
+    image: '/landing/story-boutique.png',
+    target: 'features',
+  },
+  {
+    label: 'Clients',
+    desc: 'Des milliers de clients satisfaits',
+    image: '/landing/story-cliente.png',
+    target: 'testimonials',
+  },
+  {
+    label: 'Vendeuses',
+    desc: 'Rejoignez notre communauté',
+    image: '/landing/story-vendeuse.png',
+    target: 'testimonials',
+  },
+  {
+    label: 'Paiements',
+    desc: 'Orange Money, Wave, MTN',
+    image: '/landing/story-paiement.png',
+    target: 'features',
+  },
+  {
+    label: 'Produits',
+    desc: 'Gérez votre catalogue facilement',
+    image: '/landing/story-produits.png',
+    target: 'how-it-works',
+  },
+  {
+    label: 'Live',
+    desc: 'Vendez en direct partout',
+    image: '/landing/story-live.png',
+    target: 'features',
+  },
 ]
 
-function StoryCircles() {
+function StoryCards() {
+  const [activeStory, setActiveStory] = useState<number | null>(null)
+
+  const handleCardClick = (index: number) => {
+    setActiveStory(index)
+  }
+
+  const handleStoryClose = () => {
+    setActiveStory(null)
+  }
+
+  const handleStoryCTA = () => {
+    setActiveStory(null)
+    navigateTo('register')
+  }
+
   return (
-    <motion.section
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={vp}
-      transition={{ duration: 0.5 }}
-      className="py-10 bg-white"
-    >
-      <div className="mx-auto max-w-5xl px-5 sm:px-8">
-        <div className="flex justify-center gap-4 sm:gap-6 md:gap-8 flex-wrap">
-          {stories.map((story, i) => (
-            <div key={i} className="flex flex-col items-center gap-2 cursor-pointer group">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full p-[2px] bg-gradient-to-br from-pink-500 via-rose-500 to-orange-400 group-hover:from-pink-400 group-hover:via-rose-400 group-hover:to-orange-300 transition-all duration-300 group-hover:shadow-lg group-hover:shadow-pink-500/30 group-hover:scale-110">
-                <div className="w-full h-full rounded-full p-[1.5px] bg-white">
-                  <div className="w-full h-full rounded-full overflow-hidden">
-                    <Image
-                      src={story.image}
-                      alt={story.label}
-                      width={200}
-                      height={200}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                </div>
+    <section className="py-12 sm:py-16 bg-white">
+      <div className="mx-auto max-w-7xl px-5 sm:px-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+          {storyCards.map((story, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={vp}
+              transition={{ duration: 0.4, delay: i * 0.07 }}
+              onClick={() => handleCardClick(i)}
+              className="relative rounded-2xl overflow-hidden cursor-pointer group shadow-sm hover:shadow-xl transition-all duration-300 aspect-[3/4]"
+            >
+              <Image
+                src={story.image}
+                alt={story.label}
+                fill
+                className="object-cover group-hover:scale-110 transition-transform duration-500"
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
+              />
+              {/* Gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent group-hover:from-black/80 transition-colors duration-300" />
+              {/* Instagram-style ring border */}
+              <div className="absolute inset-0 rounded-2xl ring-2 ring-pink-500/40 group-hover:ring-pink-500 transition-all duration-300" />
+              {/* Content */}
+              <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4">
+                <p className="text-white font-bold text-sm sm:text-base leading-tight">{story.label}</p>
+                <p className="text-white/70 text-xs sm:text-sm mt-1 line-clamp-2 leading-snug">{story.desc}</p>
               </div>
-              <span className="text-xs sm:text-sm font-semibold text-gray-600 group-hover:text-pink-600 transition-colors">
-                {story.label}
-              </span>
-            </div>
+              {/* Hover arrow */}
+              <div className="absolute top-3 right-3 w-7 h-7 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:scale-100 scale-75">
+                <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </motion.div>
           ))}
         </div>
       </div>
-    </motion.section>
+
+      {/* Story overlay viewer */}
+      <AnimatePresence>
+        {activeStory !== null && (
+          <StoryViewer
+            story={storyCards[activeStory]}
+            onClose={handleStoryClose}
+            onCTA={handleStoryCTA}
+          />
+        )}
+      </AnimatePresence>
+    </section>
+  )
+}
+
+function StoryViewer({
+  story,
+  onClose,
+  onCTA,
+}: {
+  story: typeof storyCards[number]
+  onClose: () => void
+  onCTA: () => void
+}) {
+  // Close on Escape
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [onClose])
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+
+      {/* Story card */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.9, y: 20 }}
+        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }}
+        className="relative w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Image */}
+        <div className="relative aspect-[3/4]">
+          <Image
+            src={story.image}
+            alt={story.label}
+            fill
+            className="object-cover"
+            sizes="(max-width: 640px) 100vw, 384px"
+            priority
+          />
+          {/* Progress bar (story-style) */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-white/30">
+            <motion.div
+              initial={{ width: '0%' }}
+              animate={{ width: '100%' }}
+              transition={{ duration: 5, ease: 'linear' }}
+              className="h-full bg-white rounded-full"
+            />
+          </div>
+          {/* Close button */}
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center hover:bg-black/50 transition-colors"
+            aria-label="Fermer"
+          >
+            <X className="w-5 h-5 text-white" />
+          </button>
+        </div>
+
+        {/* Content overlay */}
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-6 pt-16">
+          <h3 className="text-2xl font-bold text-white mb-2">{story.label}</h3>
+          <p className="text-white/80 text-base leading-relaxed mb-6">{story.desc}</p>
+          <Button
+            onClick={onCTA}
+            className="w-full rounded-full bg-white text-gray-900 hover:bg-gray-100 font-semibold text-base h-12 shadow-lg"
+          >
+            Commencer avec Boutiko
+            <ArrowRight className="w-4 h-4 ml-2" />
+          </Button>
+        </div>
+      </motion.div>
+    </motion.div>
   )
 }
 
@@ -1736,7 +1885,7 @@ function FinalCTA() {
 /* ── FOOTER ── */
 function Footer() {
   return (
-    <footer className="bg-white border-t border-gray-100 py-14 mt-auto">
+    <footer className="bg-white border-t border-gray-100 py-14 pb-24 mt-auto">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-12">
           {/* Brand */}
@@ -1839,7 +1988,7 @@ export function LandingPage() {
       <Header />
       <main className="flex-1">
         <Hero />
-        <StoryCircles />
+        <StoryCards />
         <ScrollingBanner />
         <HowItWorks />
         <SocialSelling />
