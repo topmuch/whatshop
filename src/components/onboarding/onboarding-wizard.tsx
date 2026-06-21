@@ -898,7 +898,7 @@ export function OnboardingWizard() {
   }
 
   function renderStep5() {
-    const LIVE_ALLOWED_TEMPLATES = new Set(['live-template', 'xstore-electro'])
+    const LIVE_ALLOWED_TEMPLATES = new Set(['live-template', 'live-1', 'live-2', 'live-3', 'xstore-electro'])
 
     const selectPlan = (plan: Plan) => {
       setForm((prev) => {

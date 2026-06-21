@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import { MessageCircle, Truck, HandCoins, ShieldCheck, Star, Zap, Clock, Radio, Eye } from 'lucide-react'
 import type { Product, Shop } from '@/lib/store'
 import { formatPrice, openWhatsApp } from '@/lib/shared'
+import { useLiveTheme } from './live-themes'
 
 interface ProductSpotlightProps {
   product: Product
@@ -18,6 +19,7 @@ function getDiscount(price: number, oldPrice?: number | null): number | null {
 }
 
 function CountdownTimer() {
+  const theme = useLiveTheme()
   // Countdown: 2 hours from first render (simulates live session remaining time)
   const [timeLeft, setTimeLeft] = useState({ hours: 1, minutes: 59, seconds: 59 })
   const [mounted, setMounted] = useState(false)
@@ -51,9 +53,9 @@ function CountdownTimer() {
     >
       <div className="flex flex-col items-center gap-4">
         {/* Top banner — like reference image */}
-        <div className="flex items-center gap-3 px-5 py-2.5 rounded-xl bg-red-600">
-          <Zap className="size-5 text-yellow-400" />
-          <span className="text-sm sm:text-base font-black text-white tracking-wide">
+        <div className={`flex items-center gap-3 px-5 py-2.5 rounded-xl ${theme.countdownBannerBg}`}>
+          <Zap className={`size-5 ${theme.countdownBannerIcon}`} />
+          <span className={`text-sm sm:text-base font-black ${theme.countdownBannerText} tracking-wide`}>
             OFFRE FLASH — Se termine dans
           </span>
         </div>
@@ -62,7 +64,7 @@ function CountdownTimer() {
         <div className="flex items-center gap-2 sm:gap-3">
           {blocks.map((block, i) => (
             <div key={block.label} className="flex items-center gap-2 sm:gap-3">
-              <div className="flex flex-col items-center justify-center w-16 h-20 sm:w-20 sm:h-24 md:w-24 md:h-28 rounded-xl bg-[#1A1A2E] shadow-[0_6px_24px_rgba(0,0,0,0.35)]">
+              <div className={`flex flex-col items-center justify-center w-16 h-20 sm:w-20 sm:h-24 md:w-24 md:h-28 rounded-xl ${theme.countdownBlockBg} shadow-[0_6px_24px_rgba(0,0,0,0.35)]`}>
                 <motion.span
                   key={mounted ? block.value : `static-${i}`}
                   initial={{ y: -8, opacity: 0 }}
@@ -101,6 +103,7 @@ function CountdownTimer() {
 }
 
 function ProductSpotlight({ product, shop }: ProductSpotlightProps) {
+  const theme = useLiveTheme()
   const whatsapp = shop?.whatsapp || ''
   const discount = getDiscount(product.price, product.oldPrice)
   const savings = product.oldPrice ? product.oldPrice - product.price : 0
@@ -139,28 +142,28 @@ function ProductSpotlight({ product, shop }: ProductSpotlightProps) {
     >
       {/* ─── LEFT VERTICAL BAR — "LIVE SHOWROOM" ─── */}
       <div className="flex">
-        {/* White sidebar with red accent */}
+        {/* Showroom sidebar with themed bg */}
         <motion.div
           variants={itemVariants}
-          className="hidden sm:flex flex-col items-center justify-between py-8 px-3 bg-yellow-400 min-h-[500px] lg:min-h-[600px] relative shrink-0"
+          className={`hidden sm:flex flex-col items-center justify-between py-8 px-3 ${theme.showroomBg} min-h-[500px] lg:min-h-[600px] relative shrink-0`}
           style={{ width: 'clamp(48px, 10vw, 100px)' }}
         >
-          {/* Red glowing dot */}
+          {/* Glowing dot */}
           <div className="relative">
             <span className="absolute inline-flex h-5 w-5 animate-ping rounded-full bg-red-500 opacity-60" />
             <span className="relative inline-flex h-4 w-4 rounded-full bg-red-500 shadow-[0_0_14px_rgba(239,68,68,0.8)]" />
           </div>
 
-          {/* Vertical text — bigger, yellow bg, red text */}
+          {/* Vertical text */}
           <div
-            className="text-red-600 font-black tracking-[0.3em] uppercase select-none"
+            className={`${theme.showroomText} font-black tracking-[0.3em] uppercase select-none`}
             style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', fontSize: 'clamp(18px, 3vw, 32px)' }}
           >
             LIVE SHOWROOM
           </div>
 
-          {/* Red star */}
-          <div className="text-red-500 text-2xl">★</div>
+          {/* Star */}
+          <div className={`${theme.showroomText} text-2xl`}>★</div>
         </motion.div>
 
         {/* ─── MAIN CONTENT ─── */}
@@ -168,21 +171,21 @@ function ProductSpotlight({ product, shop }: ProductSpotlightProps) {
           {/* ── TOP: Badges ── */}
           <div className="flex flex-wrap items-center gap-2.5 px-4 sm:px-6 pt-5 pb-3">
             {/* EN DIRECT badge — 2x bigger */}
-            <motion.div variants={itemVariants} className="flex items-center gap-3 px-6 sm:px-8 py-3 sm:py-4 rounded-full bg-red-600 shadow-[0_0_24px_rgba(220,38,38,0.4)]">
-              <Radio className="size-6 sm:size-7 text-white" />
-              <span className="text-base sm:text-lg lg:text-xl font-black text-white tracking-wide">EN DIRECT</span>
+            <motion.div variants={itemVariants} className={`flex items-center gap-3 px-6 sm:px-8 py-3 sm:py-4 rounded-full ${theme.enDirectBg} shadow-[0_0_24px_rgba(220,38,38,0.4)]`}>
+              <Radio className={`size-6 sm:size-7 ${theme.enDirectIcon}`} />
+              <span className={`text-base sm:text-lg lg:text-xl font-black ${theme.enDirectText} tracking-wide`}>EN DIRECT</span>
             </motion.div>
 
-            {/* OFFRE FLASH badge — yellow bg, red text */}
-            <motion.div variants={itemVariants} className="flex items-center gap-3 px-6 sm:px-8 py-3 sm:py-4 rounded-full bg-yellow-400">
-              <Zap className="size-6 sm:size-7 text-red-600" />
-              <span className="text-base sm:text-lg lg:text-xl font-black text-red-600 tracking-wide">OFFRE FLASH</span>
+            {/* OFFRE FLASH badge */}
+            <motion.div variants={itemVariants} className={`flex items-center gap-3 px-6 sm:px-8 py-3 sm:py-4 rounded-full ${theme.badgeFlashBg}`}>
+              <Zap className={`size-6 sm:size-7 ${theme.badgeFlashIcon}`} />
+              <span className={`text-base sm:text-lg lg:text-xl font-black ${theme.badgeFlashText} tracking-wide`}>OFFRE FLASH</span>
             </motion.div>
 
-            {/* STOCK LIMITÉ badge — yellow bg, red text */}
-            <motion.div variants={itemVariants} className="flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-yellow-400">
-              <Clock className="size-4 text-red-600" />
-              <span className="text-xs sm:text-sm font-black text-red-600 tracking-wide">STOCK LIMITÉ</span>
+            {/* STOCK LIMITÉ badge */}
+            <motion.div variants={itemVariants} className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full ${theme.badgeStockBg}`}>
+              <Clock className={`size-4 ${theme.badgeStockIcon}`} />
+              <span className={`text-xs sm:text-sm font-black ${theme.badgeStockText} tracking-wide`}>STOCK LIMITÉ</span>
             </motion.div>
           </div>
 
@@ -236,7 +239,7 @@ function ProductSpotlight({ product, shop }: ProductSpotlightProps) {
               </motion.h2>
               <motion.h3
                 variants={itemVariants}
-                className="font-black text-red-600 leading-[0.95] tracking-tight mt-1"
+                className={`font-black ${theme.productNameAccent} leading-[0.95] tracking-tight mt-1`}
                 style={{ fontSize: 'clamp(1.5rem, 4.5vw, 3rem)' }}
               >
                 {product.name.toUpperCase().split(' ').slice(1).join(' ')}
@@ -277,26 +280,26 @@ function ProductSpotlight({ product, shop }: ProductSpotlightProps) {
                   </motion.div>
                 )}
 
-                {/* New price — GIANT BLUE */}
+                {/* New price — themed color */}
                 <motion.div
                   variants={itemVariants}
-                  className="text-blue-600 font-black leading-none"
+                  className={`font-black leading-none ${theme.priceColor}`}
                   style={{ fontSize: 'clamp(2.5rem, 8vw, 5rem)' }}
                 >
                   {formatPrice(product.price)}
                 </motion.div>
               </motion.div>
 
-              {/* Service icons — red bg buttons, yellow/red text, bigger */}
+              {/* Service icons — themed trust badges */}
               <motion.div variants={itemVariants} className="flex flex-wrap items-center justify-center md:justify-start gap-3 sm:gap-4 mt-5">
                 {[
                   { icon: Truck, label: 'LIVRAISON RAPIDE' },
                   { icon: HandCoins, label: 'PAIEMENT À LA LIVRAISON' },
                   { icon: ShieldCheck, label: 'GARANTIE 6 MOIS' },
                 ].map(({ icon: Icon, label }) => (
-                  <div key={label} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-red-600">
-                    <Icon className="size-5 text-yellow-400" />
-                    <span className="text-xs sm:text-sm font-black text-yellow-400 tracking-wide">{label}</span>
+                  <div key={label} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl ${theme.trustBadgeBg}`}>
+                    <Icon className={`size-5 ${theme.trustBadgeIcon}`} />
+                    <span className={`text-xs sm:text-sm font-black ${theme.trustBadgeText} tracking-wide`}>{label}</span>
                   </div>
                 ))}
               </motion.div>
@@ -334,10 +337,10 @@ function ProductSpotlight({ product, shop }: ProductSpotlightProps) {
       {/* ─── BOTTOM BANNER: "LIVRAISON PARTOUT AU SÉNÉGAL" ─── */}
       <motion.div
         variants={itemVariants}
-        className="bg-red-600 flex items-center justify-center gap-3 px-4 py-3"
+        className={`${theme.livraisonBg} flex items-center justify-center gap-3 px-4 py-3`}
       >
-        <Truck className="size-5 text-white shrink-0" />
-        <span className="text-sm sm:text-base font-bold text-white tracking-wide">
+        <Truck className={`size-5 ${theme.livraisonText} shrink-0`} />
+        <span className={`text-sm sm:text-base font-bold ${theme.livraisonText} tracking-wide`}>
           LIVRAISON PARTOUT AU <span className="font-black">SÉNÉGAL</span>
         </span>
         <span className="text-lg leading-none">🇸🇳</span>

@@ -41,6 +41,63 @@ export const TEMPLATE_DISPLAY: Record<string, TemplateDisplayInfo> = {
       emoji: '🎬',
     },
   },
+  'live-1': {
+    displayName: 'Live 1 — Jaune/Rouge',
+    tagline: 'Thème flashy jaune et rouge',
+    description:
+      'Variante jaune/rouge du template live. Couleurs vives et énergiques, parfait pour attirer l\'attention pendant vos lives.',
+    features: [
+      'Thème jaune/rouge flashy',
+      'Badge EN DIRECT animé',
+      'Marquee défilant',
+      'Bouton WhatsApp direct',
+      'Animations Framer Motion',
+      'Design mobile-first',
+    ],
+    style: {
+      primaryColor: '#eab308',
+      badge: 'Jaune/Rouge',
+      emoji: '🔥',
+    },
+  },
+  'live-2': {
+    displayName: 'Live 2 — Violet/Rose',
+    tagline: 'Thème flashy violet et rose',
+    description:
+      'Variante violet/rose du template live. Ambiance nightlife et moderne pour des lives immersifs.',
+    features: [
+      'Thème violet/rose flashy',
+      'Badge EN DIRECT animé',
+      'Marquee défilant',
+      'Bouton WhatsApp direct',
+      'Animations Framer Motion',
+      'Design mobile-first',
+    ],
+    style: {
+      primaryColor: '#9333EA',
+      badge: 'Violet/Rose',
+      emoji: '💜',
+    },
+  },
+  'live-3': {
+    displayName: 'Live 3 — Cyan/Orange',
+    tagline: 'Thème flashy cyan et orange',
+    description:
+      'Variante cyan/orange du template live. Style tech et électrique pour des lives dynamiques.',
+    features: [
+      'Thème cyan/orange flashy',
+      'Badge EN DIRECT animé',
+      'Marquee défilant',
+      'Bouton WhatsApp direct',
+      'Animations Framer Motion',
+      'Design mobile-first',
+    ],
+    style: {
+      primaryColor: '#06B6D4',
+      badge: 'Cyan/Orange',
+      emoji: '⚡',
+    },
+  },
   'xstore-electro': {
     displayName: 'Moderne',
     tagline: 'Design tech et épuré',

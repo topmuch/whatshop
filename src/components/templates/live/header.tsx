@@ -5,12 +5,14 @@ import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Calendar } from 'lucide-react'
 import type { Shop } from '@/lib/store'
+import { useLiveTheme } from './live-themes'
 
 interface LiveHeaderProps {
   shop: Shop | null
 }
 
 function LiveHeader({ shop }: LiveHeaderProps) {
+  const theme = useLiveTheme()
   const isLive = shop?.isLiveMode === true
   const hasLiveUrl = !!shop?.liveUrl
 
@@ -54,13 +56,13 @@ function LiveHeader({ shop }: LiveHeaderProps) {
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.8, opacity: 0 }}
                   transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                  className="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-red-500 shadow-[0_0_20px_rgba(239,68,68,0.4),0_0_40px_rgba(239,68,68,0.2),0_0_60px_rgba(239,68,68,0.1)] min-h-[44px] animate-[liveBadgeGlow_2s_ease-in-out_infinite]"
+                  className={`flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full ${theme.enDirectBg} shadow-[0_0_20px_rgba(220,38,38,0.4),0_0_40px_rgba(220,38,38,0.2),0_0_60px_rgba(220,38,38,0.1)] min-h-[44px] animate-[liveBadgeGlow_2s_ease-in-out_infinite]`}
                 >
                   <span className="relative flex h-2.5 w-2.5">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
                     <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-white" />
                   </span>
-                  <span className="text-xs md:text-sm font-bold text-white tracking-wide">
+                  <span className={`text-xs md:text-sm font-bold ${theme.enDirectText} tracking-wide`}>
                     EN DIRECT
                   </span>
                 </motion.div>

@@ -561,7 +561,7 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
   // IMPORTANT: Shops using the 'live-template' handle live mode internally
   // (header badge, hero, product spotlight, marquee), so we skip LiveModeView
   // for them and let the template render its full live experience.
-  if (publicShop?.isLiveMode && template.id !== 'live-template') {
+  if (publicShop?.isLiveMode && !['live-template', 'live-1', 'live-2', 'live-3'].includes(template.id)) {
     return (
       <LiveModeView
         shopId={publicShop.id}
@@ -602,7 +602,7 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
 
   // ── Live template ──
   // Live commerce template with animated LIVE badge, gradient hero, WhatsApp direct.
-  if (template.id === 'live-template') {
+  if (['live-template', 'live-1', 'live-2', 'live-3'].includes(template.id)) {
     return (
       <>
         <JsonLd shop={publicShop} products={publicProducts} categories={publicCategories} />

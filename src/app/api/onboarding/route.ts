@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
     const planConfig = PLAN_CONFIG[finalPlan] || PLAN_CONFIG['TRIAL']
 
     // Auto-assign template based on plan, then sector, then override
-    const LIVE_ALLOWED = new Set(['live-template', 'xstore-electro'])
+    const LIVE_ALLOWED = new Set(['live-template', 'live-1', 'live-2', 'live-3', 'xstore-electro'])
     let template = templateOverride || sectorTemplateMap[sector] || 'xstore-electro'
     // LIVE/LIVE_PRO plans: enforce allowed templates, default to live-template
     if ((finalPlan === 'LIVE' || finalPlan === 'LIVE_PRO') && !LIVE_ALLOWED.has(template)) {
