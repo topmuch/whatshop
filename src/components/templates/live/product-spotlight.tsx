@@ -220,17 +220,45 @@ function ProductSpotlight({ product, shop }: ProductSpotlightProps) {
             </div>
           </div>
 
-          {/* ── VIEWER COUNT — above WhatsApp button ── */}
-          <motion.div variants={itemVariants} className="px-4 sm:px-6 lg:px-10 pt-4">
-            <div className="flex items-center justify-center gap-2.5 py-2 px-4 rounded-full bg-red-50 border border-red-200 inline-flex mx-auto">
-              <Eye className="size-5 text-red-500" />
-              <span className="text-base sm:text-lg font-black text-red-600">
-                <span className="live-viewer-count">130</span> personnes regardent ce live
-              </span>
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-60" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
-              </span>
+          {/* ── GRAND COMPTEUR LIVE — above WhatsApp button ── */}
+          <motion.div variants={itemVariants} className="px-4 sm:px-6 lg:px-10 pt-6 pb-2">
+            <div className="flex flex-col items-center gap-4">
+              {/* Top label */}
+              <div className="flex items-center gap-2.5 px-5 py-2 rounded-full bg-red-600">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
+                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-white" />
+                </span>
+                <span className="text-sm sm:text-base font-black text-white tracking-widest uppercase">
+                  🔴 En direct maintenant
+                </span>
+              </div>
+
+              {/* Big number blocks */}
+              <div className="flex items-center gap-2 sm:gap-3">
+                {String(130).padStart(3, '0').split('').map((digit, i) => (
+                  <div
+                    key={i}
+                    className="flex flex-col items-center justify-center w-14 h-16 sm:w-20 sm:h-24 md:w-24 md:h-28 rounded-xl bg-[#1A1A2E] shadow-[0_4px_20px_rgba(0,0,0,0.3)]"
+                  >
+                    <motion.span
+                      animate={{ opacity: [1, 0.6, 1] }}
+                      transition={{ duration: 2, repeat: Infinity, delay: i * 0.3 }}
+                      className="text-3xl sm:text-4xl md:text-5xl font-black text-white leading-none"
+                    >
+                      {digit}
+                    </motion.span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Label under blocks */}
+              <div className="flex items-center gap-2">
+                <Eye className="size-5 text-red-500" />
+                <span className="text-base sm:text-lg font-black text-[#1A1A2E] tracking-wide">
+                  PERSONNES REGARDENT CE LIVE
+                </span>
+              </div>
             </div>
           </motion.div>
 
