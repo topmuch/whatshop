@@ -162,16 +162,32 @@ function useIsMounted() {
 }
 
 export default function Home() {
-  const { view, setView, setUser, setShop, setShops, shopSlug, setShopSlug, publicShop } = useAppStore()
+  const { view, setView, setUser, setShop, setShops, shopSlug, setShopSlug, setPublicShop, setPublicProducts, publicShop } = useAppStore()
   const pathname = useClientPathname()
   const mounted = useIsMounted()
 
   // Synchronously resolve view from the actual URL
   const urlView = resolveViewFromPath(pathname)
 
-  // Use the URL-derived view immediately (no flash)
-  // Once mounted + session checked, the store view takes over
-  const effectiveView = view !== 'landing' ? view : urlView.view
+  // On mount, sync the store with the actual URL to prevent stale state
+  // from localStorage (e.g. view:'shop' from a previous /style-dakar visit)
+  // from overriding the current URL.
+  useEffect(() => {
+    if (!mounted) return
+    const isShopUrl = urlView.view === 'shop'
+    // If URL is NOT a shop but store thinks it is, force-reset the store
+    if (!isShopUrl && view === 'shop') {
+      // Use set() directly to avoid setShopSlug('') which re-sets view:'shop'
+      useAppStore.setState({ view: urlView.view, shopSlug: '', publicShop: null, publicProducts: [] })
+    }
+  }, [mounted, pathname])
+
+  // Use the URL-derived view as source of truth.
+  // The store view only wins after explicit navigation (session check, etc.)
+  // and only for non-shop, non-landing views (dashboard, admin, etc.).
+  const effectiveView = ['dashboard', 'admin', 'reseller', 'onboarding', 'login', 'register'].includes(view) && view !== urlView.view
+    ? view
+    : urlView.view
 
   // Before mount: only render known auth routes (they're client-only anyway).
   // For everything else (landing, shop, public pages), show a skeleton to
