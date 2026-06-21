@@ -221,10 +221,10 @@ function ProductSpotlight({ product, shop }: ProductSpotlightProps) {
           </div>
 
           {/* ── VIEWER COUNT — above WhatsApp button ── */}
-          <motion.div variants={itemVariants} className="px-4 sm:px-6 lg:px-10 pt-3">
-            <div className="flex items-center justify-center gap-2.5">
+          <motion.div variants={itemVariants} className="px-4 sm:px-6 lg:px-10 pt-4">
+            <div className="flex items-center justify-center gap-2.5 py-2 px-4 rounded-full bg-red-50 border border-red-200 inline-flex mx-auto">
               <Eye className="size-5 text-red-500" />
-              <span className="text-sm sm:text-base font-bold text-red-600">
+              <span className="text-base sm:text-lg font-black text-red-600">
                 <span className="live-viewer-count">130</span> personnes regardent ce live
               </span>
               <span className="relative flex h-2.5 w-2.5">

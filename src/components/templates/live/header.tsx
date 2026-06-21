@@ -29,17 +29,17 @@ function LiveHeader({ shop }: LiveHeaderProps) {
               <Image
                 src={shop.logo}
                 alt={shop.name ?? 'Logo'}
-                width={36}
-                height={36}
+                width={48}
+                height={48}
                 className="rounded-full object-cover ring-2 ring-white shadow-md"
                 priority
               />
             ) : (
-              <div className="flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-br from-[#FF6154] to-[#FF9A44] text-white text-sm font-bold shadow-md">
+              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-[#FF6154] to-[#FF9A44] text-white text-lg font-bold shadow-md">
                 {(shop?.name ?? 'L').charAt(0).toUpperCase()}
               </div>
             )}
-            <span className="text-base font-bold text-[#1A1A2E] truncate max-w-[160px] md:max-w-[240px]">
+            <span className="text-lg md:text-xl font-bold text-[#1A1A2E] truncate max-w-[160px] md:max-w-[240px]">
               {shop?.name ?? 'Ma Boutique'}
             </span>
           </div>
