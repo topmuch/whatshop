@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import { useAppStore, AppView } from '@/lib/store'
-import { useEffect, useSyncExternalStore } from 'react'
+import { useEffect, useState, useCallback, useSyncExternalStore } from 'react'
 import { ErrorBoundary } from '@/components/error-boundary'
 import { LandingPage } from '@/components/landing'
 import { AuthLogin } from '@/components/auth/auth-login'
@@ -52,19 +52,23 @@ const PAGE_VIEW_MAP: Record<string, AppView> = {
   'aide': 'faq',
 }
 
-// Empty subscribe — value is read once on mount
-const emptySubscribe = () => () => {}
-
 /**
- * Read the current pathname synchronously with proper SSR handling.
- * Server snapshot returns '/' (landing), client returns actual path.
+ * Read the current pathname via popstate listener.
  */
 function useClientPathname() {
-  return useSyncExternalStore(
-    emptySubscribe,
-    () => window.location.pathname,
-    () => '/'
-  )
+  const [realPath, setRealPath] = useState('/')
+
+  const update = useCallback(() => {
+    setRealPath(window.location.pathname)
+  }, [])
+
+  useEffect(() => {
+    update()
+    window.addEventListener('popstate', update)
+    return () => window.removeEventListener('popstate', update)
+  }, [update])
+
+  return realPath
 }
 
 /**
@@ -155,7 +159,7 @@ const IMMEDIATE_VIEWS: AppView[] = ['login', 'register', 'dashboard', 'admin', '
  */
 function useIsMounted() {
   return useSyncExternalStore(
-    emptySubscribe,
+    () => () => {},
     () => true,
     () => false
   )
@@ -166,28 +170,37 @@ export default function Home() {
   const pathname = useClientPathname()
   const mounted = useIsMounted()
 
-  // Synchronously resolve view from the actual URL
+  // Resolve view from the URL (used for shop slugs & initial page load)
   const urlView = resolveViewFromPath(pathname)
 
-  // On mount, sync the store with the actual URL to prevent stale state
-  // from localStorage (e.g. view:'shop' from a previous /style-dakar visit)
-  // from overriding the current URL.
+  /* ── MOUNT SYNC: URL → store (for direct navigation / refresh) ── */
   useEffect(() => {
     if (!mounted) return
-    const isShopUrl = urlView.view === 'shop'
-    // If URL is NOT a shop but store thinks it is, force-reset the store
-    if (!isShopUrl && view === 'shop') {
-      // Use set() directly to avoid setShopSlug('') which re-sets view:'shop'
-      useAppStore.setState({ view: urlView.view, shopSlug: '', publicShop: null, publicProducts: [] })
-    }
-  }, [mounted, pathname])
+    const realUrl = window.location.pathname
+    const resolved = resolveViewFromPath(realUrl).view
 
-  // Use the URL-derived view as source of truth.
-  // The store view only wins after explicit navigation (session check, etc.)
-  // and only for non-shop, non-landing views (dashboard, admin, etc.).
-  const effectiveView = ['dashboard', 'admin', 'reseller', 'onboarding', 'login', 'register'].includes(view) && view !== urlView.view
-    ? view
-    : urlView.view
+    // If store view doesn't match the actual URL, sync it.
+    // This handles: direct URL entry, browser refresh, back/forward.
+    if (view !== resolved) {
+      // Don't override auth views that were set by the session check
+      const isAuthView = ['dashboard', 'admin', 'reseller'].includes(view)
+      if (!isAuthView) {
+        if (resolved === 'shop') {
+          useAppStore.setState({ view: 'shop', shopSlug: '', publicShop: null, publicProducts: [] })
+        } else {
+          useAppStore.setState({ view: resolved })
+        }
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mounted])
+
+  /* ── EFFECTIVE VIEW ── */
+  // Trust the store view for everything except 'shop' (which comes from URL slugs).
+  // For 'shop', always use the URL-derived view to prevent stale localStorage state.
+  const effectiveView = (view === 'shop')
+    ? urlView.view
+    : view
 
   // Before mount: only render known auth routes (they're client-only anyway).
   // For everything else (landing, shop, public pages), show a skeleton to
@@ -212,11 +225,11 @@ export default function Home() {
   // Check for existing session — NON-BLOCKING
   // Landing page and public pages render immediately
   useEffect(() => {
-    // For shop views (from URL or store state), skip session check entirely
-    if (urlView.view === 'shop' || view === 'shop') return
+    // For shop views, skip session check entirely
+    if (effectiveView === 'shop') return
 
     // For landing & public pages, check in background (don't block render)
-    const isPublicView = ['landing', 'about', 'pricing', 'contact', 'faq', 'privacy', 'terms'].includes(urlView.view)
+    const isPublicView = ['landing', 'about', 'pricing', 'contact', 'faq', 'privacy', 'terms'].includes(effectiveView)
 
     const checkSession = async () => {
       try {

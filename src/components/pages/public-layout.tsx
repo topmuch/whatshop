@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { useAppStore, type AppView } from '@/lib/store'
+import { type AppView } from '@/lib/store'
+import { navigateTo } from '@/lib/navigation'
 import { PLATFORM_CONFIG } from '@/lib/shared'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -64,7 +65,6 @@ function Logo({ light = false }: { light?: boolean }) {
 
 /* ──────────────────────────── HEADER ──────────────────────────── */
 function PublicHeader({ currentView }: { currentView: AppView }) {
-  const { setView } = useAppStore()
   const [mobileOpen, setMobileOpen] = useState(false)
 
   return (
@@ -76,7 +76,7 @@ function PublicHeader({ currentView }: { currentView: AppView }) {
     >
       <div className="mx-auto max-w-[1400px] flex h-18 items-center justify-between px-5 sm:px-8 md:px-12 lg:px-16">
         {/* Logo */}
-        <button onClick={() => setView('landing')} className="flex-shrink-0">
+        <button onClick={() => navigateTo('landing')} className="flex-shrink-0">
           <Logo />
         </button>
 
@@ -87,7 +87,7 @@ function PublicHeader({ currentView }: { currentView: AppView }) {
             return (
               <button
                 key={item.view}
-                onClick={() => setView(item.view)}
+                onClick={() => navigateTo(item.view)}
                 className={`relative text-[14px] font-medium px-4 py-2 rounded-lg transition-all duration-200 ${
                   isActive
                     ? 'text-primary bg-primary/8'
@@ -112,14 +112,14 @@ function PublicHeader({ currentView }: { currentView: AppView }) {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setView('login')}
+            onClick={() => navigateTo('login')}
             className="font-medium text-gray-600 hover:text-gray-900"
           >
             Se connecter
           </Button>
           <Button
             size="sm"
-            onClick={() => setView('register')}
+            onClick={() => navigateTo('register')}
             className="font-medium shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90"
           >
             Créer ma boutique
@@ -147,7 +147,7 @@ function PublicHeader({ currentView }: { currentView: AppView }) {
                     key={item.view}
                     onClick={() => {
                       setMobileOpen(false)
-                      setView(item.view)
+                      navigateTo(item.view)
                     }}
                     className={`text-base font-medium px-3 py-2.5 rounded-lg transition-all duration-200 text-left ${
                       isActive
@@ -165,7 +165,7 @@ function PublicHeader({ currentView }: { currentView: AppView }) {
                 className="w-full justify-start"
                 onClick={() => {
                   setMobileOpen(false)
-                  setView('login')
+                  navigateTo('login')
                 }}
               >
                 Se connecter
@@ -174,7 +174,7 @@ function PublicHeader({ currentView }: { currentView: AppView }) {
                 className="w-full"
                 onClick={() => {
                   setMobileOpen(false)
-                  setView('register')
+                  navigateTo('register')
                 }}
               >
                 Créer ma boutique
@@ -190,7 +190,6 @@ function PublicHeader({ currentView }: { currentView: AppView }) {
 
 /* ──────────────────────────── FOOTER ──────────────────────────── */
 function PublicFooter() {
-  const { setView } = useAppStore()
 
   return (
     <motion.footer
@@ -231,9 +230,9 @@ function PublicFooter() {
             <h4 className="font-semibold text-white text-sm mb-5">PRODUIT</h4>
             <ul className="space-y-3">
               {[
-                { label: 'Fonctionnalités', action: () => setView('landing') },
-                { label: 'Tarifs', action: () => setView('pricing') },
-                { label: 'FAQ', action: () => setView('faq') },
+                { label: 'Fonctionnalités', action: () => navigateTo('landing') },
+                { label: 'Tarifs', action: () => navigateTo('pricing') },
+                { label: 'FAQ', action: () => navigateTo('faq') },
               ].map((item) => (
                 <li key={item.label}>
                   <button
@@ -252,10 +251,10 @@ function PublicFooter() {
             <h4 className="font-semibold text-white text-sm mb-5">ENTREPRISE</h4>
             <ul className="space-y-3">
               {[
-                { label: 'À propos', action: () => setView('about') },
-                { label: 'Contact', action: () => setView('contact') },
-                { label: "Conditions d'utilisation", action: () => setView('terms') },
-                { label: 'Politique de confidentialité', action: () => setView('privacy') },
+                { label: 'À propos', action: () => navigateTo('about') },
+                { label: 'Contact', action: () => navigateTo('contact') },
+                { label: "Conditions d'utilisation", action: () => navigateTo('terms') },
+                { label: 'Politique de confidentialité', action: () => navigateTo('privacy') },
               ].map((item) => (
                 <li key={item.label}>
                   <button

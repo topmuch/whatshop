@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
-import { motion, useMotionValue, useTransform, animate } from 'framer-motion'
-import { useAppStore } from '@/lib/store'
+import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion'
+import { navigateTo } from '@/lib/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -27,6 +27,7 @@ import {
   X,
   Sun,
   Moon,
+  MessageCircle,
 } from 'lucide-react'
 import { useThemeMode } from '@/lib/use-theme'
 
@@ -93,7 +94,6 @@ function Logo({ light = false, size = 'default' }: { light?: boolean; size?: 'de
 
 /* ── HEADER (Linktree-style minimal) ── */
 function Header() {
-  const { setView } = useAppStore()
   const { isDark, toggleTheme } = useThemeMode()
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
@@ -143,14 +143,14 @@ function Header() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setView('login')}
+            onClick={() => navigateTo('login')}
             className="text-gray-900 hover:text-pink-500 text-lg"
           >
             Connexion
           </Button>
           <Button
             size="sm"
-            onClick={() => setView('register')}
+            onClick={() => navigateTo('register')}
             className="bg-gray-900 hover:bg-gray-800 text-white rounded-full px-6 text-lg font-medium shadow-lg shadow-gray-900/20"
           >
             Commencer
@@ -186,13 +186,13 @@ function Header() {
               <Button
                 variant="outline"
                 className="w-full justify-center rounded-2xl h-13 text-lg font-medium mb-3"
-                onClick={() => { setOpen(false); setView('login') }}
+                onClick={() => { setOpen(false); navigateTo('login') }}
               >
                 Connexion
               </Button>
               <Button
                 className="w-full justify-center rounded-2xl bg-gray-900 hover:bg-gray-800 text-white h-13 text-lg font-medium"
-                onClick={() => { setOpen(false); setView('register') }}
+                onClick={() => { setOpen(false); navigateTo('register') }}
               >
                 Commencer gratuitement
               </Button>
@@ -253,7 +253,6 @@ function StoryCircles() {
 
 /* ── HERO FORM (Linktree-style boutique name input) ── */
 function HeroForm() {
-  const { setView } = useAppStore()
   const [boutiqueName, setBoutiqueName] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -277,7 +276,7 @@ function HeroForm() {
         const data = await res.json()
         if (data.available) {
           // Slug available → redirect to register with pre-filled shop name
-          setView('register')
+          navigateTo('register')
           // Store the chosen slug so onboarding can pick it up
           sessionStorage.setItem('preferred-slug', slug)
         } else {
@@ -336,7 +335,6 @@ const heroSlides = [
 ]
 
 function Hero() {
-  const { setView } = useAppStore()
   const [slide, setSlide] = useState(0)
 
   useEffect(() => {
@@ -706,7 +704,10 @@ const features = [
       'Tableau de bord unique pour tout gérer',
       'Changez de boutique en un clic',
     ],
+    detail: 'Avec Boutiko, un seul compte vous donne accès à plusieurs boutiques. Que vous vendiez des vêtements, de l\'électronique ou des produits de beauté — chaque boutique a son propre catalogue, ses propres commandes et sa propre personnalisation. Basculez d\'une boutique à l\'autre en un seul clic depuis votre tableau de bord.',
     image: '/landing/feature-multi-boutiques.png',
+    icon: Store,
+    color: 'from-pink-500 to-rose-500',
   },
   {
     title: 'Commandes WhatsApp',
@@ -716,7 +717,10 @@ const features = [
       'Zone de livraison & frais calculés',
       'Aucune formation technique requise',
     ],
+    detail: 'Dès qu\'un client passe commande sur votre boutique, un message WhatsApp automatique est envoyé avec tous les détails : produits, quantités, prix total, adresse de livraison et frais. Vous recevez la commande, vous confirmez, c\'est tout. Plus besoin de suivre manuellement vos messages.',
     image: '/landing/feature-whatsapp-orders.png',
+    icon: MessageCircle,
+    color: 'from-green-500 to-emerald-500',
   },
   {
     title: 'Live Shopping',
@@ -726,7 +730,10 @@ const features = [
       'Vos viewers commandent instantanément',
       'Compatible TikTok, Facebook, Instagram Live',
     ],
+    detail: 'Lancez un live shopping et vos produits s\'affichent en temps réel. Vos viewers cliquent, ajoutent au panier et commandent — tout pendant que vous présentez vos articles. Compatible TikTok, Facebook Live, Instagram Live. Augmentez vos ventes de 300% pendant vos lives.',
     image: '/landing/feature-live-mode.png',
+    icon: ShoppingBag,
+    color: 'from-purple-500 to-violet-500',
   },
   {
     title: 'Mobile Money',
@@ -736,7 +743,10 @@ const features = [
       'Confirmation instantanée de paiement',
       'Compatible tous opérateurs africains',
     ],
+    detail: 'Vos clients paient avec leur méthode préférée : Orange Money, MTN Mobile Money, Wave, ou virement bancaire. Les paiements sont sécurisés et les confirmations sont instantanées. Pas de compte bancaire nécessaire pour commencer à vendre.',
     image: '/landing/feature-mobile-money.png',
+    icon: ShoppingCart,
+    color: 'from-amber-500 to-orange-500',
   },
   {
     title: 'Statistiques',
@@ -746,7 +756,10 @@ const features = [
       'Produits les plus vendus',
       'Tableaux de bord visuels clairs',
     ],
+    detail: 'Votre tableau de bord vous montre tout : chiffre d\'affaires du jour, nombre de commandes, produits les plus vendus, taux de conversion, et bien plus. Prenez des décisions éclairées grâce à des données claires et visuelles. Exportez vos rapports en un clic.',
     image: '/landing/feature-statistiques.png',
+    icon: PackagePlus,
+    color: 'from-blue-500 to-cyan-500',
   },
   {
     title: 'IA & Automatisation',
@@ -756,11 +769,109 @@ const features = [
       'Textes marketing optimisés',
       'Gagnez des heures de travail',
     ],
+    detail: "L'intelligence artificielle de Boutiko génère automatiquement des descriptions de produits, des textes marketing, et optimise vos fiches pour plus de ventes. Prenez une photo de votre produit, l'IA fait le reste. Gagnez des heures de travail chaque semaine.",
     image: '/landing/feature-ia.png',
+    icon: Check,
+    color: 'from-rose-500 to-pink-500',
   },
 ]
 
+/* ── FEATURE DETAIL MODAL ── */
+function FeatureDetail({
+  feature,
+  onClose,
+}: {
+  feature: typeof features[number]
+  onClose: () => void
+}) {
+  const Icon = feature.icon
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.25 }}
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6"
+      onClick={onClose}
+    >
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+
+      {/* Modal */}
+      <motion.div
+        initial={{ opacity: 0, y: 30, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 30, scale: 0.95 }}
+        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }}
+        className="relative bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-white/90 backdrop-blur-sm shadow-md flex items-center justify-center hover:bg-gray-100 transition-colors"
+          aria-label="Fermer"
+        >
+          <X className="w-5 h-5 text-gray-700" />
+        </button>
+
+        {/* Image */}
+        <div className="relative w-full aspect-[16/9] overflow-hidden">
+          <Image
+            src={feature.image}
+            alt={feature.title}
+            fill
+            className="object-cover"
+            sizes="(max-width: 640px) 100vw, 672px"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+
+          {/* Title overlay */}
+          <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8">
+            <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center shadow-lg mb-3`}>
+              <Icon className="w-6 h-6 text-white" />
+            </div>
+            <h3 className="text-2xl sm:text-3xl font-extrabold text-white leading-tight">
+              {feature.title}
+            </h3>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 sm:p-8">
+          <p className="text-gray-600 text-lg leading-relaxed mb-8">
+            {feature.detail}
+          </p>
+
+          {/* Feature bullets */}
+          <div className="grid sm:grid-cols-2 gap-3 mb-8">
+            {feature.bullets.map((b, j) => (
+              <div key={j} className="flex items-start gap-3 bg-gray-50 rounded-xl p-4">
+                <svg className="w-5 h-5 text-pink-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                <span className="text-gray-700 font-medium text-sm leading-snug">{b}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* CTA */}
+          <Button
+            size="lg"
+            onClick={() => { onClose(); navigateTo('register') }}
+            className="w-full sm:w-auto text-base font-semibold rounded-full bg-gradient-to-r from-pink-500 to-orange-400 hover:from-pink-600 hover:to-orange-500 text-white shadow-lg shadow-pink-500/25 px-8 h-12"
+          >
+            Essayer {feature.title} gratuitement
+            <ArrowRight className="w-4 h-4 ml-2" />
+          </Button>
+        </div>
+      </motion.div>
+    </motion.div>
+  )
+}
+
 function Features() {
+  const [selected, setSelected] = useState<number | null>(null)
   return (
     <section id="features" className="py-24 md:py-32 bg-white">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
@@ -793,49 +904,67 @@ function Features() {
           variants={stagger}
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-4"
         >
-          {features.map((f, i) => (
-            <motion.div key={i} variants={fadeUp} custom={i * 0.06}>
-              {/* Mobile: horizontal card | Desktop: portrait card */}
-              <div className="sm:aspect-[510/937] rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 bg-white group flex flex-col sm:flex-col cursor-pointer">
-                {/* Mobile: horizontal image (left side, 40%) | Desktop: portrait image (top 60%) */}
-                <div className="relative sm:flex-[3] overflow-hidden h-44 sm:h-auto shrink-0 sm:shrink">
-                  <Image
-                    src={f.image}
-                    alt={f.title}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                  />
-                  {/* Subtle gradient overlay at bottom of image */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-                </div>
-                {/* Text block */}
-                <div className="flex-1 sm:flex-[2] flex flex-col justify-center px-4 sm:px-5 py-4 sm:py-5 gap-2 sm:gap-3">
-                  <h3 className="font-bold text-gray-900 text-base sm:text-base lg:text-lg leading-tight">
-                    {f.title}
-                  </h3>
-                  <p className="text-sm sm:text-sm text-gray-500 leading-snug">
-                    {f.desc}
-                  </p>
-                  <ul className="space-y-1.5 sm:space-y-2 mt-1">
-                    {f.bullets.map((b, j) => (
-                      <li key={j} className="flex items-start gap-1.5 sm:gap-2">
-                        <svg className="w-4 h-4 text-pink-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                        <span className="text-sm sm:text-xs text-gray-600 leading-snug">{b}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="mt-auto pt-2 ml-auto w-fit">
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-pink-500 to-orange-400 flex items-center justify-center shadow-sm group-hover:shadow-md group-hover:scale-110 transition-all duration-300">
-                      <span className="text-white font-bold text-base leading-none">+</span>
+          {features.map((f, i) => {
+            const Icon = f.icon
+            return (
+              <motion.div key={i} variants={fadeUp} custom={i * 0.06}>
+                <div
+                  onClick={() => setSelected(i)}
+                  className="sm:aspect-[510/937] rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 bg-white group flex flex-col sm:flex-col cursor-pointer"
+                >
+                  {/* Image */}
+                  <div className="relative sm:flex-[3] overflow-hidden h-44 sm:h-auto shrink-0 sm:shrink">
+                    <Image
+                      src={f.image}
+                      alt={f.title}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+                    {/* Icon badge overlay */}
+                    <div className={`absolute top-3 left-3 w-10 h-10 rounded-xl bg-gradient-to-br ${f.color} flex items-center justify-center shadow-lg`}>
+                      <Icon className="w-5 h-5 text-white" />
+                    </div>
+                  </div>
+                  {/* Text block */}
+                  <div className="flex-1 sm:flex-[2] flex flex-col justify-center px-4 sm:px-5 py-4 sm:py-5 gap-2 sm:gap-3">
+                    <h3 className="font-bold text-gray-900 text-base sm:text-base lg:text-lg leading-tight">
+                      {f.title}
+                    </h3>
+                    <p className="text-sm sm:text-sm text-gray-500 leading-snug">
+                      {f.desc}
+                    </p>
+                    <ul className="space-y-1.5 sm:space-y-2 mt-1">
+                      {f.bullets.map((b, j) => (
+                        <li key={j} className="flex items-start gap-1.5 sm:gap-2">
+                          <svg className="w-4 h-4 text-pink-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                          <span className="text-sm sm:text-xs text-gray-600 leading-snug">{b}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="mt-auto pt-2 ml-auto w-fit">
+                      <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${f.color} flex items-center justify-center shadow-sm group-hover:shadow-md group-hover:scale-110 transition-all duration-300`}>
+                        <ChevronRight className="w-4 h-4 text-white" />
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            )
+          })}
         </motion.div>
       </div>
+
+      {/* Feature detail modal */}
+      <AnimatePresence>
+        {selected !== null && (
+          <FeatureDetail
+            feature={features[selected]}
+            onClose={() => setSelected(null)}
+          />
+        )}
+      </AnimatePresence>
     </section>
   )
 }
@@ -896,7 +1025,6 @@ function DashboardPreview() {
 
 /* ── ENCART 1 : Partagez votre boutique ── */
 function ShareYourShop() {
-  const { setView } = useAppStore()
   return (
     <section className="py-20 md:py-28 bg-white overflow-hidden">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
@@ -956,7 +1084,7 @@ function ShareYourShop() {
             <motion.div variants={fadeUp} custom={0.2} className="mt-10">
               <Button
                 size="lg"
-                onClick={() => setView('register')}
+                onClick={() => navigateTo('register')}
                 className="text-lg px-10 py-6 h-auto font-semibold rounded-full bg-gradient-to-r from-pink-500 to-orange-400 hover:from-pink-600 hover:to-orange-500 text-white shadow-lg shadow-pink-500/25"
               >
                 Commencer gratuitement{' '}
@@ -972,7 +1100,6 @@ function ShareYourShop() {
 
 /* ── ENCART 2 : Créez et personnalisez ── */
 function CustomizeYourShop() {
-  const { setView } = useAppStore()
   return (
     <section className="py-20 md:py-28 bg-gray-50/80 overflow-hidden">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
@@ -1031,7 +1158,7 @@ function CustomizeYourShop() {
             <motion.div variants={fadeUp} custom={0.2} className="mt-10">
               <Button
                 size="lg"
-                onClick={() => setView('register')}
+                onClick={() => navigateTo('register')}
                 className="text-lg px-10 py-6 h-auto font-semibold rounded-full bg-gradient-to-r from-pink-500 to-orange-400 hover:from-pink-600 hover:to-orange-500 text-white shadow-lg shadow-pink-500/25"
               >
                 Commencer gratuitement{' '}
@@ -1103,7 +1230,6 @@ const plans = [
 ]
 
 function Pricing() {
-  const { setView } = useAppStore()
   return (
     <section id="pricing" className="py-24 md:py-32 bg-white">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
@@ -1190,7 +1316,7 @@ function Pricing() {
                   </ul>
                   <Button
                     variant={p.popular ? 'default' : 'outline'}
-                    onClick={() => setView('register')}
+                    onClick={() => navigateTo('register')}
                     className={`w-full rounded-full h-13 text-lg font-semibold ${
                       p.popular
                         ? 'bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 shadow-lg shadow-pink-500/25 text-white'
@@ -1565,7 +1691,6 @@ function Testimonials() {
 
 /* ── FINAL CTA ── */
 function FinalCTA() {
-  const { setView } = useAppStore()
   return (
     <section className="py-24 md:py-32 bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(255,255,255,0.15),transparent_50%)]" />
@@ -1596,7 +1721,7 @@ function FinalCTA() {
         <motion.div variants={fadeUp} custom={0.2} className="mt-12">
           <Button
             size="lg"
-            onClick={() => setView('register')}
+            onClick={() => navigateTo('register')}
             className="text-lg px-12 py-7 h-auto font-semibold rounded-full bg-white text-pink-600 hover:bg-white/90 shadow-2xl shadow-black/20"
           >
             Créer ma boutique gratuitement{' '}
@@ -1610,7 +1735,6 @@ function FinalCTA() {
 
 /* ── FOOTER ── */
 function Footer() {
-  const { setView } = useAppStore()
   return (
     <footer className="bg-white border-t border-gray-100 py-14 mt-auto">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
@@ -1637,7 +1761,7 @@ function Footer() {
               ].map((l) => (
                 <li key={l.view}>
                   <button
-                    onClick={() => setView(l.view)}
+                    onClick={() => navigateTo(l.view)}
                     className="text-base text-gray-500 hover:text-gray-900 transition-colors"
                   >
                     {l.label}
@@ -1659,7 +1783,7 @@ function Footer() {
               ].map((l) => (
                 <li key={l.view}>
                   <button
-                    onClick={() => setView(l.view)}
+                    onClick={() => navigateTo(l.view)}
                     className="text-base text-gray-500 hover:text-gray-900 transition-colors"
                   >
                     {l.label}
@@ -1690,13 +1814,13 @@ function Footer() {
           </p>
           <div className="flex gap-8">
             <button
-              onClick={() => setView('privacy')}
+              onClick={() => navigateTo('privacy')}
               className="text-base text-gray-400 hover:text-gray-600 transition-colors"
             >
               Confidentialité
             </button>
             <button
-              onClick={() => setView('terms')}
+              onClick={() => navigateTo('terms')}
               className="text-base text-gray-400 hover:text-gray-600 transition-colors"
             >
               Conditions
