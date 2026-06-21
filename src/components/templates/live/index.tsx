@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Search, X, ShoppingBag, SlidersHorizontal, ArrowUp, MessageCircle } from 'lucide-react'
 import { useAppStore, type Product, type Category } from '@/lib/store'
 import LiveHeader from './header'
-import LiveHero from './hero'
 import LiveProductCard from './product-card'
 import LiveFooter from './footer'
 import ProductSpotlight from './product-spotlight'
@@ -48,7 +47,7 @@ function LiveMarqueeBanner({
   const doubled = [...marqueeItems, ...marqueeItems]
 
   return (
-    <div className="relative overflow-hidden bg-gradient-to-r from-[#FF6154] via-[#FF7E5F] to-[#FF9A44]">
+    <div className="relative overflow-hidden bg-yellow-400">
       {/* Shimmer overlay */}
       <div className="live-marquee-shimmer" />
       <div className="py-3.5 md:py-4.5">
@@ -56,10 +55,10 @@ function LiveMarqueeBanner({
           {doubled.map((text, i) => (
             <span
               key={i}
-              className="mx-6 md:mx-10 text-sm md:text-base font-bold text-white whitespace-nowrap tracking-wide"
+              className="mx-6 md:mx-10 text-sm md:text-base font-bold text-red-600 whitespace-nowrap tracking-wide"
             >
               {text}
-              <span className="inline-block mx-4 md:mx-6 text-white/40">✦</span>
+              <span className="inline-block mx-4 md:mx-6 text-red-400">✦</span>
             </span>
           ))}
         </div>
@@ -173,16 +172,6 @@ export function LivePulseTemplate() {
 
         {/* ── Shop Switcher (LIVE PRO — multi-shop) ── */}
         {publicShop.ownerId && <ShopSwitcher currentShopId={publicShop.id} ownerId={publicShop.ownerId} />}
-
-        {/* ── Hero ── */}
-        <LiveHero shop={publicShop} />
-
-        {/* ── Wave divider between hero and marquee ── */}
-        <div className="relative -mt-1" aria-hidden="true">
-          <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-8 md:h-12 block">
-            <path d="M0 60V20C240 0 480 40 720 30C960 20 1200 0 1440 20V60H0Z" fill="#FFF0F3" fillOpacity="0.85" />
-          </svg>
-        </div>
 
         {/* ── Scrolling Marquee Banner ── */}
         <LiveMarqueeBanner

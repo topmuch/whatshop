@@ -59,8 +59,8 @@ function ProductSpotlight({ product, shop }: ProductSpotlightProps) {
         {/* White sidebar with red accent */}
         <motion.div
           variants={itemVariants}
-          className="hidden sm:flex flex-col items-center justify-between py-8 px-3 bg-white min-h-[500px] lg:min-h-[600px] relative shrink-0 border-r-2 border-red-500"
-          style={{ width: 'clamp(48px, 8vw, 80px)' }}
+          className="hidden sm:flex flex-col items-center justify-between py-8 px-3 bg-yellow-400 min-h-[500px] lg:min-h-[600px] relative shrink-0"
+          style={{ width: 'clamp(48px, 10vw, 100px)' }}
         >
           {/* Red glowing dot */}
           <div className="relative">
@@ -68,10 +68,10 @@ function ProductSpotlight({ product, shop }: ProductSpotlightProps) {
             <span className="relative inline-flex h-4 w-4 rounded-full bg-red-500 shadow-[0_0_14px_rgba(239,68,68,0.8)]" />
           </div>
 
-          {/* Vertical text */}
+          {/* Vertical text — bigger, yellow bg, red text */}
           <div
             className="text-red-600 font-black tracking-[0.3em] uppercase select-none"
-            style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', fontSize: 'clamp(14px, 2vw, 22px)' }}
+            style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', fontSize: 'clamp(18px, 3vw, 32px)' }}
           >
             LIVE SHOWROOM
           </div>
@@ -90,16 +90,16 @@ function ProductSpotlight({ product, shop }: ProductSpotlightProps) {
               <span className="text-base sm:text-lg lg:text-xl font-black text-white tracking-wide">EN DIRECT</span>
             </motion.div>
 
-            {/* OFFRE FLASH badge — 2x bigger */}
-            <motion.div variants={itemVariants} className="flex items-center gap-3 px-6 sm:px-8 py-3 sm:py-4 rounded-full bg-red-600/10 border-2 border-red-500">
-              <Zap className="size-6 sm:size-7 text-red-500" />
+            {/* OFFRE FLASH badge — yellow bg, red text */}
+            <motion.div variants={itemVariants} className="flex items-center gap-3 px-6 sm:px-8 py-3 sm:py-4 rounded-full bg-yellow-400">
+              <Zap className="size-6 sm:size-7 text-red-600" />
               <span className="text-base sm:text-lg lg:text-xl font-black text-red-600 tracking-wide">OFFRE FLASH</span>
             </motion.div>
 
-            {/* STOCK LIMITÉ badge */}
-            <motion.div variants={itemVariants} className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-red-500/10 border border-red-500/30">
-              <Clock className="size-3.5 text-red-500" />
-              <span className="text-[10px] sm:text-xs font-bold text-red-600 tracking-wide">STOCK LIMITÉ</span>
+            {/* STOCK LIMITÉ badge — yellow bg, red text */}
+            <motion.div variants={itemVariants} className="flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-yellow-400">
+              <Clock className="size-4 text-red-600" />
+              <span className="text-xs sm:text-sm font-black text-red-600 tracking-wide">STOCK LIMITÉ</span>
             </motion.div>
           </div>
 
@@ -204,18 +204,16 @@ function ProductSpotlight({ product, shop }: ProductSpotlightProps) {
                 </motion.div>
               </motion.div>
 
-              {/* Service icons — all RED */}
-              <motion.div variants={itemVariants} className="flex flex-wrap items-center justify-center md:justify-start gap-4 sm:gap-6 mt-5">
+              {/* Service icons — red bg buttons, yellow/red text, bigger */}
+              <motion.div variants={itemVariants} className="flex flex-wrap items-center justify-center md:justify-start gap-3 sm:gap-4 mt-5">
                 {[
                   { icon: Truck, label: 'LIVRAISON RAPIDE' },
                   { icon: HandCoins, label: 'PAIEMENT À LA LIVRAISON' },
                   { icon: ShieldCheck, label: 'GARANTIE 6 MOIS' },
                 ].map(({ icon: Icon, label }) => (
-                  <div key={label} className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center">
-                      <Icon className="size-4 text-red-600" />
-                    </div>
-                    <span className="text-[10px] sm:text-xs font-bold text-red-600 tracking-wide">{label}</span>
+                  <div key={label} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-red-600">
+                    <Icon className="size-5 text-yellow-400" />
+                    <span className="text-xs sm:text-sm font-black text-yellow-400 tracking-wide">{label}</span>
                   </div>
                 ))}
               </motion.div>
