@@ -169,11 +169,6 @@ export default function Home() {
   // Synchronously resolve view from the actual URL
   const urlView = resolveViewFromPath(pathname)
 
-  // ── Demo preview: redirect / to the live template demo shop ──
-  // When at root path with no session, auto-load the demo shop
-  // so the user can see the live template in the preview panel.
-  const isDemoMode = pathname === '/' && mounted && view === 'landing'
-
   // Use the URL-derived view immediately (no flash)
   // Once mounted + session checked, the store view takes over
   const effectiveView = view !== 'landing' ? view : urlView.view
@@ -182,15 +177,6 @@ export default function Home() {
   // For everything else (landing, shop, public pages), show a skeleton to
   // prevent the flash of the landing page when the real URL is a shop slug.
   const safeToRender = mounted || IMMEDIATE_VIEWS.includes(effectiveView)
-
-  // ── Demo mode: auto-load live template demo shop when at / ──
-  useEffect(() => {
-    if (isDemoMode && shopSlug !== 'style-dakar') {
-      setShopSlug('style-dakar')
-      setView('shop')
-      window.history.replaceState(null, '', '/style-dakar')
-    }
-  }, [isDemoMode, shopSlug, setShopSlug, setView])
 
   // Sync shop slug from URL into store
   useEffect(() => {
