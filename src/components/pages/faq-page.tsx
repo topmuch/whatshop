@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useAppStore } from '@/lib/store'
+import { PLATFORM_CONFIG } from '@/lib/shared'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -387,7 +388,7 @@ export function FAQPage() {
                     size="sm"
                     className="w-full rounded-full font-semibold shadow-md shadow-primary/20 bg-primary hover:bg-primary/90"
                     onClick={() =>
-                      window.open('https://wa.me/221770000000', '_blank')
+                      window.open(`https://wa.me/${PLATFORM_CONFIG.DEFAULT_WHATSAPP}`, '_blank')
                     }
                   >
                     <MessageCircle className="w-4 h-4 mr-2" />
@@ -533,7 +534,7 @@ export function FAQPage() {
                 size="lg"
                 className="text-base px-8 py-6 h-auto font-semibold rounded-full border-gray-300 hover:bg-white hover:border-gray-400 transition-all duration-300"
                 onClick={() =>
-                  window.open('https://wa.me/221770000000', '_blank')
+                  window.open(`https://wa.me/${PLATFORM_CONFIG.DEFAULT_WHATSAPP}`, '_blank')
                 }
               >
                 <MessageCircle className="w-5 h-5 mr-2 text-[#25D366]" />

@@ -108,6 +108,7 @@ function Header() {
     { label: 'Fonctionnalités', href: '#features' },
     { label: 'Comment ça marche', href: '#how-it-works' },
     { label: 'Tarifs', href: '#pricing' },
+    { label: 'Témoignages', href: '#testimonials' },
     { label: 'FAQ', href: '#faq' },
   ]
 
@@ -1455,6 +1456,113 @@ function FAQ() {
   )
 }
 
+/* ── TESTIMONIALS ── */
+const testimonials = [
+  {
+    name: 'Mariama Ba',
+    role: 'Vendeuse de mode, Dakar',
+    image: '/landing/testimonials/mariama.png',
+    text: "Boutiko a transformé mon business. Je reçois maintenant 3x plus de commandes grâce au mode Live. Mes clientes adorent !",
+    rating: 5,
+    plan: 'LIVE PRO',
+  },
+  {
+    name: 'Ibrahim Diop',
+    role: 'Propriétaire boutique électronique',
+    image: '/landing/testimonials/ibrahima.png',
+    text: "L'intégration WhatsApp est parfaite. Chaque commande arrive directement sur mon téléphone. Plus besoin de gérer un site complexe.",
+    rating: 5,
+    plan: 'BOUTIQUE PRO',
+  },
+  {
+    name: 'Adja Fall',
+    role: 'Marchande de produits beauté',
+    image: '/landing/testimonials/ady.png',
+    text: "En 2 minutes j'avais ma boutique en ligne. L'IA génère mes descriptions de produits automatiquement. Un gain de temps incroyable !",
+    rating: 5,
+    plan: 'LIVE',
+  },
+]
+
+function Testimonials() {
+  return (
+    <motion.section
+      initial="hidden"
+      whileInView="visible"
+      viewport={vp}
+      variants={stagger}
+      className="py-20 sm:py-28 bg-white"
+      id="testimonials"
+    >
+      <div className="mx-auto max-w-7xl px-5 sm:px-8">
+        {/* Section header */}
+        <motion.div variants={fadeUp} custom={0} className="text-center mb-16">
+          <Badge variant="secondary" className="bg-pink-50 text-pink-600 border border-pink-200/60 px-5 py-2 text-base font-medium mb-6 inline-flex items-center gap-2">
+            ⭐ Témoignages
+          </Badge>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight">
+            Ce qu&apos;ils disent de{' '}
+            <span className="bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent">Boutiko</span>
+          </h2>
+          <p className="mt-4 text-lg sm:text-xl text-gray-500 max-w-2xl mx-auto">
+            Des milliers de vendeurs à travers l&apos;Afrique font confiance à Boutiko pour développer leur activité en ligne.
+          </p>
+        </motion.div>
+
+        {/* Testimonial cards */}
+        <div className="grid md:grid-cols-3 gap-8">
+          {testimonials.map((t, i) => (
+            <motion.div
+              key={t.name}
+              variants={fadeUp}
+              custom={0.1 + i * 0.15}
+              className="relative bg-white rounded-3xl p-8 border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-pink-500/5 transition-all duration-300 group"
+            >
+              {/* Plan badge */}
+              <div className="absolute -top-3 -right-3">
+                <Badge className="bg-gradient-to-r from-pink-500 to-rose-500 text-white border-0 px-3 py-1 text-xs font-bold shadow-lg shadow-pink-500/20">
+                  {t.plan}
+                </Badge>
+              </div>
+
+              {/* Stars */}
+              <div className="flex items-center gap-1 mb-4">
+                {Array.from({ length: t.rating }).map((_, j) => (
+                  <svg key={j} className="w-5 h-5 text-yellow-400 fill-yellow-400" viewBox="0 0 24 24">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                  </svg>
+                ))}
+              </div>
+
+              {/* Quote */}
+              <p className="text-gray-600 text-base leading-relaxed mb-6">
+                &ldquo;{t.text}&rdquo;
+              </p>
+
+              {/* Author */}
+              <div className="flex items-center gap-4 pt-4 border-t border-gray-100">
+                <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-pink-100 shrink-0">
+                  <Image
+                    src={t.image}
+                    alt={t.name}
+                    width={100}
+                    height={100}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div>
+                  <p className="font-bold text-gray-900">{t.name}</p>
+                  <p className="text-sm text-gray-500">{t.role}</p>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </motion.section>
+  )
+}
+
 /* ── FINAL CTA ── */
 function FinalCTA() {
   const { setView } = useAppStore()
@@ -1617,6 +1725,7 @@ export function LandingPage() {
         <CustomizeYourShop />
         <Pricing />
         <SocialProof />
+        <Testimonials />
         <FAQ />
         <FinalCTA />
       </main>

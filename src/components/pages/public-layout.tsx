@@ -253,9 +253,9 @@ function PublicFooter() {
             <ul className="space-y-3">
               {[
                 { label: 'À propos', action: () => setView('about') },
-                { label: 'Blog', action: () => {} },
                 { label: 'Contact', action: () => setView('contact') },
-                { label: 'Carrières', action: () => {} },
+                { label: "Conditions d'utilisation", action: () => setView('terms') },
+                { label: 'Politique de confidentialité', action: () => setView('privacy') },
               ].map((item) => (
                 <li key={item.label}>
                   <button
@@ -276,7 +276,7 @@ function PublicFooter() {
               <li className="flex items-center gap-3">
                 <MessageCircle className="w-4 h-4 text-primary shrink-0" />
                 <a
-                  href="https://wa.me/${PLATFORM_CONFIG.DEFAULT_WHATSAPP}"
+                  href={`https://wa.me/${PLATFORM_CONFIG.DEFAULT_WHATSAPP}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-white/50 hover:text-white/80 transition-colors"

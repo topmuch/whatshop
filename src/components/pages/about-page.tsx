@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import Image from 'next/image'
 import { useAppStore } from '@/lib/store'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -461,36 +462,32 @@ function ValuesSection() {
 /* ──────────────────────────── NOTRE ÉQUIPE ──────────────────────────── */
 const team = [
   {
-    initials: 'AD',
+    image: '/landing/team/aminata-diallo.png',
     name: 'Aminata Diallo',
     role: 'CEO & Fondatrice',
     description:
       "Entrepreneuse passionnée, Aminata a fondé Boutiko après avoir constaté les difficultés des vendeurs africains à se digitaliser.",
-    gradient: 'from-[#EC4899] to-[#F59E0B]',
   },
   {
-    initials: 'KM',
+    image: '/landing/team/kwame-mensah.png',
     name: 'Kwame Mensah',
     role: 'CTO',
     description:
       "Développeur full-stack avec 10 ans d'expérience, Kwame supervise toute la stack technique et les innovations produit.",
-    gradient: 'from-[#F59E0B] to-[#EC4899]',
   },
   {
-    initials: 'FN',
+    image: '/landing/team/fatou-ndiaye.png',
     name: 'Fatou Ndiaye',
     role: 'Head of Design',
     description:
       "Designer UX/UI award-winning, Fatou crée des interfaces élégantes et intuitives qui rendent le commerce en ligne accessible à tous.",
-    gradient: 'from-[#EC4899] via-[#F59E0B] to-[#EC4899]',
   },
   {
-    initials: 'OB',
+    image: '/landing/team/omar-benjelloun.png',
     name: 'Omar Benjelloun',
     role: 'Head of Growth',
     description:
       "Spécialiste du marketing digital en Afrique, Omar développe les stratégies de croissance qui ont permis d'atteindre 15 pays.",
-    gradient: 'from-[#F59E0B] via-[#EC4899] to-[#F59E0B]',
   },
 ]
 
@@ -549,10 +546,8 @@ function TeamSection() {
               <Card className="h-full bg-[#121b36]/80 border border-white/[0.06] hover:border-white/[0.12] backdrop-blur-sm transition-all duration-500 group rounded-2xl">
                 <CardContent className="pt-7 pb-7 flex flex-col items-center text-center">
                   {/* Avatar */}
-                  <div
-                    className={`w-20 h-20 rounded-full bg-gradient-to-br ${member.gradient} flex items-center justify-center text-white text-xl font-bold shadow-lg shadow-primary/20 mb-5 group-hover:scale-110 transition-transform duration-500`}
-                  >
-                    {member.initials}
+                  <div className="w-20 h-20 rounded-full overflow-hidden ring-4 ring-white/10 shadow-lg shadow-primary/20 mb-5 group-hover:scale-110 transition-transform duration-500">
+                    <Image src={member.image} alt={member.name} width={200} height={200} className="w-full h-full object-cover" />
                   </div>
 
                   {/* Info */}
