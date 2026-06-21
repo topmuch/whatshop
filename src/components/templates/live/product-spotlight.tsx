@@ -1,6 +1,6 @@
 'use client'
 
-import { memo, useMemo } from 'react'
+import { memo, useMemo, useState, useEffect } from 'react'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { MessageCircle, Truck, HandCoins, ShieldCheck, Star, Zap, Clock, Radio, Eye } from 'lucide-react'
@@ -15,6 +15,89 @@ interface ProductSpotlightProps {
 function getDiscount(price: number, oldPrice?: number | null): number | null {
   if (!oldPrice || oldPrice <= price || oldPrice <= 0) return null
   return Math.round(((oldPrice - price) / oldPrice) * 100)
+}
+
+function CountdownTimer() {
+  // Countdown: 2 hours from first render (simulates live session remaining time)
+  const [timeLeft, setTimeLeft] = useState({ hours: 1, minutes: 59, seconds: 59 })
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+    // Set end time to 2 hours from now
+    const endTime = Date.now() + 2 * 60 * 60 * 1000
+    const timer = setInterval(() => {
+      const diff = Math.max(0, endTime - Date.now())
+      const h = Math.floor(diff / (1000 * 60 * 60))
+      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+      const s = Math.floor((diff % (1000 * 60)) / 1000)
+      setTimeLeft({ hours: h, minutes: m, seconds: s })
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [])
+
+  const blocks = [
+    { value: String(timeLeft.hours).padStart(2, '0'), label: 'HEURES' },
+    { value: String(timeLeft.minutes).padStart(2, '0'), label: 'MIN' },
+    { value: String(timeLeft.seconds).padStart(2, '0'), label: 'SEC' },
+  ]
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.3 }}
+      className="px-4 sm:px-6 lg:px-10 pt-6 pb-2"
+    >
+      <div className="flex flex-col items-center gap-4">
+        {/* Top banner — like reference image */}
+        <div className="flex items-center gap-3 px-5 py-2.5 rounded-xl bg-red-600">
+          <Zap className="size-5 text-yellow-400" />
+          <span className="text-sm sm:text-base font-black text-white tracking-wide">
+            OFFRE FLASH — Se termine dans
+          </span>
+        </div>
+
+        {/* Countdown blocks */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          {blocks.map((block, i) => (
+            <div key={block.label} className="flex items-center gap-2 sm:gap-3">
+              <div className="flex flex-col items-center justify-center w-16 h-20 sm:w-20 sm:h-24 md:w-24 md:h-28 rounded-xl bg-[#1A1A2E] shadow-[0_6px_24px_rgba(0,0,0,0.35)]">
+                <motion.span
+                  key={mounted ? block.value : `static-${i}`}
+                  initial={{ y: -8, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                  className="text-3xl sm:text-4xl md:text-5xl font-black text-white leading-none"
+                >
+                  {mounted ? block.value : '--'}
+                </motion.span>
+                <span className="text-[10px] sm:text-xs font-bold text-white/60 mt-1.5 tracking-wider uppercase">
+                  {block.label}
+                </span>
+              </div>
+              {/* Separator colon between blocks */}
+              {i < blocks.length - 1 && (
+                <span className="text-2xl sm:text-3xl md:text-4xl font-black text-[#1A1A2E]/40">:</span>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Viewer count below — smaller */}
+        <div className="flex items-center gap-2">
+          <Eye className="size-4 text-red-500" />
+          <span className="text-xs sm:text-sm font-bold text-red-500">
+            <span className="live-viewer-count">130</span> personnes regardent ce live
+          </span>
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-60" />
+            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-red-500" />
+          </span>
+        </div>
+      </div>
+    </motion.div>
+  )
 }
 
 function ProductSpotlight({ product, shop }: ProductSpotlightProps) {
@@ -220,47 +303,8 @@ function ProductSpotlight({ product, shop }: ProductSpotlightProps) {
             </div>
           </div>
 
-          {/* ── GRAND COMPTEUR LIVE — above WhatsApp button ── */}
-          <motion.div variants={itemVariants} className="px-4 sm:px-6 lg:px-10 pt-6 pb-2">
-            <div className="flex flex-col items-center gap-4">
-              {/* Top label */}
-              <div className="flex items-center gap-2.5 px-5 py-2 rounded-full bg-red-600">
-                <span className="relative flex h-2.5 w-2.5">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
-                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-white" />
-                </span>
-                <span className="text-sm sm:text-base font-black text-white tracking-widest uppercase">
-                  🔴 En direct maintenant
-                </span>
-              </div>
-
-              {/* Big number blocks */}
-              <div className="flex items-center gap-2 sm:gap-3">
-                {String(130).padStart(3, '0').split('').map((digit, i) => (
-                  <div
-                    key={i}
-                    className="flex flex-col items-center justify-center w-14 h-16 sm:w-20 sm:h-24 md:w-24 md:h-28 rounded-xl bg-[#1A1A2E] shadow-[0_4px_20px_rgba(0,0,0,0.3)]"
-                  >
-                    <motion.span
-                      animate={{ opacity: [1, 0.6, 1] }}
-                      transition={{ duration: 2, repeat: Infinity, delay: i * 0.3 }}
-                      className="text-3xl sm:text-4xl md:text-5xl font-black text-white leading-none"
-                    >
-                      {digit}
-                    </motion.span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Label under blocks */}
-              <div className="flex items-center gap-2">
-                <Eye className="size-5 text-red-500" />
-                <span className="text-base sm:text-lg font-black text-[#1A1A2E] tracking-wide">
-                  PERSONNES REGARDENT CE LIVE
-                </span>
-              </div>
-            </div>
-          </motion.div>
+          {/* ── COUNTDOWN TIMER — above WhatsApp button ── */}
+          <CountdownTimer />
 
           {/* ── BOTTOM: Giant WhatsApp Button ── */}
           <motion.div variants={itemVariants} className="px-4 sm:px-6 lg:px-10 pb-5 pt-3">
