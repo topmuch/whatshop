@@ -3,7 +3,7 @@
 import { memo, useMemo } from 'react'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
-import { MessageCircle, Truck, HandCoins, ShieldCheck, Star, Zap, Clock, Radio } from 'lucide-react'
+import { MessageCircle, Truck, HandCoins, ShieldCheck, Star, Zap, Clock, Radio, Eye } from 'lucide-react'
 import type { Product, Shop } from '@/lib/store'
 import { formatPrice, openWhatsApp } from '@/lib/shared'
 
@@ -56,44 +56,44 @@ function ProductSpotlight({ product, shop }: ProductSpotlightProps) {
     >
       {/* ─── LEFT VERTICAL BAR — "LIVE SHOWROOM" ─── */}
       <div className="flex">
-        {/* Black sidebar */}
+        {/* White sidebar with red accent */}
         <motion.div
           variants={itemVariants}
-          className="hidden sm:flex flex-col items-center justify-between py-8 px-3 bg-black min-h-[500px] lg:min-h-[600px] relative shrink-0"
+          className="hidden sm:flex flex-col items-center justify-between py-8 px-3 bg-white min-h-[500px] lg:min-h-[600px] relative shrink-0 border-r-2 border-red-500"
           style={{ width: 'clamp(48px, 8vw, 80px)' }}
         >
           {/* Red glowing dot */}
           <div className="relative">
-            <span className="absolute inline-flex h-4 w-4 animate-ping rounded-full bg-red-500 opacity-60" />
-            <span className="relative inline-flex h-3 w-3 rounded-full bg-red-500 shadow-[0_0_12px_rgba(239,68,68,0.8)]" />
+            <span className="absolute inline-flex h-5 w-5 animate-ping rounded-full bg-red-500 opacity-60" />
+            <span className="relative inline-flex h-4 w-4 rounded-full bg-red-500 shadow-[0_0_14px_rgba(239,68,68,0.8)]" />
           </div>
 
           {/* Vertical text */}
           <div
-            className="text-white font-black tracking-[0.3em] uppercase select-none"
+            className="text-red-600 font-black tracking-[0.3em] uppercase select-none"
             style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', fontSize: 'clamp(14px, 2vw, 22px)' }}
           >
             LIVE SHOWROOM
           </div>
 
-          {/* Yellow star */}
-          <div className="text-yellow-400 text-2xl">★</div>
+          {/* Red star */}
+          <div className="text-red-500 text-2xl">★</div>
         </motion.div>
 
         {/* ─── MAIN CONTENT ─── */}
         <div className="flex-1 min-w-0">
           {/* ── TOP: Badges ── */}
           <div className="flex flex-wrap items-center gap-2.5 px-4 sm:px-6 pt-5 pb-3">
-            {/* EN DIRECT badge */}
-            <motion.div variants={itemVariants} className="flex items-center gap-2 px-4 py-2 rounded-full bg-red-600 shadow-[0_0_20px_rgba(220,38,38,0.35)]">
-              <Radio className="size-4 text-white" />
-              <span className="text-xs sm:text-sm font-black text-white tracking-wide">EN DIRECT</span>
+            {/* EN DIRECT badge — 2x bigger */}
+            <motion.div variants={itemVariants} className="flex items-center gap-3 px-6 sm:px-8 py-3 sm:py-4 rounded-full bg-red-600 shadow-[0_0_24px_rgba(220,38,38,0.4)]">
+              <Radio className="size-6 sm:size-7 text-white" />
+              <span className="text-base sm:text-lg lg:text-xl font-black text-white tracking-wide">EN DIRECT</span>
             </motion.div>
 
-            {/* OFFRE FLASH badge */}
-            <motion.div variants={itemVariants} className="flex items-center gap-2 px-4 py-2 rounded-full bg-black">
-              <Zap className="size-4 text-yellow-400" />
-              <span className="text-xs sm:text-sm font-black text-yellow-400 tracking-wide">OFFRE FLASH</span>
+            {/* OFFRE FLASH badge — 2x bigger */}
+            <motion.div variants={itemVariants} className="flex items-center gap-3 px-6 sm:px-8 py-3 sm:py-4 rounded-full bg-red-600/10 border-2 border-red-500">
+              <Zap className="size-6 sm:size-7 text-red-500" />
+              <span className="text-base sm:text-lg lg:text-xl font-black text-red-600 tracking-wide">OFFRE FLASH</span>
             </motion.div>
 
             {/* STOCK LIMITÉ badge */}
@@ -204,7 +204,7 @@ function ProductSpotlight({ product, shop }: ProductSpotlightProps) {
                 </motion.div>
               </motion.div>
 
-              {/* Service icons */}
+              {/* Service icons — all RED */}
               <motion.div variants={itemVariants} className="flex flex-wrap items-center justify-center md:justify-start gap-4 sm:gap-6 mt-5">
                 {[
                   { icon: Truck, label: 'LIVRAISON RAPIDE' },
@@ -213,14 +213,28 @@ function ProductSpotlight({ product, shop }: ProductSpotlightProps) {
                 ].map(({ icon: Icon, label }) => (
                   <div key={label} className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center">
-                      <Icon className="size-4 text-red-500" />
+                      <Icon className="size-4 text-red-600" />
                     </div>
-                    <span className="text-[10px] sm:text-xs font-bold text-gray-700 tracking-wide">{label}</span>
+                    <span className="text-[10px] sm:text-xs font-bold text-red-600 tracking-wide">{label}</span>
                   </div>
                 ))}
               </motion.div>
             </div>
           </div>
+
+          {/* ── VIEWER COUNT — above WhatsApp button ── */}
+          <motion.div variants={itemVariants} className="px-4 sm:px-6 lg:px-10 pt-3">
+            <div className="flex items-center justify-center gap-2.5">
+              <Eye className="size-5 text-red-500" />
+              <span className="text-sm sm:text-base font-bold text-red-600">
+                <span className="live-viewer-count">130</span> personnes regardent ce live
+              </span>
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-60" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
+              </span>
+            </div>
+          </motion.div>
 
           {/* ── BOTTOM: Giant WhatsApp Button ── */}
           <motion.div variants={itemVariants} className="px-4 sm:px-6 lg:px-10 pb-5 pt-3">
@@ -250,11 +264,11 @@ function ProductSpotlight({ product, shop }: ProductSpotlightProps) {
       {/* ─── BOTTOM BANNER: "LIVRAISON PARTOUT AU SÉNÉGAL" ─── */}
       <motion.div
         variants={itemVariants}
-        className="bg-black flex items-center justify-center gap-3 px-4 py-3"
+        className="bg-red-600 flex items-center justify-center gap-3 px-4 py-3"
       >
-        <Truck className="size-5 text-yellow-400 shrink-0" />
+        <Truck className="size-5 text-white shrink-0" />
         <span className="text-sm sm:text-base font-bold text-white tracking-wide">
-          LIVRAISON PARTOUT AU <span className="text-yellow-400">SÉNÉGAL</span>
+          LIVRAISON PARTOUT AU <span className="font-black">SÉNÉGAL</span>
         </span>
         <span className="text-lg leading-none">🇸🇳</span>
       </motion.div>

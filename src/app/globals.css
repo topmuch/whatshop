@@ -503,3 +503,10 @@
   animation: hero-shimmer 4s ease-in-out infinite;
   pointer-events: none;
 }
+
+/* Live viewer count */
+.live-viewer-count {
+  display: inline-block;
+  min-width: 2ch;
+  text-align: center;
+}
