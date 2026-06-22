@@ -1949,7 +1949,7 @@ function FinalCTA() {
 /* ── FOOTER ── */
 function Footer() {
   return (
-    <footer className="bg-white border-t border-gray-100 py-14 pb-24 mt-auto">
+    <footer className="bg-white border-t border-gray-100 py-14 pb-36 mt-auto">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-12">
           {/* Brand */}

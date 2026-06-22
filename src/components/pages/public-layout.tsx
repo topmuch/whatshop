@@ -203,7 +203,7 @@ function PublicFooter() {
       {/* Top border accent */}
       <div className="h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
-      <div className="mx-auto max-w-[1400px] px-5 sm:px-8 md:px-12 lg:px-16 py-16 md:py-20">
+      <div className="mx-auto max-w-[1400px] px-5 sm:px-8 md:px-12 lg:px-16 py-16 md:py-20 pb-36">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12">
           {/* Brand */}
           <div className="sm:col-span-2 lg:col-span-1">

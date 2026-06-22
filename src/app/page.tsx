@@ -233,7 +233,7 @@ export default function Home() {
     // For shop views, skip session check entirely
     if (effectiveView === 'shop') return
 
-    // For landing & public pages, check in background (don't block render)
+    // Pages where we should NOT redirect authenticated users
     const isPublicView = ['landing', 'about', 'pricing', 'contact', 'faq', 'privacy', 'terms'].includes(effectiveView)
 
     const checkSession = async () => {
@@ -242,6 +242,7 @@ export default function Home() {
         if (res.ok) {
           const data = await res.json()
           if (data.user) {
+            // Always populate user data regardless of current page
             setUser(data.user)
             if (data.shops) setShops(data.shops)
             if (data.shop) setShop(data.shop)
@@ -252,11 +253,14 @@ export default function Home() {
             // the user actually opened a public shop URL (e.g. via the
             // "Voir ma boutique" link). By the time this async fetch resolves,
             // window.location.pathname is guaranteed to be the real one.
-            // If the user is viewing a public shop page, do NOT redirect them
-            // to the dashboard — let the shop page render.
+            // If the user is viewing a public shop page, do NOT redirect them.
             const currentView = resolveViewFromPath(window.location.pathname).view
             if (currentView === 'shop') return
 
+            // ── PUBLIC PAGES: only load session, do NOT redirect ──
+            if (isPublicView) return
+
+            // ── AUTH & PRIVATE PAGES: redirect based on role ──
             // Route based on role
             if (data.user.role === 'ADMIN' || data.user.role === 'SUPER_ADMIN') {
               setView('admin')
@@ -265,19 +269,17 @@ export default function Home() {
               }
             } else if (data.user.role === 'RESELLER') {
               setView('reseller')
-              window.history.replaceState(null, '', '/reseller')
+              if (urlView.view === 'login' || urlView.view === 'register') {
+                window.history.replaceState(null, '', '/reseller')
+              }
             } else if (!data.shop || (data.shops && data.shops.length === 0)) {
               setView('onboarding')
               window.history.replaceState(null, '', '/onboarding')
-            } else if (urlView.view === 'login' || urlView.view === 'register') {
+            } else if (urlView.view === 'login' || urlView.view === 'register' || urlView.view === 'onboarding') {
               setView('dashboard')
               window.history.replaceState(null, '', '/dashboard')
-            } else if (urlView.view === 'onboarding') {
-              setView('dashboard')
-              window.history.replaceState(null, '', '/dashboard')
-            } else {
-              setView('dashboard')
             }
+            // For dashboard/admin/reseller views, stay — the page handles its own auth
           }
         }
       } catch {
@@ -285,12 +287,7 @@ export default function Home() {
       }
     }
 
-    if (!isPublicView) {
-      checkSession()
-    } else {
-      // Background check for public pages — redirect if already logged in
-      checkSession()
-    }
+    checkSession()
   }, [urlView.view])
 
   const showWhatsApp = mounted && ['landing', 'about', 'pricing', 'contact', 'faq', 'privacy', 'terms'].includes(effectiveView)
