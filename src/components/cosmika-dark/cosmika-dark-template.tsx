@@ -236,7 +236,7 @@ export function CosmikaDarkTemplate() {
   }, [products])
 
   const bestSellers = useMemo(
-    () => products.filter((p) => p.isBestSeller).slice(0, 8),
+    () => products.filter((p) => p.isBestSeller).slice(0, 20),
     [products],
   )
 
@@ -802,9 +802,9 @@ function HomeView(props: HomeViewProps) {
           </h2>
           <div className="mt-3 h-0.5 w-16 rounded-full" style={{ backgroundColor: ACCENT }} />
         </div>
-        {(bestSellers.length > 0 ? bestSellers : filteredProducts.slice(0, 8)).length > 0 ? (
+        {(bestSellers.length > 0 ? bestSellers : filteredProducts.slice(0, 20)).length > 0 ? (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-4">
-            {(bestSellers.length > 0 ? bestSellers : filteredProducts.slice(0, 8)).map((p) => (
+            {(bestSellers.length > 0 ? bestSellers : filteredProducts.slice(0, 20)).map((p) => (
               <DarkProductCard
                 key={p.id}
                 product={p}

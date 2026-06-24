@@ -55,9 +55,11 @@ import {
   X,
   Upload,
   Wand2,
+  ArrowLeft,
 } from 'lucide-react'
 import { ProductWizard } from './product-wizard'
 import { toast } from 'sonner'
+import { motion, AnimatePresence } from 'framer-motion'
 import { formatPrice } from '@/lib/shared'
 import { getBusinessLabels } from '@/lib/business-labels'
 import { getPlanConfig } from '@/lib/permissions'
@@ -332,26 +334,52 @@ export function DashboardProducts() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold">{labels.productsTitle}</h1>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => {
-            const maxProducts = shop ? getPlanConfig(shop.plan).maxProducts : 20
-            if (products.length >= maxProducts) {
-              toast.error(`Limite atteinte (${products.length}/${maxProducts} produits). Passez à un plan supérieur.`, { duration: 5000 })
-              return
-            }
-            setWizardOpen(true)
-          }} className="gap-2">
-            <Wand2 className="h-4 w-4" />
-            <span className="hidden sm:inline">Wizard</span>
-          </Button>
-          <Button onClick={openAddDialog} className="gap-2">
-            <Plus className="h-4 w-4" />
-            {labels.productsAddButton}
-          </Button>
-        </div>
+        {dialogOpen ? (
+          <>
+            <Button variant="ghost" onClick={() => setDialogOpen(false)} className="gap-2 -ml-2 text-muted-foreground hover:text-foreground">
+              <ArrowLeft className="h-4 w-4" />
+              Retour aux {labels.productsTitle.toLowerCase()}
+            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={() => { setDialogOpen(false); const maxProducts = shop ? getPlanConfig(shop.plan).maxProducts : 20; if (products.length >= maxProducts) { toast.error(`Limite atteinte (${products.length}/${maxProducts} produits). Passez à un plan supérieur.`, { duration: 5000 }); return; }; setWizardOpen(true) }} className="gap-2">
+                <Wand2 className="h-4 w-4" />
+                <span className="hidden sm:inline">Wizard</span>
+              </Button>
+            </div>
+          </>
+        ) : (
+          <>
+            <h1 className="text-2xl font-bold">{labels.productsTitle}</h1>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={() => {
+                const maxProducts = shop ? getPlanConfig(shop.plan).maxProducts : 20
+                if (products.length >= maxProducts) {
+                  toast.error(`Limite atteinte (${products.length}/${maxProducts} produits). Passez à un plan supérieur.`, { duration: 5000 })
+                  return
+                }
+                setWizardOpen(true)
+              }} className="gap-2">
+                <Wand2 className="h-4 w-4" />
+                <span className="hidden sm:inline">Wizard</span>
+              </Button>
+              <Button onClick={openAddDialog} className="gap-2">
+                <Plus className="h-4 w-4" />
+                {labels.productsAddButton}
+              </Button>
+            </div>
+          </>
+        )}
       </div>
 
+      <AnimatePresence mode="wait">
+        {!dialogOpen && (
+          <motion.div
+            key="product-list"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
       {/* Plan limit warning */}
       {(() => {
         const maxProducts = shop ? getPlanConfig(shop.plan).maxProducts : 20
@@ -618,16 +646,23 @@ export function DashboardProducts() {
           </div>
         </>
       )}
-
-      {/* Add/Edit Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-lg top-[2%] translate-y-0 max-h-[96vh] flex flex-col">
-          <DialogHeader>
-            <DialogTitle>
-              {editingProduct ? `Modifier ${labels.productLabel.toLowerCase()}` : labels.productsAddButton}
-            </DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSave} className="space-y-4 overflow-y-auto flex-1 pr-1">
+          </motion.div>
+        )}
+        {dialogOpen && (
+          <motion.div
+            key="product-form"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.25 }}
+          >
+            <Card>
+              <form onSubmit={handleSave} className="space-y-4 p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="text-xl font-semibold">
+                    {editingProduct ? `Modifier ${labels.productLabel.toLowerCase()}` : labels.productsAddButton}
+                  </h2>
+                </div>
             <div className="space-y-2">
               <Label htmlFor="product-name">{`Nom du ${labels.productLabel.toLowerCase()}`} *</Label>
               <Input
@@ -827,18 +862,20 @@ export function DashboardProducts() {
                 onCheckedChange={(checked) => setForm({ ...form, isAvailable: checked })}
               />
             </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
-                Annuler
-              </Button>
-              <Button type="submit" disabled={saving}>
-                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {editingProduct ? 'Enregistrer' : 'Ajouter'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+                <div className="flex justify-end gap-2 pt-4 border-t">
+                  <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                    Annuler
+                  </Button>
+                  <Button type="submit" disabled={saving}>
+                    {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {editingProduct ? 'Enregistrer' : 'Ajouter'}
+                  </Button>
+                </div>
+              </form>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Wizard Dialog */}
       <Dialog open={wizardOpen} onOpenChange={setWizardOpen}>
