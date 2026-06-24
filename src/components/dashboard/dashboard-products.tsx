@@ -621,13 +621,13 @@ export function DashboardProducts() {
 
       {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg top-[2%] translate-y-0 max-h-[96vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>
               {editingProduct ? `Modifier ${labels.productLabel.toLowerCase()}` : labels.productsAddButton}
             </DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSave} className="space-y-4">
+          <form onSubmit={handleSave} className="space-y-4 overflow-y-auto flex-1 pr-1">
             <div className="space-y-2">
               <Label htmlFor="product-name">{`Nom du ${labels.productLabel.toLowerCase()}`} *</Label>
               <Input
