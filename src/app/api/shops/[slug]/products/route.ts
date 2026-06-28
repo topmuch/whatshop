@@ -53,8 +53,13 @@ export async function GET(
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
     })
+
+    // Shuffle products randomly so each page load shows a different order
+    for (let i = products.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[products[i], products[j]] = [products[j], products[i]]
+    }
 
     const formatted = products.map((p) => ({
       id: p.id,
