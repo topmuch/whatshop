@@ -16,9 +16,13 @@ export async function POST(request: NextRequest) {
 
   try {
     // Security: Require a secret to prevent public abuse
-    const seedSecret = process.env.SEED_SECRET || 'boutiko-seed-2024'
+    const seedSecret = process.env.SEED_SECRET || (process.env.NODE_ENV === 'development' ? 'boutiko-seed-2024' : '')
     const authHeader = request.headers.get('authorization')
     const bodySecret = request.headers.get('x-seed-secret')
+
+    if (!seedSecret) {
+      return NextResponse.json({ error: 'SEED_SECRET non configuré' }, { status: 500 })
+    }
     
     // Accept secret via header or Authorization: Bearer <secret>
     const providedSecret = bodySecret || (authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null)

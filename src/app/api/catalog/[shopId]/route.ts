@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { generateWhatsAppLink } from '@/lib/whatsapp-link'
+import { rateLimit, getClientIp, RATE_LIMITS } from '@/lib/rate-limit'
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://boutiko.pro'
 
@@ -13,9 +14,16 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://boutiko.pro'
  * pre-filled order message.
  */
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ shopId: string }> },
 ) {
+  // Rate limiting
+  const ip = getClientIp(request)
+  const rl = rateLimit(ip, RATE_LIMITS.default)
+  if (!rl.success) {
+    return NextResponse.json({ error: 'Trop de requêtes' }, { status: 429 })
+  }
+
   try {
     const { shopId } = await params
 

@@ -39,13 +39,25 @@ import { ShopHeroCarousel } from './shop-hero-carousel'
 import { TemplateProvider } from './template-provider'
 import { LiveShopFeatures } from './live-shop-features'
 import { LiveModeView } from './live-mode-view'
-import { ElectroShopPage } from './themes/electro-grid'
-import { ElectroTemplate } from '@/components/templates/electro'
-import { LivePulseTemplate } from '@/components/templates/live'
-import { SingleProductTemplate } from '@/components/single-product/single-product-template'
-import { ModernStoreTemplate } from '@/components/modern-store/modern-store-template'
-import { ModernStore2Template } from '@/components/modern-store/modern-store-2-template'
-import { CosmikaDarkTemplate } from '@/components/cosmika-dark/cosmika-dark-template'
+import dynamic from 'next/dynamic'
+
+// Dynamic imports for code splitting — only load the active template
+const ElectroShopPage = dynamic(() => import('./themes/electro-grid').then(m => ({ default: m.ElectroShopPage })), { loading: () => <ShopSkeleton /> })
+const ElectroTemplate = dynamic(() => import('@/components/templates/electro').then(m => ({ default: m.ElectroTemplate })), { loading: () => <ShopSkeleton /> })
+const LivePulseTemplate = dynamic(() => import('@/components/templates/live').then(m => ({ default: m.LivePulseTemplate })), { loading: () => <ShopSkeleton /> })
+const SingleProductTemplate = dynamic(() => import('@/components/single-product/single-product-template').then(m => ({ default: m.SingleProductTemplate })), { loading: () => <ShopSkeleton /> })
+const ModernStoreTemplate = dynamic(() => import('@/components/modern-store/modern-store-template').then(m => ({ default: m.ModernStoreTemplate })), { loading: () => <ShopSkeleton /> })
+const ModernStore2Template = dynamic(() => import('@/components/modern-store/modern-store-2-template').then(m => ({ default: m.ModernStore2Template })), { loading: () => <ShopSkeleton /> })
+const CosmikaDarkTemplate = dynamic(() => import('@/components/cosmika-dark/cosmika-dark-template').then(m => ({ default: m.CosmikaDarkTemplate })), { loading: () => <ShopSkeleton /> })
+
+/** Minimal loading skeleton shown while a template loads via dynamic import */
+function ShopSkeleton() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="animate-pulse text-muted-foreground text-sm">Chargement…</div>
+    </div>
+  )
+}
 import JsonLd from '@/components/seo/json-ld'
 import { ShippingZoneSelector } from './shipping-zone-selector'
 import { ImageWithFallback } from '@/components/ui/image-with-fallback'

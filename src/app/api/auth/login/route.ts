@@ -36,7 +36,17 @@ export async function POST(request: NextRequest) {
             name: process.env.SUPER_ADMIN_NAME || 'Super Admin',
             role: 'SUPER_ADMIN',
           },
-          include: { shops: true },
+          include: {
+            shops: {
+              select: {
+                id: true, name: true, slug: true, logo: true, banner: true,
+                whatsapp: true, phone: true, address: true, plan: true,
+                isActive: true, template: true, primaryColor: true, secondaryColor: true,
+                accentColor: true, customColors: true, templateType: true,
+                isLiveMode: true, liveProductId: true, liveStartedAt: true,
+              },
+            },
+          },
         })
         logger.info('SUPER_ADMIN auto-created on first login', 'LoginAPI', { email: newAdmin.email })
 

@@ -14,7 +14,7 @@ import { sendEmail, isEmailConfigured } from '@/lib/email'
 import { dailyRecapEmail } from '@/lib/email-templates'
 import { logger } from '@/lib/logger'
 
-const CRON_SECRET = process.env.CRON_SECRET || 'boutiko-cron-2024'
+const CRON_SECRET = process.env.CRON_SECRET
 
 function getCronSecret(request: NextRequest): string | null {
   const authHeader = request.headers.get('authorization')
@@ -25,6 +25,9 @@ export async function POST(request: NextRequest) {
   try {
     // Verify cron secret
     const secret = getCronSecret(request)
+    if (!CRON_SECRET) {
+      return NextResponse.json({ error: 'Service non configuré' }, { status: 500 })
+    }
     if (!secret || secret !== CRON_SECRET) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

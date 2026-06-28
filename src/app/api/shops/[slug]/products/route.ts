@@ -17,6 +17,9 @@ function parseImages(imagesRaw: unknown): string[] {
   return []
 }
 
+/** Max products per page when using pagination */
+const MAX_LIMIT = 100
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ slug: string }> }
@@ -30,7 +33,9 @@ export async function GET(
 
   try {
     const { slug } = await params
+    const { searchParams } = new URL(request.url)
 
+    // Verify shop exists first (no cache needed for this check)
     const shop = await db.shop.findUnique({
       where: { slug, isActive: true },
       select: { id: true },
@@ -39,6 +44,12 @@ export async function GET(
     if (!shop) {
       return NextResponse.json({ error: 'Boutique introuvable' }, { status: 404 })
     }
+
+    // Pagination support (optional query params for future use)
+    const limitParam = parseInt(searchParams.get('limit') || '0', 10)
+    const offsetParam = parseInt(searchParams.get('offset') || '0', 10)
+    const limit = limitParam > 0 ? Math.min(limitParam, MAX_LIMIT) : 0
+    const offset = offsetParam > 0 ? offsetParam : 0
 
     const products = await db.product.findMany({
       where: {
@@ -61,7 +72,12 @@ export async function GET(
       ;[products[i], products[j]] = [products[j], products[i]]
     }
 
-    const formatted = products.map((p) => ({
+    // Apply pagination if requested
+    const paginated = (limit > 0 || offset > 0)
+      ? products.slice(offset, offset + (limit || products.length))
+      : products
+
+    const formatted = paginated.map((p) => ({
       id: p.id,
       name: p.name,
       slug: p.slug,
@@ -81,6 +97,16 @@ export async function GET(
       categoryName: p.category?.name,
       createdAt: p.createdAt,
     }))
+
+    // When paginated, include metadata
+    if (limit > 0 || offset > 0) {
+      return NextResponse.json({
+        products: formatted,
+        total: products.length,
+        limit,
+        offset,
+      })
+    }
 
     return NextResponse.json(formatted)
   } catch (error) {

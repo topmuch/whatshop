@@ -1,5 +1,6 @@
 import { db } from '@/lib/db'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { rateLimit, getClientIp, RATE_LIMITS } from '@/lib/rate-limit'
 
 export const runtime = 'nodejs'
 
@@ -9,9 +10,16 @@ export const runtime = 'nodejs'
  * Returns shop info + categories + products in a single call.
  */
 export async function GET(
-  _request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ shopSlug: string }> }
 ) {
+  // Rate limiting
+  const ip = getClientIp(request)
+  const rl = rateLimit(ip, RATE_LIMITS.default)
+  if (!rl.success) {
+    return NextResponse.json({ error: 'Trop de requêtes' }, { status: 429 })
+  }
+
   try {
     const { shopSlug } = await params
 

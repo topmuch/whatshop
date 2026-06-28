@@ -55,7 +55,16 @@ export async function POST(request: NextRequest) {
 
     const target = await db.user.findUnique({
       where: { id: userId },
-      include: { shops: true, subscription: true, resellerProfile: true },
+      include: {
+        shops: {
+          select: {
+            id: true, name: true, slug: true, logo: true, plan: true,
+            isActive: true, template: true, primaryColor: true, ownerId: true,
+          },
+        },
+        subscription: { select: { id: true, planType: true, status: true, maxShops: true, startDate: true, endDate: true } },
+        resellerProfile: { select: { id: true, companyName: true, logoUrl: true, primaryColor: true, commission: true, isActive: true } },
+      },
     })
 
     if (!target) {
@@ -93,7 +102,16 @@ export async function DELETE(_request: NextRequest) {
 
     const admin = await db.user.findUnique({
       where: { id: godState.godModeOriginalUserId },
-      include: { shops: true, subscription: true, resellerProfile: true },
+      include: {
+        shops: {
+          select: {
+            id: true, name: true, slug: true, logo: true, plan: true,
+            isActive: true, template: true, primaryColor: true, ownerId: true,
+          },
+        },
+        subscription: { select: { id: true, planType: true, status: true, maxShops: true, startDate: true, endDate: true } },
+        resellerProfile: { select: { id: true, companyName: true, logoUrl: true, primaryColor: true, commission: true, isActive: true } },
+      },
     })
 
     if (!admin || admin.role !== 'SUPER_ADMIN') {

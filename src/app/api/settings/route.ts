@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { requireAuth, requireShopOwner } from '@/lib/auth'
+import { cacheInvalidate } from '@/lib/cache'
 
 // GET /api/settings — Get seller shop settings (SEO, appearance)
 export async function GET(request: NextRequest) {
@@ -68,6 +69,9 @@ export async function PUT(request: NextRequest) {
         notificationPreferences: true, notificationEmail: true,
       },
     })
+
+    // Invalidate cached shop data
+    cacheInvalidate(`shop-detail:${user.shop.slug}`)
 
     return NextResponse.json(updatedShop)
   } catch (error) {

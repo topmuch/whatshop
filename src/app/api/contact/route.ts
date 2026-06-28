@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { rateLimit, getClientIp, RATE_LIMITS } from '@/lib/rate-limit'
 
 // POST /api/contact — Save a contact message and optionally notify via WhatsApp
 export async function POST(request: NextRequest) {
+  // Rate limiting
+  const ip = getClientIp(request)
+  const rl = rateLimit(ip, RATE_LIMITS.shopLeads)
+  if (!rl.success) {
+    return NextResponse.json({ error: 'Trop de requêtes' }, { status: 429 })
+  }
+
   try {
     const body = await request.json()
     const { shopId, name, email, phone, message } = body

@@ -1,11 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { logger } from '@/lib/logger'
+import { rateLimit, getClientIp, RATE_LIMITS } from '@/lib/rate-limit'
 
 // POST /api/orders/whatsapp — créer une commande origine WhatsApp (sans formulaire client)
 // Le message WhatsApp est généré côté client ; ici on enregistre juste la commande
 // avec les infos client si fournies, sinon avec des placeholders.
 export async function POST(request: NextRequest) {
+  // Rate limiting
+  const ip = getClientIp(request)
+  const rl = rateLimit(ip, RATE_LIMITS.shopLeads)
+  if (!rl.success) {
+    return NextResponse.json({ error: 'Trop de requêtes' }, { status: 429 })
+  }
+
   try {
     const body = await request.json()
     const { shopId, items, total, customerName, customerPhone } = body

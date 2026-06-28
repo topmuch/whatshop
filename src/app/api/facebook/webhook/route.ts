@@ -60,7 +60,11 @@ export async function GET(request: NextRequest) {
   const token = searchParams.get('hub.verify_token')
   const challenge = searchParams.get('hub.challenge')
 
-  const VERIFY_TOKEN = process.env.FACEBOOK_WEBHOOK_VERIFY_TOKEN || 'boutiko_fb_verify'
+  const VERIFY_TOKEN = process.env.FACEBOOK_WEBHOOK_VERIFY_TOKEN
+
+  if (!VERIFY_TOKEN) {
+    return NextResponse.json({ error: 'Webhook non configuré' }, { status: 500 })
+  }
 
   if (mode === 'subscribe' && token === VERIFY_TOKEN) {
     return new NextResponse(challenge, {

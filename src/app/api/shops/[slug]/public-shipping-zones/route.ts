@@ -1,12 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { rateLimit, getClientIp, RATE_LIMITS } from '@/lib/rate-limit'
 
 // GET /api/shops/[slug]/public-shipping-zones
 // Public endpoint — no authentication required
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
+  // Rate limiting
+  const ip = getClientIp(request)
+  const rl = rateLimit(ip, RATE_LIMITS.default)
+  if (!rl.success) {
+    return NextResponse.json({ error: 'Trop de requêtes' }, { status: 429 })
+  }
+
   try {
     const { slug } = await params
 

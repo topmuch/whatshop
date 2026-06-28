@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { requireAuth, isValidSlug } from '@/lib/auth'
 import { checkShopLimit, getOrCreateSubscription } from '@/lib/permissions'
+import { cacheInvalidate } from '@/lib/cache'
 
 export const dynamic = 'force-dynamic'
 
@@ -101,6 +102,10 @@ export async function PUT(request: NextRequest) {
         isRestaurant: true, qrCodeUrl: true,
       },
     })
+
+    // Invalidate cached shop data
+    cacheInvalidate(`shop-detail:${updatedShop.slug}`)
+    cacheInvalidate(`shop-categories:${updatedShop.slug}`)
 
     return NextResponse.json(updatedShop)
   } catch (error) {
