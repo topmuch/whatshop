@@ -18,6 +18,11 @@ import { Prisma } from '@prisma/client'
  *   ?force=1  — Force update email/password even if SUPER_ADMIN exists.
  */
 export async function GET(request: NextRequest) {
+  // Block in production — setup should only run during deployment
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'Endpoint non disponible en production' }, { status: 403 })
+  }
+
   try {
     const { searchParams } = new URL(request.url)
     const forceUpdate = searchParams.get('force') === '1'

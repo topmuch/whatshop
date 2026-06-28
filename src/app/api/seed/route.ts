@@ -7,6 +7,11 @@ import { rateLimit, getClientIp, RATE_LIMITS } from '@/lib/rate-limit'
 // Called by Docker startup script to ensure accounts exist
 // Protected by SEED_SECRET environment variable
 export async function POST(request: NextRequest) {
+  // Block in production — seed should only run during deployment
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'Endpoint non disponible en production' }, { status: 403 })
+  }
+
   // Rate limiting
   const ip = getClientIp(request)
   const rl = rateLimit(ip, RATE_LIMITS.seed)
