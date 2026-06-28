@@ -86,6 +86,29 @@ export async function POST(request: NextRequest) {
     const finalPlan = plan || 'TRIAL'
     const planConfig = PLAN_CONFIG[finalPlan] || PLAN_CONFIG['TRIAL']
 
+    // Generate slug from name with uniqueness check
+    const trimmedName = name.trim()
+    let slug = generateSlug(trimmedName)
+    if (!slug) {
+      slug = `boutique-${Date.now().toString(36)}`
+    }
+    const slugExists = await db.shop.findUnique({ where: { slug } })
+    if (slugExists) {
+      let found = false
+      for (let i = 2; i <= 5; i++) {
+        const candidate = `${slug}-${i}`
+        const candidateExists = await db.shop.findUnique({ where: { slug: candidate } })
+        if (!candidateExists) {
+          slug = candidate
+          found = true
+          break
+        }
+      }
+      if (!found) {
+        slug = `${slug}-${Date.now().toString(36)}`
+      }
+    }
+
     // Auto-assign template based on plan, then sector, then override
     const LIVE_ALLOWED = new Set(['live-template', 'live-1', 'live-2', 'live-3', 'xstore-electro'])
     let template = templateOverride || sectorTemplateMap[sector] || 'xstore-electro'
@@ -100,7 +123,7 @@ export async function POST(request: NextRequest) {
     // Create the shop — all plans active during trial
     const shop = await db.shop.create({
       data: {
-        name,
+        name: trimmedName,
         slug,
         whatsapp: whatsapp.trim(),
         description: description || null,
