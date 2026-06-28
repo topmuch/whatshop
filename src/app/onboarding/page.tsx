@@ -367,6 +367,7 @@ export default function OnboardingPage() {
                     sector={form.sector || ''}
                     template={form.template || 'xstore-electro'}
                     selectedPlan={form.plan}
+                    isSubmitting={isSubmitting}
                     onPlanSelect={handlePlanSelect}
                     onConfirm={handleSubmit}
                   />

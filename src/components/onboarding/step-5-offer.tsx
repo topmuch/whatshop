@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Check, X, Sparkles, Star, Crown, CircleCheck } from 'lucide-react'
+import { Check, X, Sparkles, Star, Crown, CircleCheck, Loader2 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -15,6 +15,7 @@ interface Step5Props {
   sector: string
   template: string
   selectedPlan: string | null
+  isSubmitting?: boolean
   onPlanSelect: (plan: 'TRIAL' | 'PRO') => void
   onConfirm: () => void
 }
@@ -120,6 +121,7 @@ export default function Step5Offer({
   sector,
   template,
   selectedPlan,
+  isSubmitting = false,
   onPlanSelect,
   onConfirm,
 }: Step5Props) {
@@ -267,15 +269,24 @@ export default function Step5Offer({
       <motion.div variants={itemVariants} className="flex justify-center pt-2">
         <Button
           size="lg"
-          disabled={!selectedPlan}
+          disabled={!selectedPlan || isSubmitting}
           onClick={onConfirm}
           className="min-w-[260px] gap-2"
         >
-          <Sparkles className="h-4 w-4" />
-          {selectedPlan === 'PRO'
-            ? "Demander le plan Pro et créer ma boutique"
-            : "Créer ma boutique gratuitement"
-          }
+          {isSubmitting ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Création en cours...
+            </>
+          ) : (
+            <>
+              <Sparkles className="h-4 w-4" />
+              {selectedPlan === 'PRO'
+                ? "Demander le plan Pro et créer ma boutique"
+                : "Créer ma boutique gratuitement"
+              }
+            </>
+          )}
         </Button>
       </motion.div>
     </motion.div>
