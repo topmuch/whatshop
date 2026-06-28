@@ -31,7 +31,7 @@ ENV NEXT_PUBLIC_APP_URL=https://boutiko.pro
 ENV DATABASE_URL=file:/dev/null
 
 # Webpack build needs a generous heap; limit workers to avoid OOM
-ENV NODE_OPTIONS="--max-old-space-size=4096"
+ENV NODE_OPTIONS="--max-old-space-size=3072"
 ENV NEXT_PRIVATE_WORKER_COUNT=1
 
 RUN bun run build
