@@ -11,6 +11,16 @@ const nextConfig: NextConfig = {
   },
   reactStrictMode: false,
   turbopack: {},
+  experimental: {
+    // Reduce memory during build trace collection (prevents OOM in Docker)
+    outputFileTracingExcludes: {
+      '*': [
+        './node_modules/.prisma/**',
+        './node_modules/sharp/**',
+        './node_modules/@img/**',
+      ],
+    },
+  },
   // Rewrite legacy /uploads/xxx URLs to /api/uploads/xxx
   async rewrites() {
     return [
