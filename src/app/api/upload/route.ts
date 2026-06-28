@@ -1,63 +1,91 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { writeFile, mkdir } from 'fs/promises'
+import { writeFile } from 'fs/promises'
 import path from 'path'
-import { randomUUID } from 'crypto'
+import crypto from 'crypto'
+import { requireShopOwner } from '@/lib/auth'
 import { UPLOADS_DIR } from '@/lib/storage'
+import { ensureUploadsDir } from '@/lib/ensure-uploads'
 
-const ALLOWED_TYPES = [
+export const dynamic = 'force-dynamic'
+
+// Allowed mime types for product images
+const ALLOWED_MIME_TYPES = new Set([
   'image/jpeg',
+  'image/jpg',
   'image/png',
-  'image/gif',
   'image/webp',
+  'image/gif',
   'image/svg+xml',
-  'image/avif',
-]
-const MAX_SIZE = 5 * 1024 * 1024 // 5 MB
+])
 
-export async function POST(req: NextRequest) {
+// Max file size: 5 MB
+const MAX_FILE_SIZE = 5 * 1024 * 1024
+
+// ─── POST /api/upload ────────────────────────────────────────────────────────
+// Auth required — shop owner only. Uploads a file and returns its URL.
+export async function POST(request: NextRequest) {
   try {
-    const formData = await req.formData()
+    // Auth check
+    const { user, response: errorResponse } = await requireShopOwner(request)
+    if (errorResponse) return errorResponse
+    if (!user) {
+      return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
+    }
+
+    const formData = await request.formData()
     const file = formData.get('file') as File | null
 
     if (!file) {
-      return NextResponse.json({ error: 'Aucun fichier fourni' }, { status: 400 })
+      return NextResponse.json({ error: 'Fichier manquant' }, { status: 400 })
     }
 
-    if (!ALLOWED_TYPES.includes(file.type)) {
+    // Validate file type
+    if (!ALLOWED_MIME_TYPES.has(file.type)) {
       return NextResponse.json(
-        { error: `Type non autorisé. Formats acceptés : JPEG, PNG, GIF, WebP, SVG, AVIF` },
+        { error: `Type de fichier non autorisé : ${file.type}. Types acceptés : image/jpeg, image/png, image/webp, image/gif, image/svg+xml` },
         { status: 400 }
       )
     }
 
-    if (file.size > MAX_SIZE) {
-      return NextResponse.json({ error: 'Fichier trop volumineux (max 5 Mo)' }, { status: 400 })
+    // Validate file size
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json(
+        { error: `Fichier trop volumineux (${(file.size / 1024 / 1024).toFixed(1)} MB). Maximum : 5 MB` },
+        { status: 400 }
+      )
     }
 
-    // Determine subdirectory based on file type
-    let subdir = 'images'
-    if (file.type === 'image/svg+xml') subdir = 'svg'
+    // Ensure uploads directory exists
+    await ensureUploadsDir()
 
-    // Generate unique filename
-    const ext = path.extname(file.name) || `.${file.type.split('/')[1]}`
-    const filename = `${randomUUID()}${ext}`
-
-    // Ensure directory exists
-    const targetDir = path.join(UPLOADS_DIR, subdir)
-    await mkdir(targetDir, { recursive: true })
+    // Generate a unique filename to avoid collisions
+    const ext = path.extname(file.name) || getExtFromMime(file.type)
+    const uniqueName = `${crypto.randomUUID()}${ext}`
+    const filePath = path.join(UPLOADS_DIR, uniqueName)
 
     // Write file to disk
     const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
-    const filePath = path.join(targetDir, filename)
-    await writeFile(filePath, buffer)
+    await writeFile(filePath, Buffer.from(bytes))
 
-    // Return the URL (will be served via /uploads rewrite -> /api/uploads)
-    const url = `/uploads/${subdir}/${filename}`
+    // Return the URL that can be used to access the file
+    // The rewrite in next.config.ts maps /uploads/* → /api/uploads/*
+    const url = `/uploads/${uniqueName}`
 
-    return NextResponse.json({ url, filename, size: file.size, type: file.type })
-  } catch (err) {
-    console.error('[/api/upload] Error:', err)
-    return NextResponse.json({ error: 'Erreur lors du téléchargement' }, { status: 500 })
+    return NextResponse.json({ url }, { status: 201 })
+  } catch (error) {
+    console.error('Upload error:', error)
+    return NextResponse.json({ error: 'Erreur serveur lors du téléchargement' }, { status: 500 })
   }
+}
+
+function getExtFromMime(mime: string): string {
+  const map: Record<string, string> = {
+    'image/jpeg': '.jpg',
+    'image/jpg': '.jpg',
+    'image/png': '.png',
+    'image/webp': '.webp',
+    'image/gif': '.gif',
+    'image/svg+xml': '.svg',
+  }
+  return map[mime] || '.bin'
 }

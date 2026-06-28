@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import { useAppStore, AppView } from '@/lib/store'
-import { useEffect, useState, useCallback, useSyncExternalStore } from 'react'
+import { useEffect, useSyncExternalStore } from 'react'
 import { ErrorBoundary } from '@/components/error-boundary'
 import { NAVIGATE_EVENT } from '@/lib/navigation'
 import { LandingPage } from '@/components/landing'
@@ -54,26 +54,23 @@ const PAGE_VIEW_MAP: Record<string, AppView> = {
 }
 
 /**
- * Read the current pathname via popstate listener.
+ * Read the current pathname via useSyncExternalStore.
+ * Returns the real pathname immediately on the client (no effect delay),
+ * and '/' on the server (for SSR compatibility).
  */
 function useClientPathname() {
-  const [realPath, setRealPath] = useState('/')
-
-  const update = useCallback(() => {
-    setRealPath(window.location.pathname)
-  }, [])
-
-  useEffect(() => {
-    update()
-    window.addEventListener('popstate', update)
-    window.addEventListener(NAVIGATE_EVENT, update)
-    return () => {
-      window.removeEventListener('popstate', update)
-      window.removeEventListener(NAVIGATE_EVENT, update)
-    }
-  }, [update])
-
-  return realPath
+  return useSyncExternalStore(
+    (cb) => {
+      window.addEventListener('popstate', cb)
+      window.addEventListener(NAVIGATE_EVENT, cb)
+      return () => {
+        window.removeEventListener('popstate', cb)
+        window.removeEventListener(NAVIGATE_EVENT, cb)
+      }
+    },
+    () => window.location.pathname,
+    () => '/' // server snapshot
+  )
 }
 
 /**
@@ -201,11 +198,12 @@ export default function Home() {
   }, [mounted])
 
   /* ── EFFECTIVE VIEW ── */
-  // Trust the store view for everything except 'shop' (which comes from URL slugs).
-  // For 'shop', always use the URL-derived view to prevent stale localStorage state.
-  const effectiveView = (view === 'shop')
-    ? urlView.view
-    : view
+  // For shop views, ALWAYS trust the URL-derived view to prevent flashing the
+  // landing page when the user directly navigates to /shop-slug.
+  // For all other views, trust the Zustand store (handles auth redirects, etc.).
+  const effectiveView = urlView.view === 'shop'
+    ? 'shop'
+    : (view === 'shop' ? urlView.view : view)
 
   // Before mount: only render known auth routes (they're client-only anyway).
   // For everything else (landing, shop, public pages), show a skeleton to
@@ -312,7 +310,7 @@ export default function Home() {
       {effectiveView === 'dashboard' && <SellerDashboard />}
       {effectiveView === 'reseller' && <ResellerDashboard />}
       {effectiveView === 'admin' && <AdminDashboard />}
-      {effectiveView === 'shop' && <PublicShop initialProductSlug={urlView.productSlug} />}
+      {effectiveView === 'shop' && <PublicShop initialShopSlug={urlView.shopSlug} initialProductSlug={urlView.productSlug} />}
 
       {/* Public pages with shared layout */}
       {effectiveView === 'about' && (

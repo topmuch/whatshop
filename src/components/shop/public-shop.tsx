@@ -331,7 +331,7 @@ function TemplateCtaButton({
 }
 
 /* ─── Inner Shop Content (has access to template context) ─── */
-function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
+function ShopContent({ initialShopSlug, initialProductSlug }: { initialShopSlug?: string; initialProductSlug?: string }) {
   const {
     shopSlug,
     setView,
@@ -364,21 +364,26 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
   const [detailImageIndex, setDetailImageIndex] = useState(0)
   const scrollRef = useRef<HTMLDivElement>(null)
 
+  // Effective slug: prefer the store value (may be set by navigation),
+  // fall back to the prop (set immediately from URL on direct navigation).
+  const effectiveSlug = shopSlug || initialShopSlug || ''
+
   // ─── URL-based product navigation ───
   const selectProductWithUrl = useCallback((product: Product | null) => {
     setSelectedProduct(product)
-    if (product && shopSlug) {
-      const slug = product.slug || product.id
-      window.history.pushState(null, '', `/${shopSlug}/p/${slug}`)
+    const slug = effectiveSlug
+    if (product && slug) {
+      const pslug = product.slug || product.id
+      window.history.pushState(null, '', `/${slug}/p/${pslug}`)
     }
-  }, [shopSlug])
+  }, [effectiveSlug])
 
   const deselectProductWithUrl = useCallback(() => {
     setSelectedProduct(null)
-    if (shopSlug) {
-      window.history.pushState(null, '', `/${shopSlug}`)
+    if (effectiveSlug) {
+      window.history.pushState(null, '', `/${effectiveSlug}`)
     }
-  }, [shopSlug])
+  }, [effectiveSlug])
 
   // Open product from URL (deep link / shared link)
   useEffect(() => {
@@ -411,17 +416,17 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
   }, [publicProducts])
 
   const fetchShop = useCallback(async () => {
-    if (!shopSlug) return
+    if (!effectiveSlug) return
     setLoading(true)
     try {
-      const shopRes = await fetch(`/api/shops/${shopSlug}`)
+      const shopRes = await fetch(`/api/shops/${effectiveSlug}`)
       if (!shopRes.ok) return
       const shopData = await shopRes.json()
       setPublicShop(shopData)
-      fetch(`/api/shops/${shopSlug}/visit`, { method: 'POST' }).catch(() => {})
+      fetch(`/api/shops/${effectiveSlug}/visit`, { method: 'POST' }).catch(() => {})
       const [prodRes, catRes] = await Promise.all([
-        fetch(`/api/shops/${shopSlug}/products`),
-        fetch(`/api/shops/${shopSlug}/categories`),
+        fetch(`/api/shops/${effectiveSlug}/products`),
+        fetch(`/api/shops/${effectiveSlug}/categories`),
       ])
       if (prodRes.ok) setPublicProducts(await prodRes.json())
       if (catRes.ok) setPublicCategories(await catRes.json())
@@ -430,7 +435,7 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
     } finally {
       setLoading(false)
     }
-  }, [shopSlug, setPublicShop, setPublicProducts, setPublicCategories])
+  }, [effectiveSlug, setPublicShop, setPublicProducts, setPublicCategories])
 
   useEffect(() => {
     fetchShop()
@@ -443,7 +448,7 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
     if (publicShop?.isLiveMode) return // already in live mode, skip polling
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`/api/shops/${shopSlug}`)
+        const res = await fetch(`/api/shops/${effectiveSlug}`)
         if (!res.ok) return
         const data = await res.json()
         if (data.isLiveMode) {
@@ -452,7 +457,7 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
       } catch { /* silent */ }
     }, 8000) // check every 8s
     return () => clearInterval(interval)
-  }, [shopSlug, publicShop?.isLiveMode, setPublicShop])
+  }, [effectiveSlug, publicShop?.isLiveMode, setPublicShop])
 
   const filteredProducts = useMemo(() => {
     let products = publicProducts.filter((p) => p.isAvailable)
@@ -1437,8 +1442,11 @@ function ShopContent({ initialProductSlug }: { initialProductSlug?: string }) {
 }
 
 /* ─── Exported PublicShop (wraps with TemplateProvider) ─── */
-export function PublicShop({ initialProductSlug }: { initialProductSlug?: string }) {
+export function PublicShop({ initialShopSlug, initialProductSlug }: { initialShopSlug?: string; initialProductSlug?: string }) {
   const { publicShop, shopSlug } = useAppStore()
+
+  // Use the prop-derived slug immediately (avoids waiting for store sync)
+  const effectiveShopSlug = shopSlug || initialShopSlug || ''
 
   // We need shop data to know the template - use default 'xstore-electro' until loaded
   const templateId = publicShop?.template || 'xstore-electro'
@@ -1450,7 +1458,7 @@ export function PublicShop({ initialProductSlug }: { initialProductSlug?: string
         pixelId={publicShop?.facebookPixelId}
         trackPageViews={publicShop?.trackPageViews ?? true}
       />
-      <ShopContent initialProductSlug={initialProductSlug} />
+      <ShopContent initialShopSlug={effectiveShopSlug} initialProductSlug={initialProductSlug} />
     </TemplateProvider>
   )
 }
