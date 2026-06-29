@@ -6,6 +6,36 @@ import { cacheInvalidate } from '@/lib/cache'
 
 export const dynamic = 'force-dynamic'
 
+// ─── Shared select for public shop data ─────────────────────────────────────
+// Includes all fields needed by templates (Cosmika Dark, Modern Store, etc.)
+// and public-facing features (live mode, restaurant QR, etc.)
+const SHOP_PUBLIC_SELECT = {
+  id: true, name: true, slug: true, description: true, logo: true,
+  banner: true, whatsapp: true, address: true, phone: true,
+  plan: true, template: true, templateType: true, isActive: true,
+  sector: true, createdAt: true,
+  // Hero & cover images
+  heroImages: true, heroImageUrl: true, heroTitle: true, heroSubtitle: true, heroTagline: true,
+  coverImageUrl: true,
+  // Promo banners & brands
+  promoBanners: true, brands: true,
+  // Template customization
+  productsTitle: true, productsTagline: true,
+  categoriesTitle: true, categoriesTagline: true,
+  testimonialsTitle: true, testimonialsTagline: true,
+  trustBadges: true, footerLinks: true,
+  // Theming
+  accentColor: true, customColors: true, primaryColor: true, secondaryColor: true,
+  // Live mode
+  isLiveMode: true, liveProductId: true, liveStartedAt: true, liveUrl: true,
+  // Restaurant
+  isRestaurant: true, qrCodeUrl: true,
+  // SEO
+  seoTitle: true, seoDescription: true, seoKeywords: true, ogImage: true,
+  // Contact
+  contactEmail: true, businessHours: true, googleMapsUrl: true,
+} as const
+
 // GET /api/shops?id=xxx or /api/shops?slug=xxx
 export async function GET(request: NextRequest) {
   try {
@@ -16,13 +46,7 @@ export async function GET(request: NextRequest) {
     if (id) {
       const shop = await db.shop.findUnique({
         where: { id },
-        select: {
-          id: true, name: true, slug: true, description: true, logo: true,
-          banner: true, whatsapp: true, address: true, phone: true,
-          plan: true, template: true, isActive: true,
-          heroImages: true, promoBanners: true, brands: true,
-          sector: true, createdAt: true,
-        },
+        select: SHOP_PUBLIC_SELECT,
       })
       if (!shop) return NextResponse.json({ error: 'Boutique non trouvée' }, { status: 404 })
       return NextResponse.json(shop)
@@ -31,13 +55,7 @@ export async function GET(request: NextRequest) {
     if (slug) {
       const shop = await db.shop.findUnique({
         where: { slug },
-        select: {
-          id: true, name: true, slug: true, description: true, logo: true,
-          banner: true, whatsapp: true, address: true, phone: true,
-          plan: true, template: true, isActive: true,
-          heroImages: true, promoBanners: true, brands: true,
-          sector: true, createdAt: true,
-        },
+        select: SHOP_PUBLIC_SELECT,
       })
       if (!shop) return NextResponse.json({ error: 'Boutique non trouvée' }, { status: 404 })
       return NextResponse.json(shop)
@@ -93,14 +111,7 @@ export async function PUT(request: NextRequest) {
     const updatedShop = await db.shop.update({
       where: { id },
       data,
-      select: {
-        id: true, name: true, slug: true, description: true, logo: true,
-        banner: true, whatsapp: true, address: true, phone: true,
-        plan: true, template: true, isActive: true, sector: true,
-        heroImages: true, promoBanners: true, brands: true,
-        accentColor: true, customColors: true,
-        isRestaurant: true, qrCodeUrl: true,
-      },
+      select: SHOP_PUBLIC_SELECT,
     })
 
     // Invalidate cached shop data
