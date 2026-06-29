@@ -14,7 +14,6 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import {
-  ShoppingBag,
   ArrowRight,
   Menu,
   Instagram,
@@ -52,14 +51,11 @@ const fadeInUp = {
 /* ──────────────────────────── LOGO ──────────────────────────── */
 function Logo({ light = false }: { light?: boolean }) {
   return (
-    <div className="flex items-center gap-2.5">
-      <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-primary shadow-lg shadow-primary/25">
-        <ShoppingBag className="w-4.5 h-4.5 text-primary-foreground" />
-      </div>
-      <span className={`text-xl font-bold tracking-tight ${light ? 'text-white' : ''}`}>
-        Bouti<span className="text-primary">ko</span>
-      </span>
-    </div>
+    <img
+      src="/logo-boutiko.jpeg"
+      alt="Boutiko"
+      className="h-8 w-auto object-contain"
+    />
   )
 }
 

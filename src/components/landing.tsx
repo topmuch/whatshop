@@ -77,18 +77,12 @@ function Counter({
 
 /* ── LOGO ── */
 function Logo({ light = false, size = 'default' }: { light?: boolean; size?: 'default' | 'large' }) {
-  const isLarge = size === 'large'
   return (
-    <div className="flex items-center gap-3">
-      <div className={`${isLarge ? 'w-12 h-12' : 'w-10 h-10'} rounded-xl bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center shadow-lg shadow-pink-500/25`}>
-        <ShoppingBag className={`${isLarge ? 'w-6 h-6' : 'w-5 h-5'} text-white`} />
-      </div>
-      <span
-        className={`${isLarge ? 'text-2xl' : 'text-xl'} font-bold tracking-tight ${light ? 'text-white' : 'text-gray-900'}`}
-      >
-        Bouti<span className="text-pink-500">ko</span>
-      </span>
-    </div>
+    <img
+      src="/logo-boutiko.jpeg"
+      alt="Boutiko"
+      className={`${size === 'large' ? 'h-10' : 'h-8'} w-auto object-contain`}
+    />
   )
 }
 
