@@ -76,7 +76,7 @@ export async function PUT(request: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
 
     const body = await request.json()
-    const { id, name, description, whatsapp, address, phone, logo, banner, template, accentColor, heroImages, promoBanners, brands, customColors, isRestaurant, liveUrl } = body
+    const { id, name, description, whatsapp, address, phone, logo, banner, template, accentColor, heroImages, promoBanners, brands, customColors, isRestaurant, liveUrl, pwaEnabled, pwaThemeColor, pwaBackgroundColor, pwaIconUrl } = body
 
     if (!id) {
       return NextResponse.json({ error: 'ID requis' }, { status: 400 })
@@ -107,6 +107,10 @@ export async function PUT(request: NextRequest) {
     if (customColors !== undefined) data.customColors = customColors || '{}'
     if (isRestaurant !== undefined) data.isRestaurant = !!isRestaurant
     if (liveUrl !== undefined) data.liveUrl = liveUrl || null
+    if (pwaEnabled !== undefined) data.pwaEnabled = !!pwaEnabled
+    if (pwaThemeColor !== undefined) data.pwaThemeColor = pwaThemeColor || '#000000'
+    if (pwaBackgroundColor !== undefined) data.pwaBackgroundColor = pwaBackgroundColor || '#ffffff'
+    if (pwaIconUrl !== undefined) data.pwaIconUrl = pwaIconUrl || null
 
     const updatedShop = await db.shop.update({
       where: { id },

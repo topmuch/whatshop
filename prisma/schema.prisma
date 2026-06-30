@@ -212,6 +212,13 @@ model Shop {
   trackProductViews     Boolean   @default(true)
   trackWhatsAppClicks   Boolean   @default(true)
 
+  // PWA Configuration
+  pwaEnabled             Boolean   @default(false)
+  pwaThemeColor          String    @default("#000000")
+  pwaBackgroundColor     String    @default("#ffffff")
+  pwaIconUrl             String?
+  pwaInstallCount        Int       @default(0)
+
   // Moderation
   isFlagged              Boolean   @default(false)
   flaggedReason          String?
@@ -237,6 +244,7 @@ model Shop {
   facebookEvents   FacebookEvent[]
   socialPosts     SocialPost[]
   faqs            FAQ[]
+  pwaInstallEvents PWAInstallEvent[]
 }
 
 // ─── CATEGORY ──────────────────────────────────────────────────────────────────
@@ -727,4 +735,18 @@ model FAQ {
   order     Int      @default(0)
 
   @@index([shopId])
+}
+
+// ─── PWA INSTALL EVENT ──────────────────────────────────────────────────
+
+model PWAInstallEvent {
+  id          String   @id @default(cuid())
+  shopId      String
+  shop        Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  platform    String   // IOS, ANDROID, DESKTOP
+  userAgent   String?
+  installedAt DateTime @default(now())
+
+  @@index([shopId])
+  @@index([platform])
 }
