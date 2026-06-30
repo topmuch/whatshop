@@ -79,7 +79,7 @@ function Counter({
 function Logo({ light = false, size = 'default' }: { light?: boolean; size?: 'default' | 'large' }) {
   return (
     <img
-      src="/logo-boutiko.jpeg"
+      src="/logo-boutiko.png"
       alt="Boutiko"
       className="h-auto w-auto max-w-full object-contain"
       style={{ height: 75, width: 225 }}

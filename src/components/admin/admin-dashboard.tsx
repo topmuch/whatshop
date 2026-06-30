@@ -457,7 +457,7 @@ function AdminSidebarContent() {
       {/* Logo */}
       <div className="flex items-center px-6 py-5">
         <img
-          src="/logo-boutiko.jpeg"
+          src="/logo-boutiko.png"
           alt="Boutiko Admin"
           className="h-auto w-auto max-w-full object-contain brightness-0 invert"
           style={{ height: 75, width: 225 }}

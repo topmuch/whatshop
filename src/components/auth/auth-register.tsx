@@ -56,7 +56,7 @@ export function AuthRegister() {
         <div className="sticky top-0 z-50 bg-gradient-to-r from-pink-500 to-pink-600 shadow-md">
           <div className="flex items-center px-4 py-3">
             <img
-              src="/logo-boutiko.jpeg"
+              src="/logo-boutiko.png"
               alt="Boutiko"
               className="h-auto w-auto max-w-full object-contain brightness-0 invert"
               style={{ height: 75, width: 225 }}
@@ -80,7 +80,7 @@ export function AuthRegister() {
           {/* Logo */}
           <div className="hidden lg:flex items-center justify-center mb-10">
             <img
-              src="/logo-boutiko.jpeg"
+              src="/logo-boutiko.png"
               alt="Boutiko"
               className="h-auto w-auto max-w-full object-contain"
               style={{ height: 75, width: 225 }}

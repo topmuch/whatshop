@@ -52,7 +52,7 @@ const fadeInUp = {
 function Logo({ light = false }: { light?: boolean }) {
   return (
     <img
-      src="/logo-boutiko.jpeg"
+      src="/logo-boutiko.png"
       alt="Boutiko"
       className="h-auto w-auto max-w-full object-contain"
       style={{ height: 75, width: 225 }}

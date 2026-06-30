@@ -108,7 +108,7 @@ export function AuthLogin() {
           >
             <div className="flex items-center justify-center">
               <img
-                src="/logo-boutiko.jpeg"
+                src="/logo-boutiko.png"
                 alt="Boutiko"
                 className="h-auto w-auto max-w-full object-contain brightness-0 invert"
                 style={{ height: 75, width: 225 }}
@@ -194,7 +194,7 @@ export function AuthLogin() {
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center justify-center mb-8">
             <img
-              src="/logo-boutiko.jpeg"
+              src="/logo-boutiko.png"
               alt="Boutiko"
               className="h-auto w-auto max-w-full object-contain"
               style={{ height: 75, width: 225 }}
