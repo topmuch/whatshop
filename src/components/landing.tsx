@@ -81,7 +81,8 @@ function Logo({ light = false, size = 'default' }: { light?: boolean; size?: 'de
     <img
       src="/logo-boutiko.jpeg"
       alt="Boutiko"
-      className={`${size === 'large' ? 'h-10' : 'h-8'} w-auto object-contain`}
+      className="h-auto w-auto max-w-full object-contain"
+      style={{ height: 75, width: 225 }}
     />
   )
 }

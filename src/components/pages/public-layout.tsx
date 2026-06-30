@@ -54,7 +54,8 @@ function Logo({ light = false }: { light?: boolean }) {
     <img
       src="/logo-boutiko.jpeg"
       alt="Boutiko"
-      className="h-8 w-auto object-contain"
+      className="h-auto w-auto max-w-full object-contain"
+      style={{ height: 75, width: 225 }}
     />
   )
 }

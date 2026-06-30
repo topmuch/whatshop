@@ -54,14 +54,13 @@ export function AuthRegister() {
       {/* ═══════ MOBILE: Header + Banner ═══════ */}
       <div className="lg:hidden">
         <div className="sticky top-0 z-50 bg-gradient-to-r from-pink-500 to-pink-600 shadow-md">
-          <div className="flex items-center gap-3 px-4 py-3">
-            <div
-              className="flex items-center justify-center w-9 h-9 rounded-xl"
-              style={{ background: 'rgba(255,255,255,0.2)' }}
-            >
-              <ShoppingBag className="h-4 w-4 text-white" />
-            </div>
-            <span className="text-lg font-bold text-white tracking-tight">Boutiko</span>
+          <div className="flex items-center px-4 py-3">
+            <img
+              src="/logo-boutiko.jpeg"
+              alt="Boutiko"
+              className="h-auto w-auto max-w-full object-contain brightness-0 invert"
+              style={{ height: 75, width: 225 }}
+            />
           </div>
         </div>
         <div className="bg-gradient-to-br from-amber-400 via-pink-500 to-pink-600 px-5 pb-8 pt-5">
@@ -79,16 +78,13 @@ export function AuthRegister() {
           className="w-full max-w-[420px]"
         >
           {/* Logo */}
-          <div className="hidden lg:flex items-center gap-3 mb-10">
-            <div
-              className="flex items-center justify-center w-11 h-11 rounded-2xl"
-              style={{ background: 'linear-gradient(135deg, #EC4899, #F59E0B)' }}
-            >
-              <ShoppingBag className="h-5 w-5 text-white" />
-            </div>
-            <span className="text-2xl font-bold tracking-tight" style={{ color: '#0B1426' }}>
-              Boutiko
-            </span>
+          <div className="hidden lg:flex items-center justify-center mb-10">
+            <img
+              src="/logo-boutiko.jpeg"
+              alt="Boutiko"
+              className="h-auto w-auto max-w-full object-contain"
+              style={{ height: 75, width: 225 }}
+            />
           </div>
 
           {/* Heading */}

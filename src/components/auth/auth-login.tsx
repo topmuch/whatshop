@@ -10,7 +10,6 @@ import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { motion } from 'framer-motion'
 import {
-  ShoppingBag,
   Eye,
   EyeOff,
   Mail,
@@ -107,16 +106,13 @@ export function AuthLogin() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: 'easeOut' }}
           >
-            <div className="flex items-center gap-3">
-              <div
-                className="flex items-center justify-center w-12 h-12 rounded-2xl"
-                style={{ background: 'linear-gradient(135deg, #EC4899, #F59E0B)' }}
-              >
-                <ShoppingBag className="h-6 w-6 text-white" />
-              </div>
-              <span className="text-2xl font-bold text-white tracking-tight">
-                Boutiko
-              </span>
+            <div className="flex items-center justify-center">
+              <img
+                src="/logo-boutiko.jpeg"
+                alt="Boutiko"
+                className="h-auto w-auto max-w-full object-contain brightness-0 invert"
+                style={{ height: 75, width: 225 }}
+              />
             </div>
           </motion.div>
 
@@ -196,16 +192,13 @@ export function AuthLogin() {
           className="w-full max-w-md"
         >
           {/* Mobile logo */}
-          <div className="lg:hidden flex items-center justify-center gap-3 mb-8">
-            <div
-              className="flex items-center justify-center w-11 h-11 rounded-2xl"
-              style={{ background: 'linear-gradient(135deg, #EC4899, #F59E0B)' }}
-            >
-              <ShoppingBag className="h-5 w-5 text-white" />
-            </div>
-            <span className="text-2xl font-bold tracking-tight" style={{ color: '#0B1426' }}>
-              Boutiko
-            </span>
+          <div className="lg:hidden flex items-center justify-center mb-8">
+            <img
+              src="/logo-boutiko.jpeg"
+              alt="Boutiko"
+              className="h-auto w-auto max-w-full object-contain"
+              style={{ height: 75, width: 225 }}
+            />
           </div>
 
           {/* Heading */}
