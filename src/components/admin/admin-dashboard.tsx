@@ -3062,7 +3062,8 @@ function AdminConfig() {
                           if (res.ok) {
                             toast.success('Configuration Wave sauvegardée')
                           } else {
-                            toast.error('Erreur lors de la sauvegarde')
+                            const errData = await res.json().catch(() => ({}))
+                            toast.error(errData.error || 'Erreur lors de la sauvegarde')
                           }
                         } catch {
                           toast.error('Erreur de connexion')
