@@ -10,6 +10,7 @@ const CONFIG_FIELDS = [
   'notifySupportTicket', 'weeklyReport', 'lowStockAlerts',
   'smtpHost', 'smtpPort', 'smtpUser', 'smtpPass',
   'emailFrom', 'emailFromName', 'smtpConfigured',
+  'waveApiKey', 'waveWebhookSecret',
 ] as const
 
 function configToJson(config: any) {
@@ -33,6 +34,8 @@ function configToJson(config: any) {
     emailFrom: config.emailFrom,
     emailFromName: config.emailFromName,
     smtpConfigured: config.smtpConfigured,
+    waveApiKey: config.waveApiKey,
+    waveWebhookSecret: config.waveWebhookSecret,
     autoWelcomeEmail: config.autoWelcomeEmail,
     notifyNewSeller: config.notifyNewSeller,
     notifyNewOrder: config.notifyNewOrder,

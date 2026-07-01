@@ -275,6 +275,8 @@ interface PlatformConfig {
   weeklyReport: boolean
   lowStockAlerts: boolean
   forbiddenKeywords?: string
+  waveApiKey: string
+  waveWebhookSecret: string
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -2360,12 +2362,15 @@ function AdminConfig() {
     notifySupportTicket: true,
     weeklyReport: false,
     lowStockAlerts: false,
+    waveApiKey: '',
+    waveWebhookSecret: '',
   })
   const [savingConfig, setSavingConfig] = useState(false)
   const [loadingConfig, setLoadingConfig] = useState(true)
   const [savingNotif, setSavingNotif] = useState(false)
   const [testingSmtp, setTestingSmtp] = useState(false)
   const [sendingTestEmail, setSendingTestEmail] = useState(false)
+  const [savingWave, setSavingWave] = useState(false)
   const [testEmailTo, setTestEmailTo] = useState('')
   const [smtpTestResult, setSmtpTestResult] = useState<{ success: boolean; message: string } | null>(null)
 
@@ -2410,6 +2415,8 @@ function AdminConfig() {
             notifySupportTicket: data.notifySupportTicket ?? prev.notifySupportTicket,
             weeklyReport: data.weeklyReport ?? prev.weeklyReport,
             lowStockAlerts: data.lowStockAlerts ?? prev.lowStockAlerts,
+            waveApiKey: data.waveApiKey ?? prev.waveApiKey,
+            waveWebhookSecret: data.waveWebhookSecret ?? prev.waveWebhookSecret,
           }))
           setStarterPrice(String(data.starterPrice || ''))
           setProPrice(String(data.proPrice || ''))
@@ -2966,6 +2973,110 @@ function AdminConfig() {
                       checked={config.autoWelcomeEmail}
                       onCheckedChange={(checked) => setConfig(prev => ({ ...prev, autoWelcomeEmail: checked }))}
                     />
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Wave Payments Configuration */}
+                <div>
+                  <h3 className="text-sm font-semibold mb-1 flex items-center gap-2">
+                    <svg viewBox="0 0 24 24" className="h-4 w-4 text-emerald-500" fill="currentColor">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/>
+                    </svg>
+                    Paiements Wave
+                  </h3>
+                  <p className="text-xs text-muted-foreground mb-4">
+                    Configuration du compte Wave Business de Boutiko pour recevoir les paiements d&apos;abonnements.
+                    Les marchands configurent leur propre compte Wave dans leurs paramètres.
+                  </p>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 text-xs">
+                      {config.waveApiKey ? (
+                        <span className="inline-flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                          <CheckCircle className="h-3 w-3" /> Clé API configurée
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
+                          <AlertCircle className="h-3 w-3" /> Non configuré
+                        </span>
+                      )}
+                      {config.waveWebhookSecret ? (
+                        <span className="inline-flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                          <CheckCircle className="h-3 w-3" /> Webhook configuré
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
+                          <AlertCircle className="h-3 w-3" /> Webhook manquant
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="wave-api-key" className="text-xs">
+                          Clé API Wave Business
+                        </Label>
+                        <Input
+                          id="wave-api-key"
+                          type="password"
+                          placeholder="wave_sk_live_..."
+                          value={config.waveApiKey}
+                          onChange={(e) => setConfig(prev => ({ ...prev, waveApiKey: e.target.value }))}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Obtenez-la depuis votre dashboard Wave Business. Cette clé permet de créer des paiements d&apos;abonnement.
+                        </p>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="wave-webhook-secret" className="text-xs">
+                          Secret Webhook Wave
+                        </Label>
+                        <Input
+                          id="wave-webhook-secret"
+                          type="password"
+                          placeholder="whsec_..."
+                          value={config.waveWebhookSecret}
+                          onChange={(e) => setConfig(prev => ({ ...prev, waveWebhookSecret: e.target.value }))}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Pour vérifier l&apos;authenticité des callbacks Wave. Configurez le webhook URL sur{' '}
+                          <code className="bg-muted px-1 py-0.5 rounded text-[10px]">/api/payments/wave/webhook</code>
+                        </p>
+                      </div>
+                    </div>
+
+                    <Button
+                      onClick={async () => {
+                        setSavingWave(true)
+                        try {
+                          const res = await fetch('/api/admin/config', {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              waveApiKey: config.waveApiKey,
+                              waveWebhookSecret: config.waveWebhookSecret,
+                            }),
+                          })
+                          if (res.ok) {
+                            toast.success('Configuration Wave sauvegardée')
+                          } else {
+                            toast.error('Erreur lors de la sauvegarde')
+                          }
+                        } catch {
+                          toast.error('Erreur de connexion')
+                        } finally {
+                          setSavingWave(false)
+                        }
+                      }}
+                      disabled={savingWave}
+                      className="bg-emerald-600 hover:bg-emerald-700 gap-2"
+                      size="sm"
+                    >
+                      {savingWave ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                      Sauvegarder la configuration Wave
+                    </Button>
                   </div>
                 </div>
 
