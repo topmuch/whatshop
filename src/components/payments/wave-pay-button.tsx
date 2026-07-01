@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Smartphone, Loader2 } from 'lucide-react'
 import { useWavePayment, WavePaymentHandler } from '@/components/payments/wave-payment-handler'
-import { formatFCFA } from '@/lib/wave'
+import { formatFCFA } from '@/lib/wave-shared'
 
 interface WavePayButtonProps {
   type: 'SUBSCRIPTION' | 'ORDER'

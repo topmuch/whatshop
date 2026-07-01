@@ -1,54 +1,14 @@
-// ─── Wave Payment Provider ──────────────────────────────────────────────────
-// Supporte 2 modes :
-//   1. Paiement d'abonnement → Compte Wave Business de Boutiko
-//   2. Paiement de commande  → Compte Wave Business du marchand
+// ─── Wave Payment Provider (SERVER ONLY) ──────────────────────────────────
+// Ce fichier utilise 'crypto' (Node-only). Ne JAMAIS importer dans un
+// composant client. Pour le client, utiliser '@/lib/wave-shared'.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { createHmac } from 'crypto'
+import type { PaymentStatus } from './wave-shared'
 
-export type PaymentType = 'SUBSCRIPTION' | 'ORDER'
-export type PaymentStatus = 'PENDING' | 'PROCESSING' | 'SUCCEEDED' | 'FAILED' | 'CANCELLED' | 'EXPIRED'
-
-export interface WaveCreatePaymentInput {
-  amount: number
-  currency?: string // 'XOF' par défaut
-  description: string
-  clientPhoneNumber?: string // Numéro du payeur (optionnel)
-  /** Pour les paiements commandes : numéro Wave du marchand */
-  merchantWavePhone?: string
-  merchantWaveApiKey?: string
-}
-
-export interface WaveCreatePaymentResponse {
-  success: boolean
-  paymentId?: string // ID interne Wave
-  checkoutUrl?: string // URL de paiement Wave
-  error?: string
-  error_code?: string
-}
-
-export interface WavePaymentStatus {
-  id: string
-  status: string
-  amount: number
-  currency: string
-  paid_at?: string
-  error_code?: string
-  error_message?: string
-}
-
-export interface WaveWebhookPayload {
-  id: string
-  amount: number
-  currency: string
-  status: string
-  client_reference?: string
-  paid_at?: string
-  error_code?: string
-  error_message?: string
-  // Meta champs
-  meta?: Record<string, string>
-}
+export type { PaymentStatus, PaymentType } from './wave-shared'
+export type { WaveCreatePaymentInput, WaveCreatePaymentResponse, WavePaymentStatus, WaveWebhookPayload } from './wave-shared'
+export { formatFCFA, getPlanPrice } from './wave-shared'
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 
@@ -56,7 +16,7 @@ function getWaveBaseUrl(): string {
   return process.env.WAVE_API_BASE_URL || 'https://api.wave.com/v1'
 }
 
-/** Récupère la clé API Wave à utiliser selon le contexte */
+/** Récupère la clé API Wave de Boutiko (env ou SaaSConfig en BDD) */
 export function getBoutikoWaveApiKey(): string | null {
   return process.env.WAVE_API_KEY || null
 }
@@ -69,14 +29,12 @@ export function getBoutikoWaveWebhookSecret(): string | null {
 
 /**
  * Crée un paiement via l'API Wave Business.
- * 
- * Deux modes :
  * - Si merchantWaveApiKey fourni → paiement vers le compte du marchand
  * - Sinon → paiement vers le compte Wave de Boutiko
  */
 export async function createWavePayment(
-  input: WaveCreatePaymentInput
-): Promise<WaveCreatePaymentResponse> {
+  input: { amount: number; currency?: string; description: string; clientPhoneNumber?: string; merchantWavePhone?: string; merchantWaveApiKey?: string }
+): Promise<{ success: boolean; paymentId?: string; checkoutUrl?: string; error?: string; error_code?: string }> {
   const apiKey = input.merchantWaveApiKey || getBoutikoWaveApiKey()
   if (!apiKey) {
     return { success: false, error: 'Aucune clé API Wave configurée', error_code: 'NO_API_KEY' }
@@ -85,16 +43,13 @@ export async function createWavePayment(
   const baseUrl = getWaveBaseUrl()
 
   try {
-    // Corps de la requête Wave
     const body: Record<string, unknown> = {
-      amount: Math.round(input.amount), // Wave attend un entier (montant en plus petite unité ou FCFA entier)
+      amount: Math.round(input.amount),
       currency: input.currency || 'XOF',
       description: input.description,
-      // Référence client unique pour le webhook
       client_reference: `boutiko_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
     }
 
-    // Ajouter le numéro du payeur si fourni
     if (input.clientPhoneNumber) {
       body.customer_phone_number = input.clientPhoneNumber
     }
@@ -142,7 +97,7 @@ export async function createWavePayment(
 export async function checkWavePaymentStatus(
   wavePaymentId: string,
   apiKey?: string
-): Promise<WavePaymentStatus | null> {
+): Promise<{ id: string; status: string; amount: number; currency: string; paid_at?: string; error_code?: string; error_message?: string } | null> {
   const key = apiKey || getBoutikoWaveApiKey()
   if (!key) {
     console.error('[Wave] No API key for status check')
@@ -183,19 +138,15 @@ export async function checkWavePaymentStatus(
 }
 
 /**
- * Vérifie la signature d'un webhook Wave.
- * Utilise le secret pour vérifier que le webhook vient bien de Wave.
+ * Vérifie la signature d'un webhook Wave (HMAC-SHA256).
  */
 export function verifyWaveWebhookSignature(
   payload: string,
   signature: string,
   secret: string
 ): boolean {
-  // Wave utilise HMAC-SHA256 pour signer les webhooks
-  // Format de la signature: t=timestamp,v1=hex_digest
   try {
     const expectedSig = createHmac('sha256', secret).update(payload).digest('hex')
-    // Comparaison sécurisée
     const parts = signature.split(',')
     const v1Part = parts.find((p: string) => p.startsWith('v1='))
     if (!v1Part) return false
@@ -207,7 +158,6 @@ export function verifyWaveWebhookSignature(
   }
 }
 
-/** Comparaison sécurisée de chaînes */
 function timingSafeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false
   let result = 0
@@ -257,15 +207,4 @@ export function getPlanPrice(planType: string, saasConfig?: { starterPrice?: num
     BOUTIQUE_PRO: 30000,
   }
   return prices[planType] || 8000
-}
-
-/**
- * Formate un montant en FCFA.
- */
-export function formatFCFA(amount: number): string {
-  return new Intl.NumberFormat('fr-FR', {
-    style: 'decimal',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount) + ' FCFA'
 }

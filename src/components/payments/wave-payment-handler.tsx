@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Loader2, CheckCircle2, XCircle, Clock, ExternalLink, Smartphone, RotateCcw } from 'lucide-react'
-import { formatFCFA } from '@/lib/wave'
+import { formatFCFA } from '@/lib/wave-shared'
 
 interface PaymentStatusResponse {
   id: string
