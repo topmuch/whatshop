@@ -194,17 +194,3 @@ export function mapWaveStatus(waveStatus: string): PaymentStatus {
   }
 }
 
-/**
- * Calcule le prix d'un plan en FCFA.
- */
-export function getPlanPrice(planType: string, saasConfig?: { starterPrice?: number; proPrice?: number; businessPrice?: number } | null): number {
-  const prices: Record<string, number> = {
-    STARTER: saasConfig?.starterPrice || 5000,
-    PRO: saasConfig?.proPrice || 8000,
-    BUSINESS: saasConfig?.businessPrice || 20000,
-    LIVE: 20000,
-    LIVE_PRO: 35000,
-    BOUTIQUE_PRO: 30000,
-  }
-  return prices[planType] || 8000
-}
