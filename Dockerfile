@@ -48,7 +48,8 @@ COPY --from=builder /app/public ./public/
 # Copy Prisma schema for migrations
 COPY --from=builder /app/prisma ./prisma/
 
-# Copy generated client
+# Copy Prisma CLI + generated client
+COPY --from=builder /app/node_modules/prisma ./node_modules/prisma/
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma/
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma/
 
@@ -72,5 +73,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD bun -e "fetch('http://localhost:3000/').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
 
 # Push DB schema, seed production data, then start server
-# Each step uses || true so failures don't prevent the server from starting
-CMD ["sh", "-c", "npx prisma db push --skip-generate || true && bun scripts/seed-production.ts || true && bun server.js"]
+CMD ["sh", "-c", "echo '→ Pushing DB schema...' && bunx prisma db push --skip-generate 2>&1 && echo '→ Schema synced' || echo '⚠ DB push failed (non-fatal)'; bun scripts/seed-production.ts 2>&1 || echo '⚠ Seed failed (non-fatal)'; exec bun server.js"]

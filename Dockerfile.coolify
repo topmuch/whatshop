@@ -52,8 +52,9 @@ COPY --from=base /app/.next/standalone ./
 COPY --from=base /app/.next/static .next/static/
 COPY --from=base /app/public ./public/
 
-# Copy Prisma
+# Copy Prisma schema + CLI + client
 COPY --from=base /app/prisma ./prisma/
+COPY --from=base /app/node_modules/prisma ./node_modules/prisma/
 COPY --from=base /app/node_modules/.prisma ./node_modules/.prisma/
 COPY --from=base /app/node_modules/@prisma ./node_modules/@prisma/
 
@@ -76,4 +77,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3000/',r=>{r.statusCode<400?process.exit(0):process.exit(1)}).on('error',()=>process.exit(1))"
 
 # Push DB schema, seed production data, then start server
-CMD ["sh", "-c", "npx prisma db push --skip-generate || true && bun scripts/seed-production.ts || true && node server.js"]
+CMD ["sh", "-c", "echo '→ Pushing DB schema...' && npx prisma db push --skip-generate 2>&1 && echo '→ Schema synced' || echo '⚠ DB push failed (non-fatal)'; bun scripts/seed-production.ts 2>&1 || echo '⚠ Seed failed (non-fatal)'; exec node server.js"]
