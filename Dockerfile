@@ -45,13 +45,11 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static .next/static/
 COPY --from=builder /app/public ./public/
 
-# Copy Prisma schema for migrations
+# Copy Prisma schema + CLI + engines + generated client
 COPY --from=builder /app/prisma ./prisma/
-
-# Copy Prisma CLI + generated client
 COPY --from=builder /app/node_modules/prisma ./node_modules/prisma/
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma/
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma/
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma/
 
 # Copy sharp + native bindings (for image resizing)
 COPY --from=builder /app/node_modules/sharp ./node_modules/sharp
