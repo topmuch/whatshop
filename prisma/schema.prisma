@@ -61,10 +61,12 @@ model User {
   resellerClients User[]           @relation("ResellerClients")
   resellerId      String?
   reseller        User?            @relation("ResellerClients", fields: [resellerId], references: [id])
-  upgradeRequests  UpgradeRequest[]
-  reviewedUpgrades UpgradeRequest[] @relation("UpgradeReviews")
-  notifications    Notification[]
-  pushSubscriptions PushSubscription[]
+  upgradeRequests    UpgradeRequest[]
+  reviewedUpgrades   UpgradeRequest[] @relation("UpgradeReviews")
+  notifications      Notification[]
+  pushSubscriptions  PushSubscription[]
+  payments           Payment[]
+  waveConfig         MerchantWaveConfig?
 }
 
 // ─── SUBSCRIPTION (liée au COMPTE UTILISATEUR, pas à la boutique) ─────────────
@@ -80,6 +82,7 @@ model Subscription {
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
+  payments      Payment[]
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
@@ -361,12 +364,15 @@ model Order {
   source          String?  // Modern Store: CART | WHATSAPP (origine de la commande)
   createdAt       DateTime @default(now())
 
+  paymentId        String?  @unique
+  payment          Payment?
   shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
   user User? @relation(fields: [userId], references: [id])
   userId String?
   orderItems      OrderItem[]
 
   @@index([status])
+  @@index([paymentId])
 }
 
 // ─── ORDER ITEM (relational) ───────────────────────────────────────────────
@@ -494,6 +500,9 @@ model SaaSConfig {
   notifySupportTicket    Boolean  @default(true)
   weeklyReport           Boolean  @default(false)
   lowStockAlerts         Boolean  @default(false)
+  // Wave Configuration (pour les paiements d'abonnements Boutiko)
+  waveApiKey             String?  // Clé API Wave Business de Boutiko
+  waveWebhookSecret      String?  // Secret webhook pour vérifier les callbacks
   // Moderation
   forbiddenKeywords     String   @default("") // JSON array of forbidden words for shop names, product names
   createdAt              DateTime @default(now())
@@ -749,4 +758,61 @@ model PWAInstallEvent {
 
   @@index([shopId])
   @@index([platform])
+}
+
+// ─── PAYMENT (Wave & futurs providers) ───────────────────────────────────────
+
+model Payment {
+  id                String        @id @default(cuid())
+  provider          String        @default("WAVE") // WAVE | ORANGE_MONEY | FREE_MONEY
+  type              String        // SUBSCRIPTION | ORDER
+  status            String        @default("PENDING") // PENDING | PROCESSING | SUCCEEDED | FAILED | CANCELLED | EXPIRED
+  amount            Float
+  currency          String        @default("XOF")
+  description       String?
+
+  // Wave-specific
+  wavePaymentId     String?       // ID du paiement chez Wave
+  waveCheckoutUrl   String?       // URL de checkout Wave (si applicable)
+  wavePhoneNumber   String?       // Numéro du payeur
+  waveErrorCode     String?
+  waveErrorMessage  String?
+
+  // Liens
+  orderId           String?  @unique
+  order             Order?        @relation(fields: [orderId], references: [id])
+  subscriptionId    String?
+  subscription      Subscription? @relation(fields: [subscriptionId], references: [id])
+  shopId            String?       // Pour les paiements de commandes: boutique du marchand
+  userId            String?       // Utilisateur qui a initié le paiement
+  user              User?         @relation(fields: [userId], references: [id])
+
+  paidAt            DateTime?
+  expiresAt         DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@index([status])
+  @@index([provider])
+  @@index([type])
+  @@index([wavePaymentId])
+  @@index([orderId])
+  @@index([userId])
+}
+
+// ─── MERCHANT WAVE CONFIG (compte Wave du marchand pour recevoir les paiements clients) ─
+
+model MerchantWaveConfig {
+  id              String   @id @default(cuid())
+  userId          String   @unique  // Un seul config Wave par utilisateur
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Credentials du compte Wave Business du marchand
+  wavePhoneNumber String            // Numéro Wave Business (ex: +221771234567)
+  waveApiKey      String?           // Clé API Wave Business (optionnel, pour API directe)
+  webhookSecret   String?           // Secret pour vérifier les webhooks
+
+  isActive        Boolean  @default(true)
+  configuredAt    DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }

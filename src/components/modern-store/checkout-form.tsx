@@ -12,7 +12,9 @@ import {
   MessageSquare,
   Truck,
   Wallet,
+  Smartphone,
 } from 'lucide-react'
+import { WavePaymentHandler } from '@/components/payments/wave-payment-handler'
 import { useCartStore } from '@/store/cart-store'
 import { formatPrice } from '@/lib/shared'
 import { Button } from '@/components/ui/button'
@@ -39,8 +41,8 @@ interface CheckoutFormProps {
   onBack?: () => void
 }
 
-type PaymentMethod = 'COD' | 'MOBILE_MONEY'
-type Step = 'form' | 'success'
+type PaymentMethod = 'COD' | 'WAVE'
+type Step = 'form' | 'wave-payment' | 'success'
 
 /**
  * Formulaire de checkout classique pour le template Modern Store.
@@ -48,6 +50,7 @@ type Step = 'form' | 'success'
  */
 export function CheckoutForm({
   shopId,
+  shopName,
   accent,
   onSuccess,
   onBack,
@@ -96,6 +99,8 @@ export function CheckoutForm({
   const [city, setCity] = useState('')
   const [notes, setNotes] = useState('')
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('COD')
+  const [wavePaymentId, setWavePaymentId] = useState<string | null>(null)
+  const [waveCheckoutUrl, setWaveCheckoutUrl] = useState<string | undefined>()
 
   const subtotal = getSubtotal()
   const total = subtotal + (deliveryFee || 0)
@@ -157,6 +162,7 @@ export function CheckoutForm({
           notes: notes.trim() || undefined,
         },
         shippingFee: deliveryFee,
+        paymentMethod,
       }
 
       const res = await fetch('/api/orders', {
@@ -177,15 +183,88 @@ export function CheckoutForm({
       }
 
       setOrderId(data.id)
-      setStep('success')
-      clearCart()
-      onSuccess?.({ id: data.id })
-      toast.success('Commande confirmée !')
+
+      // Si paiement Wave, créer le paiement et afficher le handler
+      if (paymentMethod === 'WAVE') {
+        try {
+          const waveRes = await fetch('/api/payments/wave/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              type: 'ORDER',
+              orderId: data.id,
+              shopId,
+              clientPhoneNumber: phone.trim(),
+            }),
+          })
+          const waveData = await waveRes.json()
+          if (waveRes.ok) {
+            setWavePaymentId(waveData.paymentId)
+            setWaveCheckoutUrl(waveData.checkoutUrl)
+            setStep('wave-payment')
+          } else {
+            // Wave non configuré par le marchand, fallback vers succès
+            toast.warning('Paiement Wave non disponible. Votre commande a été enregistrée.')
+            setStep('success')
+            clearCart()
+            onSuccess?.({ id: data.id })
+          }
+        } catch {
+          setStep('success')
+          clearCart()
+          onSuccess?.({ id: data.id })
+        }
+      } else {
+        setStep('success')
+        clearCart()
+        onSuccess?.({ id: data.id })
+        toast.success('Commande confirmée !')
+      }
     } catch {
       setServerError('Erreur de connexion. Vérifiez votre réseau.')
     } finally {
       setSubmitting(false)
     }
+  }
+
+  if (step === 'wave-payment' && wavePaymentId) {
+    return (
+      <div className="mx-auto max-w-md px-4 py-8">
+        <button
+          type="button"
+          onClick={() => {
+            setStep('success')
+            clearCart()
+            onSuccess?.({ id: orderId! })
+          }}
+          className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-gray-600 transition-colors hover:text-gray-900"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Retour
+        </button>
+        <WavePaymentHandler
+          paymentId={wavePaymentId}
+          amount={total}
+          description={`Commande ${orderId?.slice(-8).toUpperCase()} - ${shopName}`}
+          checkoutUrl={waveCheckoutUrl}
+          type="ORDER"
+          onSuccess={() => {
+            setStep('success')
+            clearCart()
+            onSuccess?.({ id: orderId! })
+            toast.success('Paiement confirmé ! Le marchand a été notifié.')
+          }}
+          onError={() => {
+            // Reste sur la page wave-payment pour montrer l'erreur
+          }}
+          onClose={() => {
+            setStep('success')
+            clearCart()
+            onSuccess?.({ id: orderId! })
+          }}
+        />
+      </div>
+    )
   }
 
   if (step === 'success') {
@@ -386,20 +465,24 @@ export function CheckoutForm({
                 </div>
               </label>
               <label
-                htmlFor="pay-mm"
+                htmlFor="pay-wave"
                 className={`flex cursor-pointer items-center gap-3 rounded-xl border-2 p-3 transition-all ${
-                  paymentMethod === 'MOBILE_MONEY'
-                    ? 'border-gray-900 bg-gray-50'
-                    : 'border-gray-200 hover:border-gray-300'
+                  paymentMethod === 'WAVE'
+                    ? 'border-emerald-500 bg-emerald-50'
+                    : 'border-gray-200 hover:border-emerald-300'
                 }`}
               >
-                <RadioGroupItem id="pay-mm" value="MOBILE_MONEY" />
-                <Wallet className="h-5 w-5 text-gray-700" />
+                <RadioGroupItem id="pay-wave" value="WAVE" />
+                <div className="h-5 w-5 rounded-md bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center">
+                  <svg viewBox="0 0 24 24" className="h-3 w-3 text-white" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/>
+                  </svg>
+                </div>
                 <div>
                   <p className="text-sm font-semibold text-gray-900">
-                    Mobile Money
+                    Wave
                   </p>
-                  <p className="text-xs text-gray-500">Wave, Orange, MTN...</p>
+                  <p className="text-xs text-gray-500">Paiement mobile instantané</p>
                 </div>
               </label>
             </RadioGroup>

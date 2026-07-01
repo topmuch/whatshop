@@ -9,6 +9,7 @@ import { ShopInfoForm } from './settings/shop-info-form'
 import { AppearanceTab } from './settings/appearance-tab'
 import { SeoDomainTab } from './settings/seo-domain-tab'
 import { NotificationTab } from './settings/notification-tab'
+import { WaveConfigPanel } from './wave-config'
 
 export function DashboardSettings() {
   const { shop } = useAppStore()
@@ -32,10 +33,11 @@ export function DashboardSettings() {
       <SubscriptionSection shop={shop} />
 
       <Tabs defaultValue="boutique" className="space-y-6">
-        <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full">
+        <TabsList className="grid grid-cols-2 sm:grid-cols-5 w-full">
           <TabsTrigger value="boutique" className="text-xs sm:text-sm">Boutique</TabsTrigger>
           <TabsTrigger value="apparence" className="text-xs sm:text-sm">Apparence</TabsTrigger>
           <TabsTrigger value="seo" className="text-xs sm:text-sm">SEO &amp; Domaine</TabsTrigger>
+          <TabsTrigger value="paiements" className="text-xs sm:text-sm">Paiements</TabsTrigger>
           <TabsTrigger value="notifications" className="text-xs sm:text-sm">Notifications</TabsTrigger>
         </TabsList>
 
@@ -50,6 +52,10 @@ export function DashboardSettings() {
 
         <TabsContent value="seo" className="space-y-6">
           <SeoDomainTab shop={shop} />
+        </TabsContent>
+
+        <TabsContent value="paiements" className="space-y-6">
+          <WaveConfigPanel />
         </TabsContent>
 
         <TabsContent value="notifications" className="space-y-6">

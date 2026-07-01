@@ -15,8 +15,10 @@ import {
   ArrowUpRight,
   AlertCircle,
   Clock,
+  Smartphone,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { WavePayButton } from '@/components/payments/wave-pay-button'
 
 export function SubscriptionSection({ shop }: { shop: Shop | null }) {
   const [subscriptionData, setSubscriptionData] = useState<{
@@ -254,21 +256,39 @@ export function SubscriptionSection({ shop }: { shop: Shop | null }) {
                             </p>
                           )}
                         </div>
-                        <Button
-                          className="w-full gap-1.5"
-                          size="sm"
-                          onClick={() => handleUpgrade(plan.type)}
-                          disabled={upgrading === plan.type || !!subscriptionData.pendingUpgrade}
-                        >
-                          {upgrading === plan.type ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          ) : subscriptionData.pendingUpgrade ? (
-                            <Clock className="h-3.5 w-3.5" />
-                          ) : (
-                            <ArrowUpRight className="h-3.5 w-3.5" />
-                          )}
-                          {subscriptionData.pendingUpgrade ? 'Demande en cours...' : `Demander le ${plan.label}`}
-                        </Button>
+                        <div className="space-y-2">
+                          <WavePayButton
+                            type="SUBSCRIPTION"
+                            planType={plan.type}
+                            amount={plan.price}
+                            description={`Abonnement Boutiko - Plan ${plan.label}`}
+                            size="sm"
+                            className="w-full"
+                            buttonText={`Payer ${plan.price.toLocaleString('fr-FR')} FCFA via Wave`}
+                            onSuccess={() => {
+                              // Recharger les données d'abonnement
+                              fetch('/api/subscription')
+                                .then(r => r.ok ? r.json() : null)
+                                .then(d => { if (d) setSubscriptionData(d) })
+                            }}
+                          />
+                          <Button
+                            className="w-full gap-1.5"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleUpgrade(plan.type)}
+                            disabled={upgrading === plan.type || !!subscriptionData.pendingUpgrade}
+                          >
+                            {upgrading === plan.type ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : subscriptionData.pendingUpgrade ? (
+                              <Clock className="h-3.5 w-3.5" />
+                            ) : (
+                              <ArrowUpRight className="h-3.5 w-3.5" />
+                            )}
+                            {subscriptionData.pendingUpgrade ? 'Demande en cours...' : `Ou demander par validation admin`}
+                          </Button>
+                        </div>
                       </div>
                     ))}
                 </div>
