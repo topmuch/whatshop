@@ -100,7 +100,6 @@ import {
   CheckCheck,
   Server,
   Copy,
-  Check,
 } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { formatDistanceToNow } from 'date-fns'
