@@ -99,6 +99,8 @@ import {
   ShieldAlert,
   CheckCheck,
   Server,
+  Copy,
+  Check,
 } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { formatDistanceToNow } from 'date-fns'
@@ -845,6 +847,42 @@ function AdminUpgradeRequests() {
           </CardContent>
         </Card>
       )}
+    </div>
+  )
+}
+
+// ─── Webhook URL Copy Component ────────────────────────────────────────────
+
+function WebhookUrlCopy() {
+  const [copied, setCopied] = useState(false)
+  const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
+  const webhookUrl = `${baseUrl}/api/payments/wave/webhook`
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(webhookUrl)
+      setCopied(true)
+      toast.success('URL copiée !')
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      toast.error('Impossible de copier')
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <code className="flex-1 text-xs bg-white border border-emerald-200 rounded-md px-2.5 py-1.5 text-emerald-800 font-mono break-all select-all">
+        {webhookUrl}
+      </code>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={handleCopy}
+        className="shrink-0 h-8 px-2 border-emerald-200 hover:bg-emerald-100"
+      >
+        {copied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+      </Button>
     </div>
   )
 }
@@ -2992,6 +3030,14 @@ function AdminConfig() {
                   </p>
 
                   <div className="space-y-4">
+                    {/* Webhook URL */}
+                    <div className="rounded-lg border border-dashed border-emerald-300 bg-emerald-50/50 p-3 space-y-2">
+                      <p className="text-xs font-medium text-emerald-700 flex items-center gap-1.5">
+                        <Server className="h-3.5 w-3.5" /> URL Webhook à configurer dans Wave
+                      </p>
+                      <WebhookUrlCopy />
+                    </div>
+
                     <div className="flex items-center gap-2 text-xs">
                       {config.waveApiKey ? (
                         <span className="inline-flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
