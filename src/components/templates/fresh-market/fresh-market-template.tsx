@@ -767,75 +767,86 @@ function HomeView({
     <>
       {/* ─── HERO SLIDER ─── */}
       {!searchQuery && !selectedCategory && (
-        <section>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="relative w-full overflow-hidden min-h-[320px] sm:min-h-[420px] lg:min-h-[520px]"
-          >
-            {/* Background images with crossfade */}
-            {heroSlides.map((slide, idx) => (
-              <div
-                key={idx}
-                className="absolute inset-0 transition-opacity duration-700"
-                style={{ opacity: idx === currentSlide ? 1 : 0 }}
-              >
-                <img
-                  src={slide.image}
-                  alt=""
-                  className="w-full h-full object-cover object-center"
-                />
-              </div>
-            ))}
-
-            {/* Content */}
-            <div className="relative z-10 h-full flex items-center px-6 sm:px-10 lg:px-16">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={currentSlide}
-                  initial={{ opacity: 0, x: 30 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -30 }}
-                  transition={{ duration: 0.5 }}
-                  className="max-w-xl"
-                >
-                  <span className="inline-block px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-white text-xs sm:text-sm font-semibold uppercase tracking-wider mb-3 sm:mb-4" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
-                    {heroSlides[currentSlide].badge}
-                  </span>
-                  <h1 className="text-2xl sm:text-4xl lg:text-6xl font-bold text-white leading-tight mb-2 sm:mb-3" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}>
-                    {heroSlides[currentSlide].title}
-                  </h1>
-                  <p className="text-white/90 text-sm sm:text-lg mb-4 sm:mb-6 max-w-md" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
-                    {heroSlides[currentSlide].subtitle}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => document.getElementById('products-section')?.scrollIntoView({ behavior: 'smooth' })}
-                    className="inline-flex items-center gap-2 px-5 sm:px-8 py-2.5 sm:py-3.5 bg-white text-teal-700 font-semibold rounded-full hover:bg-teal-50 transition-colors shadow-lg text-sm sm:text-base"
+        <section className="bg-gradient-to-br from-teal-600 via-teal-700 to-emerald-800">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="relative flex flex-col lg:flex-row items-center gap-6 lg:gap-10 py-8 sm:py-12 lg:py-8"
+            >
+              {/* Text Content - Left side */}
+              <div className="flex-1 order-2 lg:order-1 text-center lg:text-left min-h-[200px] flex flex-col justify-center">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={currentSlide}
+                    initial={{ opacity: 0, x: 30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -30 }}
+                    transition={{ duration: 0.5 }}
                   >
-                    {heroSlides[currentSlide].cta}
-                    <ChevronRight className="size-4" />
-                  </button>
-                </motion.div>
-              </AnimatePresence>
-            </div>
+                    <span className="inline-block px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-white text-xs sm:text-sm font-semibold uppercase tracking-wider mb-3 sm:mb-4">
+                      {heroSlides[currentSlide].badge}
+                    </span>
+                    <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-white leading-tight mb-3 sm:mb-4">
+                      {heroSlides[currentSlide].title}
+                    </h1>
+                    <p className="text-white/85 text-sm sm:text-base lg:text-lg mb-5 sm:mb-6 max-w-lg mx-auto lg:mx-0">
+                      {heroSlides[currentSlide].subtitle}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => document.getElementById('products-section')?.scrollIntoView({ behavior: 'smooth' })}
+                      className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-3.5 bg-white text-teal-700 font-semibold rounded-full hover:bg-teal-50 transition-colors shadow-lg text-sm sm:text-base"
+                    >
+                      {heroSlides[currentSlide].cta}
+                      <ChevronRight className="size-4" />
+                    </button>
+                  </motion.div>
+                </AnimatePresence>
 
-            {/* Dot navigation */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
-              {heroSlides.map((_, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => setCurrentSlide(idx)}
-                  className={`h-2.5 rounded-full transition-all duration-300 ${
-                    idx === currentSlide ? 'w-8 bg-white' : 'w-2.5 bg-white/50 hover:bg-white/70'
-                  }`}
-                  aria-label={`Slide ${idx + 1}`}
-                />
-              ))}
-            </div>
-          </motion.div>
+                {/* Dot navigation */}
+                <div className="flex items-center gap-2 mt-6 lg:mt-8 justify-center lg:justify-start">
+                  {heroSlides.map((_, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setCurrentSlide(idx)}
+                      className={`h-2.5 rounded-full transition-all duration-300 ${
+                        idx === currentSlide ? 'w-8 bg-white' : 'w-2.5 bg-white/50 hover:bg-white/70'
+                      }`}
+                      aria-label={`Slide ${idx + 1}`}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Portrait Image - Right side */}
+              <div className="relative order-1 lg:order-2 w-full max-w-[340px] sm:max-w-[380px] lg:max-w-[420px] xl:max-w-[460px] flex-shrink-0">
+                {heroSlides.map((slide, idx) => (
+                  <div
+                    key={idx}
+                    className="absolute inset-0 transition-all duration-700 ease-in-out"
+                    style={{
+                      opacity: idx === currentSlide ? 1 : 0,
+                      transform: idx === currentSlide ? 'scale(1)' : 'scale(0.95)',
+                    }}
+                  >
+                    <div className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden shadow-2xl">
+                      <img
+                        src={slide.image}
+                        alt=""
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+                    </div>
+                  </div>
+                ))}
+                {/* Spacer to maintain height */}
+                <div className="w-full aspect-[3/4] rounded-2xl" aria-hidden="true" />
+              </div>
+            </motion.div>
+          </div>
         </section>
       )}
 
