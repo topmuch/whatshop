@@ -761,8 +761,7 @@ function HomeView({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="relative w-full overflow-hidden"
-            style={{ aspectRatio: '16/9' }}
+            className="relative w-full overflow-hidden min-h-[320px] sm:min-h-[420px] lg:min-h-[520px]"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-orange-500 via-orange-400 to-amber-400">
               {/* Decorative circles */}
@@ -1007,15 +1006,16 @@ function ProductSection({
             <ChevronRight className="size-4" />
           </button>
         </div>
-        <div className="flex gap-4 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           {products.map((p) => (
-            <ProductCard
-              key={p.id}
-              product={p}
-              onClick={() => onProductClick(p)}
-              onAddToCart={(e) => { e.stopPropagation(); onAddToCart(p) }}
-              badge={badge}
-            />
+            <div key={p.id} className="shrink-0 w-[280px] sm:w-[240px] snap-start">
+              <ProductCard
+                product={p}
+                onClick={() => onProductClick(p)}
+                onAddToCart={(e) => { e.stopPropagation(); onAddToCart(p) }}
+                badge={badge}
+              />
+            </div>
           ))}
         </div>
       </div>
@@ -1037,7 +1037,7 @@ function ProductGrid({
   onAddToCart: (p: FreshProduct) => void
 }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       {products.map((p) => (
         <ProductCard
           key={p.id}
@@ -1496,7 +1496,7 @@ function ProductDetailView({
       {relatedProducts.length > 0 && (
         <section className="mt-12">
           <h2 className="text-xl font-bold text-gray-900 mb-4">Produits similaires</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {relatedProducts.map((p) => (
               <ProductCard
                 key={p.id}
