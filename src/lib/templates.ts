@@ -680,6 +680,7 @@ export const templates: Record<TemplateId, ShopTemplate> = {
       showSearch: true,
       showSort: false,
       showCart: true,
+      gridCols: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4',
     },
     decorative: {
       pattern: 'none',
