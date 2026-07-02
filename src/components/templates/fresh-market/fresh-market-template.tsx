@@ -708,53 +708,46 @@ function HomeView({
   onCategoryClick: (catId: string | null) => void
   categoryRef: React.RefObject<HTMLDivElement | null>
 }) {
+  // ─── Hero Slider state ───
+  const [currentSlide, setCurrentSlide] = useState(0)
+
+  const heroSlides = [
+    {
+      image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=1400&h=600&fit=crop',
+      gradient: 'from-orange-600/80 via-orange-500/60 to-amber-400/40',
+      badge: 'Promotions Sp\u00e9ciales',
+      title: <>Jusqu&apos;\u00e0 <span className="text-yellow-200">-30%</span></>,
+      subtitle: 'D\u00e9couvrez notre s\u00e9lection de produits frais et de saison \u00e0 des prix imbattables.',
+      cta: 'D\u00e9couvrir',
+    },
+    {
+      image: 'https://images.unsplash.com/photo-1607349913338-fca6f7fc608c?w=1400&h=600&fit=crop',
+      gradient: 'from-green-800/80 via-green-600/60 to-emerald-400/40',
+      badge: 'Offres du Jour',
+      title: <>Produits <span className="text-green-200">Frais</span> Quotidiennement</>,
+      subtitle: 'S\u00e9lection rigoureuse de produits frais chaque matin, directement des producteurs locaux.',
+      cta: 'Voir les offres',
+    },
+    {
+      image: 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=1400&h=600&fit=crop',
+      gradient: 'from-teal-800/80 via-teal-600/60 to-cyan-400/40',
+      badge: 'Nouveaut\u00e9s',
+      title: <>D\u00e9couvrez nos <span className="text-teal-200">Nouveaut\u00e9s</span></>,
+      subtitle: 'De nouveaux produits arrivent chaque semaine. Soyez les premiers \u00e0 les d\u00e9guster !',
+      cta: 'Explorer',
+    },
+  ]
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroSlides.length)
+    }, 5000)
+    return () => clearInterval(timer)
+  }, [heroSlides.length])
+
   return (
     <>
-      {/* ─── CATEGORY ICONS ROW ─── */}
-      {categories.length > 0 && (
-        <section className="bg-white border-b border-gray-100">
-          <div ref={categoryRef} className="max-w-7xl mx-auto px-4 py-4">
-            <div className="flex gap-4 overflow-x-auto scrollbar-none pb-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-              {/* All category */}
-              <div className="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer" onClick={() => onCategoryClick(null)}>
-                <div className={`w-16 h-16 rounded-full overflow-hidden border-2 flex items-center justify-center transition-colors ${
-                  !selectedCategory ? 'border-teal-500 bg-teal-50' : 'border-gray-200 bg-gray-50'
-                }`}>
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Package className="size-6 text-teal-600" />
-                  </div>
-                </div>
-                <span className={`text-xs font-medium text-center max-w-[72px] truncate ${
-                  !selectedCategory ? 'text-teal-700' : 'text-gray-500'
-                }`}>Tout</span>
-              </div>
-
-              {categories.map((cat) => (
-                <div
-                  key={cat.id}
-                  className="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer"
-                  onClick={() => onCategoryClick(cat.id)}
-                >
-                  <div className={`w-16 h-16 rounded-full overflow-hidden border-2 flex items-center justify-center transition-colors ${
-                    selectedCategory === cat.id ? 'border-teal-500 bg-teal-50' : 'border-teal-100 bg-teal-50'
-                  }`}>
-                    {cat.image ? (
-                      <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <Leaf className="size-6 text-teal-600" />
-                    )}
-                  </div>
-                  <span className={`text-xs font-medium text-center max-w-[72px] truncate ${
-                    selectedCategory === cat.id ? 'text-teal-700' : 'text-gray-600'
-                  }`}>{cat.name}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ─── HERO BANNER (16:9 full-width) ─── */}
+      {/* ─── HERO SLIDER ─── */}
       {!searchQuery && !selectedCategory && (
         <section>
           <motion.div
@@ -763,33 +756,67 @@ function HomeView({
             transition={{ duration: 0.5 }}
             className="relative w-full overflow-hidden min-h-[320px] sm:min-h-[420px] lg:min-h-[520px]"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-orange-500 via-orange-400 to-amber-400">
-              {/* Decorative circles */}
-              <div className="absolute top-0 right-0 w-64 h-64 sm:w-96 sm:h-96 bg-orange-300/30 rounded-full -translate-y-1/2 translate-x-1/2" />
-              <div className="absolute bottom-0 left-0 w-48 h-48 sm:w-72 sm:h-72 bg-amber-300/20 rounded-full translate-y-1/2 -translate-x-1/2" />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-yellow-300/10 rounded-full" />
+            {/* Background images with crossfade */}
+            {heroSlides.map((slide, idx) => (
+              <div
+                key={idx}
+                className="absolute inset-0 transition-opacity duration-700"
+                style={{ opacity: idx === currentSlide ? 1 : 0 }}
+              >
+                <img
+                  src={slide.image}
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
+                <div className={`absolute inset-0 bg-gradient-to-r ${slide.gradient}`} />
+              </div>
+            ))}
+
+            {/* Content */}
+            <div className="relative z-10 h-full flex items-center px-6 sm:px-10 lg:px-16">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentSlide}
+                  initial={{ opacity: 0, x: 30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -30 }}
+                  transition={{ duration: 0.5 }}
+                  className="max-w-xl"
+                >
+                  <span className="inline-block px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-white text-xs sm:text-sm font-semibold uppercase tracking-wider mb-3 sm:mb-4">
+                    {heroSlides[currentSlide].badge}
+                  </span>
+                  <h1 className="text-2xl sm:text-4xl lg:text-6xl font-bold text-white leading-tight mb-2 sm:mb-3">
+                    {heroSlides[currentSlide].title}
+                  </h1>
+                  <p className="text-white/80 text-sm sm:text-lg mb-4 sm:mb-6 max-w-md">
+                    {heroSlides[currentSlide].subtitle}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => document.getElementById('products-section')?.scrollIntoView({ behavior: 'smooth' })}
+                    className="inline-flex items-center gap-2 px-5 sm:px-8 py-2.5 sm:py-3.5 bg-white text-teal-700 font-semibold rounded-full hover:bg-teal-50 transition-colors shadow-lg text-sm sm:text-base"
+                  >
+                    {heroSlides[currentSlide].cta}
+                    <ChevronRight className="size-4" />
+                  </button>
+                </motion.div>
+              </AnimatePresence>
             </div>
 
-            <div className="relative z-10 h-full flex items-center px-6 sm:px-10 lg:px-16">
-              <div className="max-w-xl">
-                <span className="inline-block px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-white text-xs sm:text-sm font-semibold uppercase tracking-wider mb-3 sm:mb-4">
-                  Promotions Sp\u00e9ciales
-                </span>
-                <h1 className="text-2xl sm:text-4xl lg:text-6xl font-bold text-white leading-tight mb-2 sm:mb-3">
-                  Jusqu&apos;\u00e0 <span className="text-yellow-200">-30%</span>
-                </h1>
-                <p className="text-white/80 text-sm sm:text-lg mb-4 sm:mb-6 max-w-md">
-                  D\u00e9couvrez notre s\u00e9lection de produits frais et de saison \u00e0 des prix imbattables. Livraison rapide garantie.
-                </p>
+            {/* Dot navigation */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
+              {heroSlides.map((_, idx) => (
                 <button
+                  key={idx}
                   type="button"
-                  onClick={() => document.getElementById('products-section')?.scrollIntoView({ behavior: 'smooth' })}
-                  className="inline-flex items-center gap-2 px-5 sm:px-8 py-2.5 sm:py-3.5 bg-white text-orange-600 font-semibold rounded-full hover:bg-orange-50 transition-colors shadow-lg text-sm sm:text-base"
-                >
-                  Shop Now
-                  <ChevronRight className="size-4" />
-                </button>
-              </div>
+                  onClick={() => setCurrentSlide(idx)}
+                  className={`h-2.5 rounded-full transition-all duration-300 ${
+                    idx === currentSlide ? 'w-8 bg-white' : 'w-2.5 bg-white/50 hover:bg-white/70'
+                  }`}
+                  aria-label={`Slide ${idx + 1}`}
+                />
+              ))}
             </div>
           </motion.div>
         </section>
@@ -823,6 +850,71 @@ function HomeView({
               icon={<BadgePercent className="size-6" />}
               onClick={() => document.getElementById('deals')?.scrollIntoView({ behavior: 'smooth' })}
             />
+          </div>
+        </section>
+      )}
+
+      {/* ─── CATEGORY ICONS ROW ─── */}
+      {categories.length > 0 && (
+        <section className="bg-white border-b border-gray-100">
+          <div ref={categoryRef} className="max-w-7xl mx-auto px-4 py-5">
+            <div className="flex gap-4 overflow-x-auto scrollbar-none pb-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+              {/* All category */}
+              <div className="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer" onClick={() => onCategoryClick(null)}>
+                <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 flex items-center justify-center transition-colors ${
+                  !selectedCategory ? 'border-teal-500 bg-teal-50' : 'border-gray-200 bg-gray-50'
+                }`}>
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Package className="size-8 text-teal-600" />
+                  </div>
+                </div>
+                <span className={`text-sm font-medium text-center max-w-[90px] truncate ${
+                  !selectedCategory ? 'text-teal-700' : 'text-gray-500'
+                }`}>Tout</span>
+              </div>
+
+              {categories.map((cat) => (
+                <div
+                  key={cat.id}
+                  className="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer"
+                  onClick={() => onCategoryClick(cat.id)}
+                >
+                  <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 flex items-center justify-center transition-colors ${
+                    selectedCategory === cat.id ? 'border-teal-500 bg-teal-50' : 'border-teal-100 bg-teal-50'
+                  }`}>
+                    {cat.image ? (
+                      <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <Leaf className="size-8 text-teal-600" />
+                    )}
+                  </div>
+                  <span className={`text-sm font-medium text-center max-w-[90px] truncate ${
+                    selectedCategory === cat.id ? 'text-teal-700' : 'text-gray-600'
+                  }`}>{cat.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ─── TOUS LES PRODUITS ─── */}
+      {!searchQuery && !selectedCategory && products.length > 0 && (
+        <section id="products-section" className="max-w-7xl mx-auto px-4 py-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-gray-900">Tous les produits</h2>
+            <span className="text-sm text-gray-500">{products.length} produit{products.length !== 1 ? 's' : ''}</span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {products.map((p) => (
+              <ProductCard
+                key={p.id}
+                product={p}
+                onClick={() => onProductClick(p)}
+                onAddToCart={(e) => { e.stopPropagation(); onAddToCart(p) }}
+                badge={p.compareAtPrice && p.compareAtPrice > p.price ? 'sale' : undefined}
+              />
+            ))}
           </div>
         </section>
       )}
@@ -864,49 +956,110 @@ function HomeView({
 
       {/* ─── NOUVEAUTÉS ─── */}
       {!searchQuery && !selectedCategory && newArrivals.length > 0 && (
-        <ProductSection
-          id="new-arrivals"
-          title="Nouveaut\u00e9s"
-          products={newArrivals}
-          onProductClick={onProductClick}
-          onAddToCart={onAddToCart}
-          badge="new"
-        />
+        <section id="new-arrivals" className="max-w-7xl mx-auto px-4 py-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-gray-900">Nouveaut\u00e9s</h2>
+            <button
+              type="button"
+              className="text-sm text-teal-600 hover:text-teal-700 font-medium flex items-center gap-1"
+            >
+              Voir tout
+              <ChevronRight className="size-4" />
+            </button>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {newArrivals.map((p) => (
+              <ProductCard
+                key={p.id}
+                product={p}
+                onClick={() => onProductClick(p)}
+                onAddToCart={(e) => { e.stopPropagation(); onAddToCart(p) }}
+                badge="new"
+              />
+            ))}
+          </div>
+        </section>
       )}
 
       {/* ─── OFFRES DU JOUR ─── */}
       {!searchQuery && !selectedCategory && dealsOfTheDay.length > 0 && (
-        <ProductSection
-          id="deals"
-          title="Offres du jour"
-          products={dealsOfTheDay}
-          onProductClick={onProductClick}
-          onAddToCart={onAddToCart}
-          badge="sale"
-        />
+        <section id="deals" className="max-w-7xl mx-auto px-4 py-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-gray-900">Offres du jour</h2>
+            <button
+              type="button"
+              className="text-sm text-teal-600 hover:text-teal-700 font-medium flex items-center gap-1"
+            >
+              Voir tout
+              <ChevronRight className="size-4" />
+            </button>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {dealsOfTheDay.map((p) => (
+              <ProductCard
+                key={p.id}
+                product={p}
+                onClick={() => onProductClick(p)}
+                onAddToCart={(e) => { e.stopPropagation(); onAddToCart(p) }}
+                badge="sale"
+              />
+            ))}
+          </div>
+        </section>
       )}
 
       {/* ─── MEILLEURES VENTES ─── */}
       {!searchQuery && !selectedCategory && bestSellers.length > 0 && (
-        <ProductSection
-          id="best-sellers"
-          title="Meilleures ventes"
-          products={bestSellers}
-          onProductClick={onProductClick}
-          onAddToCart={onAddToCart}
-        />
+        <section id="best-sellers" className="max-w-7xl mx-auto px-4 py-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-gray-900">Meilleures ventes</h2>
+            <button
+              type="button"
+              className="text-sm text-teal-600 hover:text-teal-700 font-medium flex items-center gap-1"
+            >
+              Voir tout
+              <ChevronRight className="size-4" />
+            </button>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {bestSellers.map((p) => (
+              <ProductCard
+                key={p.id}
+                product={p}
+                onClick={() => onProductClick(p)}
+                onAddToCart={(e) => { e.stopPropagation(); onAddToCart(p) }}
+              />
+            ))}
+          </div>
+        </section>
       )}
 
       {/* ─── RECOMMANDÉ POUR VOUS ─── */}
       {!searchQuery && !selectedCategory && recommended.length > 0 && (
-        <ProductSection
-          id="recommended"
-          title="Recommand\u00e9 pour vous"
-          products={recommended}
-          onProductClick={onProductClick}
-          onAddToCart={onAddToCart}
-          bg
-        />
+        <section id="recommended" className="bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 py-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-gray-900">Recommand\u00e9 pour vous</h2>
+              <button
+                type="button"
+                className="text-sm text-teal-600 hover:text-teal-700 font-medium flex items-center gap-1"
+              >
+                Voir tout
+                <ChevronRight className="size-4" />
+              </button>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {recommended.map((p) => (
+                <ProductCard
+                  key={p.id}
+                  product={p}
+                  onClick={() => onProductClick(p)}
+                  onAddToCart={(e) => { e.stopPropagation(); onAddToCart(p) }}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
       )}
 
       {/* ─── TRUST SECTION ─── */}
@@ -1037,7 +1190,7 @@ function ProductGrid({
   onAddToCart: (p: FreshProduct) => void
 }) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
       {products.map((p) => (
         <ProductCard
           key={p.id}
@@ -1496,7 +1649,7 @@ function ProductDetailView({
       {relatedProducts.length > 0 && (
         <section className="mt-12">
           <h2 className="text-xl font-bold text-gray-900 mb-4">Produits similaires</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {relatedProducts.map((p) => (
               <ProductCard
                 key={p.id}
