@@ -67,10 +67,14 @@ interface FreshProduct {
   price: number
   compareAtPrice?: number | null
   image: string
+  images?: string[]
   categoryId?: string | null
+  categoryName?: string | null
   isAvailable: boolean
   createdAt?: string | null
+  shortDescription?: string | null
   description?: string | null
+  stock?: number | null
 }
 
 interface FreshCategory {
@@ -163,7 +167,12 @@ export function FreshMarketTemplate() {
         const productsData = await productsRes.json()
         const categoriesData = await categoriesRes.json()
         if (!cancelled) {
-          setProducts(Array.isArray(productsData) ? productsData : [])
+          const mappedProducts = (Array.isArray(productsData) ? productsData : []).map((p: Record<string, unknown>) => ({
+            ...p,
+            images: Array.isArray(p.images) ? p.images : p.image ? [p.image] : [],
+            compareAtPrice: p.oldPrice ?? p.compareAtPrice ?? null,
+          }))
+          setProducts(mappedProducts)
           setCategories(Array.isArray(categoriesData) ? categoriesData.map((c: { id: string; name: string; image?: string | null }) => ({ id: c.id, name: c.name, image: c.image })) : [])
         }
       } catch {
@@ -508,6 +517,7 @@ export function FreshMarketTemplate() {
 
         {view === 'product' && (
           <ProductDetailView
+            key={productDetail?.id || 'empty'}
             product={productDetail}
             loading={loadingProduct}
             relatedProducts={relatedProducts}
@@ -744,34 +754,38 @@ function HomeView({
         </section>
       )}
 
-      {/* ─── HERO BANNER ─── */}
+      {/* ─── HERO BANNER (16:9 full-width) ─── */}
       {!searchQuery && !selectedCategory && (
-        <section className="max-w-7xl mx-auto px-4 pt-6">
+        <section>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="relative overflow-hidden rounded-2xl"
+            className="relative w-full overflow-hidden"
+            style={{ aspectRatio: '16/9' }}
           >
-            <div className="bg-gradient-to-br from-orange-500 via-orange-400 to-amber-400 px-6 py-10 sm:px-10 sm:py-14 lg:py-20">
+            <div className="absolute inset-0 bg-gradient-to-br from-orange-500 via-orange-400 to-amber-400">
               {/* Decorative circles */}
-              <div className="absolute top-0 right-0 w-64 h-64 bg-orange-300/30 rounded-full -translate-y-1/2 translate-x-1/2" />
-              <div className="absolute bottom-0 left-0 w-48 h-48 bg-amber-300/20 rounded-full translate-y-1/2 -translate-x-1/2" />
+              <div className="absolute top-0 right-0 w-64 h-64 sm:w-96 sm:h-96 bg-orange-300/30 rounded-full -translate-y-1/2 translate-x-1/2" />
+              <div className="absolute bottom-0 left-0 w-48 h-48 sm:w-72 sm:h-72 bg-amber-300/20 rounded-full translate-y-1/2 -translate-x-1/2" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-yellow-300/10 rounded-full" />
+            </div>
 
-              <div className="relative z-10 max-w-lg">
-                <span className="inline-block px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-white text-xs font-semibold uppercase tracking-wider mb-3">
+            <div className="relative z-10 h-full flex items-center px-6 sm:px-10 lg:px-16">
+              <div className="max-w-xl">
+                <span className="inline-block px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-white text-xs sm:text-sm font-semibold uppercase tracking-wider mb-3 sm:mb-4">
                   Promotions Sp\u00e9ciales
                 </span>
-                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight mb-3">
+                <h1 className="text-2xl sm:text-4xl lg:text-6xl font-bold text-white leading-tight mb-2 sm:mb-3">
                   Jusqu&apos;\u00e0 <span className="text-yellow-200">-30%</span>
                 </h1>
-                <p className="text-white/80 text-sm sm:text-base mb-6 max-w-sm">
+                <p className="text-white/80 text-sm sm:text-lg mb-4 sm:mb-6 max-w-md">
                   D\u00e9couvrez notre s\u00e9lection de produits frais et de saison \u00e0 des prix imbattables. Livraison rapide garantie.
                 </p>
                 <button
                   type="button"
                   onClick={() => document.getElementById('products-section')?.scrollIntoView({ behavior: 'smooth' })}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-white text-orange-600 font-semibold rounded-full hover:bg-orange-50 transition-colors shadow-lg"
+                  className="inline-flex items-center gap-2 px-5 sm:px-8 py-2.5 sm:py-3.5 bg-white text-orange-600 font-semibold rounded-full hover:bg-orange-50 transition-colors shadow-lg text-sm sm:text-base"
                 >
                   Shop Now
                   <ChevronRight className="size-4" />
@@ -1023,7 +1037,7 @@ function ProductGrid({
   onAddToCart: (p: FreshProduct) => void
 }) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
       {products.map((p) => (
         <ProductCard
           key={p.id}
@@ -1061,7 +1075,7 @@ function ProductCard({
     <motion.div
       whileHover={{ y: -2 }}
       transition={{ duration: 0.2 }}
-      className="bg-white rounded-xl border border-gray-100 overflow-hidden group hover:shadow-lg transition-all duration-300 cursor-pointer shrink-0 w-[160px] sm:w-[180px]"
+      className="bg-white rounded-xl border border-gray-100 overflow-hidden group hover:shadow-lg transition-all duration-300 cursor-pointer w-full"
       onClick={onClick}
     >
       <div className="relative aspect-square bg-gray-50">
@@ -1231,6 +1245,16 @@ function ProductDetailView({
   onProductClick: (p: FreshProduct) => void
 }) {
   const [qty, setQty] = useState(1)
+  const [activeImageIndex, setActiveImageIndex] = useState(0)
+
+  // Build the image gallery: use detailed images array, fallback to single image
+  const galleryImages = useMemo(() => {
+    if (!product) return []
+    const imgs = product.images && product.images.length > 0
+      ? product.images
+      : product.image ? [product.image] : []
+    return imgs
+  }, [product])
 
   if (loading) {
     return (
@@ -1247,7 +1271,7 @@ function ProductDetailView({
         <button
           type="button"
           onClick={onBack}
-          className="mt-4 text-sm text-teal-600 hover:text-teal-700 font-medium flex items-center gap-1"
+          className="mt-4 text-sm text-teal-600 hover:text-teal-700 font-medium flex items-center gap-1 min-h-[44px]"
         >
           <ArrowLeft className="size-4" />
           Retour \u00e0 la boutique
@@ -1259,6 +1283,8 @@ function ProductDetailView({
   const discount = product.compareAtPrice && product.compareAtPrice > product.price
     ? Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100)
     : null
+
+  const currentImage = galleryImages[activeImageIndex] || product.image
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
@@ -1272,38 +1298,73 @@ function ProductDetailView({
         Retour
       </button>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Image */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-10">
+        {/* ─── Image Gallery ─── */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="relative aspect-square rounded-2xl overflow-hidden bg-gray-50"
         >
-          <ImageWithFallback
-            src={product.image}
-            alt={product.name}
-            fill
-            className="object-cover"
-            fallbackIcon="package"
-          />
-          {discount !== null && (
-            <span className="absolute top-4 left-4 px-3 py-1 bg-red-500 text-white text-sm font-bold rounded-lg">
-              -{discount}%
-            </span>
+          {/* Main image */}
+          <div className="relative aspect-square rounded-2xl overflow-hidden bg-gray-50 mb-3">
+            <ImageWithFallback
+              src={currentImage}
+              alt={product.name}
+              fill
+              className="object-cover"
+              fallbackIcon="package"
+            />
+            {discount !== null && (
+              <span className="absolute top-4 left-4 px-3 py-1 bg-red-500 text-white text-sm font-bold rounded-lg">
+                -{discount}%
+              </span>
+            )}
+          </div>
+
+          {/* Thumbnails */}
+          {galleryImages.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+              {galleryImages.map((img, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setActiveImageIndex(idx)}
+                  className={`relative shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden border-2 transition-all duration-200 ${
+                    idx === activeImageIndex
+                      ? 'border-teal-600 shadow-md'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <ImageWithFallback
+                    src={img}
+                    alt={`${product.name} ${idx + 1}`}
+                    fill
+                    className="object-cover"
+                    fallbackIcon="package"
+                  />
+                </button>
+              ))}
+            </div>
           )}
         </motion.div>
 
-        {/* Details */}
+        {/* ─── Product Details ─── */}
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           className="flex flex-col"
         >
+          {/* Category */}
+          {product.categoryName && (
+            <span className="text-xs font-semibold uppercase tracking-wider text-teal-600 mb-1">
+              {product.categoryName}
+            </span>
+          )}
+
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
             {product.name}
           </h1>
 
-          {/* Rating placeholder */}
+          {/* Rating */}
           <div className="flex items-center gap-2 mb-4">
             <div className="flex items-center gap-0.5">
               {[1, 2, 3, 4, 5].map((s) => (
@@ -1317,7 +1378,7 @@ function ProductDetailView({
           </div>
 
           {/* Price */}
-          <div className="flex items-baseline gap-3 mb-6">
+          <div className="flex items-baseline gap-3 mb-5">
             <span className="text-3xl font-bold" style={{ color: GREEN_600 }}>
               {formatPrice(product.price)}
             </span>
@@ -1326,17 +1387,45 @@ function ProductDetailView({
                 {formatPrice(product.compareAtPrice)}
               </span>
             )}
+            {discount !== null && (
+              <span className="px-2 py-0.5 bg-red-50 text-red-500 text-xs font-bold rounded-md">
+                -{discount}%
+              </span>
+            )}
           </div>
 
-          {/* Description */}
-          {product.description && (
-            <p className="text-sm text-gray-600 leading-relaxed mb-6">
-              {product.description}
+          {/* Short description */}
+          {product.shortDescription && (
+            <p className="text-sm text-gray-600 leading-relaxed mb-4 font-medium">
+              {product.shortDescription}
             </p>
           )}
 
+          {/* Full description */}
+          {product.description && (
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold text-gray-800 mb-2">Description</h3>
+              <div className="text-sm text-gray-600 leading-relaxed whitespace-pre-line bg-gray-50 rounded-xl p-4">
+                {product.description}
+              </div>
+            </div>
+          )}
+
+          {/* Stock indicator */}
+          {product.stock !== undefined && product.stock !== null && (
+            <div className="flex items-center gap-2 mb-5">
+              <div className={`h-2.5 w-2.5 rounded-full ${product.stock > 0 ? 'bg-green-500' : 'bg-red-500'}`} />
+              <span className={`text-xs font-medium ${product.stock > 0 ? 'text-green-600' : 'text-red-500'}`}>
+                {product.stock > 0 ? `En stock (${product.stock} disponibles)` : 'Rupture de stock'}
+              </span>
+            </div>
+          )}
+
+          {/* Divider */}
+          <div className="border-t border-gray-100 my-4" />
+
           {/* Quantity */}
-          <div className="flex items-center gap-4 mb-6">
+          <div className="flex items-center gap-4 mb-5">
             <span className="text-sm font-medium text-gray-700">Quantit\u00e9 :</span>
             <div className="flex items-center bg-gray-100 rounded-lg">
               <button
@@ -1386,7 +1475,7 @@ function ProductDetailView({
           </div>
 
           {/* Service badges */}
-          <div className="mt-8 grid grid-cols-3 gap-3">
+          <div className="mt-6 grid grid-cols-3 gap-3">
             <div className="flex flex-col items-center text-center p-3 rounded-xl bg-gray-50">
               <Truck className="size-5 text-teal-600 mb-1.5" />
               <span className="text-xs text-gray-600 font-medium">Livraison 24h</span>
@@ -1407,7 +1496,7 @@ function ProductDetailView({
       {relatedProducts.length > 0 && (
         <section className="mt-12">
           <h2 className="text-xl font-bold text-gray-900 mb-4">Produits similaires</h2>
-          <div className="flex gap-4 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {relatedProducts.map((p) => (
               <ProductCard
                 key={p.id}
