@@ -302,7 +302,7 @@ export function GroceryGrid({
                   className="flex flex-col items-center gap-1.5 flex-shrink-0 cursor-pointer"
                 >
                   <div
-                    className={`flex items-center justify-center rounded-full text-2xl transition-all ${
+                    className={`flex items-center justify-center rounded-full text-2xl transition-all overflow-hidden ${
                       isActive ? 'ring-3 shadow-lg scale-110' : 'hover:ring-2'
                     }`}
                     style={{
@@ -314,9 +314,17 @@ export function GroceryGrid({
 
                     }}
                   >
-                    <span className={isActive ? 'text-white' : ''}>
-                      {emoji}
-                    </span>
+                    {cat.image ? (
+                      <img
+                        src={cat.image}
+                        alt={cat.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className={isActive ? 'text-white' : ''}>
+                        {emoji}
+                      </span>
+                    )}
                   </div>
                   <span
                     className="text-xs font-medium text-center leading-tight max-w-[64px] truncate"

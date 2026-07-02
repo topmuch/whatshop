@@ -39,6 +39,7 @@ import { ImageWithFallback } from '@/components/ui/image-with-fallback'
 interface Category {
   id: string
   name: string
+  image?: string
 }
 
 interface ElectroDepotGridProps {
@@ -358,7 +359,7 @@ function QuickCategoryCircles({
               className="flex flex-col items-center gap-2 flex-shrink-0 cursor-pointer"
             >
               <div
-                className="flex items-center justify-center rounded-full transition-all duration-200"
+                className="flex items-center justify-center rounded-full transition-all duration-200 overflow-hidden"
                 style={{
                   width: 60,
                   height: 60,
@@ -367,7 +368,11 @@ function QuickCategoryCircles({
                   border: isActive ? `2px solid ${COLORS.primary}` : '2px solid transparent',
                 }}
               >
-                <span className="text-2xl">{cat.emoji}</span>
+                {cat.image ? (
+                  <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-2xl">{cat.emoji}</span>
+                )}
               </div>
               <span
                 className="text-[11px] font-medium text-center leading-tight max-w-[64px] truncate transition-colors"

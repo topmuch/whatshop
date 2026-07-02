@@ -91,12 +91,14 @@ function CircularCategoryButton({
   active,
   onClick,
   count,
+  image,
 }: {
   label: string
   emoji: string
   active: boolean
   onClick: () => void
   count?: number
+  image?: string
 }) {
   return (
     <button
@@ -105,7 +107,7 @@ function CircularCategoryButton({
     >
       <div
         className={`
-          w-16 h-16 sm:w-20 sm:h-20 rounded-full
+          w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden
           flex items-center justify-center text-2xl sm:text-3xl
           transition-all duration-300 cursor-pointer
           ${active
@@ -121,12 +123,20 @@ function CircularCategoryButton({
           border: active ? 'none' : `1px solid ${COLORS.border}`,
         }}
       >
-        <span
-          className="transition-colors duration-200"
-          style={{ filter: active ? 'brightness(0) invert(1)' : 'none' }}
-        >
-          {emoji}
-        </span>
+        {image ? (
+          <img
+            src={image}
+            alt={label}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <span
+            className="transition-colors duration-200"
+            style={{ filter: active ? 'brightness(0) invert(1)' : 'none' }}
+          >
+            {emoji}
+          </span>
+        )}
       </div>
       <span
         className="text-[11px] sm:text-xs font-medium leading-tight max-w-[72px] sm:max-w-[84px] text-center line-clamp-2 transition-colors duration-200"
@@ -518,6 +528,7 @@ export function FashionGrid({
                     key={cat.id}
                     label={cat.name}
                     emoji={getCategoryEmoji(cat.name)}
+                    image={cat.image}
                     active={activeCategory === cat.id}
                     onClick={() =>
                       onCategoryClick(activeCategory === cat.id ? null : cat.id)

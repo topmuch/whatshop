@@ -35,7 +35,7 @@ export async function GET(
       return db.category.findMany({
         where: { shopId: shop.id },
         orderBy: { createdAt: 'asc' },
-        select: { id: true, name: true },
+        select: { id: true, name: true, image: true },
       })
     })
 
