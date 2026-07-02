@@ -78,6 +78,10 @@ export function CosmikaDarkTemplate() {
   const shopName = shop?.name || ''
   const shopSlug = shop?.slug || ''
 
+  // Dynamic appearance settings from template-settings
+  const btnColor = shop?.buttonColor || ACCENT
+  const logoH = shop?.logoSize ? parseInt(shop.logoSize) : null
+
   // Cart store subscriptions
   const openCart = useCartStore((s) => s.openCart)
   const itemCount = useCartStore((s) =>
@@ -314,6 +318,7 @@ export function CosmikaDarkTemplate() {
         onNavClick={() => setMobileMenuOpen(false)}
         categories={categories}
         shopSlug={shopSlug}
+        logoH={logoH}
       />
 
       {/* ─── MAIN VIEW ─── */}
@@ -325,6 +330,7 @@ export function CosmikaDarkTemplate() {
             whatsapp={whatsapp}
             shopId={shopId}
             shopName={shopName}
+            btnColor={btnColor}
             products={products}
             heroProduct={heroProduct}
             promoProducts={promoProducts}
@@ -346,6 +352,8 @@ export function CosmikaDarkTemplate() {
             whatsapp={whatsapp}
             shopId={shopId}
             shopName={shopName}
+            btnColor={btnColor}
+            logoH={logoH}
             loading={loadingProduct}
             product={detailedProduct}
             relatedProducts={relatedProducts}
@@ -386,6 +394,7 @@ export function CosmikaDarkTemplate() {
         address={shop?.address || ''}
         contactEmail={shop?.contactEmail || ''}
         config={config}
+        btnColor={btnColor}
       />
 
       {/* ─── CART DRAWER ─── */}
@@ -462,6 +471,7 @@ function Header({
   onNavClick,
   categories,
   shopSlug,
+  logoH,
 }: {
   shop: PublicShopData
   itemCount: number
@@ -472,6 +482,7 @@ function Header({
   onNavClick: () => void
   categories: { name: string; id: string }[]
   shopSlug: string
+  logoH: number | null
 }) {
   const navLinks = [
     { label: 'Accueil', action: () => { onHomeClick() } },
@@ -535,7 +546,8 @@ function Header({
                 width={200}
                 height={53}
                 unoptimized
-                className="h-10 md:h-12 w-auto max-w-[180px] md:max-w-[200px] object-contain"
+                className={logoH ? 'w-auto max-w-[180px] md:max-w-[200px] object-contain' : 'h-10 md:h-12 w-auto max-w-[180px] md:max-w-[200px] object-contain'}
+                style={logoH ? { height: logoH } : undefined}
                 priority
               />
             ) : (
@@ -644,6 +656,7 @@ interface HomeViewProps {
   whatsapp: string
   shopId: string
   shopName: string
+  btnColor: string
   products: ModernStoreProduct[]
   heroProduct: ModernStoreProduct | null
   promoProducts: ModernStoreProduct[]
@@ -658,7 +671,7 @@ interface HomeViewProps {
 
 function HomeView(props: HomeViewProps) {
   const {
-    shop, config, whatsapp, shopId, shopName,
+    shop, config, whatsapp, shopId, shopName, btnColor,
     products, heroProduct, promoProducts, bestSellers,
     testimonials, categories, promoBanners, brands, onProductClick, onSeeProducts,
   } = props
@@ -787,6 +800,7 @@ function HomeView(props: HomeViewProps) {
                 shopId={shopId}
                 shopName={shopName}
                 whatsapp={whatsapp}
+                btnColor={btnColor}
                 onClick={() => onProductClick(p)}
               />
             ))}
@@ -811,6 +825,7 @@ function HomeView(props: HomeViewProps) {
                 shopId={shopId}
                 shopName={shopName}
                 whatsapp={whatsapp}
+                btnColor={btnColor}
                 onQuickView={onProductClick}
               />
             ))}
@@ -897,7 +912,7 @@ function HomeView(props: HomeViewProps) {
               <Button
                 type="submit"
                 className="rounded-xl px-6 font-bold text-white transition-colors hover:bg-[#ea580c]"
-                style={{ backgroundColor: ACCENT }}
+                style={{ backgroundColor: btnColor }}
               >
                 S&apos;abonner
               </Button>
@@ -918,12 +933,14 @@ function DarkProductCard({
   shopId,
   shopName,
   whatsapp,
+  btnColor,
   onQuickView,
 }: {
   product: ModernStoreProduct
   shopId: string
   shopName: string
   whatsapp: string
+  btnColor: string
   onQuickView: (p: ModernStoreProduct) => void
 }) {
   const addItem = useCartStore((s) => s.addItem)
@@ -1050,7 +1067,7 @@ function DarkProductCard({
           type="button"
           onClick={handleAdd}
           className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl py-3 text-xs font-bold uppercase tracking-wide text-white transition-all duration-200 hover:brightness-110 active:scale-[0.98]"
-          style={{ backgroundColor: ACCENT }}
+          style={{ backgroundColor: btnColor }}
           aria-label={`Ajouter ${product.name} au panier`}
         >
           <ShoppingBag className="h-4 w-4" />
@@ -1070,12 +1087,14 @@ function PromoDealCard({
   shopId,
   shopName,
   whatsapp,
+  btnColor,
   onClick,
 }: {
   product: ModernStoreProduct
   shopId: string
   shopName: string
   whatsapp: string
+  btnColor: string
   onClick: () => void
 }) {
   const addItem = useCartStore((s) => s.addItem)
@@ -1154,7 +1173,7 @@ function PromoDealCard({
           type="button"
           onClick={handleAdd}
           className="mt-auto flex w-full items-center justify-center gap-2 rounded-xl py-2 text-xs font-bold uppercase tracking-wide text-white transition-all duration-200 hover:brightness-110 active:scale-[0.98]"
-          style={{ backgroundColor: ACCENT }}
+          style={{ backgroundColor: btnColor }}
           aria-label={`Ajouter ${product.name} au panier`}
         >
           <ShoppingBag className="h-4 w-4" />
@@ -1400,6 +1419,8 @@ interface ProductViewProps {
   whatsapp: string
   shopId: string
   shopName: string
+  btnColor: string
+  logoH: number | null
   loading: boolean
   product: DetailedProduct | null
   relatedProducts: ModernStoreProduct[]
@@ -1421,7 +1442,7 @@ interface ProductViewProps {
 
 function ProductView(props: ProductViewProps) {
   const {
-    shop, whatsapp, shopId, shopName,
+    shop, whatsapp, shopId, shopName, btnColor, logoH,
     loading, product, relatedProducts, allProducts,
     quantity, onQuantityChange, finalPrice, availableStock,
     onSelectionChange, onAddToCart, onBuyNow, onBack, onProductClick,
@@ -1608,7 +1629,7 @@ function ProductView(props: ProductViewProps) {
                 disabled={!inStock}
                 size="lg"
                 className="gap-2 rounded-xl py-6 text-sm font-bold uppercase tracking-wide text-white transition-colors hover:brightness-110 disabled:opacity-50"
-                style={{ backgroundColor: ACCENT }}
+                style={{ backgroundColor: btnColor }}
               >
                 <ShoppingBag className="h-5 w-5" />
                 Ajouter au panier
@@ -1719,6 +1740,7 @@ function ProductView(props: ProductViewProps) {
                 shopId={shopId}
                 shopName={shopName}
                 whatsapp={whatsapp}
+                btnColor={btnColor}
                 onQuickView={onProductClick}
               />
             ))}
@@ -1754,6 +1776,7 @@ function CosmikaDarkFooter({
   address,
   contactEmail,
   config,
+  btnColor,
 }: {
   shop: PublicShopData | null
   shopName: string
@@ -1765,6 +1788,7 @@ function CosmikaDarkFooter({
   address: string
   contactEmail: string
   config: ModernStoreConfig
+  btnColor: string
 }) {
   const year = new Date().getFullYear()
 
@@ -1951,7 +1975,7 @@ function CosmikaDarkFooter({
               <button
                 type="submit"
                 className="flex h-10 items-center justify-center rounded-r-lg px-3 text-white transition-colors hover:brightness-110"
-                style={{ backgroundColor: ACCENT }}
+                style={{ backgroundColor: btnColor }}
                 aria-label="S'inscrire"
               >
                 <ChevronRight className="h-4 w-4" />

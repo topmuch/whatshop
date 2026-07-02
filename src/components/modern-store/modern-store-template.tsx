@@ -84,11 +84,12 @@ export function ModernStoreTemplate({ videoHero: forceVideoHero }: { videoHero?:
   const { publicShop } = useAppStore()
   const shop = publicShop as PublicShopData | null
 
-  const accent = shop?.accentColor || shop?.primaryColor || '#EC4899'
+  const accent = shop?.buttonColor || shop?.accentColor || shop?.primaryColor || '#EC4899'
   const shopId = shop?.id || ''
   const whatsapp = shop?.whatsapp || ''
   const shopName = shop?.name || ''
   const shopSlug = shop?.slug || ''
+  const logoH = shop?.logoSize ? parseInt(shop.logoSize) : null
 
   // Cart store subscriptions
   const openCart = useCartStore((s) => s.openCart)
@@ -320,6 +321,7 @@ export function ModernStoreTemplate({ videoHero: forceVideoHero }: { videoHero?:
         itemCount={itemCount}
         onCartClick={openCart}
         onHomeClick={() => setView('home')}
+        logoH={logoH}
       />
 
       {/* ─── MAIN VIEW ─── */}
@@ -419,12 +421,14 @@ function Header({
   itemCount,
   onCartClick,
   onHomeClick,
+  logoH,
 }: {
   shop: PublicShopData
   accent: string
   itemCount: number
   onCartClick: () => void
   onHomeClick: () => void
+  logoH: number | null
 }) {
   return (
     <header className="sticky top-0 z-30 border-b border-gray-100 bg-white/95 backdrop-blur-md shadow-sm">
@@ -443,7 +447,8 @@ function Header({
               width={200}
               height={53}
               unoptimized
-              className="h-10 md:h-12 w-auto max-w-[180px] md:max-w-[200px] object-contain"
+              className={logoH ? 'w-auto max-w-[180px] md:max-w-[200px] object-contain' : 'h-10 md:h-12 w-auto max-w-[180px] md:max-w-[200px] object-contain'}
+              style={logoH ? { height: logoH } : undefined}
               priority
             />
           ) : (

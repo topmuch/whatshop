@@ -27,6 +27,8 @@ import {
   ChevronDown,
   Upload,
   Type,
+  Palette,
+  X,
 } from 'lucide-react'
 import { MarqueeConfigTab } from './marquee-config-tab'
 import { toast } from 'sonner'
@@ -35,6 +37,8 @@ import type { Testimonial, TrustBadge } from '@/lib/store'
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
 interface TemplateSettings {
+  buttonColor: string
+  logoSize: string
   heroTitle: string
   heroSubtitle: string
   heroTagline: string
@@ -54,6 +58,8 @@ interface TemplateCustomizationProps {
 }
 
 const EMPTY_SETTINGS: TemplateSettings = {
+  buttonColor: '',
+  logoSize: '',
   heroTitle: '',
   heroSubtitle: '',
   heroTagline: '',
@@ -114,6 +120,8 @@ export function TemplateCustomization({ shopSlug }: TemplateCustomizationProps) 
       if (res.ok) {
         const data = await res.json()
         setSettings({
+          buttonColor: data.buttonColor || '',
+          logoSize: data.logoSize || '',
           heroTitle: data.heroTitle || '',
           heroSubtitle: data.heroSubtitle || '',
           heroTagline: data.heroTagline || '',
@@ -353,8 +361,12 @@ export function TemplateCustomization({ shopSlug }: TemplateCustomizationProps) 
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="hero" className="space-y-6">
-            <TabsList className="grid grid-cols-3 sm:grid-cols-6 w-full">
+          <Tabs defaultValue="appearance" className="space-y-6">
+            <TabsList className="grid grid-cols-4 sm:grid-cols-7 w-full">
+              <TabsTrigger value="appearance" className="text-xs sm:text-sm gap-1.5">
+                <Palette className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Apparence</span>
+              </TabsTrigger>
               <TabsTrigger value="hero" className="text-xs sm:text-sm">Hero</TabsTrigger>
               <TabsTrigger value="sections" className="text-xs sm:text-sm">Sections</TabsTrigger>
               <TabsTrigger value="marquee" className="text-xs sm:text-sm gap-1.5">
@@ -365,6 +377,101 @@ export function TemplateCustomization({ shopSlug }: TemplateCustomizationProps) 
               <TabsTrigger value="testimonials" className="text-xs sm:text-sm">Avis</TabsTrigger>
               <TabsTrigger value="footer" className="text-xs sm:text-sm">Footer</TabsTrigger>
             </TabsList>
+
+            {/* ─── APPEARANCE TAB ─── */}
+            <TabsContent value="appearance" className="space-y-6">
+              <div className="space-y-4">
+                {/* Button Color */}
+                <div className="space-y-2">
+                  <Label htmlFor="button-color">Couleur des boutons</Label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      id="button-color"
+                      value={settings.buttonColor || '#0D9488'}
+                      onChange={(e) => setSettings((s) => ({ ...s, buttonColor: e.target.value }))}
+                      className="h-10 w-14 cursor-pointer rounded-lg border border-muted"
+                    />
+                    <Input
+                      value={settings.buttonColor}
+                      onChange={(e) => setSettings((s) => ({ ...s, buttonColor: e.target.value }))}
+                      placeholder="#0D9488 (défaut du template)"
+                      className="flex-1"
+                      maxLength={7}
+                    />
+                    {settings.buttonColor && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-10 w-10 text-muted-foreground hover:text-destructive"
+                        onClick={() => setSettings((s) => ({ ...s, buttonColor: '' }))}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Laissez vide pour utiliser la couleur par défaut du template.
+                  </p>
+                </div>
+
+                {/* Logo Size */}
+                <div className="space-y-2">
+                  <Label htmlFor="logo-size">
+                    Taille du logo{settings.logoSize ? ` : ${settings.logoSize}px` : ''}
+                  </Label>
+                  <div className="flex items-center gap-4">
+                    <input
+                      type="range"
+                      id="logo-size"
+                      min={24}
+                      max={120}
+                      step={4}
+                      value={settings.logoSize ? parseInt(settings.logoSize) : 40}
+                      onChange={(e) => setSettings((s) => ({ ...s, logoSize: e.target.value }))}
+                      className="flex-1 h-2 cursor-pointer accent-primary"
+                    />
+                    <div className="flex items-center gap-1.5">
+                      <Input
+                        type="number"
+                        value={settings.logoSize}
+                        onChange={(e) => {
+                          const val = e.target.value
+                          if (val === '') {
+                            setSettings((s) => ({ ...s, logoSize: '' }))
+                          } else {
+                            const num = parseInt(val)
+                            if (!isNaN(num) && num >= 24 && num <= 120) {
+                              setSettings((s) => ({ ...s, logoSize: String(num) }))
+                            }
+                          }
+                        }}
+                        className="w-20 h-10 text-center"
+                        placeholder="px"
+                        min={24}
+                        max={120}
+                      />
+                      <span className="text-xs text-muted-foreground">px</span>
+                    </div>
+                    {settings.logoSize && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-10 w-10 text-muted-foreground hover:text-destructive"
+                        onClick={() => setSettings((s) => ({ ...s, logoSize: '' }))}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Laissez vide pour utiliser la taille par défaut du template (24–120px).
+                  </p>
+                </div>
+              </div>
+            </TabsContent>
 
             {/* ─── HERO TAB ─── */}
             <TabsContent value="hero" className="space-y-4">

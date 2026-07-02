@@ -32,6 +32,8 @@ const ALLOWED_FIELDS = [
   'testimonialsTagline',
   'trustBadges',
   'footerLinks',
+  'buttonColor',
+  'logoSize',
 ] as const
 
 type AllowedField = (typeof ALLOWED_FIELDS)[number]

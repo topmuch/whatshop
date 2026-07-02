@@ -125,6 +125,10 @@ export function FreshMarketTemplate({
   const shopName = shop?.name || ''
   const shopSlug = shop?.slug || ''
 
+  // Dynamic appearance settings from template-settings
+  const btnColor = shop?.buttonColor || TEAL_600
+  const logoH = shop?.logoSize ? parseInt(shop.logoSize) : null
+
   // Cart store
   const cartItems = useCartStore((s) => s.items)
   const isOpen = useCartStore((s) => s.isOpen)
@@ -392,11 +396,12 @@ export function FreshMarketTemplate({
               <img
                 src={shop.logo}
                 alt={shop.name}
-                className="h-9 md:h-10 w-auto max-w-[160px] object-contain"
+                className={logoH ? 'w-auto max-w-[160px] object-contain' : 'h-9 md:h-10 w-auto max-w-[160px] object-contain'}
+                style={logoH ? { height: logoH } : undefined}
               />
             ) : (
               <div className="flex items-center gap-2">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-600">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg" style={{ backgroundColor: btnColor }}>
                   <Store className="h-4 w-4 text-white" />
                 </div>
                 <span className="text-base font-bold text-gray-900 hidden sm:inline">
@@ -445,7 +450,8 @@ export function FreshMarketTemplate({
           <button
             type="button"
             onClick={handleCartToggle}
-            className="relative flex h-11 w-11 items-center justify-center rounded-full bg-teal-600 text-white hover:bg-teal-700 transition-colors"
+            className="relative flex h-11 w-11 items-center justify-center rounded-full text-white transition-colors"
+            style={{ backgroundColor: btnColor }}
             aria-label="Ouvrir le panier"
           >
             <ShoppingCart className="size-5" />
@@ -570,10 +576,10 @@ export function FreshMarketTemplate({
             <div>
               <div className="flex items-center gap-2 mb-4">
                 {shop.logo ? (
-                  <img src={shop.logo} alt={shopName} className="h-8 w-auto max-w-[140px] object-contain brightness-0 invert" />
+                  <img src={shop.logo} alt={shopName} className={logoH ? 'w-auto max-w-[140px] object-contain brightness-0 invert' : 'h-8 w-auto max-w-[140px] object-contain brightness-0 invert'} style={logoH ? { height: logoH } : undefined} />
                 ) : (
                   <div className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-600">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ backgroundColor: btnColor }}>
                       <Store className="h-4 w-4 text-white" />
                     </div>
                     <span className="text-base font-bold text-white">{shopName}</span>
@@ -646,7 +652,8 @@ export function FreshMarketTemplate({
                 />
                 <button
                   type="button"
-                  className="h-10 px-4 rounded-lg bg-teal-600 text-white text-sm font-medium hover:bg-teal-700 transition-colors shrink-0"
+                  className="h-10 px-4 rounded-lg text-white text-sm font-medium transition-colors shrink-0"
+                  style={{ backgroundColor: btnColor }}
                 >
                   OK
                 </button>
@@ -1306,7 +1313,8 @@ function ProductCard({
           <motion.button
             type="button"
             whileTap={{ scale: 0.9 }}
-            className="h-9 w-9 bg-teal-600 hover:bg-teal-700 text-white rounded-lg flex items-center justify-center transition-colors shadow-sm"
+            className="h-9 w-9 text-white rounded-lg flex items-center justify-center transition-colors shadow-sm"
+            style={{ backgroundColor: btnColor }}
             onClick={onAddToCart}
             aria-label={`Ajouter ${product.name} au panier`}
           >
@@ -1639,7 +1647,8 @@ function ProductDetailView({
                   onAddToCart(product)
                 }
               }}
-              className="flex-1 h-12 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-xl flex items-center justify-center gap-2 transition-colors"
+              className="flex-1 h-12 text-white font-semibold rounded-xl flex items-center justify-center gap-2 transition-colors"
+              style={{ backgroundColor: btnColor }}
             >
               <ShoppingCart className="size-5" />
               Ajouter au panier
