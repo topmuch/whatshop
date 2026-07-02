@@ -624,7 +624,7 @@ function ShopContent({ initialShopSlug, initialProductSlug }: { initialShopSlug?
     return (
       <>
         <JsonLd shop={publicShop} products={publicProducts} categories={publicCategories} />
-        <FreshMarketTemplate />
+        <FreshMarketTemplate initialProducts={publicProducts} initialCategories={publicCategories} />
       </>
     )
   }

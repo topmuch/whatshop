@@ -29,7 +29,7 @@ import {
   Menu,
   RotateCcw,
 } from 'lucide-react'
-import { useAppStore, type Shop as ShopType } from '@/lib/store'
+import { useAppStore, type Shop as ShopType, type Product, type Category } from '@/lib/store'
 import { formatPrice } from '@/lib/shared'
 import { buildWhatsAppBuyNowLink, buildWhatsAppCartLink } from '@/lib/whatsapp-utils'
 import { useCartStore } from '@/store/cart-store'
@@ -110,7 +110,13 @@ const FRESH_MARKET_CART_THEME: ThemedCartDrawerTheme = {
 // MAIN TEMPLATE
 // ═══════════════════════════════════════════════════════════════════════════
 
-export function FreshMarketTemplate() {
+export function FreshMarketTemplate({
+  initialProducts,
+  initialCategories,
+}: {
+  initialProducts?: Product[]
+  initialCategories?: Category[]
+} = {}) {
   const { publicShop } = useAppStore()
   const shop = publicShop as PublicShopData | null
 
@@ -155,14 +161,29 @@ export function FreshMarketTemplate() {
 
   // ─── Initial data fetch ───
   useEffect(() => {
+    // If products already provided via props, use them directly
+    if (initialProducts && initialProducts.length > 0) {
+      const mapped = initialProducts.map((p) => ({
+        ...p,
+        images: Array.isArray(p.images) ? p.images : p.image ? [p.image] : [],
+        compareAtPrice: p.oldPrice ?? p.compareAtPrice ?? null,
+      })) as FreshProduct[]
+      setProducts(mapped)
+      if (initialCategories && initialCategories.length > 0) {
+        setCategories(initialCategories.map((c) => ({ id: c.id, name: c.name, image: c.image })))
+      }
+      setLoading(false)
+      return
+    }
+
     if (!shop?.slug) return
     let cancelled = false
     async function load() {
       setLoading(true)
       try {
         const [productsRes, categoriesRes] = await Promise.all([
-          fetch(`/api/shops/${shop!.slug}/products`),
-          fetch(`/api/shops/${shop!.slug}/categories`),
+          fetch(`/api/shops/${shop!.slug}/products`, { cache: 'no-store' }),
+          fetch(`/api/shops/${shop!.slug}/categories`, { cache: 'no-store' }),
         ])
         const productsData = await productsRes.json()
         const categoriesData = await categoriesRes.json()
@@ -183,7 +204,7 @@ export function FreshMarketTemplate() {
     }
     load()
     return () => { cancelled = true }
-  }, [shop?.slug])
+  }, [shop?.slug, initialProducts, initialCategories])
 
   // ─── Fetch product detail ───
   useEffect(() => {
@@ -714,7 +735,6 @@ function HomeView({
   const heroSlides = [
     {
       image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=1400&h=600&fit=crop',
-      gradient: 'from-orange-600/80 via-orange-500/60 to-amber-400/40',
       badge: 'Promotions Sp\u00e9ciales',
       title: <>Jusqu&apos;\u00e0 <span className="text-yellow-200">-30%</span></>,
       subtitle: 'D\u00e9couvrez notre s\u00e9lection de produits frais et de saison \u00e0 des prix imbattables.',
@@ -722,7 +742,6 @@ function HomeView({
     },
     {
       image: 'https://images.unsplash.com/photo-1607349913338-fca6f7fc608c?w=1400&h=600&fit=crop',
-      gradient: 'from-green-800/80 via-green-600/60 to-emerald-400/40',
       badge: 'Offres du Jour',
       title: <>Produits <span className="text-green-200">Frais</span> Quotidiennement</>,
       subtitle: 'S\u00e9lection rigoureuse de produits frais chaque matin, directement des producteurs locaux.',
@@ -730,7 +749,6 @@ function HomeView({
     },
     {
       image: 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=1400&h=600&fit=crop',
-      gradient: 'from-teal-800/80 via-teal-600/60 to-cyan-400/40',
       badge: 'Nouveaut\u00e9s',
       title: <>D\u00e9couvrez nos <span className="text-teal-200">Nouveaut\u00e9s</span></>,
       subtitle: 'De nouveaux produits arrivent chaque semaine. Soyez les premiers \u00e0 les d\u00e9guster !',
@@ -768,7 +786,6 @@ function HomeView({
                   alt=""
                   className="w-full h-full object-cover"
                 />
-                <div className={`absolute inset-0 bg-gradient-to-r ${slide.gradient}`} />
               </div>
             ))}
 
@@ -783,13 +800,13 @@ function HomeView({
                   transition={{ duration: 0.5 }}
                   className="max-w-xl"
                 >
-                  <span className="inline-block px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-white text-xs sm:text-sm font-semibold uppercase tracking-wider mb-3 sm:mb-4">
+                  <span className="inline-block px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-white text-xs sm:text-sm font-semibold uppercase tracking-wider mb-3 sm:mb-4" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
                     {heroSlides[currentSlide].badge}
                   </span>
-                  <h1 className="text-2xl sm:text-4xl lg:text-6xl font-bold text-white leading-tight mb-2 sm:mb-3">
+                  <h1 className="text-2xl sm:text-4xl lg:text-6xl font-bold text-white leading-tight mb-2 sm:mb-3" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}>
                     {heroSlides[currentSlide].title}
                   </h1>
-                  <p className="text-white/80 text-sm sm:text-lg mb-4 sm:mb-6 max-w-md">
+                  <p className="text-white/90 text-sm sm:text-lg mb-4 sm:mb-6 max-w-md" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
                     {heroSlides[currentSlide].subtitle}
                   </p>
                   <button
