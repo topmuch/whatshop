@@ -178,6 +178,28 @@ export const TEMPLATE_DISPLAY: Record<string, TemplateDisplayInfo> = {
       emoji: '🎯',
     },
   },
+  'fresh-market': {
+    displayName: 'Fresh Market',
+    tagline: 'Marché frais et épicerie fine',
+    description:
+      "Template marché frais inspiré des grandes surfaces alimentaires. En-tête teal, hero orange promotionnel, catégories circulaires avec images, sections produits défilantes (Nouveautés, Offres, Best-sellers). Parfait pour l'alimentation, fruits & légumes, boulangerie, épicerie.",
+    features: [
+      'En-tête teal professionnel avec infos livraison',
+      'Catégories circulaires avec images défilantes',
+      'Hero orange avec promotions mises en avant',
+      'Tuiles promotionnelles colorées',
+      'Sections produits horizontales (Nouveautés, Offres, Best-sellers)',
+      'Cart drawer intégré avec thème cohérent',
+      'Icônes de confiance (livraison, qualité, prix)',
+      'Footer multi-colonnes professionnel',
+      'Design mobile-first responsive',
+    ],
+    style: {
+      primaryColor: '#0D9488',
+      badge: 'Alimentaire',
+      emoji: '🥬',
+    },
+  },
 }
 
 /**

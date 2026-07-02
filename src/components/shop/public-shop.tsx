@@ -49,6 +49,7 @@ const SingleProductTemplate = dynamic(() => import('@/components/single-product/
 const ModernStoreTemplate = dynamic(() => import('@/components/modern-store/modern-store-template').then(m => ({ default: m.ModernStoreTemplate })), { loading: () => <ShopSkeleton /> })
 const ModernStore2Template = dynamic(() => import('@/components/modern-store/modern-store-2-template').then(m => ({ default: m.ModernStore2Template })), { loading: () => <ShopSkeleton /> })
 const CosmikaDarkTemplate = dynamic(() => import('@/components/cosmika-dark/cosmika-dark-template').then(m => ({ default: m.CosmikaDarkTemplate })), { loading: () => <ShopSkeleton /> })
+const FreshMarketTemplate = dynamic(() => import('@/components/templates/fresh-market/fresh-market-template').then(m => ({ default: m.FreshMarketTemplate })), { loading: () => <ShopSkeleton /> })
 
 /** Minimal loading skeleton shown while a template loads via dynamic import */
 function ShopSkeleton() {
@@ -615,6 +616,17 @@ function ShopContent({ initialShopSlug, initialProductSlug }: { initialShopSlug?
   // Dark luxury e-commerce template with golden accents, marquee, and premium design.
   if (publicShop?.templateType === 'COSMIKA_DARK') {
     return <CosmikaDarkTemplate />
+  }
+
+  // ── Fresh Market template ──
+  // Fresh food/grocery market with teal header, orange hero, circular categories.
+  if (template.id === 'fresh-market' || publicShop?.templateType === 'FRESH_MARKET') {
+    return (
+      <>
+        <JsonLd shop={publicShop} products={publicProducts} categories={publicCategories} />
+        <FreshMarketTemplate />
+      </>
+    )
   }
 
   // ── Live template ──

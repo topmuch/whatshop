@@ -17,11 +17,12 @@ import { useState, useEffect } from 'react'
  * Modern Store and Single Produit are special templates that change the
  * entire page structure, not just the visual theme.
  */
-function templateIdToType(templateId: TemplateId): 'STANDARD' | 'MODERN_STORE' | 'MODERN_STORE_2' | 'SINGLE_PRODUCT' | 'COSMIKA_DARK' {
+function templateIdToType(templateId: TemplateId): 'STANDARD' | 'MODERN_STORE' | 'MODERN_STORE_2' | 'SINGLE_PRODUCT' | 'COSMIKA_DARK' | 'FRESH_MARKET' {
   if (templateId === 'modern-store') return 'MODERN_STORE'
   if (templateId === 'modern-store-2') return 'MODERN_STORE_2'
   if (templateId === 'single-product') return 'SINGLE_PRODUCT'
   if (templateId === 'cosmika-dark') return 'COSMIKA_DARK'
+  if (templateId === 'fresh-market') return 'FRESH_MARKET'
   return 'STANDARD'
 }
 
