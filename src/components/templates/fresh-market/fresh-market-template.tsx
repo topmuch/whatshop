@@ -734,21 +734,21 @@ function HomeView({
 
   const heroSlides = [
     {
-      image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=1400&h=600&fit=crop',
+      image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=864&h=1152&fit=crop',
       badge: 'Promotions Sp\u00e9ciales',
       title: <>Jusqu&apos;\u00e0 <span className="text-yellow-200">-30%</span></>,
       subtitle: 'D\u00e9couvrez notre s\u00e9lection de produits frais et de saison \u00e0 des prix imbattables.',
       cta: 'D\u00e9couvrir',
     },
     {
-      image: 'https://images.unsplash.com/photo-1607349913338-fca6f7fc608c?w=1400&h=600&fit=crop',
+      image: '/slider-slide2.png',
       badge: 'Offres du Jour',
       title: <>Produits <span className="text-green-200">Frais</span> Quotidiennement</>,
       subtitle: 'S\u00e9lection rigoureuse de produits frais chaque matin, directement des producteurs locaux.',
       cta: 'Voir les offres',
     },
     {
-      image: 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=1400&h=600&fit=crop',
+      image: 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=864&h=1152&fit=crop',
       badge: 'Nouveaut\u00e9s',
       title: <>D\u00e9couvrez nos <span className="text-teal-200">Nouveaut\u00e9s</span></>,
       subtitle: 'De nouveaux produits arrivent chaque semaine. Soyez les premiers \u00e0 les d\u00e9guster !',
@@ -784,7 +784,7 @@ function HomeView({
                 <img
                   src={slide.image}
                   alt=""
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover object-center"
                 />
               </div>
             ))}
