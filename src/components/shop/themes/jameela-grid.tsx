@@ -231,7 +231,7 @@ function JameelaProductCard({
             <motion.button
               whileTap={{ scale: 0.96 }}
               onClick={handleAdd}
-              className="mt-1 flex h-8 w-full items-center justify-center gap-1.5 rounded-md text-xs font-semibold transition-all hover:shadow-md active:scale-95"
+              className="mt-1 flex h-10 w-full items-center justify-center gap-1.5 rounded-md text-xs font-semibold transition-all hover:shadow-md active:scale-95"
               style={{
                 backgroundColor: JAMEELA.roseCta,
                 color: JAMEELA.headerDark,
@@ -244,12 +244,12 @@ function JameelaProductCard({
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="mt-1 flex h-8 w-full items-center justify-between rounded-md border"
+              className="mt-1 flex h-10 w-full items-center justify-between rounded-md border"
               style={{ borderColor: JAMEELA.beigeGold }}
             >
               <button
                 onClick={handleDecrease}
-                className="flex h-full w-8 items-center justify-center text-[#333] hover:text-[#1a1a1a] transition-colors"
+                className="flex h-full w-10 items-center justify-center text-[#333] hover:text-[#1a1a1a] transition-colors"
               >
                 {qty === 1 ? (
                   <Trash2 className="size-3.5" style={{ color: JAMEELA.saleRed }} />
@@ -262,7 +262,7 @@ function JameelaProductCard({
               </span>
               <button
                 onClick={handleIncrease}
-                className="flex h-full w-8 items-center justify-center text-[#333] hover:text-[#1a1a1a] transition-colors"
+                className="flex h-full w-10 items-center justify-center text-[#333] hover:text-[#1a1a1a] transition-colors"
               >
                 <Plus className="size-3.5" />
               </button>
@@ -270,7 +270,7 @@ function JameelaProductCard({
           )
         ) : (
           <div
-            className="mt-1 flex h-8 w-full items-center justify-center rounded-md text-xs font-medium border"
+            className="mt-1 flex h-10 w-full items-center justify-center rounded-md text-xs font-medium border"
             style={{
               borderColor: '#ddd',
               color: JAMEELA.mutedText,

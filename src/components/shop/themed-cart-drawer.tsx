@@ -146,7 +146,7 @@ export function ThemedCartDrawer({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-red-400 h-7 text-xs"
+                    className="text-red-400 h-9 text-xs"
                     onClick={onClear}
                   >
                     <Trash2 className="size-3 mr-1" />
@@ -206,7 +206,7 @@ export function ThemedCartDrawer({
                       }}
                     >
                       <button
-                        className="h-7 w-7 flex items-center justify-center"
+                        className="h-9 w-9 flex items-center justify-center"
                         onClick={() => handleDecrease(item)}
                       >
                         {item.quantity === 1 ? (
@@ -225,7 +225,7 @@ export function ThemedCartDrawer({
                         {item.quantity}
                       </span>
                       <button
-                        className="h-7 w-7 flex items-center justify-center"
+                        className="h-9 w-9 flex items-center justify-center"
                         onClick={() =>
                           updateCartQuantity(
                             item.productId,

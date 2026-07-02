@@ -107,12 +107,12 @@ function ElectroMenu({
                 alt={shopName}
                 width={200}
                 height={53}
-                className="h-[53px] w-[200px] object-contain"
+                className="h-8 sm:h-[53px] w-28 sm:w-[200px] object-contain"
                 fallbackIcon="image"
               />
             ) : (
               <div
-                className="flex items-center gap-2 h-[82px] w-[255px] rounded-lg"
+                className="flex items-center gap-2 h-[60px] sm:h-[82px] w-[180px] sm:w-[255px] rounded-lg"
               >
                 <div
                   className="flex items-center justify-center w-12 h-12 rounded-xl"
@@ -183,7 +183,7 @@ function ElectroMenu({
             {/* Mobile hamburger */}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="md:hidden flex flex-col gap-1 p-2"
+              className="md:hidden flex flex-col justify-center gap-1 p-3"
               aria-label="Menu"
             >
               <span
@@ -1219,11 +1219,11 @@ function ElectroCartBar({
                       <p className="text-xs font-bold" style={{ color: BLUE.primary }}>{formatPrice(item.price)}</p>
                     </div>
                     <div className="flex items-center rounded-lg" style={{ background: BLUE.bgGray }}>
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => updateCartQuantity(item.productId, item.quantity - 1)}>
+                      <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => updateCartQuantity(item.productId, item.quantity - 1)}>
                         {item.quantity === 1 ? <Trash2 className="size-3 text-red-500" /> : <Minus className="size-3" />}
                       </Button>
                       <span className="text-sm font-semibold min-w-[24px] text-center">{item.quantity}</span>
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => updateCartQuantity(item.productId, item.quantity + 1)}>
+                      <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => updateCartQuantity(item.productId, item.quantity + 1)}>
                         <Plus className="size-3" />
                       </Button>
                     </div>
