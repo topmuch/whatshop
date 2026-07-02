@@ -31,6 +31,8 @@ import {
 } from 'lucide-react'
 import { Product as ProductType, formatPrice } from '@/lib/shared'
 import { LiveShopFeatures } from '../live-shop-features'
+import { ThemedCartDrawer } from '@/components/shop/themed-cart-drawer'
+import { useAppStore } from '@/lib/store'
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -519,6 +521,25 @@ export function JameelaGrid({
   shopName,
   whatsapp,
 }: JameelaGridProps) {
+  const { cart, clearCart, getCartTotal, removeFromCart } = useAppStore()
+  const [cartExpanded, setCartExpanded] = useState(false)
+
+  const total = getCartTotal()
+  const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0)
+
+  function handleWhatsAppCheckout() {
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
+    const itemsText = cart
+      .map((c) => {
+        return `🌸 ${c.name} x${c.quantity} — ${(c.price * c.quantity).toLocaleString('fr-FR')} FCFA`
+      })
+      .join('\n')
+    const msg = `Bonjour ${shopName} ! ✨\n\nJe souhaite commander :\n\n${itemsText}\n\n━━━━━━━━━━━━━━\n💰 Total : ${total.toLocaleString('fr-FR')} FCFA\n\n📝 Mes informations :\nNom :\nAdresse :\nTéléphone :\n\nMerci ! 🙏`
+    const encoded = encodeURIComponent(msg)
+    const phone = whatsapp?.replace(/\D/g, '') || ''
+    window.open(`https://wa.me/${phone}?text=${encoded}`, '_blank')
+  }
+
   /* ----- sort products for sections ----- */
   const sortedByDate = useMemo(() => {
     return [...publicProducts]
@@ -822,6 +843,38 @@ export function JameelaGrid({
           </a>
         </motion.div>
       )}
+
+      {/* ═══ CART DRAWER ═══ */}
+      <AnimatePresence>
+        {cart.length > 0 && (
+          <ThemedCartDrawer
+            expanded={cartExpanded}
+            onToggle={() => setCartExpanded(!cartExpanded)}
+            onClear={clearCart}
+            onCheckout={handleWhatsAppCheckout}
+            total={total}
+            itemCount={itemCount}
+            cart={cart}
+            updateCartQuantity={updateCartQuantity}
+            removeFromCart={removeFromCart}
+            theme={{
+              text: JAMEELA.headerDark,
+              textMuted: JAMEELA.mutedText,
+              price: JAMEELA.roseCta,
+              bg: '#ffffff',
+              border: JAMEELA.beigeGold,
+              primary: JAMEELA.roseCta,
+              primaryLight: '#fecdd3',
+              whatsapp: '#25D366',
+              whatsappFg: '#ffffff',
+              shadow: '0 -4px 20px rgba(0,0,0,0.08)',
+              roundedItem: 'rounded-lg',
+              roundedBtn: 'rounded-lg',
+              maxWidth: 'max-w-[1200px]',
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }

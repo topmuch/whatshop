@@ -32,6 +32,7 @@ import {
 } from '@/components/ui/select'
 import { Product as ProductType, formatPrice } from '@/lib/shared'
 import { LiveShopFeatures } from '../live-shop-features'
+import { ThemedCartDrawer } from '@/components/shop/themed-cart-drawer'
 import { ImageWithFallback } from '@/components/ui/image-with-fallback'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -174,6 +175,7 @@ export function GroceryGrid({
   whatsapp,
 }: GroceryGridProps) {
   const countdown = useCountdown(5 * 3600)
+  const [cartExpanded, setCartExpanded] = useState(false)
   const isFiltering = isSearching || activeCategory !== null || searchQuery.trim() !== ''
 
   // Sort products
@@ -608,6 +610,37 @@ export function GroceryGrid({
           ))}
         </div>
       </section>
+
+      {/* ═══ CART DRAWER ═══ */}
+      <AnimatePresence>
+        {cart.length > 0 && (
+          <ThemedCartDrawer
+            expanded={cartExpanded}
+            onToggle={() => setCartExpanded(!cartExpanded)}
+            onClear={clearCart}
+            onCheckout={handleWhatsAppCheckout}
+            total={total}
+            itemCount={itemCount}
+            cart={cart}
+            updateCartQuantity={updateCartQuantity}
+            theme={{
+              text: GROCERY_COLORS.dark,
+              textMuted: '#6b7280',
+              price: GROCERY_COLORS.green,
+              bg: '#ffffff',
+              border: '#e5e7eb',
+              primary: GROCERY_COLORS.green,
+              primaryLight: GROCERY_COLORS.greenLight,
+              whatsapp: '#25D366',
+              whatsappFg: '#ffffff',
+              shadow: '0 -4px 20px rgba(0,166,81,0.1)',
+              roundedItem: 'rounded-xl',
+              roundedBtn: 'rounded-xl',
+              maxWidth: 'max-w-[1200px]',
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }

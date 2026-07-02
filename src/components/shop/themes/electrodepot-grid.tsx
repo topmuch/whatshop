@@ -33,6 +33,7 @@ import { Input } from '@/components/ui/input'
 import { Product as ProductType, formatPrice } from '@/lib/shared'
 import { LiveShopFeatures } from '../live-shop-features'
 import { ImageWithFallback } from '@/components/ui/image-with-fallback'
+import { ThemedCartDrawer } from '@/components/shop/themed-cart-drawer'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -860,6 +861,7 @@ export function ElectroDepotGrid({
   whatsapp,
 }: ElectroDepotGridProps) {
   const [localSearch, setLocalSearch] = useState(searchQuery)
+  const [cartExpanded, setCartExpanded] = useState(false)
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Debounced search
@@ -1175,6 +1177,37 @@ export function ElectroDepotGrid({
           </>
         )}
       </div>
+
+      {/* ═══ CART DRAWER ═══ */}
+      <AnimatePresence>
+        {cart.length > 0 && (
+          <ThemedCartDrawer
+            expanded={cartExpanded}
+            onToggle={() => setCartExpanded(!cartExpanded)}
+            onClear={clearCart}
+            onCheckout={handleWhatsAppCheckout}
+            total={total}
+            itemCount={itemCount}
+            cart={cart}
+            updateCartQuantity={updateCartQuantity}
+            theme={{
+              text: COLORS.text || '#1a1a1a',
+              textMuted: COLORS.muted || '#6b7280',
+              price: COLORS.primary || '#3b82f6',
+              bg: '#ffffff',
+              border: COLORS.border || '#e5e7eb',
+              primary: COLORS.primary || '#3b82f6',
+              primaryLight: '#fef2f2',
+              whatsapp: '#25D366',
+              whatsappFg: '#ffffff',
+              shadow: '0 -4px 20px rgba(0,0,0,0.08)',
+              roundedItem: 'rounded-lg',
+              roundedBtn: 'rounded-lg',
+              maxWidth: 'max-w-[1200px]',
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }

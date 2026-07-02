@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 import { Product as ProductType, formatPrice } from '@/lib/shared'
 import { LiveShopFeatures } from '../live-shop-features'
+import { ThemedCartDrawer } from '@/components/shop/themed-cart-drawer'
 
 /* ─── Types ─── */
 
@@ -44,6 +45,11 @@ interface FashionGridProps {
   onSearchChange: (query: string) => void
   shopName: string
   whatsapp?: string
+  cart: any[]
+  total: number
+  itemCount: number
+  clearCart: () => void
+  handleWhatsAppCheckout: () => void
 }
 
 /* ─── Theme Colors ─── */
@@ -441,7 +447,13 @@ export function FashionGrid({
   onSortChange,
   onSearchChange,
   shopName,
+  cart,
+  total,
+  itemCount,
+  clearCart,
+  handleWhatsAppCheckout,
 }: FashionGridProps) {
+  const [cartExpanded, setCartExpanded] = useState(false)
   const featuredRef = useRef<HTMLDivElement>(null)
 
   const featuredProducts = useFeaturedProducts(publicProducts)
@@ -744,6 +756,37 @@ export function FashionGrid({
               </div>
             </div>
           </motion.section>
+        )}
+      </AnimatePresence>
+
+      {/* ═══ CART DRAWER ═══ */}
+      <AnimatePresence>
+        {cart.length > 0 && (
+          <ThemedCartDrawer
+            expanded={cartExpanded}
+            onToggle={() => setCartExpanded(!cartExpanded)}
+            onClear={clearCart}
+            onCheckout={handleWhatsAppCheckout}
+            total={total}
+            itemCount={itemCount}
+            cart={cart}
+            updateCartQuantity={updateCartQuantity}
+            theme={{
+              text: COLORS.text,
+              textMuted: COLORS.textMuted,
+              price: COLORS.accent,
+              bg: '#ffffff',
+              border: COLORS.border,
+              primary: COLORS.accent,
+              primaryLight: '#ffe4e6',
+              whatsapp: '#25D366',
+              whatsappFg: '#ffffff',
+              shadow: '0 -4px 20px rgba(200,16,46,0.08)',
+              roundedItem: 'rounded-full',
+              roundedBtn: 'rounded-full',
+              maxWidth: 'max-w-[1200px]',
+            }}
+          />
         )}
       </AnimatePresence>
 
