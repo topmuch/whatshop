@@ -101,7 +101,7 @@ export function CosmikaDarkTemplate() {
   const [loading, setLoading] = useState(true)
   const [testimonials, setTestimonials] = useState<Testimonial[]>([])
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [categories, setCategories] = useState<{ name: string; id: string }[]>([])
+  const [categories, setCategories] = useState<{ name: string; id: string; image?: string }[]>([])
 
   // ─── Promo banners ───
   const promoBanners = useMemo(() => {
@@ -162,7 +162,7 @@ export function CosmikaDarkTemplate() {
           )
           setProducts(Array.isArray(productsData) ? productsData : [])
           setTestimonials(Array.isArray(testimonialsData) ? testimonialsData : [])
-          setCategories(Array.isArray(categoriesData) ? categoriesData.map((c: { id: string; name: string }) => ({ name: c.name, id: c.id })) : [])
+          setCategories(Array.isArray(categoriesData) ? categoriesData.map((c: { id: string; name: string; image?: string }) => ({ name: c.name, id: c.id, image: c.image })) : [])
         }
       } catch {
         if (!cancelled) toast.error('Erreur de chargement de la boutique')
@@ -490,7 +490,7 @@ function Header({
     { label: 'Accueil', action: () => { onHomeClick() } },
     { label: 'Produits', action: () => { onHomeClick(); setTimeout(() => document.getElementById('best-sellers')?.scrollIntoView({ behavior: 'smooth' }), 100) } },
     ...categories.length > 0
-      ? [{ label: 'Cat\u00e9gories', action: () => { onHomeClick(); setTimeout(() => document.getElementById('categories')?.scrollIntoView({ behavior: 'smooth' }), 100) } }]
+      ? [{ label: 'Catégories', action: () => { onHomeClick(); setTimeout(() => document.getElementById('categories')?.scrollIntoView({ behavior: 'smooth' }), 100) } }]
       : [],
     { label: 'Contact', action: () => { document.getElementById('footer')?.scrollIntoView({ behavior: 'smooth' }) } },
   ]
@@ -539,7 +539,7 @@ function Header({
             type="button"
             onClick={onHomeClick}
             className="flex items-center gap-2 min-h-[44px]"
-            aria-label="Retour \u00e0 l'accueil"
+            aria-label="Retour à l'accueil"
           >
             {shop.logo ? (
               <Image
@@ -664,7 +664,7 @@ interface HomeViewProps {
   promoProducts: ModernStoreProduct[]
   bestSellers: ModernStoreProduct[]
   testimonials: Testimonial[]
-  categories: { name: string; id: string }[]
+  categories: { name: string; id: string; image?: string }[]
   promoBanners: { id?: string; image: string; title?: string; link?: string }[]
   brands: { id?: string; name: string; image: string; link?: string }[]
   onProductClick: (p: ModernStoreProduct) => void
@@ -759,28 +759,102 @@ function HomeView(props: HomeViewProps) {
         </section>
       )}
 
-      {/* ─── SECTION 2: CATEGORY TABS ─── */}
+      {/* ─── SECTION 2: CATEGORY CIRCLES ─── */}
       {categories.length > 0 && (
         <section id="categories" className="mx-auto max-w-[1440px] px-5 py-16">
-          <h2 className="mb-5 text-center text-xs font-bold uppercase tracking-[0.2em]" style={{ color: ACCENT }}>
-            Cat\u00e9gories
+          <h2 className="mb-10 text-center text-xs font-bold uppercase tracking-[0.2em]" style={{ color: ACCENT }}>
+            Catégories
           </h2>
-          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-            {categoryTabs.map((cat) => (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => setActiveCategory(cat.id)}
-                className="flex-shrink-0 rounded-full px-6 py-2.5 text-sm font-medium transition-all duration-200"
+          <div className="flex flex-wrap justify-center gap-6 md:gap-8 lg:gap-10">
+            {/* "Tous" circle */}
+            <motion.button
+              key="all"
+              type="button"
+              onClick={() => setActiveCategory('all')}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="flex flex-col items-center gap-3 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 rounded-full"
+              aria-label="Toutes les catégories"
+              aria-pressed={activeCategory === 'all'}
+            >
+              <div
+                className="w-20 h-20 md:w-28 md:h-28 lg:w-32 lg:h-32 rounded-full overflow-hidden flex items-center justify-center transition-all duration-300"
                 style={{
-                  backgroundColor: activeCategory === cat.id ? ACCENT : BG_CARD,
-                  color: activeCategory === cat.id ? '#ffffff' : TEXT_MUTED,
-                  border: `1px solid ${activeCategory === cat.id ? ACCENT : BORDER_SUBTLE}`,
+                  border: activeCategory === 'all'
+                    ? `3px solid ${ACCENT}`
+                    : `2px solid ${BORDER_SUBTLE}`,
+                  boxShadow: activeCategory === 'all'
+                    ? `0 0 0 4px ${ACCENT}22`
+                    : undefined,
+                  backgroundColor: activeCategory === 'all' ? `${ACCENT}15` : BG_CARD,
                 }}
               >
-                {cat.label}
-              </button>
-            ))}
+                <span
+                  className="text-2xl md:text-3xl"
+                  style={{ color: activeCategory === 'all' ? ACCENT : TEXT_MUTED }}
+                >
+                  ✦
+                </span>
+              </div>
+              <span
+                className="text-xs md:text-sm font-medium transition-colors duration-200"
+                style={{ color: activeCategory === 'all' ? ACCENT : TEXT_MUTED }}
+              >
+                Tous
+              </span>
+            </motion.button>
+
+            {/* Category circles with images */}
+            {categories.map((cat) => {
+              const isActive = activeCategory === cat.id
+              return (
+                <motion.button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setActiveCategory(cat.id)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex flex-col items-center gap-3 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 rounded-full"
+                  aria-label={cat.name}
+                  aria-pressed={isActive}
+                >
+                  <div
+                    className="w-20 h-20 md:w-28 md:h-28 lg:w-32 lg:h-32 rounded-full overflow-hidden transition-all duration-300"
+                    style={{
+                      border: isActive
+                        ? `3px solid ${ACCENT}`
+                        : `2px solid ${BORDER_SUBTLE}`,
+                      boxShadow: isActive
+                        ? `0 0 0 4px ${ACCENT}22`
+                        : undefined,
+                    }}
+                  >
+                    {cat.image ? (
+                      <Image
+                        src={cat.image}
+                        alt={cat.name}
+                        width={128}
+                        height={128}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div
+                        className="w-full h-full flex items-center justify-center text-2xl md:text-3xl"
+                        style={{ backgroundColor: BG_CARD }}
+                      >
+                        📁
+                      </div>
+                    )}
+                  </div>
+                  <span
+                    className="text-xs md:text-sm font-medium transition-colors duration-200 max-w-[100px] md:max-w-[130px] text-center leading-tight"
+                    style={{ color: isActive ? ACCENT : TEXT_MUTED }}
+                  >
+                    {cat.name}
+                  </span>
+                </motion.button>
+              )
+            })}
           </div>
         </section>
       )}
@@ -791,7 +865,7 @@ function HomeView(props: HomeViewProps) {
           <div className="mb-8 flex items-center gap-2">
             <Flame className="h-6 w-6 text-red-500" />
             <h2 className="text-2xl font-bold md:text-3xl" style={{ color: TEXT_PRIMARY }}>
-              Offres sp\u00e9ciales
+              Offres spéciales
             </h2>
           </div>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -892,7 +966,7 @@ function HomeView(props: HomeViewProps) {
         >
           <div className="mx-auto max-w-lg text-center">
             <h3 className="text-xl font-bold md:text-2xl" style={{ color: TEXT_PRIMARY }}>
-              {config.newsletter.title || 'Restez inform\u00e9'}
+              {config.newsletter.title || 'Restez informé'}
             </h3>
             <p className="mt-2 text-sm" style={{ color: TEXT_SUBTLE }}>
               {config.newsletter.placeholder || 'Inscrivez-vous pour recevoir nos offres.'}
@@ -965,7 +1039,7 @@ function DarkProductCard({
       },
       shopId,
     )
-    toast.success(`${product.name} ajout\u00e9 au panier`)
+    toast.success(`${product.name} ajouté au panier`)
   }
 
   return (
@@ -1119,7 +1193,7 @@ function PromoDealCard({
       },
       shopId,
     )
-    toast.success(`${product.name} ajout\u00e9 au panier`)
+    toast.success(`${product.name} ajouté au panier`)
   }
 
   return (
@@ -1273,7 +1347,7 @@ function TestimonialsCarousel({
                   {current.clientName}
                 </p>
                 <p className="text-xs" style={{ color: TEXT_SUBTLE }}>
-                  {current.clientRole || 'Client v\u00e9rifi\u00e9'}
+                  {current.clientRole || 'Client vérifié'}
                 </p>
               </div>
             </div>
@@ -1286,7 +1360,7 @@ function TestimonialsCarousel({
           <button
             type="button"
             onClick={prev}
-            aria-label="T\u00e9moignage pr\u00e9c\u00e9dent"
+            aria-label="Témoignage précédent"
             className="flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-gray-100"
             style={{ border: `1px solid ${BORDER_SUBTLE}`, color: TEXT_MUTED }}
           >
@@ -1298,7 +1372,7 @@ function TestimonialsCarousel({
                 key={t.id}
                 type="button"
                 onClick={() => setIndex(i)}
-                aria-label={`Aller au t\u00e9moignage ${i + 1}`}
+                aria-label={`Aller au témoignage ${i + 1}`}
                 className="h-2 rounded-full transition-all"
                 style={{
                   width: i === index ? 24 : 8,
@@ -1310,7 +1384,7 @@ function TestimonialsCarousel({
           <button
             type="button"
             onClick={next}
-            aria-label="T\u00e9moignage suivant"
+            aria-label="Témoignage suivant"
             className="flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-gray-100"
             style={{ border: `1px solid ${BORDER_SUBTLE}`, color: TEXT_MUTED }}
           >
@@ -1469,7 +1543,7 @@ function ProductView(props: ProductViewProps) {
           className="gap-2 border-[#e5e5e5] text-gray-700 hover:bg-gray-50"
         >
           <ArrowLeft className="h-4 w-4" />
-          Retour \u00e0 la boutique
+          Retour à la boutique
         </Button>
       </div>
     )
@@ -1575,7 +1649,7 @@ function ProductView(props: ProductViewProps) {
               >
                 {lowStock && <Flame className="h-4 w-4 animate-pulse" />}
                 {stock > 5
-                  ? `\u2713 ${stock} en stock, pr\u00eat \u00e0 exp\u00e9dier`
+                  ? `✓ ${stock} en stock, prêt à expédier`
                   : stock > 0
                     ? `Plus que ${stock} en stock !`
                     : 'Rupture de stock'}
@@ -1605,7 +1679,7 @@ function ProductView(props: ProductViewProps) {
             <div className="flex flex-wrap items-center gap-4">
               <div>
                 <p className="mb-1.5 text-xs font-semibold" style={{ color: TEXT_MUTED }}>
-                  Quantit\u00e9
+                  Quantité
                 </p>
                 <QuantitySelector
                   value={quantity}
@@ -1657,7 +1731,7 @@ function ProductView(props: ProductViewProps) {
                   color: TEXT_MUTED,
                 }}
               >
-                <ShieldCheck className="h-3.5 w-3.5 text-green-500" /> Paiement \u00e0 la livraison
+                <ShieldCheck className="h-3.5 w-3.5 text-green-500" /> Paiement à la livraison
               </span>
               <span
                 className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium"
@@ -1697,7 +1771,7 @@ function ProductView(props: ProductViewProps) {
                 <Facebook className="h-4 w-4" />
               </a>
               <a
-                href={`https://wa.me/?text=${encodeURIComponent(`${product.name} \u2014 ${formatPrice(currentPrice)}\n${productUrl}`)}`}
+                href={`https://wa.me/?text=${encodeURIComponent(`${product.name} — ${formatPrice(currentPrice)}\n${productUrl}`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Partager sur WhatsApp"
@@ -1782,7 +1856,7 @@ function CosmikaDarkFooter({
 }: {
   shop: PublicShopData | null
   shopName: string
-  categories: { name: string; id: string }[]
+  categories: { name: string; id: string; image?: string }[]
   products: ModernStoreProduct[]
   onProductClick: (p: ModernStoreProduct) => void
   whatsapp: string
@@ -1991,10 +2065,10 @@ function CosmikaDarkFooter({
       <div style={{ borderTop: `1px solid ${BORDER_SUBTLE}` }}>
         <div className="mx-auto flex max-w-7xl flex-col items-center gap-2 px-5 py-6 text-center text-xs sm:flex-row sm:justify-between" style={{ color: TEXT_SUBTLE }}>
           <p>
-            \u00a9 {year} {shopName}. Tous droits r\u00e9serv\u00e9s.
+            © {year} {shopName}. Tous droits réservés.
           </p>
           <p>
-            Propuls\u00e9 par{' '}
+            Propulsé par{' '}
             <span className="font-bold" style={{ color: ACCENT }}>
               Boutiko
             </span>
