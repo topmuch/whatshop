@@ -81,6 +81,22 @@ const DEFAULT_BADGES: TrustBadge[] = [
   { emoji: '📱', title: 'Support WhatsApp', subtitle: 'Réponse rapide', order: 3 },
 ]
 
+// ─── Button Color Presets ──────────────────────────────────────────────────
+const BUTTON_COLOR_PRESETS = [
+  { name: 'Rose', color: '#e11d48', shades: ['#fecdd3', '#fda4af', '#fb7185', '#e11d48', '#9f1239'] },
+  { name: 'Violet', color: '#7c3aed', shades: ['#ede9fe', '#c4b5fd', '#a78bfa', '#7c3aed', '#5b21b6'] },
+  { name: 'Bleu Royal', color: '#2563eb', shades: ['#dbeafe', '#93c5fd', '#60a5fa', '#2563eb', '#1d4ed8'] },
+  { name: 'Indigo', color: '#4f46e5', shades: ['#e0e7ff', '#a5b4fc', '#818cf8', '#4f46e5', '#3730a3'] },
+  { name: 'Émeraude', color: '#059669', shades: ['#d1fae5', '#6ee7b7', '#34d399', '#059669', '#047857'] },
+  { name: 'Teal', color: '#0d9488', shades: ['#ccfbf1', '#5eead4', '#2dd4bf', '#0d9488', '#0f766e'] },
+  { name: 'Orange', color: '#ea580c', shades: ['#ffedd5', '#fdba74', '#fb923c', '#ea580c', '#c2410c'] },
+  { name: 'Ambre', color: '#d97706', shades: ['#fef3c7', '#fcd34d', '#fbbf24', '#d97706', '#b45309'] },
+  { name: 'Bordeaux', color: '#881337', shades: ['#ffe4e6', '#fda4af', '#fb7185', '#e11d48', '#881337'] },
+  { name: 'Noir Luxe', color: '#0f172a', shades: ['#f1f5f9', '#cbd5e1', '#94a3b8', '#475569', '#0f172a'] },
+  { name: 'Cyan', color: '#0891b2', shades: ['#cffafe', '#67e8f9', '#22d3ee', '#0891b2', '#155e75'] },
+  { name: 'Fuchsia', color: '#c026d3', shades: ['#fae8ff', '#f0abfc', '#e879f9', '#c026d3', '#86198f'] },
+]
+
 // ─── Component ──────────────────────────────────────────────────────────────────
 
 export function TemplateCustomization({ shopSlug }: TemplateCustomizationProps) {
@@ -381,10 +397,50 @@ export function TemplateCustomization({ shopSlug }: TemplateCustomizationProps) 
             {/* ─── APPEARANCE TAB ─── */}
             <TabsContent value="appearance" className="space-y-6">
               <div className="space-y-4">
-                {/* Button Color */}
-                <div className="space-y-2">
-                  <Label htmlFor="button-color">Couleur des boutons</Label>
-                  <div className="flex items-center gap-3">
+                {/* Button Color Presets */}
+                <div className="space-y-3">
+                  <Label>Couleur des boutons</Label>
+                  <p className="text-xs text-muted-foreground">Choisissez une palette prédéfinie ou saisissez une couleur personnalisée.</p>
+
+                  {/* Preset Palettes */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
+                    {BUTTON_COLOR_PRESETS.map((preset) => (
+                      <button
+                        key={preset.color}
+                        type="button"
+                        onClick={() => setSettings((s) => ({ ...s, buttonColor: preset.color }))}
+                        className={`group relative flex flex-col items-start gap-1.5 rounded-xl border-2 p-3 transition-all duration-200 hover:shadow-md text-left ${
+                          settings.buttonColor === preset.color
+                            ? 'border-primary bg-primary/5 shadow-sm'
+                            : 'border-transparent bg-muted/50 hover:border-muted-foreground/20'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 w-full">
+                          <div
+                            className="h-7 w-7 rounded-lg shadow-sm ring-1 ring-black/10 shrink-0"
+                            style={{ backgroundColor: preset.color }}
+                          />
+                          <span className="text-xs font-semibold leading-tight">{preset.name}</span>
+                        </div>
+                        {/* Nuances */}
+                        <div className="flex gap-1">
+                          {preset.shades.map((shade, i) => (
+                            <div
+                              key={i}
+                              className="h-4 w-4 rounded-sm ring-1 ring-black/5 first:rounded-l-md last:rounded-r-md"
+                              style={{ backgroundColor: shade }}
+                            />
+                          ))}
+                        </div>
+                        {settings.buttonColor === preset.color && (
+                          <Check className="absolute top-2 right-2 h-3.5 w-3.5 text-primary" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Custom Color Picker */}
+                  <div className="flex items-center gap-3 pt-1">
                     <input
                       type="color"
                       id="button-color"
@@ -395,7 +451,7 @@ export function TemplateCustomization({ shopSlug }: TemplateCustomizationProps) 
                     <Input
                       value={settings.buttonColor}
                       onChange={(e) => setSettings((s) => ({ ...s, buttonColor: e.target.value }))}
-                      placeholder="#0D9488 (défaut du template)"
+                      placeholder="Couleur personnalisée (ex: #e11d48)"
                       className="flex-1"
                       maxLength={7}
                     />
