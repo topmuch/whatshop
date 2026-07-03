@@ -46,7 +46,7 @@ const TEXT_PRIMARY = '#111827'
 const TEXT_MUTED = '#4b5563'
 const TEXT_SUBTLE = '#9ca3af'
 
-type View = 'home' | 'boutique' | 'contact' | 'product' | 'checkout'
+type View = 'home' | 'boutique' | 'contact' | 'product' | 'checkout' | 'about' | 'privacy'
 
 interface DetailedProduct extends ModernStoreProduct {
   variants: ModernStoreVariant[]
@@ -420,6 +420,14 @@ export function CosmikaDarkTemplate() {
             onSuccess={() => { setView('home') }}
           />
         )}
+
+        {view === 'about' && (
+          <AboutView shop={shop} shopName={shopName} onBack={() => setView('home')} />
+        )}
+
+        {view === 'privacy' && (
+          <PrivacyView shop={shop} shopName={shopName} onBack={() => setView('home')} />
+        )}
       </main>
 
       {/* ─── FOOTER ─── */}
@@ -435,6 +443,11 @@ export function CosmikaDarkTemplate() {
         contactEmail={shop?.contactEmail || ''}
         config={config}
         btnColor={btnColor}
+        onAboutClick={() => { setView('about'); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+        onPrivacyClick={() => { setView('privacy'); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+        onContactClick={() => { setView('contact'); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+        onHomeClick={() => { setView('home'); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+        onBoutiqueClick={() => { setView('boutique'); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
       />
 
       {/* ─── CART DRAWER ─── */}
@@ -2390,6 +2403,11 @@ function CosmikaDarkFooter({
   contactEmail,
   config,
   btnColor,
+  onAboutClick,
+  onPrivacyClick,
+  onContactClick,
+  onHomeClick,
+  onBoutiqueClick,
 }: {
   shop: PublicShopData | null
   shopName: string
@@ -2402,40 +2420,53 @@ function CosmikaDarkFooter({
   contactEmail: string
   config: ModernStoreConfig
   btnColor: string
+  onAboutClick: () => void
+  onPrivacyClick: () => void
+  onContactClick: () => void
+  onHomeClick: () => void
+  onBoutiqueClick: () => void
 }) {
   const year = new Date().getFullYear()
+  const FOOTER_BG = '#000000'
+  const FOOTER_CARD = '#111111'
+  const FOOTER_TEXT = '#e5e7eb'
+  const FOOTER_MUTED = '#9ca3af'
+  const FOOTER_BORDER = '#222222'
 
   return (
-    <footer id="footer" className="mt-auto" style={{ backgroundColor: BG_SECONDARY }}>
+    <footer id="footer" className="mt-auto" style={{ backgroundColor: FOOTER_BG }}>
       {/* ── Top: 4 columns ── */}
-      <div className="mx-auto max-w-7xl px-5 py-16 md:py-24">
-        <div className="grid grid-cols-2 gap-10 md:grid-cols-4">
+      <div className="mx-auto max-w-7xl px-5 pt-16 pb-10 md:pt-20 md:pb-14">
+        <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-4">
           {/* Column 1: Logo + Description + Social */}
-          <div className="col-span-2 md:col-span-1">
+          <div className="sm:col-span-2 lg:col-span-1">
             {shop?.logo ? (
-              <Image
-                src={shop.logo}
-                alt={shop?.name || 'Logo'}
-                width={160}
-                height={42}
-                unoptimized
-                className="mb-5 h-14 w-auto max-w-[260px] object-contain"
-              />
+              <div className="mb-5">
+                <Image
+                  src={shop.logo}
+                  alt={shop?.name || 'Logo'}
+                  width={200}
+                  height={53}
+                  unoptimized
+                  className="h-14 w-auto max-w-[220px] object-contain opacity-70"
+                  style={{ filter: 'brightness(0) invert(1)' }}
+                />
+              </div>
             ) : (
               <div className="mb-5 flex items-center gap-2">
                 <div
-                  className="flex h-12 w-12 items-center justify-center rounded-lg"
-                  style={{ backgroundColor: ACCENT }}
+                  className="flex h-11 w-11 items-center justify-center rounded-xl"
+                  style={{ backgroundColor: FOOTER_CARD, border: `1px solid ${FOOTER_BORDER}` }}
                 >
-                  <Store className="h-6 w-6 text-white" />
+                  <Store className="h-5 w-5" style={{ color: ACCENT }} />
                 </div>
-                <span className="text-lg font-bold" style={{ color: TEXT_PRIMARY }}>
+                <span className="text-lg font-bold" style={{ color: FOOTER_TEXT }}>
                   {shopName}
                 </span>
               </div>
             )}
             {shop?.description && (
-              <p className="mb-4 text-sm leading-relaxed line-clamp-3" style={{ color: TEXT_SUBTLE }}>
+              <p className="mb-5 text-sm leading-relaxed line-clamp-3" style={{ color: FOOTER_MUTED }}>
                 {shop.description}
               </p>
             )}
@@ -2445,8 +2476,8 @@ function CosmikaDarkFooter({
                   href={`https://wa.me/${whatsapp.replace(/\D/g, '')}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex h-9 w-9 items-center justify-center rounded-full transition-all duration-200 hover:scale-110"
-                  style={{ backgroundColor: BG_CARD, border: `1px solid ${BORDER_SUBTLE}`, color: ACCENT }}
+                  className="flex h-10 w-10 items-center justify-center rounded-full transition-all duration-200 hover:scale-110"
+                  style={{ backgroundColor: FOOTER_CARD, border: `1px solid ${FOOTER_BORDER}`, color: FOOTER_TEXT }}
                   aria-label="WhatsApp"
                 >
                   <MessageCircle className="h-4 w-4" />
@@ -2457,11 +2488,35 @@ function CosmikaDarkFooter({
                   href={(shop as any).facebookUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex h-9 w-9 items-center justify-center rounded-full transition-all duration-200 hover:scale-110"
-                  style={{ backgroundColor: BG_CARD, border: `1px solid ${BORDER_SUBTLE}`, color: ACCENT }}
+                  className="flex h-10 w-10 items-center justify-center rounded-full transition-all duration-200 hover:scale-110"
+                  style={{ backgroundColor: FOOTER_CARD, border: `1px solid ${FOOTER_BORDER}`, color: FOOTER_TEXT }}
                   aria-label="Facebook"
                 >
                   <Facebook className="h-4 w-4" />
+                </a>
+              )}
+              {(shop as any)?.instagramUrl && (
+                <a
+                  href={(shop as any).instagramUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex h-10 w-10 items-center justify-center rounded-full transition-all duration-200 hover:scale-110"
+                  style={{ backgroundColor: FOOTER_CARD, border: `1px solid ${FOOTER_BORDER}`, color: FOOTER_TEXT }}
+                  aria-label="Instagram"
+                >
+                  <Instagram className="h-4 w-4" />
+                </a>
+              )}
+              {(shop as any)?.websiteUrl && (
+                <a
+                  href={(shop as any).websiteUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex h-10 w-10 items-center justify-center rounded-full transition-all duration-200 hover:scale-110"
+                  style={{ backgroundColor: FOOTER_CARD, border: `1px solid ${FOOTER_BORDER}`, color: FOOTER_TEXT }}
+                  aria-label="Site web"
+                >
+                  <Globe className="h-4 w-4" />
                 </a>
               )}
             </div>
@@ -2469,16 +2524,16 @@ function CosmikaDarkFooter({
 
           {/* Column 2: MENU */}
           <div>
-            <h4 className="mb-4 text-xs font-bold uppercase tracking-widest" style={{ color: ACCENT }}>
+            <h4 className="mb-5 text-xs font-bold uppercase tracking-widest" style={{ color: ACCENT }}>
               Menu
             </h4>
-            <ul className="space-y-2.5 text-sm">
+            <ul className="space-y-3 text-sm">
               <li>
                 <button
                   type="button"
-                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                  className="transition-colors hover:text-[#f97316]"
-                  style={{ color: TEXT_SUBTLE }}
+                  onClick={onHomeClick}
+                  className="transition-colors duration-200 hover:text-white"
+                  style={{ color: FOOTER_MUTED }}
                 >
                   Accueil
                 </button>
@@ -2486,63 +2541,89 @@ function CosmikaDarkFooter({
               <li>
                 <button
                   type="button"
-                  onClick={() =>
-                    document.getElementById('best-sellers')?.scrollIntoView({ behavior: 'smooth' })
-                  }
-                  className="transition-colors hover:text-[#f97316]"
-                  style={{ color: TEXT_SUBTLE }}
+                  onClick={onBoutiqueClick}
+                  className="transition-colors duration-200 hover:text-white"
+                  style={{ color: FOOTER_MUTED }}
                 >
-                  Produits
+                  Boutique
                 </button>
               </li>
-              {contactEmail && (
-                <li>
-                  <a
-                    href={`mailto:${contactEmail}`}
-                    className="transition-colors hover:text-[#f97316]"
-                    style={{ color: TEXT_SUBTLE }}
-                  >
-                    Contact
-                  </a>
-                </li>
-              )}
+              <li>
+                <button
+                  type="button"
+                  onClick={onContactClick}
+                  className="transition-colors duration-200 hover:text-white"
+                  style={{ color: FOOTER_MUTED }}
+                >
+                  Contact
+                </button>
+              </li>
             </ul>
           </div>
 
-          {/* Column 3: CONTACT */}
+          {/* Column 3: INFORMATIONS */}
           <div>
-            <h4 className="mb-4 text-xs font-bold uppercase tracking-widest" style={{ color: ACCENT }}>
-              Contact
+            <h4 className="mb-5 text-xs font-bold uppercase tracking-widest" style={{ color: ACCENT }}>
+              Informations
             </h4>
-            <ul className="space-y-2.5 text-sm">
-              {phone && (
-                <li>
-                  <a
-                    href={`tel:${phone.replace(/\D/g, '')}`}
-                    className="flex items-center gap-2 transition-colors hover:text-[#f97316]"
-                    style={{ color: TEXT_SUBTLE }}
-                  >
-                    <Phone className="h-3.5 w-3.5" />
-                    {phone}
-                  </a>
-                </li>
-              )}
+            <ul className="space-y-3 text-sm">
+              <li>
+                <button
+                  type="button"
+                  onClick={onAboutClick}
+                  className="transition-colors duration-200 hover:text-white"
+                  style={{ color: FOOTER_MUTED }}
+                >
+                  À propos de nous
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={onPrivacyClick}
+                  className="transition-colors duration-200 hover:text-white"
+                  style={{ color: FOOTER_MUTED }}
+                >
+                  Politique de confidentialité
+                </button>
+              </li>
               {whatsapp && (
                 <li>
                   <a
                     href={`https://wa.me/${whatsapp.replace(/\D/g, '')}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 transition-colors hover:text-[#f97316]"
-                    style={{ color: TEXT_SUBTLE }}
+                    className="flex items-center gap-2 transition-colors duration-200 hover:text-white"
+                    style={{ color: FOOTER_MUTED }}
                   >
                     <MessageCircle className="h-3.5 w-3.5" />
                     WhatsApp
                   </a>
                 </li>
               )}
+            </ul>
+          </div>
+
+          {/* Column 4: CONTACT + NEWSLETTER */}
+          <div>
+            <h4 className="mb-5 text-xs font-bold uppercase tracking-widest" style={{ color: ACCENT }}>
+              Contact
+            </h4>
+            <ul className="mb-6 space-y-3 text-sm">
+              {phone && (
+                <li>
+                  <a
+                    href={`tel:${phone.replace(/\D/g, '')}`}
+                    className="flex items-center gap-2 transition-colors duration-200 hover:text-white"
+                    style={{ color: FOOTER_MUTED }}
+                  >
+                    <Phone className="h-3.5 w-3.5" />
+                    {phone}
+                  </a>
+                </li>
+              )}
               {address && (
-                <li className="flex items-start gap-2" style={{ color: TEXT_SUBTLE }}>
+                <li className="flex items-start gap-2" style={{ color: FOOTER_MUTED }}>
                   <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                   <span className="line-clamp-2">{address}</span>
                 </li>
@@ -2551,67 +2632,363 @@ function CosmikaDarkFooter({
                 <li>
                   <a
                     href={`mailto:${contactEmail}`}
-                    className="transition-colors hover:text-[#f97316]"
-                    style={{ color: TEXT_SUBTLE }}
+                    className="transition-colors duration-200 hover:text-white"
+                    style={{ color: FOOTER_MUTED }}
                   >
                     {contactEmail}
                   </a>
                 </li>
               )}
             </ul>
-          </div>
 
-          {/* Column 4: NEWSLETTER */}
-          <div>
-            <h4 className="mb-4 text-xs font-bold uppercase tracking-widest" style={{ color: ACCENT }}>
-              Newsletter
-            </h4>
             {config.newsletter.enabled && (
-              <p className="mb-3 text-sm" style={{ color: TEXT_SUBTLE }}>
-                {config.newsletter.placeholder || 'Inscrivez-vous pour recevoir nos offres.'}
-              </p>
+              <>
+                <h4 className="mb-3 text-xs font-bold uppercase tracking-widest" style={{ color: ACCENT }}>
+                  Newsletter
+                </h4>
+                <p className="mb-3 text-sm" style={{ color: FOOTER_MUTED }}>
+                  {config.newsletter.placeholder || 'Inscrivez-vous pour recevoir nos offres.'}
+                </p>
+                <form
+                  className="flex"
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    toast.success('Merci pour votre inscription !')
+                    ;(e.currentTarget as HTMLFormElement).reset()
+                  }}
+                >
+                  <Input
+                    type="email"
+                    placeholder="Votre email"
+                    required
+                    className="h-10 flex-1 rounded-l-lg rounded-r-none border-[#333] bg-[#111] text-sm text-white placeholder:text-[#666] focus:ring-0 focus:border-[#f97316]"
+                  />
+                  <button
+                    type="submit"
+                    className="flex h-10 items-center justify-center rounded-r-lg px-3 text-white transition-colors hover:brightness-110"
+                    style={{ backgroundColor: btnColor }}
+                    aria-label="S'inscrire"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </form>
+              </>
             )}
-            <form
-              className="flex"
-              onSubmit={(e) => {
-                e.preventDefault()
-                toast.success('Merci pour votre inscription !')
-                ;(e.currentTarget as HTMLFormElement).reset()
-              }}
-            >
-              <Input
-                type="email"
-                placeholder="Votre email"
-                required
-                className="h-10 flex-1 rounded-l-lg rounded-r-none border-[#e5e5e5] bg-white text-sm text-gray-900 placeholder:text-[#9ca3af] focus:ring-0 focus:border-[#f97316]"
-              />
-              <button
-                type="submit"
-                className="flex h-10 items-center justify-center rounded-r-lg px-3 text-white transition-colors hover:brightness-110"
-                style={{ backgroundColor: btnColor }}
-                aria-label="S'inscrire"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </form>
           </div>
         </div>
       </div>
 
       {/* ── Bottom: Copyright ── */}
-      <div style={{ borderTop: `1px solid ${BORDER_SUBTLE}` }}>
-        <div className="mx-auto flex max-w-7xl flex-col items-center gap-2 px-5 py-6 text-center text-xs sm:flex-row sm:justify-between" style={{ color: TEXT_SUBTLE }}>
+      <div style={{ borderTop: `1px solid ${FOOTER_BORDER}` }}>
+        <div className="mx-auto flex max-w-7xl flex-col items-center gap-3 px-5 py-6 text-center text-xs sm:flex-row sm:justify-between" style={{ color: FOOTER_MUTED }}>
           <p>
             © {year} {shopName}. Tous droits réservés.
           </p>
-          <p>
-            Propulsé par{' '}
-            <span className="font-bold" style={{ color: ACCENT }}>
-              Boutiko
-            </span>
-          </p>
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={onAboutClick}
+              className="transition-colors duration-200 hover:text-white"
+            >
+              À propos
+            </button>
+            <span style={{ color: FOOTER_BORDER }}>|</span>
+            <button
+              type="button"
+              onClick={onPrivacyClick}
+              className="transition-colors duration-200 hover:text-white"
+            >
+              Confidentialité
+            </button>
+            <span style={{ color: FOOTER_BORDER }}>|</span>
+            <p>
+              Propulsé par{' '}
+              <span className="font-bold" style={{ color: ACCENT }}>
+                Boutiko
+              </span>
+            </p>
+          </div>
         </div>
       </div>
     </footer>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ABOUT VIEW
+// ═══════════════════════════════════════════════════════════════════════════
+
+function AboutView({
+  shop,
+  shopName,
+  onBack,
+}: {
+  shop: PublicShopData | null
+  shopName: string
+  onBack: () => void
+}) {
+  return (
+    <div className="mx-auto max-w-4xl px-5 py-12 md:py-20">
+      {/* Back button */}
+      <button
+        type="button"
+        onClick={onBack}
+        className="mb-8 flex items-center gap-2 text-sm font-medium transition-colors hover:text-[#f97316]"
+        style={{ color: TEXT_MUTED }}
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Retour à l'accueil
+      </button>
+
+      {/* Title */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <h1 className="text-3xl font-bold md:text-4xl" style={{ color: TEXT_PRIMARY }}>
+          À propos de {shopName}
+        </h1>
+        <div className="mt-4 h-1 w-20 rounded-full" style={{ backgroundColor: ACCENT }} />
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.15 }}
+        className="mt-10 space-y-8"
+      >
+        {shop?.description ? (
+          <p className="text-base leading-relaxed" style={{ color: TEXT_SUBTLE }}>
+            {shop.description}
+          </p>
+        ) : (
+          <p className="text-base leading-relaxed" style={{ color: TEXT_SUBTLE }}>
+            {shopName} est une boutique en ligne dédiée à vous offrir les meilleurs produits avec un service client exceptionnel.
+            Nous sélectionnons soigneusement chaque article pour garantir qualité et satisfaction.
+          </p>
+        )}
+
+        {/* Values */}
+        <div className="grid gap-6 sm:grid-cols-3">
+          {[
+            {
+              title: 'Qualité',
+              description: 'Nous sélectionnons uniquement des produits de qualité supérieure pour nos clients.',
+              icon: '✨',
+            },
+            {
+              title: 'Confiance',
+              description: 'Paiement à la livraison pour une expérience d\'achat en toute sérénité.',
+              icon: '🛡️',
+            },
+            {
+              title: 'Service',
+              description: 'Notre équipe est disponible 7j/7 pour répondre à toutes vos questions.',
+              icon: '💬',
+            },
+          ].map((value, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.3 + i * 0.1 }}
+              className="rounded-2xl p-6 text-center"
+              style={{ backgroundColor: BG_SECONDARY, border: `1px solid ${BORDER_SUBTLE}` }}
+            >
+              <div className="mb-3 text-3xl">{value.icon}</div>
+              <h3 className="mb-2 text-base font-bold" style={{ color: TEXT_PRIMARY }}>
+                {value.title}
+              </h3>
+              <p className="text-sm leading-relaxed" style={{ color: TEXT_SUBTLE }}>
+                {value.description}
+              </p>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Contact CTA */}
+        {shop?.whatsapp && (
+          <div
+            className="mt-10 rounded-2xl p-8 text-center"
+            style={{ backgroundColor: BG_SECONDARY, border: `1px solid ${BORDER_SUBTLE}` }}
+          >
+            <h3 className="mb-2 text-xl font-bold" style={{ color: TEXT_PRIMARY }}>
+              Une question ?
+            </h3>
+            <p className="mb-5 text-sm" style={{ color: TEXT_SUBTLE }}>
+              N'hésitez pas à nous contacter sur WhatsApp
+            </p>
+            <motion.a
+              href={`https://wa.me/${shop.whatsapp.replace(/\D/g, '')}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.97 }}
+              className="inline-flex items-center gap-2 rounded-full px-8 py-3 text-sm font-semibold text-white"
+              style={{ backgroundColor: ACCENT }}
+            >
+              <MessageCircle className="h-4 w-4" />
+              Contactez-nous sur WhatsApp
+            </motion.a>
+          </div>
+        )}
+      </motion.div>
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PRIVACY VIEW
+// ═══════════════════════════════════════════════════════════════════════════
+
+function PrivacyView({
+  shop,
+  shopName,
+  onBack,
+}: {
+  shop: PublicShopData | null
+  shopName: string
+  onBack: () => void
+}) {
+  return (
+    <div className="mx-auto max-w-4xl px-5 py-12 md:py-20">
+      {/* Back button */}
+      <button
+        type="button"
+        onClick={onBack}
+        className="mb-8 flex items-center gap-2 text-sm font-medium transition-colors hover:text-[#f97316]"
+        style={{ color: TEXT_MUTED }}
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Retour à l'accueil
+      </button>
+
+      {/* Title */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <h1 className="text-3xl font-bold md:text-4xl" style={{ color: TEXT_PRIMARY }}>
+          Politique de confidentialité
+        </h1>
+        <p className="mt-2 text-sm" style={{ color: TEXT_SUBTLE }}>
+          Dernière mise à jour : Janvier {new Date().getFullYear()}
+        </p>
+        <div className="mt-4 h-1 w-20 rounded-full" style={{ backgroundColor: ACCENT }} />
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.15 }}
+        className="mt-10 space-y-8"
+      >
+        {/* Section 1 */}
+        <section>
+          <h2 className="mb-3 text-xl font-bold" style={{ color: TEXT_PRIMARY }}>
+            1. Collecte des données
+          </h2>
+          <p className="text-sm leading-relaxed" style={{ color: TEXT_SUBTLE }}>
+            Chez {shopName}, nous respectons votre vie privée. Les données personnelles que nous collectons
+            lors de vos commandes (nom, numéro de téléphone, adresse de livraison) sont utilisées
+            uniquement pour le traitement de votre commande et la livraison de vos produits.
+          </p>
+        </section>
+
+        {/* Section 2 */}
+        <section>
+          <h2 className="mb-3 text-xl font-bold" style={{ color: TEXT_PRIMARY }}>
+            2. Utilisation des données
+          </h2>
+          <p className="text-sm leading-relaxed" style={{ color: TEXT_SUBTLE }}>
+            Vos données sont utilisées pour :
+          </p>
+          <ul className="mt-3 list-disc space-y-2 pl-6 text-sm" style={{ color: TEXT_SUBTLE }}>
+            <li>Traiter et livrer vos commandes</li>
+            <li>Vous contacter concernant votre commande</li>
+            <li>Améliorer nos services et votre expérience d'achat</li>
+            <li>Vous envoyer des offres promotionnelles (avec votre consentement)</li>
+          </ul>
+        </section>
+
+        {/* Section 3 */}
+        <section>
+          <h2 className="mb-3 text-xl font-bold" style={{ color: TEXT_PRIMARY }}>
+            3. Partage des données
+          </h2>
+          <p className="text-sm leading-relaxed" style={{ color: TEXT_SUBTLE }}>
+            Nous ne vendons, ne louons ni ne partageons vos informations personnelles avec des tiers
+            à des fins marketing. Vos données peuvent être partagées avec nos partenaires de livraison
+            dans le seul but de traiter votre commande.
+          </p>
+        </section>
+
+        {/* Section 4 */}
+        <section>
+          <h2 className="mb-3 text-xl font-bold" style={{ color: TEXT_PRIMARY }}>
+            4. Sécurité des données
+          </h2>
+          <p className="text-sm leading-relaxed" style={{ color: TEXT_SUBTLE }}>
+            Nous mettons en œuvre des mesures de sécurité appropriées pour protéger vos données
+            personnelles contre tout accès non autorisé, modification, divulgation ou destruction.
+          </p>
+        </section>
+
+        {/* Section 5 */}
+        <section>
+          <h2 className="mb-3 text-xl font-bold" style={{ color: TEXT_PRIMARY }}>
+            5. Paiement
+          </h2>
+          <p className="text-sm leading-relaxed" style={{ color: TEXT_SUBTLE }}>
+            Le paiement se fait à la livraison. Nous ne collectons aucune information de carte bancaire
+            ou de compte mobile money sur notre plateforme. Toute transaction financière se fait
+            directement entre vous et le livreur.
+          </p>
+        </section>
+
+        {/* Section 6 */}
+        <section>
+          <h2 className="mb-3 text-xl font-bold" style={{ color: TEXT_PRIMARY }}>
+            6. Vos droits
+          </h2>
+          <p className="text-sm leading-relaxed" style={{ color: TEXT_SUBTLE }}>
+            Vous avez le droit d'accéder, de modifier ou de supprimer vos données personnelles.
+            Pour exercer ces droits, veuillez nous contacter via WhatsApp ou par email.
+          </p>
+        </section>
+
+        {/* Section 7 */}
+        <section>
+          <h2 className="mb-3 text-xl font-bold" style={{ color: TEXT_PRIMARY }}>
+            7. Contact
+          </h2>
+          <p className="text-sm leading-relaxed" style={{ color: TEXT_SUBTLE }}>
+            Pour toute question concernant cette politique de confidentialité, vous pouvez nous contacter :
+          </p>
+          <div className="mt-3 space-y-2 text-sm" style={{ color: TEXT_SUBTLE }}>
+            {shop?.phone && (
+              <p className="flex items-center gap-2">
+                <Phone className="h-4 w-4" style={{ color: ACCENT }} />
+                {shop.phone}
+              </p>
+            )}
+            {shop?.whatsapp && (
+              <p className="flex items-center gap-2">
+                <MessageCircle className="h-4 w-4" style={{ color: ACCENT }} />
+                {shop.whatsapp}
+              </p>
+            )}
+            {shop?.contactEmail && (
+              <p className="flex items-center gap-2">
+                <Mail className="h-4 w-4" style={{ color: ACCENT }} />
+                {shop.contactEmail}
+              </p>
+            )}
+          </div>
+        </section>
+      </motion.div>
+    </div>
   )
 }
