@@ -26,22 +26,22 @@ function LiveHeader({ shop }: LiveHeaderProps) {
       role="banner"
     >
       <div className="max-w-7xl mx-auto px-4 lg:px-6">
-        <div className="flex items-center justify-between h-14 md:h-16">
+        <div className="flex items-center justify-between h-16 md:h-20">
           {/* ── Left: Logo + Shop Name ── */}
           <div className="flex items-center gap-3 min-h-[44px]">
             {shop?.logo ? (
               <Image
                 src={shop.logo}
                 alt={shop.name ?? 'Logo'}
-                width={56}
-                height={56}
-                className='w-14 h-14 rounded-full object-cover ring-2 ring-white shadow-md'
+                width={64}
+                height={64}
+                className='w-16 h-16 rounded-full object-cover ring-2 ring-white shadow-md'
                 style={logoSize ? { height: parseInt(logoSize), width: parseInt(logoSize) } : undefined}
                 priority
               />
             ) : (
               <div
-                className='flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-[#FF6154] to-[#FF9A44] text-white text-xl font-bold shadow-md'
+                className='flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-[#FF6154] to-[#FF9A44] text-white text-2xl font-bold shadow-md'
                 style={logoSize ? { height: parseInt(logoSize), width: parseInt(logoSize) } : undefined}
               >
                 {(shop?.name ?? 'L').charAt(0).toUpperCase()}

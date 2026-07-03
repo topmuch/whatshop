@@ -69,7 +69,7 @@ export function ElectroHeader({
         role="banner"
       >
         <div className="max-w-7xl mx-auto px-4 lg:px-6">
-          <div className="flex items-center justify-between h-14 md:h-16">
+          <div className="flex items-center justify-between h-16 md:h-20">
             {/* ── Logo (well-dimensioned uploaded logo) ── */}
             <button
               onClick={() => handleNavClick(onAccueilClick)}
@@ -82,7 +82,7 @@ export function ElectroHeader({
                   alt={shop.name ?? 'Logo'}
                   width={200}
                   height={53}
-                  className='h-14 md:h-16 w-auto max-w-[200px] md:max-w-[240px] object-contain'
+                  className='h-16 md:h-20 w-auto max-w-[240px] md:max-w-[300px] object-contain'
                   style={logoSize ? { height: parseInt(logoSize) } : undefined}
                   priority
                 />
