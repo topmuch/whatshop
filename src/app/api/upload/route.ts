@@ -19,7 +19,7 @@ const ALLOWED_TYPES = [
 
 // ─── POST /api/upload ───────────────────────────────────────────────────────
 // Accepts FormData with a "file" field.
-// Optional query param: ?dir=products|categories|logos (default: "products")
+// Optional query param: ?dir=products|categories|logos|pwa (default: "products")
 // Returns: { url: "/uploads/<dir>/<filename>" }
 
 export async function POST(request: NextRequest) {
