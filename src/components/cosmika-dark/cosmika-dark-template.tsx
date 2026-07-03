@@ -331,7 +331,13 @@ export function CosmikaDarkTemplate() {
           <BoutiqueView
             shop={shop}
             categories={categories}
+            products={products}
+            shopId={shopId}
+            shopName={shopName}
+            whatsapp={whatsapp}
+            btnColor={btnColor}
             onBack={() => setView('home')}
+            onProductClick={handleProductClick}
           />
         )}
 
@@ -1919,14 +1925,116 @@ function ProductView(props: ProductViewProps) {
 function BoutiqueView({
   shop,
   categories,
+  products,
+  shopId,
+  shopName,
+  whatsapp,
+  btnColor,
   onBack,
+  onProductClick,
 }: {
   shop: PublicShopData
   categories: { name: string; id: string; image?: string }[]
+  products: ModernStoreProduct[]
+  shopId: string
+  shopName: string
+  whatsapp: string
+  btnColor: string
   onBack: () => void
+  onProductClick: (p: ModernStoreProduct) => void
 }) {
+  const [selectedCategory, setSelectedCategory] = useState<{
+    name: string
+    id: string
+    image?: string
+  } | null>(null)
+
+  const filteredProducts = useMemo(() => {
+    if (!selectedCategory) return []
+    return products.filter(
+      (p) => p.categoryId === selectedCategory.id || p.categoryName === selectedCategory.name
+    )
+  }, [products, selectedCategory])
+
+  // Category products view
+  if (selectedCategory) {
+    return (
+      <section className="mx-auto max-w-[1440px] px-5 pt-6 md:pt-10 pb-16">
+        {/* Back button */}
+        <button
+          type="button"
+          onClick={() => setSelectedCategory(null)}
+          className="mb-8 flex items-center gap-2 text-sm font-medium transition-colors hover:text-[#f97316]"
+          style={{ color: TEXT_MUTED }}
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Toutes les catégories
+        </button>
+
+        {/* Category title */}
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold md:text-3xl" style={{ color: TEXT_PRIMARY }}>
+            {selectedCategory.name}
+          </h1>
+          <p className="mt-1 text-sm" style={{ color: TEXT_SUBTLE }}>
+            {filteredProducts.length} produit{filteredProducts.length !== 1 ? 's' : ''} trouvé{filteredProducts.length !== 1 ? 's' : ''}
+          </p>
+          <div className="mt-3 h-1 w-16 rounded-full" style={{ backgroundColor: ACCENT }} />
+        </div>
+
+        {/* Products grid */}
+        {filteredProducts.length > 0 ? (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-4">
+            {filteredProducts.map((p) => (
+              <DarkProductCard
+                key={p.id}
+                product={p}
+                shopId={shopId}
+                shopName={shopName}
+                whatsapp={whatsapp}
+                btnColor={btnColor}
+                onQuickView={onProductClick}
+              />
+            ))}
+          </div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col items-center justify-center py-20 text-center"
+          >
+            <div
+              className="mb-4 flex h-20 w-20 items-center justify-center rounded-full"
+              style={{ backgroundColor: `${ACCENT}10` }}
+            >
+              <ShoppingBag className="h-8 w-8" style={{ color: ACCENT }} />
+            </div>
+            <h3 className="text-lg font-bold" style={{ color: TEXT_PRIMARY }}>
+              Aucun produit
+            </h3>
+            <p className="mt-2 text-sm" style={{ color: TEXT_SUBTLE }}>
+              Aucun produit dans cette catégorie pour le moment.
+            </p>
+          </motion.div>
+        )}
+      </section>
+    )
+  }
+
+  // Default: category circles view
   return (
     <section className="mx-auto max-w-[1440px] px-5 pt-8 md:pt-12 pb-16">
+      {/* Back button */}
+      <button
+        type="button"
+        onClick={onBack}
+        className="mb-8 flex items-center gap-2 text-sm font-medium transition-colors hover:text-[#f97316]"
+        style={{ color: TEXT_MUTED }}
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Retour à l'accueil
+      </button>
+
       {/* ── Page Header ── */}
       <div className="mb-12 text-center">
         <h1 className="text-2xl font-bold md:text-3xl" style={{ color: TEXT_PRIMARY }}>
@@ -1945,7 +2053,7 @@ function BoutiqueView({
             <motion.button
               key={cat.id}
               type="button"
-              onClick={onBack}
+              onClick={() => setSelectedCategory(cat)}
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.06 * index, duration: 0.4, ease: 'easeOut' }}
@@ -2438,33 +2546,11 @@ function CosmikaDarkFooter({
       {/* ── Top: 4 columns ── */}
       <div className="mx-auto max-w-7xl px-5 pt-16 pb-10 md:pt-20 md:pb-14">
         <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-4">
-          {/* Column 1: Logo + Description + Social */}
+          {/* Column 1: Description + Social */}
           <div className="sm:col-span-2 lg:col-span-1">
-            {shop?.logo ? (
-              <div className="mb-5">
-                <Image
-                  src={shop.logo}
-                  alt={shop?.name || 'Logo'}
-                  width={200}
-                  height={53}
-                  unoptimized
-                  className="h-14 w-auto max-w-[220px] object-contain opacity-70"
-                  style={{ filter: 'brightness(0) invert(1)' }}
-                />
-              </div>
-            ) : (
-              <div className="mb-5 flex items-center gap-2">
-                <div
-                  className="flex h-11 w-11 items-center justify-center rounded-xl"
-                  style={{ backgroundColor: FOOTER_CARD, border: `1px solid ${FOOTER_BORDER}` }}
-                >
-                  <Store className="h-5 w-5" style={{ color: ACCENT }} />
-                </div>
-                <span className="text-lg font-bold" style={{ color: FOOTER_TEXT }}>
-                  {shopName}
-                </span>
-              </div>
-            )}
+            <h3 className="mb-5 text-lg font-bold" style={{ color: FOOTER_TEXT }}>
+              {shopName}
+            </h3>
             {shop?.description && (
               <p className="mb-5 text-sm leading-relaxed line-clamp-3" style={{ color: FOOTER_MUTED }}>
                 {shop.description}
