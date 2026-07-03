@@ -35,6 +35,7 @@ export async function GET(
           businessType: true,
           template: true,
           accentColor: true,
+          customColors: true,
           isActive: true,
           heroImages: true,
           promoBanners: true,

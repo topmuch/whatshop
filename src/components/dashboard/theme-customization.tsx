@@ -13,6 +13,8 @@ interface CustomColors {
   primary?: string
   secondary?: string
   accent?: string
+  buttonColor?: string
+  logoSize?: string
 }
 
 const COLOR_PRESETS = {
@@ -46,33 +48,34 @@ export function ThemeCustomization() {
     setColors((prev) => ({ ...prev, [key]: value }))
   }, [])
 
-  const handleSave = useCallback(async () => {
+  // Preserve appearance fields (buttonColor, logoSize) when saving theme colors
+  const saveColors = useCallback(async (newColors: CustomColors) => {
     if (!shop) return
     setSaving(true)
     try {
+      // Read current customColors from DB to preserve any extra keys
+      const currentRaw = shop.customColors
+      let current: Record<string, string> = {}
+      if (currentRaw) {
+        try { current = JSON.parse(currentRaw) } catch { /* ignore */ }
+      }
+      // Merge: new theme colors + preserve appearance fields
+      const merged = { ...current, ...newColors }
       const res = await fetch('/api/shops', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: shop.id,
-          customColors: JSON.stringify(colors),
-        }),
+        body: JSON.stringify({ id: shop.id, customColors: JSON.stringify(merged) }),
       })
-
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}))
         toast.error(errData.error || 'Erreur lors de la sauvegarde')
         return
       }
-
       const updatedShop = await res.json()
-
-      // Update stores
-      setShop({ ...shop, customColors: JSON.stringify(colors) })
+      setShop({ ...shop, customColors: JSON.stringify(merged) })
       if (publicShop && publicShop.id === shop.id) {
-        setPublicShop({ ...publicShop, customColors: JSON.stringify(colors) })
+        setPublicShop({ ...publicShop, customColors: JSON.stringify(merged) })
       }
-
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
       toast.success('Couleurs mises à jour !')
@@ -81,7 +84,11 @@ export function ThemeCustomization() {
     } finally {
       setSaving(false)
     }
-  }, [shop, colors, setShop, publicShop, setPublicShop])
+  }, [shop, setShop, publicShop, setPublicShop])
+
+  const handleSave = useCallback(() => {
+    saveColors(colors)
+  }, [colors, saveColors])
 
   const handleReset = useCallback(() => {
     setColors({})
