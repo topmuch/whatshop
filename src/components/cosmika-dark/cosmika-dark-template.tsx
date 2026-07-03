@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   ShoppingBag, Star, Store, ArrowLeft, Truck, RotateCcw, ShieldCheck,
   ChevronRight, Facebook, MessageCircle, Flame, Phone, MapPin, Menu, X,
-  Headphones, Eye, Heart, Clock, ChevronDown,
+  Headphones, Eye, Heart, Clock, ChevronDown, Send, Mail, Instagram, Globe,
 } from 'lucide-react'
 import { useAppStore, type Shop as ShopType } from '@/lib/store'
 import { formatPrice } from '@/lib/shared'
@@ -492,7 +492,7 @@ function Header({
     ...categories.length > 0
       ? [{ label: 'Catégories', action: () => { onHomeClick(); setTimeout(() => document.getElementById('categories')?.scrollIntoView({ behavior: 'smooth' }), 100) } }]
       : [],
-    { label: 'Contact', action: () => { document.getElementById('footer')?.scrollIntoView({ behavior: 'smooth' }) } },
+    { label: 'Contact', action: () => { document.getElementById('contact-section')?.scrollIntoView({ behavior: 'smooth' }) } },
   ]
 
   return (
@@ -762,84 +762,45 @@ function HomeView(props: HomeViewProps) {
       {/* ─── SECTION 2: CATEGORY CIRCLES ─── */}
       {categories.length > 0 && (
         <section id="categories" className="mx-auto max-w-[1440px] px-5 py-16">
-          <h2 className="mb-10 text-center text-xs font-bold uppercase tracking-[0.2em]" style={{ color: ACCENT }}>
+          <h2 className="mb-12 text-center text-xs font-bold uppercase tracking-[0.2em]" style={{ color: ACCENT }}>
             Catégories
           </h2>
-          <div className="flex flex-wrap justify-center gap-6 md:gap-8 lg:gap-10">
-            {/* "Tous" circle */}
-            <motion.button
-              key="all"
-              type="button"
-              onClick={() => setActiveCategory('all')}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="flex flex-col items-center gap-3 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 rounded-full"
-              aria-label="Toutes les catégories"
-              aria-pressed={activeCategory === 'all'}
-            >
-              <div
-                className="w-20 h-20 md:w-28 md:h-28 lg:w-32 lg:h-32 rounded-full overflow-hidden flex items-center justify-center transition-all duration-300"
-                style={{
-                  border: activeCategory === 'all'
-                    ? `3px solid ${ACCENT}`
-                    : `2px solid ${BORDER_SUBTLE}`,
-                  boxShadow: activeCategory === 'all'
-                    ? `0 0 0 4px ${ACCENT}22`
-                    : undefined,
-                  backgroundColor: activeCategory === 'all' ? `${ACCENT}15` : BG_CARD,
-                }}
-              >
-                <span
-                  className="text-2xl md:text-3xl"
-                  style={{ color: activeCategory === 'all' ? ACCENT : TEXT_MUTED }}
-                >
-                  ✦
-                </span>
-              </div>
-              <span
-                className="text-xs md:text-sm font-medium transition-colors duration-200"
-                style={{ color: activeCategory === 'all' ? ACCENT : TEXT_MUTED }}
-              >
-                Tous
-              </span>
-            </motion.button>
-
-            {/* Category circles with images */}
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-6 md:gap-8 lg:gap-10 justify-items-center">
             {categories.map((cat) => {
               const isActive = activeCategory === cat.id
               return (
                 <motion.button
                   key={cat.id}
                   type="button"
-                  onClick={() => setActiveCategory(cat.id)}
-                  whileHover={{ scale: 1.05 }}
+                  onClick={() => setActiveCategory(isActive ? 'all' : cat.id)}
+                  whileHover={{ scale: 1.08 }}
                   whileTap={{ scale: 0.95 }}
-                  className="flex flex-col items-center gap-3 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 rounded-full"
+                  className="flex flex-col items-center gap-4 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 rounded-full"
                   aria-label={cat.name}
                   aria-pressed={isActive}
                 >
                   <div
-                    className="w-20 h-20 md:w-28 md:h-28 lg:w-32 lg:h-32 rounded-full overflow-hidden transition-all duration-300"
+                    className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 lg:w-44 lg:h-44 rounded-full overflow-hidden transition-all duration-300"
                     style={{
                       border: isActive
                         ? `3px solid ${ACCENT}`
                         : `2px solid ${BORDER_SUBTLE}`,
                       boxShadow: isActive
-                        ? `0 0 0 4px ${ACCENT}22`
-                        : undefined,
+                        ? `0 0 0 5px ${ACCENT}22, 0 8px 25px ${ACCENT}18`
+                        : `0 2px 8px rgba(0,0,0,0.06)`,
                     }}
                   >
                     {cat.image ? (
                       <Image
                         src={cat.image}
                         alt={cat.name}
-                        width={128}
-                        height={128}
+                        width={176}
+                        height={176}
                         className="w-full h-full object-cover"
                       />
                     ) : (
                       <div
-                        className="w-full h-full flex items-center justify-center text-2xl md:text-3xl"
+                        className="w-full h-full flex items-center justify-center text-3xl md:text-4xl"
                         style={{ backgroundColor: BG_CARD }}
                       >
                         📁
@@ -847,7 +808,7 @@ function HomeView(props: HomeViewProps) {
                     )}
                   </div>
                   <span
-                    className="text-xs md:text-sm font-medium transition-colors duration-200 max-w-[100px] md:max-w-[130px] text-center leading-tight"
+                    className="text-sm md:text-base font-medium transition-colors duration-200 max-w-[110px] md:max-w-[140px] text-center leading-tight"
                     style={{ color: isActive ? ACCENT : TEXT_MUTED }}
                   >
                     {cat.name}
@@ -955,7 +916,10 @@ function HomeView(props: HomeViewProps) {
       {/* ─── SECTION 6.5: BRAND CAROUSEL ─── */}
       <BrandCarousel brands={brands} />
 
-      {/* ─── SECTION 7: NEWSLETTER ─── */}
+      {/* ─── SECTION 7: CONTACT ─── */}
+      <ContactSection shop={shop} btnColor={btnColor} />
+
+      {/* ─── SECTION 8: NEWSLETTER ─── */}
       {config.newsletter.enabled && (
         <section
           className="px-5 py-20"
@@ -1834,6 +1798,382 @@ function ProductView(props: ProductViewProps) {
         onAddToCart={onAddToCart}
       />
     </>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CONTACT SECTION
+// ═══════════════════════════════════════════════════════════════════════════
+
+function ContactSection({ shop, btnColor }: { shop: PublicShopData | null; btnColor: string }) {
+  const [formState, setFormState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const [formData, setFormData] = useState({ name: '', email: '', phone: '', subject: '', message: '' })
+
+  const whatsapp = shop?.whatsapp || ''
+  const phone = shop?.phone || ''
+  const address = shop?.address || ''
+  const contactEmail = shop?.contactEmail || ''
+  const businessHours = shop?.businessHours || ''
+  const googleMapsUrl = shop?.googleMapsUrl || ''
+  const hasAnyContact = whatsapp || phone || address || contactEmail || businessHours
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setFormState('sending')
+    try {
+      // Send via API
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...formData,
+          shopId: shop?.id,
+          shopName: shop?.name,
+        }),
+      })
+      if (res.ok) {
+        setFormState('sent')
+        setFormData({ name: '', email: '', phone: '', subject: '', message: '' })
+        setTimeout(() => setFormState('idle'), 5000)
+      } else {
+        setFormState('error')
+        setTimeout(() => setFormState('idle'), 4000)
+      }
+    } catch {
+      setFormState('error')
+      setTimeout(() => setFormState('idle'), 4000)
+    }
+  }
+
+  const handleChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }))
+  }
+
+  return (
+    <section id="contact-section" className="px-5 py-20 md:py-24" style={{ backgroundColor: BG_SECONDARY }}>
+      <div className="mx-auto max-w-6xl">
+        {/* ── Header ── */}
+        <div className="mb-14 text-center">
+          <h2 className="text-3xl font-bold md:text-4xl" style={{ color: TEXT_PRIMARY }}>
+            Contactez-nous
+          </h2>
+          <p className="mt-3 text-sm md:text-base" style={{ color: TEXT_SUBTLE }}>
+            Une question ? N&apos;hésitez pas à nous contacter, nous vous répondrons dans les plus brefs délais.
+          </p>
+          <div className="mx-auto mt-4 h-1 w-16 rounded-full" style={{ backgroundColor: ACCENT }} />
+        </div>
+
+        <div className="grid grid-cols-1 gap-12 md:grid-cols-2">
+          {/* ── LEFT: Contact Info Cards ── */}
+          <div className="space-y-5">
+            {/* WhatsApp */}
+            {whatsapp && (
+              <a
+                href={`https://wa.me/${whatsapp.replace(/\D/g, '')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-start gap-4 rounded-2xl p-5 transition-all duration-200 hover:shadow-lg group"
+                style={{ backgroundColor: BG_CARD, border: `1px solid ${BORDER_SUBTLE}` }}
+              >
+                <div
+                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl transition-transform group-hover:scale-110"
+                  style={{ backgroundColor: '#25D36615' }}
+                >
+                  <MessageCircle className="h-6 w-6" style={{ color: '#25D366' }} />
+                </div>
+                <div>
+                  <h4 className="font-semibold" style={{ color: TEXT_PRIMARY }}>WhatsApp</h4>
+                  <p className="mt-0.5 text-sm" style={{ color: TEXT_SUBTLE }}>
+                    {whatsapp}
+                  </p>
+                  <p className="mt-1 text-xs font-medium" style={{ color: '#25D366' }}>
+                    Écrire sur WhatsApp →
+                  </p>
+                </div>
+              </a>
+            )}
+
+            {/* Phone */}
+            {phone && (
+              <a
+                href={`tel:${phone.replace(/\D/g, '')}`}
+                className="flex items-start gap-4 rounded-2xl p-5 transition-all duration-200 hover:shadow-lg group"
+                style={{ backgroundColor: BG_CARD, border: `1px solid ${BORDER_SUBTLE}` }}
+              >
+                <div
+                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl transition-transform group-hover:scale-110"
+                  style={{ backgroundColor: `${ACCENT}15` }}
+                >
+                  <Phone className="h-6 w-6" style={{ color: ACCENT }} />
+                </div>
+                <div>
+                  <h4 className="font-semibold" style={{ color: TEXT_PRIMARY }}>Téléphone</h4>
+                  <p className="mt-0.5 text-sm" style={{ color: TEXT_SUBTLE }}>{phone}</p>
+                  <p className="mt-1 text-xs font-medium" style={{ color: ACCENT }}>
+                    Appeler →
+                  </p>
+                </div>
+              </a>
+            )}
+
+            {/* Email */}
+            {contactEmail && (
+              <a
+                href={`mailto:${contactEmail}`}
+                className="flex items-start gap-4 rounded-2xl p-5 transition-all duration-200 hover:shadow-lg group"
+                style={{ backgroundColor: BG_CARD, border: `1px solid ${BORDER_SUBTLE}` }}
+              >
+                <div
+                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl transition-transform group-hover:scale-110"
+                  style={{ backgroundColor: `${ACCENT}15` }}
+                >
+                  <Mail className="h-6 w-6" style={{ color: ACCENT }} />
+                </div>
+                <div>
+                  <h4 className="font-semibold" style={{ color: TEXT_PRIMARY }}>Email</h4>
+                  <p className="mt-0.5 text-sm" style={{ color: TEXT_SUBTLE }}>{contactEmail}</p>
+                  <p className="mt-1 text-xs font-medium" style={{ color: ACCENT }}>
+                    Envoyer un email →
+                  </p>
+                </div>
+              </a>
+            )}
+
+            {/* Address */}
+            {address && (
+              <a
+                href={googleMapsUrl || '#'}
+                target={googleMapsUrl ? '_blank' : undefined}
+                rel={googleMapsUrl ? 'noopener noreferrer' : undefined}
+                className="flex items-start gap-4 rounded-2xl p-5 transition-all duration-200 hover:shadow-lg group"
+                style={{ backgroundColor: BG_CARD, border: `1px solid ${BORDER_SUBTLE}` }}
+              >
+                <div
+                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl transition-transform group-hover:scale-110"
+                  style={{ backgroundColor: `${ACCENT}15` }}
+                >
+                  <MapPin className="h-6 w-6" style={{ color: ACCENT }} />
+                </div>
+                <div>
+                  <h4 className="font-semibold" style={{ color: TEXT_PRIMARY }}>Adresse</h4>
+                  <p className="mt-0.5 text-sm leading-relaxed" style={{ color: TEXT_SUBTLE }}>{address}</p>
+                  {googleMapsUrl && (
+                    <p className="mt-1 text-xs font-medium" style={{ color: ACCENT }}>
+                      Voir sur Google Maps →
+                    </p>
+                  )}
+                </div>
+              </a>
+            )}
+
+            {/* Business Hours */}
+            {businessHours && (
+              <div
+                className="flex items-start gap-4 rounded-2xl p-5"
+                style={{ backgroundColor: BG_CARD, border: `1px solid ${BORDER_SUBTLE}` }}
+              >
+                <div
+                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl"
+                  style={{ backgroundColor: `${ACCENT}15` }}
+                >
+                  <Clock className="h-6 w-6" style={{ color: ACCENT }} />
+                </div>
+                <div>
+                  <h4 className="font-semibold" style={{ color: TEXT_PRIMARY }}>Horaires d&apos;ouverture</h4>
+                  <p className="mt-1 text-sm leading-relaxed whitespace-pre-line" style={{ color: TEXT_SUBTLE }}>
+                    {businessHours}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* No contact info fallback */}
+            {!hasAnyContact && (
+              <div
+                className="flex items-center gap-3 rounded-2xl p-5"
+                style={{ backgroundColor: BG_CARD, border: `1px solid ${BORDER_SUBTLE}` }}
+              >
+                <div
+                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl"
+                  style={{ backgroundColor: `${ACCENT}15` }}
+                >
+                  <Headphones className="h-6 w-6" style={{ color: ACCENT }} />
+                </div>
+                <div>
+                  <h4 className="font-semibold" style={{ color: TEXT_PRIMARY }}>Service client</h4>
+                  <p className="mt-0.5 text-sm" style={{ color: TEXT_SUBTLE }}>
+                    Utilisez le formulaire ci-contre pour nous contacter.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ── RIGHT: Contact Form ── */}
+          <div
+            className="rounded-2xl p-6 md:p-8"
+            style={{ backgroundColor: BG_CARD, border: `1px solid ${BORDER_SUBTLE}` }}
+          >
+            <h3 className="mb-1 text-lg font-bold" style={{ color: TEXT_PRIMARY }}>
+              Envoyez-nous un message
+            </h3>
+            <p className="mb-6 text-sm" style={{ color: TEXT_SUBTLE }}>
+              Remplissez le formulaire ci-dessous et nous vous répondrons rapidement.
+            </p>
+
+            {formState === 'sent' ? (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex flex-col items-center justify-center py-12 text-center"
+              >
+                <div
+                  className="mb-4 flex h-16 w-16 items-center justify-center rounded-full"
+                  style={{ backgroundColor: '#22c55e15' }}
+                >
+                  <Send className="h-7 w-7 text-green-500" />
+                </div>
+                <h4 className="text-lg font-bold" style={{ color: TEXT_PRIMARY }}>
+                  Message envoyé !
+                </h4>
+                <p className="mt-1 text-sm" style={{ color: TEXT_SUBTLE }}>
+                  Merci, nous vous répondrons très bientôt.
+                </p>
+              </motion.div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label htmlFor="contact-name" className="mb-1.5 block text-sm font-medium" style={{ color: TEXT_PRIMARY }}>
+                      Nom complet <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    <input
+                      id="contact-name"
+                      type="text"
+                      required
+                      value={formData.name}
+                      onChange={(e) => handleChange('name', e.target.value)}
+                      placeholder="Votre nom"
+                      className="w-full rounded-xl border px-4 py-3 text-sm outline-none transition-all focus:ring-2"
+                      style={{
+                        backgroundColor: BG_MAIN,
+                        borderColor: BORDER_SUBTLE,
+                        color: TEXT_PRIMARY,
+                        focusRingColor: ACCENT,
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="contact-email" className="mb-1.5 block text-sm font-medium" style={{ color: TEXT_PRIMARY }}>
+                      Email <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    <input
+                      id="contact-email"
+                      type="email"
+                      required
+                      value={formData.email}
+                      onChange={(e) => handleChange('email', e.target.value)}
+                      placeholder="votre@email.com"
+                      className="w-full rounded-xl border px-4 py-3 text-sm outline-none transition-all focus:ring-2"
+                      style={{
+                        backgroundColor: BG_MAIN,
+                        borderColor: BORDER_SUBTLE,
+                        color: TEXT_PRIMARY,
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label htmlFor="contact-phone" className="mb-1.5 block text-sm font-medium" style={{ color: TEXT_PRIMARY }}>
+                      Téléphone
+                    </label>
+                    <input
+                      id="contact-phone"
+                      type="tel"
+                      value={formData.phone}
+                      onChange={(e) => handleChange('phone', e.target.value)}
+                      placeholder="+225 XX XX XX XX"
+                      className="w-full rounded-xl border px-4 py-3 text-sm outline-none transition-all focus:ring-2"
+                      style={{
+                        backgroundColor: BG_MAIN,
+                        borderColor: BORDER_SUBTLE,
+                        color: TEXT_PRIMARY,
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="contact-subject" className="mb-1.5 block text-sm font-medium" style={{ color: TEXT_PRIMARY }}>
+                      Sujet <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    <input
+                      id="contact-subject"
+                      type="text"
+                      required
+                      value={formData.subject}
+                      onChange={(e) => handleChange('subject', e.target.value)}
+                      placeholder="Sujet de votre message"
+                      className="w-full rounded-xl border px-4 py-3 text-sm outline-none transition-all focus:ring-2"
+                      style={{
+                        backgroundColor: BG_MAIN,
+                        borderColor: BORDER_SUBTLE,
+                        color: TEXT_PRIMARY,
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label htmlFor="contact-message" className="mb-1.5 block text-sm font-medium" style={{ color: TEXT_PRIMARY }}>
+                    Message <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <textarea
+                    id="contact-message"
+                    required
+                    rows={5}
+                    value={formData.message}
+                    onChange={(e) => handleChange('message', e.target.value)}
+                    placeholder="Décrivez votre demande..."
+                    className="w-full resize-none rounded-xl border px-4 py-3 text-sm outline-none transition-all focus:ring-2"
+                    style={{
+                      backgroundColor: BG_MAIN,
+                      borderColor: BORDER_SUBTLE,
+                      color: TEXT_PRIMARY,
+                    }}
+                  />
+                </div>
+
+                {formState === 'error' && (
+                  <p className="text-sm text-red-500">
+                    Une erreur est survenue. Veuillez réessayer ou nous contacter directement via WhatsApp.
+                  </p>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={formState === 'sending'}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-sm font-bold text-white transition-all hover:opacity-90 disabled:opacity-60"
+                  style={{ backgroundColor: btnColor || ACCENT }}
+                >
+                  {formState === 'sending' ? (
+                    <>
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                      Envoi en cours...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4" />
+                      Envoyer le message
+                    </>
+                  )}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
   )
 }
 

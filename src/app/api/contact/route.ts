@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const { shopId, name, email, phone, message } = body
+    const { shopId, name, email, phone, subject, message } = body
 
     // Validation
     if (!shopId || !name || !email || !message) {
@@ -43,13 +43,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Save the contact message
+    const fullMessage = subject ? `[${subject.trim()}]\n\n${message.trim()}` : message.trim()
     await db.contactMessage.create({
       data: {
         shopId,
         name: name.trim(),
         email: email.trim(),
         phone: phone?.trim() || null,
-        message: message.trim(),
+        message: fullMessage,
       },
     })
 
