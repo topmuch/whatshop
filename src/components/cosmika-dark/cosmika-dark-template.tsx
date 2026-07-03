@@ -596,7 +596,7 @@ function Header({
         }}
       >
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
-          {/* Left: Mobile hamburger + Desktop nav links */}
+          {/* Left: Logo + Nav links */}
           <div className="flex items-center gap-4">
             {/* Mobile hamburger */}
             <button
@@ -609,8 +609,41 @@ function Header({
               {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
 
+            {/* Logo */}
+            <button
+              type="button"
+              onClick={onHomeClick}
+              className="flex items-center gap-2 min-h-[44px]"
+              aria-label="Retour à l'accueil"
+            >
+              {shop.logo ? (
+                <Image
+                  src={shop.logo}
+                  alt={shop.name}
+                  width={200}
+                  height={53}
+                  unoptimized
+                  className='h-12 md:h-16 w-auto max-w-[180px] md:max-w-[260px] object-contain'
+                  style={logoH ? { height: Math.min(logoH, 64) } : undefined}
+                  priority
+                />
+              ) : (
+                <div className="flex items-center gap-2">
+                  <div
+                    className="flex h-9 w-9 items-center justify-center rounded-lg"
+                    style={{ backgroundColor: ACCENT }}
+                  >
+                    <Store className="h-4 w-4 text-white" />
+                  </div>
+                  <span className="text-base font-bold" style={{ color: TEXT_PRIMARY }}>
+                    {shop.name}
+                  </span>
+                </div>
+              )}
+            </button>
+
             {/* Desktop nav links */}
-            <nav className="hidden md:flex md:items-center md:gap-6">
+            <nav className="hidden lg:flex lg:items-center lg:gap-6">
               {navLinks.map((link) => (
                 <button
                   key={link.label}
@@ -624,39 +657,6 @@ function Header({
               ))}
             </nav>
           </div>
-
-          {/* Center: Logo */}
-          <button
-            type="button"
-            onClick={onHomeClick}
-            className="flex items-center gap-2 min-h-[44px]"
-            aria-label="Retour à l'accueil"
-          >
-            {shop.logo ? (
-              <Image
-                src={shop.logo}
-                alt={shop.name}
-                width={200}
-                height={53}
-                unoptimized
-                className='h-16 md:h-20 w-auto max-w-[240px] md:max-w-[300px] object-contain'
-                style={logoH ? { height: logoH } : undefined}
-                priority
-              />
-            ) : (
-              <div className="flex items-center gap-2">
-                <div
-                  className="flex h-9 w-9 items-center justify-center rounded-lg"
-                  style={{ backgroundColor: ACCENT }}
-                >
-                  <Store className="h-4 w-4 text-white" />
-                </div>
-                <span className="text-base font-bold" style={{ color: TEXT_PRIMARY }}>
-                  {shop.name}
-                </span>
-              </div>
-            )}
-          </button>
 
           {/* Right: Cart icon */}
           <button
@@ -969,21 +969,31 @@ function HomeView(props: HomeViewProps) {
       {config.benefits.length > 0 && (
         <section className="py-20" style={{ backgroundColor: BG_SECONDARY }}>
           <div className="mx-auto max-w-7xl px-5">
-            <div className="grid grid-cols-2 gap-10 md:grid-cols-4">
+            <div className="grid grid-cols-2 gap-8 md:gap-12 lg:grid-cols-4">
               {config.benefits.map((b, i) => {
-                const icons = [Truck, ShieldCheck, RotateCcw, Headphones]
-                const Icon = icons[i % icons.length]
+                const benefitImages = ['/benefits/livraison.png', '/benefits/paiement.png', '/benefits/retour.png', '/benefits/support.png']
+                const imgSrc = benefitImages[i % benefitImages.length]
                 return (
-                  <div key={i} className="flex flex-col items-center text-center gap-3">
-                    <div
-                      className="flex h-12 w-12 items-center justify-center rounded-xl"
-                      style={{ backgroundColor: `${ACCENT}15` }}
-                    >
-                      <Icon className="h-6 w-6" style={{ color: ACCENT }} />
+                  <motion.div
+                    key={i}
+                    className="flex flex-col items-center text-center gap-4"
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: i * 0.1 }}
+                  >
+                    <div className="relative h-20 w-20 md:h-24 md:w-24 overflow-hidden rounded-2xl">
+                      <Image
+                        src={imgSrc}
+                        alt={b.title}
+                        fill
+                        className="object-cover"
+                        unoptimized
+                      />
                     </div>
                     <h3 className="text-sm font-bold" style={{ color: TEXT_PRIMARY }}>{b.title}</h3>
                     <p className="text-xs leading-relaxed" style={{ color: TEXT_SUBTLE }}>{b.description}</p>
-                  </div>
+                  </motion.div>
                 )
               })}
             </div>
