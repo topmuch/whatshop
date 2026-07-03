@@ -108,6 +108,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr" suppressHydrationWarning>
+      <script dangerouslySetInnerHTML={{ __html: `
+        // Prevent flash of landing page when visiting /shop-slug directly
+        (function() {
+          var p = window.location.pathname;
+          if (p !== '/' && p !== '') {
+            document.documentElement.style.visibility = 'hidden';
+            document.documentElement.classList.add('ws-loading-shop');
+          }
+        })();
+      `}} />
       <head>
         <script dangerouslySetInnerHTML={{ __html: `
           try {

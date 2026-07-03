@@ -178,6 +178,14 @@ export default function Home() {
   /* ── MOUNT SYNC: URL → store (for direct navigation / refresh) ── */
   useEffect(() => {
     if (!mounted) return
+
+    // Remove the visibility:hidden set by layout.tsx inline script
+    // This prevents flash of landing page when visiting /shop-slug directly
+    if (document.documentElement.classList.contains('ws-loading-shop')) {
+      document.documentElement.style.visibility = ''
+      document.documentElement.classList.remove('ws-loading-shop')
+    }
+
     const realUrl = window.location.pathname
     const resolved = resolveViewFromPath(realUrl).view
 
