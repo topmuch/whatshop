@@ -27,6 +27,7 @@ import { CartDrawer } from '@/components/modern-store/cart-drawer'
 import { CheckoutForm } from '@/components/modern-store/checkout-form'
 import { ImageGallery } from '@/components/modern-store/image-gallery'
 import { StickyCTA } from '@/components/modern-store/sticky-cta'
+import { getAppearance } from '@/lib/appearance'
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CONSTANTS & TYPES
@@ -79,8 +80,9 @@ export function CosmikaDarkTemplate() {
   const shopSlug = shop?.slug || ''
 
   // Dynamic appearance settings from template-settings
-  const btnColor = shop?.buttonColor || ACCENT
-  const logoH = shop?.logoSize ? parseInt(shop.logoSize) : null
+  const { buttonColor, logoSize } = getAppearance(shop?.customColors)
+  const btnColor = buttonColor || ACCENT
+  const logoH = logoSize ? parseInt(logoSize) : null
 
   // Cart store subscriptions
   const openCart = useCartStore((s) => s.openCart)

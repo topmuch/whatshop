@@ -36,6 +36,7 @@ import { useCartStore } from '@/store/cart-store'
 import { ThemedCartDrawer, type ThemedCartDrawerTheme } from '@/components/shop/themed-cart-drawer'
 import { ImageWithFallback } from '@/components/ui/image-with-fallback'
 import { toast } from 'sonner'
+import { getAppearance } from '@/lib/appearance'
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CONSTANTS & TYPES
@@ -126,8 +127,9 @@ export function FreshMarketTemplate({
   const shopSlug = shop?.slug || ''
 
   // Dynamic appearance settings from template-settings
-  const btnColor = shop?.buttonColor || TEAL_600
-  const logoH = shop?.logoSize ? parseInt(shop.logoSize) : null
+  const { buttonColor, logoSize } = getAppearance(shop?.customColors)
+  const btnColor = buttonColor || TEAL_600
+  const logoH = logoSize ? parseInt(logoSize) : null
 
   // Cart store
   const cartItems = useCartStore((s) => s.items)

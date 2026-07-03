@@ -182,10 +182,6 @@ model Shop {
   trustBadges           String   @default("[]")  // JSON array of {emoji, title, subtitle, order}
   footerLinks           String   @default("[]")  // JSON array of {section, label, url}
 
-  // Appearance customization
-  buttonColor           String?              // Hex color for CTA buttons (e.g. "#0D9488")
-  logoSize              String?              // Logo height in px as string (e.g. "40", "56", "80")
-
   // Notification preferences
   notificationPreferences String   @default("{}") // JSON: { newOrder: true, lowStock: false, ... }
   notificationEmail       String?

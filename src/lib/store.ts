@@ -70,9 +70,6 @@ export interface Shop {
   testimonialsTagline?: string
   trustBadges?: string
   footerLinks?: string
-  // Appearance customization
-  buttonColor?: string
-  logoSize?: string
   // Analytics
   whatsappClicks?: number
   contactFormSubmits?: number

@@ -18,7 +18,7 @@ function parseJsonField<T>(raw: unknown, defaultValue: T): T {
   return raw as T
 }
 
-/** Fields that are safe to update on the Shop model. */
+/** Direct DB columns managed by this endpoint */
 const ALLOWED_FIELDS = [
   'heroTitle',
   'heroSubtitle',
@@ -32,11 +32,56 @@ const ALLOWED_FIELDS = [
   'testimonialsTagline',
   'trustBadges',
   'footerLinks',
-  'buttonColor',
-  'logoSize',
 ] as const
 
+/** Fields stored inside the customColors JSON column */
+const CUSTOM_COLORS_FIELDS = ['buttonColor', 'logoSize'] as const
+
 type AllowedField = (typeof ALLOWED_FIELDS)[number]
+
+/** Build the response object from raw DB rows */
+function buildResponse(shop: {
+  heroTitle: string | null
+  heroSubtitle: string | null
+  heroTagline: string | null
+  heroImageUrl: string | null
+  productsTitle: string | null
+  productsTagline: string | null
+  categoriesTitle: string | null
+  categoriesTagline: string | null
+  testimonialsTitle: string | null
+  testimonialsTagline: string | null
+  trustBadges: string | null
+  footerLinks: string | null
+  customColors: string | null
+}) {
+  const colors = parseJsonField<Record<string, string>>(shop.customColors, {})
+  return {
+    heroTitle: shop.heroTitle,
+    heroSubtitle: shop.heroSubtitle,
+    heroTagline: shop.heroTagline,
+    heroImageUrl: shop.heroImageUrl,
+    productsTitle: shop.productsTitle,
+    productsTagline: shop.productsTagline,
+    categoriesTitle: shop.categoriesTitle,
+    categoriesTagline: shop.categoriesTagline,
+    testimonialsTitle: shop.testimonialsTitle,
+    testimonialsTagline: shop.testimonialsTagline,
+    trustBadges: parseJsonField(shop.trustBadges, []),
+    footerLinks: parseJsonField(shop.footerLinks, []),
+    buttonColor: colors.buttonColor || '',
+    logoSize: colors.logoSize || '',
+  }
+}
+
+const SELECT_FIELDS = {
+  heroTitle: true, heroSubtitle: true, heroTagline: true, heroImageUrl: true,
+  productsTitle: true, productsTagline: true,
+  categoriesTitle: true, categoriesTagline: true,
+  testimonialsTitle: true, testimonialsTagline: true,
+  trustBadges: true, footerLinks: true,
+  customColors: true,
+} as const
 
 // ─── GET /api/shops/[slug]/template-settings ─────────────────────────────────────
 // Public — no auth needed. Return template customization fields for a shop.
@@ -49,40 +94,14 @@ export async function GET(
 
     const shop = await db.shop.findUnique({
       where: { slug, isActive: true },
-      select: {
-        heroTitle: true,
-        heroSubtitle: true,
-        heroTagline: true,
-        heroImageUrl: true,
-        productsTitle: true,
-        productsTagline: true,
-        categoriesTitle: true,
-        categoriesTagline: true,
-        testimonialsTitle: true,
-        testimonialsTagline: true,
-        trustBadges: true,
-        footerLinks: true,
-      },
+      select: SELECT_FIELDS,
     })
 
     if (!shop) {
       return NextResponse.json({ error: 'Boutique introuvable' }, { status: 404 })
     }
 
-    return NextResponse.json({
-      heroTitle: shop.heroTitle,
-      heroSubtitle: shop.heroSubtitle,
-      heroTagline: shop.heroTagline,
-      heroImageUrl: shop.heroImageUrl,
-      productsTitle: shop.productsTitle,
-      productsTagline: shop.productsTagline,
-      categoriesTitle: shop.categoriesTitle,
-      categoriesTagline: shop.categoriesTagline,
-      testimonialsTitle: shop.testimonialsTitle,
-      testimonialsTagline: shop.testimonialsTagline,
-      trustBadges: parseJsonField(shop.trustBadges, []),
-      footerLinks: parseJsonField(shop.footerLinks, []),
-    })
+    return NextResponse.json(buildResponse(shop))
   } catch (error) {
     console.error('Template settings GET error:', error)
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
@@ -108,14 +127,9 @@ export async function PUT(
     for (const key of ALLOWED_FIELDS) {
       if (body[key] !== undefined) {
         if (key === 'trustBadges') {
-          // Validate trustBadges as JSON array
           if (!Array.isArray(body[key])) {
-            return NextResponse.json(
-              { error: 'trustBadges doit être un tableau' },
-              { status: 400 }
-            )
+            return NextResponse.json({ error: 'trustBadges doit être un tableau' }, { status: 400 })
           }
-          // Validate each badge has required fields
           for (let i = 0; i < body[key].length; i++) {
             const badge = body[key][i]
             if (!badge.emoji || !badge.title || typeof badge.order !== 'number') {
@@ -127,14 +141,9 @@ export async function PUT(
           }
           data[key] = JSON.stringify(body[key])
         } else if (key === 'footerLinks') {
-          // Validate footerLinks as JSON array
           if (!Array.isArray(body[key])) {
-            return NextResponse.json(
-              { error: 'footerLinks doit être un tableau' },
-              { status: 400 }
-            )
+            return NextResponse.json({ error: 'footerLinks doit être un tableau' }, { status: 400 })
           }
-          // Validate each link has required fields
           for (let i = 0; i < body[key].length; i++) {
             const link = body[key][i]
             if (!link.section || !link.label || !link.url) {
@@ -146,69 +155,52 @@ export async function PUT(
           }
           data[key] = JSON.stringify(body[key])
         } else {
-          // Simple string fields
           data[key] = body[key] || null
         }
       }
+    }
+
+    // Handle buttonColor / logoSize → merge into customColors JSON
+    const hasCustomField = CUSTOM_COLORS_FIELDS.some(f => body[f] !== undefined)
+    if (hasCustomField) {
+      const currentShop = await db.shop.findUnique({
+        where: { id: user.shop.id },
+        select: { customColors: true },
+      })
+      const currentColors = parseJsonField<Record<string, string>>(currentShop?.customColors, {})
+
+      for (const field of CUSTOM_COLORS_FIELDS) {
+        if (body[field] !== undefined) {
+          if (body[field]) {
+            currentColors[field] = body[field]
+          } else {
+            delete currentColors[field]
+          }
+        }
+      }
+
+      data.customColors = JSON.stringify(currentColors)
     }
 
     // If nothing to update, return current settings
     if (Object.keys(data).length === 0) {
       const currentShop = await db.shop.findUnique({
         where: { id: user.shop.id },
-        select: {
-          heroTitle: true, heroSubtitle: true, heroTagline: true, heroImageUrl: true,
-          productsTitle: true, productsTagline: true,
-          categoriesTitle: true, categoriesTagline: true,
-          testimonialsTitle: true, testimonialsTagline: true,
-          trustBadges: true, footerLinks: true,
-        },
+        select: SELECT_FIELDS,
       })
       if (!currentShop) {
         return NextResponse.json({ error: 'Boutique introuvable' }, { status: 404 })
       }
-      return NextResponse.json({
-        heroTitle: currentShop.heroTitle,
-        heroSubtitle: currentShop.heroSubtitle,
-        heroTagline: currentShop.heroTagline,
-        heroImageUrl: currentShop.heroImageUrl,
-        productsTitle: currentShop.productsTitle,
-        productsTagline: currentShop.productsTagline,
-        categoriesTitle: currentShop.categoriesTitle,
-        categoriesTagline: currentShop.categoriesTagline,
-        testimonialsTitle: currentShop.testimonialsTitle,
-        testimonialsTagline: currentShop.testimonialsTagline,
-        trustBadges: parseJsonField(currentShop.trustBadges, []),
-        footerLinks: parseJsonField(currentShop.footerLinks, []),
-      })
+      return NextResponse.json(buildResponse(currentShop))
     }
 
     const updatedShop = await db.shop.update({
       where: { id: user.shop.id },
       data,
-      select: {
-        heroTitle: true, heroSubtitle: true, heroTagline: true, heroImageUrl: true,
-        productsTitle: true, productsTagline: true,
-        categoriesTitle: true, categoriesTagline: true,
-        testimonialsTitle: true, testimonialsTagline: true,
-        trustBadges: true, footerLinks: true,
-      },
+      select: SELECT_FIELDS,
     })
 
-    return NextResponse.json({
-      heroTitle: updatedShop.heroTitle,
-      heroSubtitle: updatedShop.heroSubtitle,
-      heroTagline: updatedShop.heroTagline,
-      heroImageUrl: updatedShop.heroImageUrl,
-      productsTitle: updatedShop.productsTitle,
-      productsTagline: updatedShop.productsTagline,
-      categoriesTitle: updatedShop.categoriesTitle,
-      categoriesTagline: updatedShop.categoriesTagline,
-      testimonialsTitle: updatedShop.testimonialsTitle,
-      testimonialsTagline: updatedShop.testimonialsTagline,
-      trustBadges: parseJsonField(updatedShop.trustBadges, []),
-      footerLinks: parseJsonField(updatedShop.footerLinks, []),
-    })
+    return NextResponse.json(buildResponse(updatedShop))
   } catch (error) {
     console.error('Template settings PUT error:', error)
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })

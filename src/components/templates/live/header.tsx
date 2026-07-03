@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Calendar } from 'lucide-react'
 import type { Shop } from '@/lib/store'
 import { useLiveTheme } from './live-themes'
+import { getAppearance } from '@/lib/appearance'
 
 interface LiveHeaderProps {
   shop: Shop | null
@@ -13,6 +14,7 @@ interface LiveHeaderProps {
 
 function LiveHeader({ shop }: LiveHeaderProps) {
   const theme = useLiveTheme()
+  const { logoSize } = getAppearance(shop?.customColors)
   const isLive = shop?.isLiveMode === true
   const hasLiveUrl = !!shop?.liveUrl
 
@@ -33,14 +35,14 @@ function LiveHeader({ shop }: LiveHeaderProps) {
                 alt={shop.name ?? 'Logo'}
                 width={48}
                 height={48}
-                className={shop?.logoSize ? 'rounded-full object-cover ring-2 ring-white shadow-md' : 'w-12 h-12 rounded-full object-cover ring-2 ring-white shadow-md'}
-                style={shop?.logoSize ? { height: parseInt(shop.logoSize), width: parseInt(shop.logoSize) } : undefined}
+                className={logoSize ? 'rounded-full object-cover ring-2 ring-white shadow-md' : 'w-12 h-12 rounded-full object-cover ring-2 ring-white shadow-md'}
+                style={logoSize ? { height: parseInt(logoSize), width: parseInt(logoSize) } : undefined}
                 priority
               />
             ) : (
               <div
-                className={shop?.logoSize ? 'flex items-center justify-center rounded-full bg-gradient-to-br from-[#FF6154] to-[#FF9A44] text-white text-lg font-bold shadow-md' : 'flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-[#FF6154] to-[#FF9A44] text-white text-lg font-bold shadow-md'}
-                style={shop?.logoSize ? { height: parseInt(shop.logoSize), width: parseInt(shop.logoSize) } : undefined}
+                className={logoSize ? 'flex items-center justify-center rounded-full bg-gradient-to-br from-[#FF6154] to-[#FF9A44] text-white text-lg font-bold shadow-md' : 'flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-[#FF6154] to-[#FF9A44] text-white text-lg font-bold shadow-md'}
+                style={logoSize ? { height: parseInt(logoSize), width: parseInt(logoSize) } : undefined}
               >
                 {(shop?.name ?? 'L').charAt(0).toUpperCase()}
               </div>

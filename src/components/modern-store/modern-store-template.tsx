@@ -42,6 +42,7 @@ import { CheckoutForm } from './checkout-form'
 import { TrustBadges } from './trust-badges'
 import { StickyCTA } from './sticky-cta'
 import { ImageGallery } from './image-gallery'
+import { getAppearance } from '@/lib/appearance'
 
 type View = 'home' | 'product' | 'checkout'
 
@@ -84,12 +85,13 @@ export function ModernStoreTemplate({ videoHero: forceVideoHero }: { videoHero?:
   const { publicShop } = useAppStore()
   const shop = publicShop as PublicShopData | null
 
-  const accent = shop?.buttonColor || shop?.accentColor || shop?.primaryColor || '#EC4899'
+  const { buttonColor, logoSize } = getAppearance(shop?.customColors)
+  const accent = buttonColor || shop?.accentColor || shop?.primaryColor || '#EC4899'
   const shopId = shop?.id || ''
   const whatsapp = shop?.whatsapp || ''
   const shopName = shop?.name || ''
   const shopSlug = shop?.slug || ''
-  const logoH = shop?.logoSize ? parseInt(shop.logoSize) : null
+  const logoH = logoSize ? parseInt(logoSize) : null
 
   // Cart store subscriptions
   const openCart = useCartStore((s) => s.openCart)
