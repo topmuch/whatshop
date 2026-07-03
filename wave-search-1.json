@@ -1,0 +1,92 @@
+[
+  {
+    "url": "https://docs.wave.com/business",
+    "name": "API Reference – Wave Business APIs",
+    "snippet": "By using these REST APIs you can receive payments, send money to your clients, check the balance on your wallet and perform automated reconciliation.",
+    "host_name": "docs.wave.com",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://developer.waveapps.com/hc/en-us/articles/360019968212-API-Reference",
+    "name": "API Reference – Wave - Developer Portal",
+    "snippet": "An approximate bill given to a buyer indicating the products or services, quantities, and expected prices (not a request for payment). Refers to ...",
+    "host_name": "developer.waveapps.com",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://docs.wave.com/checkout",
+    "name": "Checkout API - Wave",
+    "snippet": "The Checkout API provides a programmatic means to allow you to prompt users from a website or a mobile app to send payments.",
+    "host_name": "docs.wave.com",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.scribd.com/document/843451856/Pay-With-Wave-API-Documentation",
+    "name": "Pay With Wave API Documentation | PDF | Computing - Scribd",
+    "snippet": "The document provides integration guidelines and API specifications for the Pay with Wave Redirect API, an online payment solution by Digital Money Myanmar ...",
+    "host_name": "www.scribd.com",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://developers.klasha.com/accepting-payments/payments-api/mobile-money",
+    "name": "Mobile money - API Documentation - Klasha",
+    "snippet": "Collect payments via our mobile money api. Follow these steps to accept payment using our mobile money API: Initiate the Payment via API.",
+    "host_name": "developers.klasha.com",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://developer.mobilemoneyapi.io",
+    "name": "Mobile Money API Developer Portal: Home",
+    "snippet": "A full set of developer documentation and guides for getting started with the Mobile Money API Specification.",
+    "host_name": "developer.mobilemoneyapi.io",
+    "rank": 5,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://docs.clickpesa.com/payment-api/mobile-money-payment-api/mobile-money-payment-api-overview",
+    "name": "Mobile Money Payment API - ClickPesa Documentation",
+    "snippet": "The Mobile Money Payment API enables you to collect payments directly from customers' mobile money wallets using USSD-PUSH requests",
+    "host_name": "docs.clickpesa.com",
+    "rank": 6,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://developers.korapay.com/docs/mobile-money-apis",
+    "name": "Accept Mobile Money Payment with APIs",
+    "snippet": "Step 1: Collect payment data required to initiate payment · Step 2: Authorize mobile money transaction · Step 3: Verify Payment · Step 4: Setup Webhook.",
+    "host_name": "developers.korapay.com",
+    "rank": 7,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://developer.flutterwave.com/docs/mobile-money",
+    "name": "Mobile Money - Flutterwave Documentation",
+    "snippet": "Step 2: Create a Mobile Money Payment Method Object. Next, create a payment method by sending a request to the create payment method endpoint. Set the type ...",
+    "host_name": "developer.flutterwave.com",
+    "rank": 8,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://docs.wave.com/payout",
+    "name": "Wave Payout API",
+    "snippet": "Wave's Payout API provides a programmatic way to send money from your business to one or more recipients. Payout recipients are identified by mobile, so using ...",
+    "host_name": "docs.wave.com",
+    "rank": 9,
+    "date": "",
+    "favicon": ""
+  }
+]

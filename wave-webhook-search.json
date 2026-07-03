@@ -1,0 +1,47 @@
+[
+  {
+    "url": "https://docs.wave.com/webhook",
+    "name": "Webhooks – Wave Payout API",
+    "snippet": "Webhooks allow Wave to notify your application in real-time when important events occur, such as completed payments, failed transactions or received funds.",
+    "host_name": "docs.wave.com",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://docs.wave.com/checkout",
+    "name": "Checkout API - Wave",
+    "snippet": "The Checkout API provides a programmatic means to allow you to prompt users from a website or a mobile app to send payments.",
+    "host_name": "docs.wave.com",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://docs.wave.com/business",
+    "name": "API Reference – Wave Business APIs",
+    "snippet": "By using these REST APIs you can receive payments, send money to your clients, check the balance on your wallet and perform automated reconciliation. To use ...",
+    "host_name": "docs.wave.com",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://developer.squareup.com/docs/payments-api/webhooks",
+    "name": "Payments API Webhooks - Square Developer",
+    "snippet": "The Payments API supports webhook events that notify you when a payment is created or updated. For example, when a payment is completed (paid), a payment. ...",
+    "host_name": "developer.squareup.com",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://docs.wave.com/balance-api",
+    "name": "Balance & Reconciliation API - Wave",
+    "snippet": "With this API you will be able to easily do automated daily reconciliation, setup balance alerts, issue refunds and more. For real time notifications about the ...",
+    "host_name": "docs.wave.com",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  }
+]
