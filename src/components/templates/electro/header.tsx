@@ -82,7 +82,7 @@ export function ElectroHeader({
                   alt={shop.name ?? 'Logo'}
                   width={200}
                   height={53}
-                  className={logoSize ? 'w-auto max-w-[180px] md:max-w-[200px] object-contain' : 'h-10 md:h-12 w-auto max-w-[180px] md:max-w-[200px] object-contain'}
+                  className='h-14 md:h-16 w-auto max-w-[200px] md:max-w-[240px] object-contain'
                   style={logoSize ? { height: parseInt(logoSize) } : undefined}
                   priority
                 />

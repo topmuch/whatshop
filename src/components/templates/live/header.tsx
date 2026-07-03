@@ -33,15 +33,15 @@ function LiveHeader({ shop }: LiveHeaderProps) {
               <Image
                 src={shop.logo}
                 alt={shop.name ?? 'Logo'}
-                width={48}
-                height={48}
-                className={logoSize ? 'rounded-full object-cover ring-2 ring-white shadow-md' : 'w-12 h-12 rounded-full object-cover ring-2 ring-white shadow-md'}
+                width={56}
+                height={56}
+                className='w-14 h-14 rounded-full object-cover ring-2 ring-white shadow-md'
                 style={logoSize ? { height: parseInt(logoSize), width: parseInt(logoSize) } : undefined}
                 priority
               />
             ) : (
               <div
-                className={logoSize ? 'flex items-center justify-center rounded-full bg-gradient-to-br from-[#FF6154] to-[#FF9A44] text-white text-lg font-bold shadow-md' : 'flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-[#FF6154] to-[#FF9A44] text-white text-lg font-bold shadow-md'}
+                className='flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-[#FF6154] to-[#FF9A44] text-white text-xl font-bold shadow-md'
                 style={logoSize ? { height: parseInt(logoSize), width: parseInt(logoSize) } : undefined}
               >
                 {(shop?.name ?? 'L').charAt(0).toUpperCase()}

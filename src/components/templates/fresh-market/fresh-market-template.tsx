@@ -398,7 +398,7 @@ export function FreshMarketTemplate({
               <img
                 src={shop.logo}
                 alt={shop.name}
-                className={logoH ? 'w-auto max-w-[160px] object-contain' : 'h-9 md:h-10 w-auto max-w-[160px] object-contain'}
+                className='h-12 md:h-14 w-auto max-w-[200px] object-contain'
                 style={logoH ? { height: logoH } : undefined}
               />
             ) : (
@@ -578,7 +578,7 @@ export function FreshMarketTemplate({
             <div>
               <div className="flex items-center gap-2 mb-4">
                 {shop.logo ? (
-                  <img src={shop.logo} alt={shopName} className={logoH ? 'w-auto max-w-[140px] object-contain brightness-0 invert' : 'h-8 w-auto max-w-[140px] object-contain brightness-0 invert'} style={logoH ? { height: logoH } : undefined} />
+                  <img src={shop.logo} alt={shopName} className='h-10 md:h-12 w-auto max-w-[180px] object-contain brightness-0 invert' style={logoH ? { height: logoH } : undefined} />
                 ) : (
                   <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ backgroundColor: btnColor }}>

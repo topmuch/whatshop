@@ -449,7 +449,7 @@ function Header({
               width={200}
               height={53}
               unoptimized
-              className={logoH ? 'w-auto max-w-[180px] md:max-w-[200px] object-contain' : 'h-10 md:h-12 w-auto max-w-[180px] md:max-w-[200px] object-contain'}
+              className='h-14 md:h-16 w-auto max-w-[200px] md:max-w-[240px] object-contain'
               style={logoH ? { height: logoH } : undefined}
               priority
             />
