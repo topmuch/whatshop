@@ -46,7 +46,7 @@ const TEXT_PRIMARY = '#111827'
 const TEXT_MUTED = '#4b5563'
 const TEXT_SUBTLE = '#9ca3af'
 
-type View = 'home' | 'product' | 'checkout'
+type View = 'home' | 'boutique' | 'product' | 'checkout'
 
 interface DetailedProduct extends ModernStoreProduct {
   variants: ModernStoreVariant[]
@@ -315,6 +315,7 @@ export function CosmikaDarkTemplate() {
         itemCount={itemCount}
         onCartClick={openCart}
         onHomeClick={() => { setView('home'); setMobileMenuOpen(false) }}
+        onBoutiqueClick={() => { setView('boutique'); setMobileMenuOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
         onMobileMenuToggle={() => setMobileMenuOpen(!mobileMenuOpen)}
         mobileMenuOpen={mobileMenuOpen}
         onNavClick={() => setMobileMenuOpen(false)}
@@ -325,6 +326,20 @@ export function CosmikaDarkTemplate() {
 
       {/* ─── MAIN VIEW ─── */}
       <main className="flex-1">
+        {view === 'boutique' && (
+          <BoutiqueView
+            shop={shop}
+            whatsapp={whatsapp}
+            shopId={shopId}
+            shopName={shopName}
+            btnColor={btnColor}
+            products={products}
+            categories={categories}
+            onProductClick={handleProductClick}
+            onBack={() => setView('home')}
+          />
+        )}
+
         {view === 'home' && (
           <HomeView
             shop={shop}
@@ -468,6 +483,7 @@ function Header({
   itemCount,
   onCartClick,
   onHomeClick,
+  onBoutiqueClick,
   onMobileMenuToggle,
   mobileMenuOpen,
   onNavClick,
@@ -479,16 +495,17 @@ function Header({
   itemCount: number
   onCartClick: () => void
   onHomeClick: () => void
+  onBoutiqueClick: () => void
   onMobileMenuToggle: () => void
   mobileMenuOpen: boolean
   onNavClick: () => void
-  categories: { name: string; id: string }[]
+  categories: { name: string; id: string; image?: string }[]
   shopSlug: string
   logoH: number | null
 }) {
   const navLinks = [
     { label: 'Accueil', action: () => { onHomeClick() } },
-    { label: 'Produits', action: () => { onHomeClick(); setTimeout(() => document.getElementById('best-sellers')?.scrollIntoView({ behavior: 'smooth' }), 100) } },
+    { label: 'Boutique', action: () => { onBoutiqueClick() } },
     ...categories.length > 0
       ? [{ label: 'Catégories', action: () => { onHomeClick(); setTimeout(() => document.getElementById('categories')?.scrollIntoView({ behavior: 'smooth' }), 100) } }]
       : [],
@@ -1797,6 +1814,234 @@ function ProductView(props: ProductViewProps) {
         shopName={shopName}
         onAddToCart={onAddToCart}
       />
+    </>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BOUTIQUE VIEW — Category circles + filtered products
+// ═══════════════════════════════════════════════════════════════════════════
+
+interface BoutiqueViewProps {
+  shop: PublicShopData
+  whatsapp: string
+  shopId: string
+  shopName: string
+  btnColor: string
+  products: ModernStoreProduct[]
+  categories: { name: string; id: string; image?: string }[]
+  onProductClick: (p: ModernStoreProduct) => void
+  onBack: () => void
+}
+
+function BoutiqueView({
+  shop, whatsapp, shopId, shopName, btnColor,
+  products, categories, onProductClick, onBack,
+}: BoutiqueViewProps) {
+  const [activeCategory, setActiveCategory] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+
+  const filteredProducts = useMemo(() => {
+    let result = products
+    if (activeCategory) {
+      result = result.filter(
+        (p) => p.categoryId === activeCategory || p.categoryName === activeCategory
+      )
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase()
+      result = result.filter(
+        (p) =>
+          p.name?.toLowerCase().includes(q) ||
+          p.description?.toLowerCase().includes(q)
+      )
+    }
+    return result
+  }, [products, activeCategory, searchQuery])
+
+  const activeCatName = categories.find((c) => c.id === activeCategory)?.name
+
+  return (
+    <>
+      {/* ── Page Header ── */}
+      <section className="mx-auto max-w-[1440px] px-5 pt-8 pb-4">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-2xl font-bold md:text-3xl" style={{ color: TEXT_PRIMARY }}>
+              Notre Boutique
+            </h1>
+            <p className="mt-1 text-sm" style={{ color: TEXT_SUBTLE }}>
+              {products.length} produit{products.length > 1 ? 's' : ''} disponible{products.length > 1 ? 's' : ''}
+            </p>
+          </div>
+
+          {/* Search bar */}
+          <div className="hidden sm:flex items-center gap-2 rounded-xl px-4 py-2.5 w-72" style={{ backgroundColor: BG_CARD, border: `1px solid ${BORDER_SUBTLE}` }}>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 shrink-0" style={{ color: TEXT_MUTED }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              type="text"
+              placeholder="Rechercher un produit..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-transparent text-sm outline-none"
+              style={{ color: TEXT_PRIMARY }}
+            />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery('')} className="shrink-0" style={{ color: TEXT_MUTED }}>
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Mobile search */}
+        <div className="sm:hidden mb-6 flex items-center gap-2 rounded-xl px-4 py-2.5" style={{ backgroundColor: BG_CARD, border: `1px solid ${BORDER_SUBTLE}` }}>
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 shrink-0" style={{ color: TEXT_MUTED }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input
+            type="text"
+            placeholder="Rechercher..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-transparent text-sm outline-none"
+            style={{ color: TEXT_PRIMARY }}
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery('')} className="shrink-0" style={{ color: TEXT_MUTED }}>
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+      </section>
+
+      {/* ── Category Circles ── */}
+      {categories.length > 0 && (
+        <section className="mx-auto max-w-[1440px] px-5 pb-8">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-5 md:gap-7 justify-items-center">
+            {categories.map((cat) => {
+              const isActive = activeCategory === cat.id
+              return (
+                <motion.button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setActiveCategory(isActive ? null : cat.id)}
+                  whileHover={{ scale: 1.06 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex flex-col items-center gap-3 cursor-pointer focus-visible:outline-none focus-visible:ring-2 rounded-full"
+                  aria-label={cat.name}
+                  aria-pressed={isActive}
+                >
+                  <div
+                    className="w-20 h-20 sm:w-28 sm:h-28 md:w-36 md:h-36 lg:w-40 lg:h-40 rounded-full overflow-hidden transition-all duration-300"
+                    style={{
+                      border: isActive
+                        ? `3px solid ${ACCENT}`
+                        : `2px solid ${BORDER_SUBTLE}`,
+                      boxShadow: isActive
+                        ? `0 0 0 5px ${ACCENT}22, 0 8px 25px ${ACCENT}18`
+                        : `0 2px 8px rgba(0,0,0,0.06)`,
+                    }}
+                  >
+                    {cat.image ? (
+                      <Image
+                        src={cat.image}
+                        alt={cat.name}
+                        width={160}
+                        height={160}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div
+                        className="w-full h-full flex items-center justify-center text-3xl md:text-4xl"
+                        style={{ backgroundColor: BG_CARD }}
+                      >
+                        📁
+                      </div>
+                    )}
+                  </div>
+                  <span
+                    className="text-xs sm:text-sm md:text-base font-medium text-center leading-tight max-w-[90px] sm:max-w-[120px] md:max-w-[140px] transition-colors duration-200"
+                    style={{ color: isActive ? ACCENT : TEXT_MUTED }}
+                  >
+                    {cat.name}
+                  </span>
+                </motion.button>
+              )
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* ── Active category filter bar ── */}
+      {activeCategory && (
+        <section className="mx-auto max-w-[1440px] px-5 pb-4">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setActiveCategory(null)}
+              className="flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-medium transition-colors"
+              style={{ backgroundColor: `${ACCENT}15`, color: ACCENT, border: `1px solid ${ACCENT}40` }}
+            >
+              <X className="h-3 w-3" />
+              {activeCatName}
+            </button>
+            <span className="text-xs" style={{ color: TEXT_SUBTLE }}>
+              {filteredProducts.length} produit{filteredProducts.length > 1 ? 's' : ''}
+            </span>
+          </div>
+        </section>
+      )}
+
+      {/* ── Products Grid ── */}
+      <section className="mx-auto max-w-[1440px] px-5 pb-16">
+        {filteredProducts.length > 0 ? (
+          <div className="grid grid-cols-2 gap-4 md:gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            {filteredProducts.map((product) => (
+              <DarkProductCard
+                key={product.id}
+                product={product}
+                shopId={shopId}
+                shopName={shopName}
+                whatsapp={whatsapp}
+                btnColor={btnColor}
+                onQuickView={onProductClick}
+              />
+            ))}
+          </div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col items-center justify-center py-20 text-center"
+          >
+            <div
+              className="mb-4 flex h-20 w-20 items-center justify-center rounded-full"
+              style={{ backgroundColor: `${ACCENT}10` }}
+            >
+              <Store className="h-8 w-8" style={{ color: ACCENT }} />
+            </div>
+            <h3 className="text-lg font-bold" style={{ color: TEXT_PRIMARY }}>
+              {searchQuery ? 'Aucun résultat' : 'Aucun produit dans cette catégorie'}
+            </h3>
+            <p className="mt-2 text-sm max-w-sm" style={{ color: TEXT_SUBTLE }}>
+              {searchQuery
+                ? `Aucun produit ne correspond à "${searchQuery}". Essayez un autre terme.`
+                : 'Essayez une autre catégorie ou revenez plus tard.'}
+            </p>
+            <button
+              type="button"
+              onClick={() => { setActiveCategory(null); setSearchQuery('') }}
+              className="mt-4 rounded-full px-6 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
+              style={{ backgroundColor: btnColor || ACCENT }}
+            >
+              Voir tous les produits
+            </button>
+          </motion.div>
+        )}
+      </section>
     </>
   )
 }
