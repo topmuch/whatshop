@@ -567,7 +567,7 @@ function MinimalisteHeader({
   return (
     <>
       {/* ─── TOP BAR ─── */}
-      <div className="w-full text-center py-2 px-4" style={{ backgroundColor: DARK_BG }}>
+      <div className="w-full text-center py-2 px-4 bg-gray-50 border-b border-gray-200">
         <div className="mx-auto max-w-7xl flex items-center justify-between">
           <div className="w-24 hidden md:flex items-center gap-3">
             {shop?.whatsapp ? (
@@ -575,26 +575,26 @@ function MinimalisteHeader({
                 href={`https://wa.me/${shop.whatsapp.replace(/\D/g, '')}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-white/60 hover:text-white transition-colors"
+                className="text-gray-400 hover:text-black transition-colors"
                 aria-label="WhatsApp"
               >
                 <MessageCircle className="h-4 w-4" />
               </a>
             ) : null}
             {shop?.contactEmail ? (
-              <a href={`mailto:${shop.contactEmail}`} className="text-white/60 hover:text-white transition-colors" aria-label="Email">
+              <a href={`mailto:${shop.contactEmail}`} className="text-gray-400 hover:text-black transition-colors" aria-label="Email">
                 <Mail className="h-4 w-4" />
               </a>
             ) : null}
           </div>
-          <p className="text-[11px] sm:text-xs tracking-widest uppercase text-white/80 font-light flex-1 text-center">
+          <p className="text-[11px] sm:text-xs tracking-widest uppercase text-black font-light flex-1 text-center">
             Livraison gratuite pour toute commande
           </p>
           <div className="w-24 flex items-center justify-end gap-3">
-            <a href="#" className="text-white/60 hover:text-white transition-colors" aria-label="Facebook">
+            <a href="#" className="text-gray-400 hover:text-black transition-colors" aria-label="Facebook">
               <Facebook className="h-4 w-4" />
             </a>
-            <a href="#" className="text-white/60 hover:text-white transition-colors" aria-label="Instagram">
+            <a href="#" className="text-gray-400 hover:text-black transition-colors" aria-label="Instagram">
               <Instagram className="h-4 w-4" />
             </a>
           </div>
@@ -647,7 +647,7 @@ function MinimalisteHeader({
             <button
               type="button"
               onClick={onSearchToggle}
-              className="flex h-11 w-11 items-center justify-center rounded-lg text-gray-600 hover:text-black transition-colors"
+              className="flex h-11 w-11 items-center justify-center rounded-lg text-black transition-colors"
               aria-label="Rechercher"
             >
               <Search className="h-5 w-5" />
@@ -656,7 +656,7 @@ function MinimalisteHeader({
             <button
               type="button"
               onClick={() => { window.location.href = '/login' }}
-              className="hidden sm:flex h-11 items-center gap-1.5 rounded-lg px-3 text-xs font-light tracking-wide text-gray-600 hover:text-black transition-colors"
+              className="hidden sm:flex h-11 items-center gap-1.5 rounded-lg px-3 text-xs font-light tracking-wide text-black transition-colors"
               aria-label="Connexion"
             >
               <LogIn className="h-4 w-4" />
@@ -665,7 +665,7 @@ function MinimalisteHeader({
 
             <button
               type="button"
-              className="hidden sm:flex h-11 w-11 items-center justify-center rounded-lg text-gray-600 hover:text-black transition-colors"
+              className="hidden sm:flex h-11 w-11 items-center justify-center rounded-lg text-black transition-colors"
               aria-label="Favoris"
             >
               <Heart className="h-5 w-5" />
@@ -675,7 +675,7 @@ function MinimalisteHeader({
               type="button"
               onClick={onCartClick}
               aria-label={`Voir le panier (${itemCount} article${itemCount > 1 ? 's' : ''})`}
-              className="relative flex h-11 w-11 items-center justify-center rounded-lg text-gray-600 hover:text-black transition-colors"
+              className="relative flex h-11 w-11 items-center justify-center rounded-lg text-black transition-colors"
             >
               <ShoppingBag className="h-5 w-5" />
               {itemCount > 0 && (
@@ -704,7 +704,7 @@ function MinimalisteHeader({
               <div className="relative group">
                 <button
                   type="button"
-                  className="text-xs font-light tracking-[0.15em] uppercase text-white/60 hover:text-white transition-colors flex items-center gap-1"
+                  className="text-xs font-light tracking-[0.15em] uppercase text-gray-500 hover:text-black transition-colors flex items-center gap-1"
                 >
                   Catégories
                   <ChevronRight className="h-3 w-3 rotate-90" />
