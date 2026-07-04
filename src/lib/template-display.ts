@@ -200,6 +200,29 @@ export const TEMPLATE_DISPLAY: Record<string, TemplateDisplayInfo> = {
       emoji: '🥬',
     },
   },
+  'minimaliste': {
+    displayName: 'Minimaliste',
+    tagline: 'Élégance minimaliste Savoy',
+    description:
+      'Template minimaliste inspiré de Savoy : en-tête sombre #1a1a1a, logo centré, slider hero grand format 1622×675, grille produits 4 colonnes avec images 305×349. Design épuré et premium pour la mode, les accessoires et les boutiques haut de gamme.',
+    features: [
+      'En-tête sombre avec logo centré',
+      'Slider hero grand format avec auto-défilement',
+      'Grille produits 4 colonnes responsive',
+      'Images produits format 305×349',
+      'Badges NOUVEAU et pourcentages promotionnels',
+      'Fiches produit détaillées avec galerie',
+      'Panier persistant + checkout formulaire',
+      'Bouton flottant WhatsApp',
+      'Footer sombre multi-colonnes',
+      'Design épuré et minimaliste',
+    ],
+    style: {
+      primaryColor: '#1a1a1a',
+      badge: 'Minimaliste',
+      emoji: '✨',
+    },
+  },
 }
 
 /**

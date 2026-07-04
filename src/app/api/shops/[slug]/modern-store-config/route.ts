@@ -48,7 +48,7 @@ export async function PUT(
     const data: Record<string, unknown> = {}
 
     if (templateType !== undefined) {
-      if (!['STANDARD', 'SINGLE_PRODUCT', 'MODERN_STORE', 'MODERN_STORE_2', 'COSMIKA_DARK', 'FRESH_MARKET'].includes(templateType)) {
+      if (!['STANDARD', 'SINGLE_PRODUCT', 'MODERN_STORE', 'MODERN_STORE_2', 'COSMIKA_DARK', 'FRESH_MARKET', 'MINIMALISTE'].includes(templateType)) {
         return NextResponse.json({ error: 'templateType invalide' }, { status: 400 })
       }
       data.templateType = templateType
