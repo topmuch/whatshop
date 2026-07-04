@@ -17,6 +17,7 @@ import {
   Flame,
   Phone,
   MapPin,
+  LogIn,
 } from 'lucide-react'
 import { useAppStore, type Shop as ShopType } from '@/lib/store'
 import { formatPrice } from '@/lib/shared'
@@ -466,6 +467,17 @@ function Header({
               </span>
             </div>
           )}
+        </button>
+
+        {/* Login button */}
+        <button
+          type="button"
+          onClick={() => { window.location.href = '/login' }}
+          aria-label="Connexion"
+          className="flex h-11 items-center justify-center gap-0 rounded-full px-3 text-gray-700 transition-colors hover:bg-gray-100"
+        >
+          <LogIn className="h-4 w-4" />
+          <span className="hidden sm:inline ml-1.5">Connexion</span>
         </button>
 
         {/* Cart icon */}

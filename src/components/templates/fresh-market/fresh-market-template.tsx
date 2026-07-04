@@ -28,6 +28,7 @@ import {
   Store,
   Menu,
   RotateCcw,
+  LogIn,
 } from 'lucide-react'
 import { useAppStore, type Shop as ShopType, type Product, type Category } from '@/lib/store'
 import { formatPrice } from '@/lib/shared'
@@ -447,6 +448,18 @@ export function FreshMarketTemplate({
               Boutique
             </button>
           </nav>
+
+          {/* Login button */}
+          <button
+            type="button"
+            onClick={() => { window.location.href = '/login' }}
+            className="relative flex h-11 items-center justify-center rounded-full text-white transition-colors px-4"
+            style={{ backgroundColor: btnColor }}
+            aria-label="Connexion"
+          >
+            <LogIn className="h-4 w-4" />
+            <span className="hidden sm:inline ml-1.5">Connexion</span>
+          </button>
 
           {/* Cart button */}
           <button

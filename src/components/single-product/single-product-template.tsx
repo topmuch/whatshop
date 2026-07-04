@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useAppStore } from '@/lib/store'
 import { formatPrice, openWhatsApp } from '@/lib/shared'
 import { Button } from '@/components/ui/button'
-import { MessageCircle, Star, Flame, Store, ArrowLeft, Truck, ShieldCheck, RotateCcw, BadgeCheck } from 'lucide-react'
+import { MessageCircle, Star, Flame, Store, ArrowLeft, Truck, ShieldCheck, RotateCcw, BadgeCheck, LogIn } from 'lucide-react'
 import { ImageGallery } from './image-gallery'
 import { CountdownTimer } from './countdown-timer'
 import { VariantSelector } from './variant-selector'
@@ -171,6 +171,17 @@ export function SingleProductTemplate() {
             </div>
           )}
           <span className="font-semibold text-gray-900">{shop.name}</span>
+          <div className="ml-auto flex items-center">
+            <button
+              type="button"
+              onClick={() => { window.location.href = '/login' }}
+              aria-label="Connexion"
+              className="inline-flex items-center rounded-full px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+            >
+              <LogIn className="h-4 w-4" />
+              <span className="hidden sm:inline ml-1.5">Connexion</span>
+            </button>
+          </div>
         </div>
       </header>
 

@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   ShoppingBag, Star, Store, ArrowLeft, Truck, RotateCcw, ShieldCheck,
   ChevronRight, Facebook, MessageCircle, Flame, Phone, MapPin, Menu, X,
-  Headphones, Eye, Heart, Clock, ChevronDown, Send, Mail, Instagram, Globe,
+  Headphones, Eye, Heart, Clock, ChevronDown, Send, Mail, Instagram, Globe, LogIn,
 } from 'lucide-react'
 import { useAppStore, type Shop as ShopType } from '@/lib/store'
 import { formatPrice } from '@/lib/shared'
@@ -677,24 +677,36 @@ function Header({
             </nav>
           </div>
 
-          {/* Right: Cart icon */}
-          <button
-            type="button"
-            onClick={onCartClick}
-            aria-label={`Voir le panier (${itemCount} article${itemCount > 1 ? 's' : ''})`}
-            className="relative flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-gray-100"
-            style={{ color: TEXT_PRIMARY }}
-          >
-            <ShoppingBag className="h-5 w-5" />
-            {itemCount > 0 && (
-              <span
-                className="absolute -right-0.5 -top-0.5 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1 text-[10px] font-bold text-white"
-                style={{ backgroundColor: ACCENT }}
-              >
-                {itemCount}
-              </span>
-            )}
-          </button>
+          {/* Right: Login + Cart icons */}
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => { window.location.href = '/login' }}
+              className="flex h-11 items-center gap-1.5 rounded-full px-3 text-xs font-medium transition-all duration-200 hover:bg-gray-100 md:px-4 md:text-sm"
+              style={{ color: TEXT_MUTED }}
+              aria-label="Connexion"
+            >
+              <LogIn className="h-4 w-4" />
+              <span className="hidden sm:inline">Connexion</span>
+            </button>
+            <button
+              type="button"
+              onClick={onCartClick}
+              aria-label={`Voir le panier (${itemCount} article${itemCount > 1 ? 's' : ''})`}
+              className="relative flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-gray-100"
+              style={{ color: TEXT_PRIMARY }}
+            >
+              <ShoppingBag className="h-5 w-5" />
+              {itemCount > 0 && (
+                <span
+                  className="absolute -right-0.5 -top-0.5 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1 text-[10px] font-bold text-white"
+                  style={{ backgroundColor: ACCENT }}
+                >
+                  {itemCount}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
       </header>
 
