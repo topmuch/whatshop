@@ -50,6 +50,7 @@ const ModernStoreTemplate = dynamic(() => import('@/components/modern-store/mode
 const ModernStore2Template = dynamic(() => import('@/components/modern-store/modern-store-2-template').then(m => ({ default: m.ModernStore2Template })), { loading: () => <ShopSkeleton /> })
 const CosmikaDarkTemplate = dynamic(() => import('@/components/cosmika-dark/cosmika-dark-template').then(m => ({ default: m.CosmikaDarkTemplate })), { loading: () => <ShopSkeleton /> })
 const FreshMarketTemplate = dynamic(() => import('@/components/templates/fresh-market/fresh-market-template').then(m => ({ default: m.FreshMarketTemplate })), { loading: () => <ShopSkeleton /> })
+const MinimalisteTemplate = dynamic(() => import('@/components/minimaliste/minimaliste-template').then(m => ({ default: m.MinimalisteTemplate })), { loading: () => <ShopSkeleton /> })
 
 /** Minimal loading skeleton shown while a template loads via dynamic import */
 function ShopSkeleton() {
@@ -672,6 +673,17 @@ function ShopContent({ initialShopSlug, initialProductSlug }: { initialShopSlug?
       <>
         <JsonLd shop={publicShop} products={publicProducts} categories={publicCategories} />
         <FreshMarketTemplate initialProducts={publicProducts} initialCategories={publicCategories} />
+      </>
+    )
+  }
+
+  // ── Minimaliste template ──
+  // Savoy-inspired minimalist design: dark header, centered logo, 4-col product grid.
+  if (publicShop?.templateType === 'MINIMALISTE') {
+    return (
+      <>
+        <JsonLd shop={publicShop} products={publicProducts} categories={publicCategories} />
+        <MinimalisteTemplate />
       </>
     )
   }

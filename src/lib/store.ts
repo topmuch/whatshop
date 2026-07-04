@@ -97,7 +97,7 @@ export interface Shop {
   liveUrl?: string | null
   ownerId?: string | null
   // Single Product Landing Page template
-  templateType?: string // STANDARD | SINGLE_PRODUCT | MODERN_STORE
+  templateType?: string // STANDARD | SINGLE_PRODUCT | MODERN_STORE | MODERN_STORE_2 | COSMIKA_DARK | FRESH_MARKET | MINIMALISTE
   singleProductConfig?: string | null // JSON string
   modernStoreConfig?: string | null // JSON string
 }
