@@ -44,6 +44,11 @@ const ACCENT_ORANGE = '#f59e0b'
 const BORDER_LIGHT = '#e5e5e5'
 const WHATSAPP_GREEN = '#25D366'
 
+// Parse customColors from shop for theme customization
+function parseCustomColors(raw: string | undefined): Record<string, string> {
+  try { return raw ? JSON.parse(raw) : {} } catch { return {} }
+}
+
 type View = 'home' | 'boutique' | 'contact' | 'product' | 'checkout' | 'about' | 'privacy'
 
 interface DetailedProduct extends ModernStoreProduct {
@@ -69,7 +74,11 @@ export function MinimalisteTemplate() {
 
   // Dynamic appearance from customColors
   const { buttonColor, logoSize } = getAppearance(shop?.customColors)
-  const btnColor = buttonColor || shop?.primaryColor || DARK_BG
+  const customC = parseCustomColors(shop?.customColors)
+  const themePrimary = customC.primary || ''
+  const themeSecondary = customC.secondary || ''
+  const themeAccent = customC.accent || ''
+  const btnColor = themeAccent || buttonColor || shop?.primaryColor || DARK_BG
   const logoH = logoSize ? parseInt(logoSize) : null
 
   // Cart store
@@ -283,6 +292,7 @@ export function MinimalisteTemplate() {
         products={products}
         onProductClick={handleProductClick}
         logoH={logoH}
+        themeAccent={themeAccent}
       />
 
       {/* ─── SEARCH OVERLAY ─── */}
@@ -319,6 +329,8 @@ export function MinimalisteTemplate() {
                 shopId={shopId}
                 shopName={shopName}
                 btnColor={btnColor}
+                themePrimary={themePrimary}
+                themeAccent={themeAccent}
                 onProductClick={handleProductClick}
                 onSeeAllProducts={() => setView('boutique')}
               />
@@ -340,6 +352,8 @@ export function MinimalisteTemplate() {
                 shopId={shopId}
                 shopName={shopName}
                 btnColor={btnColor}
+                themePrimary={themePrimary}
+                themeAccent={themeAccent}
                 onBack={() => setView('home')}
                 onProductClick={handleProductClick}
               />
@@ -523,6 +537,7 @@ function MinimalisteHeader({
   products,
   onProductClick,
   logoH,
+  themeAccent,
 }: {
   shop: PublicShopData
   itemCount: number
@@ -541,6 +556,7 @@ function MinimalisteHeader({
   products: ModernStoreProduct[]
   onProductClick: (p: ModernStoreProduct) => void
   logoH: number | null
+  themeAccent: string
 }) {
   const navLinks = [
     { label: 'Accueil', action: onHomeClick },
@@ -585,18 +601,15 @@ function MinimalisteHeader({
         </div>
       </div>
 
-      {/* ─── MAIN HEADER ─── */}
-      <header
-        className="sticky top-0 z-30 w-full"
-        style={{ backgroundColor: DARK_BG, borderBottom: '1px solid rgba(255,255,255,0.08)' }}
-      >
+      {/* ─── MAIN HEADER (white, Savoy-style) ─── */}
+      <header className="sticky top-0 z-30 w-full bg-white shadow-sm" style={{ borderBottom: '1px solid #f0f0f0' }}>
         <div className="mx-auto max-w-7xl flex items-center justify-between px-4 py-3 md:py-4">
           {/* Left: Hamburger (mobile) */}
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={onMobileMenuToggle}
-              className="flex h-11 w-11 items-center justify-center rounded-lg text-white/80 hover:text-white transition-colors md:hidden"
+              className="flex h-11 w-11 items-center justify-center rounded-lg text-gray-700 hover:text-black transition-colors md:hidden"
               aria-label="Ouvrir le menu"
             >
               {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -623,8 +636,8 @@ function MinimalisteHeader({
               />
             ) : (
               <div className="flex items-center gap-2">
-                <Store className="h-5 w-5 text-white" />
-                <span className="text-base font-bold text-white tracking-wide">{shop.name}</span>
+                <Store className="h-5 w-5 text-black" />
+                <span className="text-base font-bold text-black tracking-wide">{shop.name}</span>
               </div>
             )}
           </button>
@@ -634,7 +647,7 @@ function MinimalisteHeader({
             <button
               type="button"
               onClick={onSearchToggle}
-              className="flex h-11 w-11 items-center justify-center rounded-lg text-white/80 hover:text-white transition-colors"
+              className="flex h-11 w-11 items-center justify-center rounded-lg text-gray-600 hover:text-black transition-colors"
               aria-label="Rechercher"
             >
               <Search className="h-5 w-5" />
@@ -643,7 +656,7 @@ function MinimalisteHeader({
             <button
               type="button"
               onClick={() => { window.location.href = '/login' }}
-              className="hidden sm:flex h-11 items-center gap-1.5 rounded-lg px-3 text-xs font-light tracking-wide text-white/80 hover:text-white transition-colors"
+              className="hidden sm:flex h-11 items-center gap-1.5 rounded-lg px-3 text-xs font-light tracking-wide text-gray-600 hover:text-black transition-colors"
               aria-label="Connexion"
             >
               <LogIn className="h-4 w-4" />
@@ -652,7 +665,7 @@ function MinimalisteHeader({
 
             <button
               type="button"
-              className="hidden sm:flex h-11 w-11 items-center justify-center rounded-lg text-white/80 hover:text-white transition-colors"
+              className="hidden sm:flex h-11 w-11 items-center justify-center rounded-lg text-gray-600 hover:text-black transition-colors"
               aria-label="Favoris"
             >
               <Heart className="h-5 w-5" />
@@ -662,11 +675,11 @@ function MinimalisteHeader({
               type="button"
               onClick={onCartClick}
               aria-label={`Voir le panier (${itemCount} article${itemCount > 1 ? 's' : ''})`}
-              className="relative flex h-11 w-11 items-center justify-center rounded-lg text-white/80 hover:text-white transition-colors"
+              className="relative flex h-11 w-11 items-center justify-center rounded-lg text-gray-600 hover:text-black transition-colors"
             >
               <ShoppingBag className="h-5 w-5" />
               {itemCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1 text-[10px] font-bold text-white" style={{ backgroundColor: ACCENT_ORANGE }}>
+                <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1 text-[10px] font-bold text-white" style={{ backgroundColor: themeAccent || ACCENT_ORANGE }}>
                   {itemCount}
                 </span>
               )}
@@ -675,14 +688,14 @@ function MinimalisteHeader({
         </div>
 
         {/* Desktop nav links */}
-        <nav className="hidden md:block border-t border-white/5">
+        <nav className="hidden md:block border-t border-gray-100">
           <div className="mx-auto max-w-7xl flex items-center justify-center gap-8 px-4 py-3">
             {navLinks.map((link) => (
               <button
                 key={link.label}
                 type="button"
                 onClick={() => { link.action(); onNavClick() }}
-                className="text-xs font-light tracking-[0.15em] uppercase text-white/60 hover:text-white transition-colors"
+                className="text-xs font-light tracking-[0.15em] uppercase text-gray-500 hover:text-black transition-colors"
               >
                 {link.label}
               </button>
@@ -936,8 +949,8 @@ function HeroSlider({
   const subtitle = shop.heroSubtitle || shop.description || ''
 
   return (
-    <section className="relative w-full">
-      <div className="relative w-full overflow-hidden" style={{ aspectRatio: '1622/675' }}>
+    <section className="mx-auto max-w-7xl">
+      <div className="relative w-full overflow-hidden" style={{ aspectRatio: '1598/665' }}>
         <AnimatePresence mode="wait">
           <motion.div
             key={current}
@@ -1140,6 +1153,8 @@ function HomeView({
   shopId,
   shopName,
   btnColor,
+  themePrimary,
+  themeAccent,
   onProductClick,
   onSeeAllProducts,
 }: {
@@ -1152,6 +1167,8 @@ function HomeView({
   shopId: string
   shopName: string
   btnColor: string
+  themePrimary: string
+  themeAccent: string
   onProductClick: (p: ModernStoreProduct) => void
   onSeeAllProducts: () => void
 }) {
@@ -1188,7 +1205,7 @@ function HomeView({
           <h2 className="text-2xl md:text-3xl font-bold text-black tracking-tight inline-block">
             Nos Produits
           </h2>
-          <div className="mt-3 mx-auto h-[2px] w-12 bg-black" />
+          <div className="mt-3 mx-auto h-[2px] w-12" style={{ backgroundColor: themePrimary || '#111111' }} />
         </div>
 
         {/* Category filter */}
@@ -1202,9 +1219,10 @@ function HomeView({
                   onClick={() => setActiveCategory(tab.id)}
                   className={`px-5 py-2 text-xs font-medium tracking-wider uppercase transition-all duration-200 rounded-none ${
                     activeCategory === tab.id
-                      ? 'bg-black text-white'
+                      ? 'text-white'
                       : 'bg-transparent text-gray-500 hover:text-black border border-gray-200 hover:border-black'
                   }`}
+                  style={activeCategory === tab.id ? { backgroundColor: themePrimary || '#111111' } : undefined}
                 >
                   {tab.label}
                 </button>
@@ -1237,7 +1255,8 @@ function HomeView({
                 <button
                   type="button"
                   onClick={onSeeAllProducts}
-                  className="inline-flex items-center gap-2 bg-black text-white px-10 py-3.5 text-sm font-medium tracking-wider uppercase hover:bg-gray-800 transition-colors"
+                  className="inline-flex items-center gap-2 text-white px-10 py-3.5 text-sm font-medium tracking-wider uppercase transition-colors"
+                  style={{ backgroundColor: themePrimary || '#111111' }}
                 >
                   Voir tous les produits
                   <ChevronRight className="h-4 w-4" />
@@ -1284,6 +1303,8 @@ function BoutiqueView({
   shopId,
   shopName,
   btnColor,
+  themePrimary,
+  themeAccent,
   onBack,
   onProductClick,
 }: {
@@ -1293,6 +1314,8 @@ function BoutiqueView({
   shopId: string
   shopName: string
   btnColor: string
+  themePrimary: string
+  themeAccent: string
   onBack: () => void
   onProductClick: (p: ModernStoreProduct) => void
 }) {
@@ -1346,9 +1369,10 @@ function BoutiqueView({
                 onClick={() => setActiveCategory(tab.id)}
                 className={`px-5 py-2 text-xs font-medium tracking-wider uppercase transition-all duration-200 rounded-none ${
                   activeCategory === tab.id
-                    ? 'bg-black text-white'
+                    ? 'text-white'
                     : 'bg-transparent text-gray-500 hover:text-black border border-gray-200 hover:border-black'
                 }`}
+                style={activeCategory === tab.id ? { backgroundColor: themePrimary || '#111111' } : undefined}
               >
                 {tab.label}
               </button>
