@@ -110,9 +110,13 @@ export default function RootLayout({
     <html lang="fr" suppressHydrationWarning>
       <script dangerouslySetInnerHTML={{ __html: `
         // Prevent flash of landing page when visiting /shop-slug directly
+        // Only hide paths that look like shop slugs (not known app routes)
         (function() {
-          var p = window.location.pathname;
-          if (p !== '/' && p !== '') {
+          var p = window.location.pathname.replace(/\\/$/, '');
+          var slug = p.slice(1).toLowerCase();
+          var APP_ROUTES = ['login','connexion','inscription','register','onboarding','dashboard','reseller','revendeur','admin','about','a-propos','tarifs','pricing','contact','contactez-nous','faq','aide','privacy','confidentialite','terms','conditions','offline','menu'];
+          var isAppRoute = APP_ROUTES.indexOf(slug) !== -1 || slug.startsWith('p/');
+          if (p !== '/' && p !== '' && !isAppRoute) {
             document.documentElement.style.visibility = 'hidden';
             document.documentElement.classList.add('ws-loading-shop');
           }
