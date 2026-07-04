@@ -17,7 +17,7 @@ export async function GET(
   try {
     const { slug } = await params
 
-    const shop = await cacheFetch(`shop-detail:${slug}`, 120, async () => {
+    const shop = await cacheFetch(`shop-detail:${slug}`, 10, async () => {
       return db.shop.findUnique({
         where: { slug, isActive: true },
         select: {

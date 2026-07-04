@@ -1584,7 +1584,8 @@ function ProductView({
             type="button"
             onClick={onAddToCart}
             disabled={isOutOfStock}
-            className="w-full flex items-center justify-center gap-2 bg-black text-white py-4 text-sm font-medium tracking-wider uppercase hover:bg-gray-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed rounded-none mb-3"
+            className="w-full flex items-center justify-center gap-2 text-white py-4 text-sm font-medium tracking-wider uppercase transition-colors disabled:opacity-40 disabled:cursor-not-allowed rounded-none mb-3"
+            style={{ backgroundColor: btnColor }}
           >
             <ShoppingBag className="h-4 w-4" />
             {isOutOfStock ? 'Rupture de stock' : 'Ajouter au panier'}
@@ -1998,18 +1999,6 @@ function MinimalisteFooter({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8">
           {/* Column 1: Description + Social */}
           <div>
-            {shop.logo ? (
-              <Image
-                src={shop.logo}
-                alt={shop.name}
-                width={140}
-                height={40}
-                unoptimized
-                className="h-10 w-auto max-w-[140px] object-contain mb-4 brightness-0 invert"
-              />
-            ) : (
-              <p className="text-base font-bold text-white tracking-wide mb-4">{shop.name}</p>
-            )}
             <p className="text-xs text-white/50 leading-relaxed mb-6 max-w-xs">
               {shop.description || `Découvrez notre collection de produits sélectionnés avec soin chez ${shopName}.`}
             </p>
