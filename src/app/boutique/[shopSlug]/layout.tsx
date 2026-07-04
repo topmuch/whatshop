@@ -35,14 +35,36 @@ export async function generateMetadata({
     },
   })
 
+  // Always set per-shop favicon (even without PWA)
+  const baseMeta: Metadata = {
+    icons: {
+      icon: [
+        {
+          url: `/api/favicon/${shopSlug}`,
+          sizes: '32x32',
+          type: 'image/svg+xml',
+        },
+      ],
+    },
+    title: {
+      absolute: shop ? `${shop.name} | Boutiko` : undefined,
+    },
+  }
+
   if (!shop || !shop.pwaEnabled) {
-    return {}
+    return baseMeta
   }
 
   return {
+    ...baseMeta,
     manifest: `/api/manifest/${shopSlug}`,
     icons: {
       icon: [
+        {
+          url: `/api/favicon/${shopSlug}`,
+          sizes: '32x32',
+          type: 'image/svg+xml',
+        },
         {
           url: `/api/manifest/${shopSlug}/icon/192`,
           sizes: '192x192',

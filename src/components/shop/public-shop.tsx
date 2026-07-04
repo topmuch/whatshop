@@ -428,6 +428,51 @@ function ShopContent({ initialShopSlug, initialProductSlug }: { initialShopSlug?
     return () => window.removeEventListener('popstate', handlePopState)
   }, [publicProducts])
 
+  // ── Dynamic favicon per shop ──
+  const setShopFavicon = useCallback((slug: string) => {
+    try {
+      // Remove any existing dynamic favicon links
+      document.querySelectorAll('link[data-dynamic-favicon]').forEach(el => el.remove())
+      // Add new favicon link for this shop
+      const link = document.createElement('link')
+      link.rel = 'icon'
+      link.type = 'image/svg+xml'
+      link.href = `/api/favicon/${slug}`
+      link.setAttribute('data-dynamic-favicon', 'true')
+      document.head.appendChild(link)
+      // Also update document title if shop name is available
+      const shop = useAppStore.getState().publicShop
+      if (shop?.name) {
+        document.title = `${shop.name} | Boutiko`
+      }
+    } catch { /* silent */ }
+  }, [])
+
+  const resetFavicon = useCallback(() => {
+    try {
+      // Remove dynamic favicons
+      document.querySelectorAll('link[data-dynamic-favicon]').forEach(el => el.remove())
+      // Restore default favicon
+      const link = document.createElement('link')
+      link.rel = 'icon'
+      link.href = '/favicon.ico'
+      link.setAttribute('data-dynamic-favicon', 'reset')
+      document.head.appendChild(link)
+      // Remove the reset link after default loads
+      setTimeout(() => {
+        link.remove()
+      }, 100)
+      document.title = 'Boutiko — Créez votre boutique en ligne en Afrique'
+    } catch { /* silent */ }
+  }, [])
+
+  // Reset favicon when component unmounts (user navigates away from shop)
+  useEffect(() => {
+    return () => {
+      resetFavicon()
+    }
+  }, [resetFavicon])
+
   const fetchShop = useCallback(async () => {
     if (!effectiveSlug) return
     setLoading(true)
@@ -436,6 +481,8 @@ function ShopContent({ initialShopSlug, initialProductSlug }: { initialShopSlug?
       if (!shopRes.ok) return
       const shopData = await shopRes.json()
       setPublicShop(shopData)
+      // Set per-shop favicon dynamically
+      setShopFavicon(effectiveSlug)
       fetch(`/api/shops/${effectiveSlug}/visit`, { method: 'POST' }).catch(() => {})
       const [prodRes, catRes] = await Promise.all([
         fetch(`/api/shops/${effectiveSlug}/products`),
