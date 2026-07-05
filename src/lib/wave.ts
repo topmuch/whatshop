@@ -8,7 +8,7 @@ import type { PaymentStatus } from './wave-shared'
 
 export type { PaymentStatus, PaymentType } from './wave-shared'
 export type { WaveCreatePaymentInput, WaveCreatePaymentResponse, WavePaymentStatus, WaveWebhookPayload } from './wave-shared'
-export { formatFCFA, getPlanPrice } from './wave-shared'
+export { formatFCFA } from './wave-shared'
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 

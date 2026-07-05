@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth'
 import { db } from '@/lib/db'
-import { createWavePayment, mapWaveStatus, getPlanPrice } from '@/lib/wave'
+import { createWavePayment, mapWaveStatus } from '@/lib/wave'
 import { PLAN_CONFIGS } from '@/lib/permissions'
 import { PlanType } from '@prisma/client'
 
