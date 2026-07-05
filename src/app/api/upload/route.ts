@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { writeFile, mkdir } from 'fs/promises'
 import path from 'path'
 import { randomUUID } from 'crypto'
-import { getSessionUser } from '@/lib/auth'
+import { getAuthUser } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,7 +12,7 @@ const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'im
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getSessionUser(request)
+    const user = await getAuthUser(request)
     if (!user) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
     }
