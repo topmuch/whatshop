@@ -604,7 +604,7 @@ function MinimalisteHeader({
       {/* ─── MAIN HEADER (white, Savoy-style) ─── */}
       <header className="sticky top-0 z-30 w-full bg-white shadow-sm" style={{ borderBottom: '1px solid #f0f0f0' }}>
         <div className="mx-auto max-w-7xl flex items-center justify-between px-4 py-3 md:py-4">
-          {/* Left: Hamburger (mobile) */}
+          {/* Left: Hamburger (mobile) + Logo */}
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -614,15 +614,13 @@ function MinimalisteHeader({
             >
               {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
-          </div>
 
-          {/* Center: Logo */}
-          <button
-            type="button"
-            onClick={onHomeClick}
-            className="flex items-center min-h-[44px]"
-            aria-label="Retour à l'accueil"
-          >
+            <button
+              type="button"
+              onClick={onHomeClick}
+              className="flex items-center min-h-[44px]"
+              aria-label="Retour à l'accueil"
+            >
             {shop.logo ? (
               <Image
                 src={shop.logo}
@@ -641,6 +639,7 @@ function MinimalisteHeader({
               </div>
             )}
           </button>
+          </div>
 
           {/* Right: Search, Connexion, Heart, Cart */}
           <div className="flex items-center gap-1 sm:gap-2">
