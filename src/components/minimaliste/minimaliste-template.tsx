@@ -566,8 +566,8 @@ function MinimalisteHeader({
 
   return (
     <>
-      {/* ─── TOP BAR ─── */}
-      <div className="w-full text-center py-2 px-4 bg-gray-50 border-b border-gray-200">
+      {/* ─── TOP BAR (black promo banner) ─── */}
+      <div className="w-full text-center py-2 px-4 bg-black">
         <div className="mx-auto max-w-7xl flex items-center justify-between">
           <div className="w-24 hidden md:flex items-center gap-3">
             {shop?.whatsapp ? (
@@ -575,26 +575,26 @@ function MinimalisteHeader({
                 href={`https://wa.me/${shop.whatsapp.replace(/\D/g, '')}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-400 hover:text-black transition-colors"
+                className="text-white/60 hover:text-white transition-colors"
                 aria-label="WhatsApp"
               >
                 <MessageCircle className="h-4 w-4" />
               </a>
             ) : null}
             {shop?.contactEmail ? (
-              <a href={`mailto:${shop.contactEmail}`} className="text-gray-400 hover:text-black transition-colors" aria-label="Email">
+              <a href={`mailto:${shop.contactEmail}`} className="text-white/60 hover:text-white transition-colors" aria-label="Email">
                 <Mail className="h-4 w-4" />
               </a>
             ) : null}
           </div>
-          <p className="text-[11px] sm:text-xs tracking-widest uppercase text-black font-light flex-1 text-center">
+          <p className="text-[11px] sm:text-xs tracking-widest uppercase text-white font-light flex-1 text-center">
             Livraison gratuite pour toute commande
           </p>
           <div className="w-24 flex items-center justify-end gap-3">
-            <a href="#" className="text-gray-400 hover:text-black transition-colors" aria-label="Facebook">
+            <a href="#" className="text-white/60 hover:text-white transition-colors" aria-label="Facebook">
               <Facebook className="h-4 w-4" />
             </a>
-            <a href="#" className="text-gray-400 hover:text-black transition-colors" aria-label="Instagram">
+            <a href="#" className="text-white/60 hover:text-white transition-colors" aria-label="Instagram">
               <Instagram className="h-4 w-4" />
             </a>
           </div>
@@ -687,15 +687,15 @@ function MinimalisteHeader({
           </div>
         </div>
 
-        {/* Desktop nav links */}
-        <nav className="hidden md:block border-t border-gray-100">
+        {/* Desktop nav links (black bar) */}
+        <nav className="hidden md:block bg-black">
           <div className="mx-auto max-w-7xl flex items-center justify-center gap-8 px-4 py-3">
             {navLinks.map((link) => (
               <button
                 key={link.label}
                 type="button"
                 onClick={() => { link.action(); onNavClick() }}
-                className="text-xs font-light tracking-[0.15em] uppercase text-gray-500 hover:text-black transition-colors"
+                className="text-xs font-light tracking-[0.15em] uppercase text-white hover:text-white/80 transition-colors"
               >
                 {link.label}
               </button>
@@ -704,7 +704,7 @@ function MinimalisteHeader({
               <div className="relative group">
                 <button
                   type="button"
-                  className="text-xs font-light tracking-[0.15em] uppercase text-gray-500 hover:text-black transition-colors flex items-center gap-1"
+                  className="text-xs font-light tracking-[0.15em] uppercase text-white hover:text-white/80 transition-colors flex items-center gap-1"
                 >
                   Catégories
                   <ChevronRight className="h-3 w-3 rotate-90" />
