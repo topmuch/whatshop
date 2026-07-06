@@ -107,12 +107,7 @@ export function AuthLogin() {
             transition={{ duration: 0.6, ease: 'easeOut' }}
           >
             <div className="flex items-center justify-center">
-              <img
-                src="/logo-boutiko.png"
-                alt="Boutiko"
-                className="h-auto w-auto max-w-full object-contain brightness-0 invert"
-                style={{ height: 75, width: 225 }}
-              />
+              <span className="text-3xl font-extrabold text-white tracking-tight">Boutiko</span>
             </div>
           </motion.div>
 
@@ -193,12 +188,7 @@ export function AuthLogin() {
         >
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center justify-center mb-8">
-            <img
-              src="/logo-boutiko.png"
-              alt="Boutiko"
-              className="h-auto w-auto max-w-full object-contain"
-              style={{ height: 75, width: 225 }}
-            />
+            <span className="text-3xl font-extrabold tracking-tight" style={{ color: '#0B1426' }}>Boutiko</span>
           </div>
 
           {/* Heading */}

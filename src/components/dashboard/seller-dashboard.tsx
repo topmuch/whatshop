@@ -385,12 +385,7 @@ function SidebarContent({
     <div className="flex flex-col h-full">
       {/* Logo + Notification bell */}
       <div className="flex items-center justify-between px-6 py-5">
-        <img
-          src="/logo-boutiko.png"
-          alt="Boutiko"
-          className="h-auto w-auto max-w-full object-contain brightness-0 invert"
-          style={{ height: 75, width: 225 }}
-        />
+        <span className="text-2xl font-extrabold text-white tracking-tight">Boutiko</span>
         <NotificationBell />
       </div>
 
