@@ -55,7 +55,6 @@ export function AuthRegister() {
       <div className="lg:hidden">
         <div className="sticky top-0 z-50 bg-gradient-to-r from-pink-500 to-pink-600 shadow-md">
           <div className="flex items-center px-4 py-3">
-            <span className="text-2xl font-extrabold text-white tracking-tight">Boutiko</span>
           </div>
         </div>
         <div className="bg-gradient-to-br from-amber-400 via-pink-500 to-pink-600 px-5 pb-8 pt-5">
@@ -72,10 +71,8 @@ export function AuthRegister() {
           transition={{ duration: 0.5, ease: 'easeOut' }}
           className="w-full max-w-[420px]"
         >
-          {/* Logo */}
-          <div className="hidden lg:flex items-center justify-center mb-10">
-            <span className="text-3xl font-extrabold tracking-tight" style={{ color: '#0B1426' }}>Boutiko</span>
-          </div>
+          {/* Spacer */}
+          <div className="hidden lg:flex items-center justify-center mb-10 h-[75px]"></div>
 
           {/* Heading */}
           <div className="hidden lg:block mb-8">

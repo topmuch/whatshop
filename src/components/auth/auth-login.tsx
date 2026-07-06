@@ -100,14 +100,13 @@ export function AuthLogin() {
         />
 
         <div className="relative z-10 flex flex-col justify-between p-12 xl:p-16">
-          {/* Logo + Brand */}
+          {/* Brand */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: 'easeOut' }}
           >
-            <div className="flex items-center justify-center">
-              <span className="text-3xl font-extrabold text-white tracking-tight">Boutiko</span>
+            <div className="flex items-center justify-center h-[75px]">
             </div>
           </motion.div>
 
@@ -186,10 +185,8 @@ export function AuthLogin() {
           transition={{ duration: 0.5, ease: 'easeOut' }}
           className="w-full max-w-md"
         >
-          {/* Mobile logo */}
-          <div className="lg:hidden flex items-center justify-center mb-8">
-            <span className="text-3xl font-extrabold tracking-tight" style={{ color: '#0B1426' }}>Boutiko</span>
-          </div>
+          {/* Mobile spacer */}
+          <div className="lg:hidden mb-8 h-[75px]"></div>
 
           {/* Heading */}
           <div className="mb-8">
@@ -197,7 +194,7 @@ export function AuthLogin() {
               Connexion
             </h2>
             <p className="mt-2 text-muted-foreground">
-              Connectez-vous à votre compte Boutiko
+              Connectez-vous à votre compte
             </p>
           </div>
 
