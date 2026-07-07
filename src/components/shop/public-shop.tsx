@@ -51,6 +51,7 @@ const ModernStore2Template = dynamic(() => import('@/components/modern-store/mod
 const CosmikaDarkTemplate = dynamic(() => import('@/components/cosmika-dark/cosmika-dark-template').then(m => ({ default: m.CosmikaDarkTemplate })), { loading: () => <ShopSkeleton /> })
 const FreshMarketTemplate = dynamic(() => import('@/components/templates/fresh-market/fresh-market-template').then(m => ({ default: m.FreshMarketTemplate })), { loading: () => <ShopSkeleton /> })
 const MinimalisteTemplate = dynamic(() => import('@/components/minimaliste/minimaliste-template').then(m => ({ default: m.MinimalisteTemplate })), { loading: () => <ShopSkeleton /> })
+const BreezelTemplate = dynamic(() => import('@/components/breezel/breezel-template').then(m => ({ default: m.BreezelTemplate })), { loading: () => <ShopSkeleton /> })
 
 /** Minimal loading skeleton shown while a template loads via dynamic import */
 function ShopSkeleton() {
@@ -684,6 +685,17 @@ function ShopContent({ initialShopSlug, initialProductSlug }: { initialShopSlug?
       <>
         <JsonLd shop={publicShop} products={publicProducts} categories={publicCategories} />
         <MinimalisteTemplate />
+      </>
+    )
+  }
+
+  // ── Breezel template ──
+  // Landing page produit épurée : slider full-width, page produit détaillée, design navy/white.
+  if (publicShop?.templateType === 'BREEZEL') {
+    return (
+      <>
+        <JsonLd shop={publicShop} products={publicProducts} categories={publicCategories} />
+        <BreezelTemplate />
       </>
     )
   }
