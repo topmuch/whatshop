@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 const siteDescription =
-  "Boutiko est la plateforme N°1 pour créer votre boutique en ligne en Côte d'Ivoire, Sénégal et Cameroun. Simple, rapide et abordable. Essai gratuit.";
+  "Boutiko : créez votre boutique en ligne en Afrique francophone. E-commerce simple et abordable au Sénégal, Côte d'Ivoire, Cameroun, Mali, Togo, Bénin, Burkina Faso, Niger, Tchad, Guinée. Livraison Mobile Money. Essai gratuit.";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -37,19 +37,53 @@ export const metadata: Metadata = {
   description: siteDescription,
   keywords: [
     "boutique en ligne",
-    "créer boutique afrique",
-    "e-commerce côte d'ivoire",
-    "e-commerce sénégal",
+    "créer boutique en ligne",
+    "e-commerce Afrique",
+    "e-commerce Sénégal",
+    "e-commerce Côte d'Ivoire",
+    "e-commerce Cameroun",
+    "e-commerce Mali",
+    "e-commerce Togo",
+    "e-commerce Bénin",
+    "e-commerce Burkina Faso",
+    "e-commerce Niger",
+    "e-commerce Tchad",
+    "e-commerce Guinée",
+    "boutique en ligne Afrique",
+    "vente en ligne Afrique",
+    "créer boutique Sénégal",
+    "créer boutique Côte d'Ivoire",
+    "créer boutique Cameroun",
+    "créer boutique Mali",
+    "créer boutique Togo",
+    "créer boutique Bénin",
+    "créer boutique Burkina Faso",
+    "créer boutique Niger",
+    "créer boutique Tchad",
+    "créer boutique Guinée",
+    "site e-commerce Afrique",
+    "plateforme e-commerce Afrique",
+    "boutique en ligne gratuite",
+    "vendre en ligne Afrique",
+    "vendre sur WhatsApp",
+    "Mobile Money Afrique",
+    "paiement Mobile Money",
     "boutiko",
     "linktree boutique",
-    "vente en ligne afrique",
+    "boutique WhatsApp",
+    "catalogue en ligne",
+    "marché en ligne Afrique",
+    "shopping en ligne Afrique",
+    "magasin en ligne",
+    "boutique en ligne francophone",
+    "e-commerce francophone Afrique",
   ],
   authors: [{ name: "Boutiko" }],
   creator: "Boutiko",
   metadataBase: new URL("https://boutiko.pro"),
   openGraph: {
     type: "website",
-    locale: "fr_CI",
+    locale: "fr_FR",
     url: "https://boutiko.pro",
     siteName: "Boutiko",
     title: "Boutiko — Créez votre boutique en ligne en Afrique",
@@ -96,8 +130,13 @@ const jsonLd = {
   url: "https://boutiko.pro",
   logo: "https://boutiko.pro/pwa-icons/icon-512x512.png",
   description:
-    "Plateforme de création de boutiques en ligne en Afrique",
-  areaServed: ["CI", "SN", "CM"],
+    "Plateforme N°1 de création de boutiques en ligne en Afrique francophone. E-commerce au Sénégal, Côte d'Ivoire, Cameroun, Mali, Togo, Bénin, Burkina Faso, Niger, Tchad, Guinée.",
+  areaServed: ["CI", "SN", "CM", "ML", "TG", "BJ", "BF", "NE", "TD", "GN"],
+  contactPoint: {
+    "@type": "ContactPoint",
+    contactType: "customer service",
+    availableLanguage: ["fr"],
+  },
   sameAs: [],
 };
 

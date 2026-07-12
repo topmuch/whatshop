@@ -24,28 +24,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 1.0,
     },
     {
-      url: `${BASE_URL}/onboarding`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.9,
-    },
-    {
-      url: `${BASE_URL}/register`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.9,
-    },
-    {
-      url: `${BASE_URL}/pricing`,
+      url: `${BASE_URL}/tarifs`,
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 0.9,
     },
     {
-      url: `${BASE_URL}/about`,
+      url: `${BASE_URL}/faq`,
       lastModified: new Date(),
       changeFrequency: "monthly",
-      priority: 0.6,
+      priority: 0.7,
     },
     {
       url: `${BASE_URL}/contact`,
@@ -54,26 +42,32 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     },
     {
-      url: `${BASE_URL}/faq`,
+      url: `${BASE_URL}/contactez-nous`,
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.6,
     },
     {
-      url: `${BASE_URL}/terms`,
+      url: `${BASE_URL}/about`,
       lastModified: new Date(),
-      changeFrequency: "yearly",
-      priority: 0.3,
+      changeFrequency: "monthly",
+      priority: 0.5,
     },
     {
-      url: `${BASE_URL}/privacy`,
+      url: `${BASE_URL}/conditions`,
       lastModified: new Date(),
       changeFrequency: "yearly",
-      priority: 0.3,
+      priority: 0.2,
+    },
+    {
+      url: `${BASE_URL}/confidentialite`,
+      lastModified: new Date(),
+      changeFrequency: "yearly",
+      priority: 0.2,
     },
   ]
 
-  // ─── Shop pages ──────────────────────────────────────────────────────────
+  // ─── Shop pages: /boutique/<shopSlug> ────────────────────────────────────
   let shopPages: MetadataRoute.Sitemap = []
   try {
     const shops = await db.shop.findMany({
@@ -90,34 +84,48 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // DB not available yet (build time, first deploy) — serve static pages only
   }
 
-  // ─── Product pages ───────────────────────────────────────────────────────
+  // ─── Product pages: /boutique/<shopSlug>/p/<productSlug> ────────────────
   let productPages: MetadataRoute.Sitemap = []
   try {
     const products = await db.product.findMany({
       where: {
         shop: ACTIVE_SHOP_WHERE,
         isAvailable: true,
+        slug: { not: null },
       },
       select: {
-        id: true,
         slug: true,
         updatedAt: true,
         shop: { select: { slug: true } },
       },
-      take: 5000, // safety limit
+      take: 10000,
     })
     productPages = products.map((p) => ({
-      // Clean URL pattern: /boutique/<shopSlug>/p/<productSlug>
-      url: p.slug
-        ? `${BASE_URL}/boutique/${p.shop.slug}/p/${p.slug}`
-        : `${BASE_URL}/boutique/${p.shop.slug}`,
+      url: `${BASE_URL}/boutique/${p.shop.slug}/p/${p.slug}`,
       lastModified: p.updatedAt,
       changeFrequency: "weekly" as const,
-      priority: 0.6,
+      priority: 0.7,
     }))
   } catch {
     // DB not available — serve static + shop pages only
   }
 
-  return [...staticPages, ...shopPages, ...productPages]
+  // ─── Menu pages: /menu/<shopSlug> ────────────────────────────────────────
+  let menuPages: MetadataRoute.Sitemap = []
+  try {
+    const shops = await db.shop.findMany({
+      where: { ...ACTIVE_SHOP_WHERE, sector: 'restaurant' },
+      select: { slug: true, updatedAt: true },
+    })
+    menuPages = shops.map((shop) => ({
+      url: `${BASE_URL}/menu/${shop.slug}`,
+      lastModified: shop.updatedAt,
+      changeFrequency: "weekly" as const,
+      priority: 0.6,
+    }))
+  } catch {
+    // DB not available
+  }
+
+  return [...staticPages, ...shopPages, ...productPages, ...menuPages]
 }

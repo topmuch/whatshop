@@ -62,10 +62,30 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   // ─── URL ───────────────────────────────────────────────────────────────
   const url = `${BASE_URL}/boutique/${shop.slug}`
 
-  // ─── Keywords ──────────────────────────────────────────────────────────
-  const keywords = shop.seoKeywords
+  // ─── Keywords (shop-specific + default African SEO keywords) ───────────
+  const shopKeywords = shop.seoKeywords
     ? shop.seoKeywords.split(',').map((k) => k.trim()).filter(Boolean)
-    : [shop.name, 'Boutiko', 'boutique en ligne', 'WhatsApp']
+    : []
+  const defaultKeywords = [
+    shop.name,
+    'Boutiko',
+    'boutique en ligne',
+    'e-commerce Afrique',
+    'acheter en ligne',
+    'vente en ligne',
+    'WhatsApp shopping',
+    'boutique en ligne Sénégal',
+    'boutique en ligne Côte d\'Ivoire',
+    'boutique en ligne Cameroun',
+    'boutique en ligne Mali',
+    'boutique en ligne Togo',
+    'boutique en ligne Bénin',
+    'boutique en ligne Burkina Faso',
+    'boutique en ligne Niger',
+    'boutique en ligne Tchad',
+    'boutique en ligne Guinée',
+  ]
+  const keywords = [...shopKeywords, ...defaultKeywords]
 
   return {
     title,
