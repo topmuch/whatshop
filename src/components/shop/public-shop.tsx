@@ -379,9 +379,11 @@ function ShopContent({ initialShopSlug, initialProductSlug }: { initialShopSlug?
   const [detailImageIndex, setDetailImageIndex] = useState(0)
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  // Effective slug: prefer the store value (may be set by navigation),
-  // fall back to the prop (set immediately from URL on direct navigation).
-  const effectiveSlug = shopSlug || initialShopSlug || ''
+  // Effective slug: prefer the prop (comes directly from URL resolution,
+  // never stale), fall back to the store value (set by SPA navigation).
+  // This ensures that on direct URL entry (/cereales-de-anta), the slug
+  // is always correct even if the store hasn't synced yet.
+  const effectiveSlug = initialShopSlug || shopSlug || ''
 
   // ─── URL-based product navigation ───
   const selectProductWithUrl = useCallback((product: Product | null) => {

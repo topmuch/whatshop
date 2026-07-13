@@ -148,13 +148,36 @@ export default function RootLayout({
   return (
     <html lang="fr" suppressHydrationWarning>
       <script dangerouslySetInnerHTML={{ __html: `
-        // Prevent flash of landing page when visiting /shop-slug directly
-        // Only hide paths that look like shop slugs (not known app routes)
+        // ═══════════════════════════════════════════════════════════
+        // BOOTSTRAP: runs BEFORE React hydrates.
+        // 1. Clean stale navigation keys from localStorage (prevents
+        //    old 'view:dashboard' from hijacking shop-slug URLs).
+        // 2. Hide page for shop slugs to prevent flash of landing.
+        // ═══════════════════════════════════════════════════════════
         (function() {
+          // ── Clean stale navigation state ──
+          try {
+            var raw = localStorage.getItem('boutiko-storage');
+            if (raw) {
+              var parsed = JSON.parse(raw);
+              var state = parsed && parsed.state;
+              if (state) {
+                var dirty = false;
+                ['view','dashboardTab','adminTab','shopSlug','publicShop','publicProducts','publicCategories','selectedShippingZone'].forEach(function(k) {
+                  if (state[k] !== undefined) { delete state[k]; dirty = true; }
+                });
+                if (dirty) {
+                  localStorage.setItem('boutiko-storage', JSON.stringify({ state: state, version: parsed.version }));
+                }
+              }
+            }
+          } catch(e) {}
+
+          // ── Hide page for shop slugs ──
           var p = window.location.pathname.replace(/\\/$/, '');
           var slug = p.slice(1).toLowerCase();
-          var APP_ROUTES = ['login','connexion','inscription','register','onboarding','dashboard','reseller','revendeur','admin','about','a-propos','tarifs','pricing','contact','contactez-nous','faq','aide','privacy','confidentialite','terms','conditions','offline','menu'];
-          var isAppRoute = APP_ROUTES.indexOf(slug) !== -1 || slug.startsWith('p/');
+          var APP_ROUTES = ['login','connexion','inscription','register','onboarding','dashboard','reseller','revendeur','admin','about','a-propos','tarifs','pricing','contact','contactez-nous','faq','aide','privacy','confidentialite','terms','conditions','offline','menu','boutique','go'];
+          var isAppRoute = APP_ROUTES.indexOf(slug) !== -1 || slug.startsWith('p/') || slug.startsWith('go/') || slug.startsWith('boutique/');
           if (p !== '/' && p !== '' && !isAppRoute) {
             document.documentElement.style.visibility = 'hidden';
             document.documentElement.classList.add('ws-loading-shop');
@@ -169,12 +192,27 @@ export default function RootLayout({
             }
           } catch(e) {}
         `}} />
-        {/* Service Worker registration — let the browser handle updates naturally.
-             Previous version forced reg.update() + reload on every page load, which
-             interrupted shop-slug navigation and caused unwanted full-page reloads. */}
+        {/* Service Worker registration with update handling.
+             When a new SW is detected, skip waiting and reload to ensure
+             the user always gets the latest code. */}
         <script dangerouslySetInnerHTML={{ __html: `
           if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js').catch(function() {});
+            navigator.serviceWorker.register('/sw.js').then(function(reg) {
+              if (reg.waiting) {
+                reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+              }
+              reg.addEventListener('updatefound', function() {
+                var newWorker = reg.installing;
+                newWorker.addEventListener('statechange', function() {
+                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    newWorker.postMessage({ type: 'SKIP_WAITING' });
+                  }
+                });
+              });
+            }).catch(function() {});
+            navigator.serviceWorker.addEventListener('controllerchange', function() {
+              window.location.reload();
+            });
           }
         `}} />
         <script
