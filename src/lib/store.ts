@@ -271,7 +271,8 @@ export const useAppStore = create<AppState>()(
       name: 'boutiko-storage',
       partialize: (state) => ({
         cart: state.cart,
-        view: state.view,
+        // view is NOT persisted — it must always be derived from the URL on page load
+        // to prevent stale 'dashboard' view from hijacking shop slug routes.
         user: state.user,
         shop: state.shop,
         shops: state.shops,

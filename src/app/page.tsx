@@ -192,12 +192,14 @@ export default function Home() {
     // If store view doesn't match the actual URL, sync it.
     // This handles: direct URL entry, browser refresh, back/forward.
     if (view !== resolved) {
-      // Don't override auth views that were set by the session check
-      const isAuthView = ['dashboard', 'admin', 'reseller'].includes(view)
-      if (!isAuthView) {
-        if (resolved === 'shop') {
-          useAppStore.setState({ view: 'shop', shopSlug: '', publicShop: null, publicProducts: [] })
-        } else {
+      // ALWAYS trust the URL for shop views — never let a stale auth view
+      // (e.g. persisted 'dashboard') prevent a public shop from rendering.
+      if (resolved === 'shop') {
+        useAppStore.setState({ view: 'shop', shopSlug: '', publicShop: null, publicProducts: [] })
+      } else {
+        // Don't override auth views that were set by the session check
+        const isAuthView = ['dashboard', 'admin', 'reseller'].includes(view)
+        if (!isAuthView) {
           useAppStore.setState({ view: resolved })
         }
       }
@@ -206,12 +208,15 @@ export default function Home() {
   }, [mounted])
 
   /* ── EFFECTIVE VIEW ── */
-  // For shop views, ALWAYS trust the URL-derived view to prevent flashing the
-  // landing page when the user directly navigates to /shop-slug.
-  // For all other views, trust the Zustand store (handles auth redirects, etc.).
+  // Priority rules:
+  //  1. Shop URLs ALWAYS win — prevents stale 'dashboard' from hijacking shop slugs.
+  //  2. When the store is still 'landing' (default, no longer persisted),
+  //     trust the URL so that /dashboard, /login, /pricing etc. render immediately.
+  //  3. Otherwise trust the store — handles auth redirects (replaceState + setView
+  //     without popstate) where the URL snapshot may be stale.
   const effectiveView = urlView.view === 'shop'
     ? 'shop'
-    : (view === 'shop' ? urlView.view : view)
+    : (view === 'shop' ? urlView.view : (view === 'landing' ? urlView.view : view))
 
   // Before mount: only render known auth routes (they're client-only anyway).
   // For everything else (landing, shop, public pages), show a skeleton to
