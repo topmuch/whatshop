@@ -1566,7 +1566,7 @@ export function ElectroShopPage() {
           </div>
           <h2 className="text-xl font-bold mb-2" style={{ color: BLUE.text }}>Boutique introuvable</h2>
           <p className="text-sm mb-4" style={{ color: BLUE.textMuted }}>Cette boutique n&apos;existe pas ou a été désactivée.</p>
-          <Button onClick={() => setView('landing')} style={{ background: BLUE.primary }} className="text-white font-semibold rounded-xl">
+          <Button onClick={() => { window.history.pushState(null, '', '/'); setView('landing') }} style={{ background: BLUE.primary }} className="text-white font-semibold rounded-xl">
             Retour à l&apos;accueil
           </Button>
         </div>

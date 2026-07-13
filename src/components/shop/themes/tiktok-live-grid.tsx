@@ -1314,7 +1314,7 @@ export function TikTokLiveShopPage() {
             Cette boutique n&apos;existe pas ou a été désactivée.
           </p>
           <Button
-            onClick={() => setView('landing')}
+            onClick={() => { window.history.pushState(null, '', '/'); setView('landing') }}
             className="text-white font-semibold rounded-xl"
             style={{ background: TT.redOrange }}
           >

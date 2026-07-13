@@ -152,8 +152,12 @@ function PageSkeleton() {
   )
 }
 
-// Views that are safe to render during SSR/hydration (client-only auth views)
-const IMMEDIATE_VIEWS: AppView[] = ['login', 'register', 'dashboard', 'admin', 'reseller', 'onboarding']
+// Views that are safe to render during SSR/hydration.
+// Only pure client-only views with no dependency on persisted store state.
+// Auth views (dashboard, admin, reseller) are EXCLUDED because the stale
+// persisted 'view: "dashboard"' can cause them to briefly render during
+// the hydration server-snapshot pass, hijacking shop-slug URLs.
+const IMMEDIATE_VIEWS: AppView[] = ['login', 'register', 'onboarding']
 
 /**
  * Returns true only on the client after hydration.
@@ -187,7 +191,9 @@ export default function Home() {
     }
 
     const realUrl = window.location.pathname
-    const resolved = resolveViewFromPath(realUrl).view
+    const resolvedView = resolveViewFromPath(realUrl)
+    const resolved = resolvedView.view
+    const resolvedSlug = resolvedView.shopSlug
 
     // If store view doesn't match the actual URL, sync it.
     // This handles: direct URL entry, browser refresh, back/forward.
@@ -195,7 +201,13 @@ export default function Home() {
       // ALWAYS trust the URL for shop views — never let a stale auth view
       // (e.g. persisted 'dashboard') prevent a public shop from rendering.
       if (resolved === 'shop') {
-        useAppStore.setState({ view: 'shop', shopSlug: '', publicShop: null, publicProducts: [] })
+        // Only clear shop data if the slug actually changed (avoid flashing
+        // the loading spinner when the same shop is re-visited).
+        const slugChanged = resolvedSlug !== shopSlug
+        useAppStore.setState({
+          view: 'shop',
+          ...(slugChanged ? { shopSlug: '', publicShop: null, publicProducts: [] } : {}),
+        })
       } else {
         // Don't override auth views that were set by the session check
         const isAuthView = ['dashboard', 'admin', 'reseller'].includes(view)
@@ -204,8 +216,7 @@ export default function Home() {
         }
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mounted])
+  }, [mounted, view, shopSlug])
 
   /* ── EFFECTIVE VIEW ── */
   // Priority rules:

@@ -476,7 +476,10 @@ function ShopContent({ initialShopSlug, initialProductSlug }: { initialShopSlug?
   }, [resetFavicon])
 
   const fetchShop = useCallback(async () => {
-    if (!effectiveSlug) return
+    if (!effectiveSlug) {
+      setLoading(false)
+      return
+    }
     setLoading(true)
     try {
       const shopRes = await fetch(`/api/shops/${effectiveSlug}`)
@@ -753,7 +756,7 @@ function ShopContent({ initialShopSlug, initialProductSlug }: { initialShopSlug?
           <Package className="h-12 w-12 text-muted-foreground/40 mx-auto mb-4" />
           <h2 className="text-xl font-bold mb-2">Boutique introuvable</h2>
           <p className="text-muted-foreground mb-4">Cette boutique n&apos;existe pas ou a été désactivée.</p>
-          <Button onClick={() => setView('landing')}>Retour à l&apos;accueil</Button>
+          <Button onClick={() => { window.history.pushState(null, '', '/'); setView('landing') }}>Retour à l&apos;accueil</Button>
         </Card>
       </div>
     )
@@ -782,7 +785,7 @@ function ShopContent({ initialShopSlug, initialProductSlug }: { initialShopSlug?
         }}
       >
         <div className="max-w-5xl mx-auto px-4 py-2.5 flex items-center gap-3">
-          <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => selectedProduct ? deselectProductWithUrl() : setView('landing')}>
+          <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => selectedProduct ? deselectProductWithUrl() : (window.history.pushState(null, '', '/'), setView('landing'))}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
 

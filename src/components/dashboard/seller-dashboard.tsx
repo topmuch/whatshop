@@ -663,6 +663,7 @@ export function SellerDashboard() {
             }
           } else {
             setView('landing')
+            window.history.replaceState(null, '', '/')
           }
         }
       } catch {

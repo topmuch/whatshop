@@ -940,7 +940,7 @@ export function ElectroTemplate() {
             Cette boutique n&apos;existe pas ou a été désactivée.
           </p>
           <Button
-            onClick={() => setView('landing')}
+            onClick={() => { window.history.pushState(null, '', '/'); setView('landing') }}
             className="font-semibold rounded-xl"
             style={{ background: colors.primary, color: colors.ctaText }}
           >

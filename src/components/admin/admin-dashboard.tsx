@@ -1002,6 +1002,7 @@ export function AdminDashboard() {
             }
           } else {
             setView('landing')
+            window.history.replaceState(null, '', '/')
           }
         }
       } catch {

@@ -1071,7 +1071,7 @@ export function CosmikaBeautyShopPage() {
             Cette boutique n&apos;existe pas ou a été désactivée.
           </p>
           <button
-            onClick={() => setView('landing')}
+            onClick={() => { window.history.pushState(null, '', '/'); setView('landing') }}
             className="inline-flex items-center gap-2 px-6 py-2.5 bg-black text-white text-sm font-semibold rounded-full hover:opacity-90 transition-opacity"
           >
             Retour à l&apos;accueil

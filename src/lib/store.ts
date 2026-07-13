@@ -278,6 +278,22 @@ export const useAppStore = create<AppState>()(
         shops: state.shops,
         isAuthenticated: state.isAuthenticated,
       }),
+      // Custom merge: explicitly EXCLUDE 'view' from the loaded state.
+      // The default merge is a shallow spread ({ ...state, ...partial }), which means
+      // old localStorage entries that still contain view:'dashboard' would
+      // overwrite the initial view:'landing' and hijack shop-slug routes.
+      merge: (persistedState, currentState) => {
+        const filtered = { ...(persistedState as Record<string, unknown>) }
+        delete filtered['view']
+        delete filtered['dashboardTab']
+        delete filtered['adminTab']
+        delete filtered['shopSlug']
+        delete filtered['publicShop']
+        delete filtered['publicProducts']
+        delete filtered['publicCategories']
+        delete filtered['selectedShippingZone']
+        return { ...currentState, ...filtered } as AppState
+      },
     }
   )
 )
