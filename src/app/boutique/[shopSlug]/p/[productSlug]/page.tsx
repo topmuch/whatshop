@@ -57,21 +57,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const description = (
     product.shortDescription ||
     product.description ||
-    `Achetez ${product.name} chez ${product.shop.name}. Boutique en ligne Afrique. Livraison et paiement Mobile Money.`
+    `${product.name} disponible chez ${product.shop.name}. Commandez sur WhatsApp.`
   ).slice(0, 160)
-
-  // SEO keywords for product pages
-  const keywords = [
-    product.name,
-    shopTitle,
-    'Boutiko',
-    'acheter en ligne',
-    'boutique en ligne',
-    'e-commerce Afrique',
-    `acheter ${product.name.toLowerCase()}`,
-    `${product.name} Afrique`,
-    `${product.name} livraison`,
-  ]
 
   // Image: product image > shop OG > fallback
   let productImages: string[] = []
@@ -117,7 +104,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       'max-image-preview': 'large',
       'max-snippet': -1,
     },
-    keywords,
   }
 }
 
@@ -131,7 +117,7 @@ export default async function ProductPage({ params }: PageProps) {
       isAvailable: true,
       shop: { slug: shopSlug, isActive: true },
     },
-    select: { id: true, name: true },
+    select: { id: true },
   })
 
   if (!product) {
@@ -211,7 +197,7 @@ export default async function ProductPage({ params }: PageProps) {
               {
                 '@type': 'ListItem',
                 position: 3,
-                name: product.name,
+                name: productSlug,
                 item: `${shopUrl}/p/${productSlug}`,
               },
             ],

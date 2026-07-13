@@ -130,7 +130,7 @@ export function SingleProductTemplate() {
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-gray-50 p-4">
         <Store className="h-12 w-12 text-gray-300" />
         <p className="text-gray-500">Cette boutique n'a pas encore configuré son produit.</p>
-        <Button variant="outline" onClick={() => { window.history.pushState(null, '', '/'); setView('landing') }}>
+        <Button variant="outline" onClick={() => setView('landing')}>
           <ArrowLeft className="mr-2 h-4 w-4" /> Retour à l'accueil
         </Button>
       </div>
@@ -160,7 +160,7 @@ export function SingleProductTemplate() {
       {/* ─── Minimal header ─── */}
       <header className="sticky top-0 z-30 border-b border-gray-100 bg-white/95 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
-          <button onClick={() => { window.history.pushState(null, '', '/'); setView('landing') }} aria-label="Retour" className="rounded-full p-1.5 hover:bg-gray-100">
+          <button onClick={() => setView('landing')} aria-label="Retour" className="rounded-full p-1.5 hover:bg-gray-100">
             <ArrowLeft className="h-5 w-5 text-gray-700" />
           </button>
           {shop.logo ? (

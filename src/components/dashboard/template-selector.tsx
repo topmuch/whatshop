@@ -14,13 +14,13 @@ interface TemplateSelectorProps {
   plan?: string | null
 }
 
-/** Templates allowed per plan. LIVE/LIVE_PRO get Live + Moderne + Breezel */
+/** Templates allowed per plan. LIVE/LIVE_PRO get only Live + Moderne */
 const PLAN_TEMPLATES: Record<string, TemplateId[]> = {
-  LIVE: ['live-template', 'live-1', 'live-2', 'live-3', 'xstore-electro', 'breezel'],
-  LIVE_PRO: ['live-template', 'live-1', 'live-2', 'live-3', 'xstore-electro', 'breezel'],
+  LIVE: ['live-template', 'live-1', 'live-2', 'live-3', 'xstore-electro'],
+  LIVE_PRO: ['live-template', 'live-1', 'live-2', 'live-3', 'xstore-electro'],
 }
 
-const LIVE_ALLOWED = new Set(['live-template', 'live-1', 'live-2', 'live-3', 'xstore-electro', 'breezel'])
+const LIVE_ALLOWED = new Set(['live-template', 'live-1', 'live-2', 'live-3', 'xstore-electro'])
 
 function getPreviewGradient(_templateId: string, colors: ShopTemplate['colors']): string {
   if (colors.primary.startsWith('linear')) return colors.primary

@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 const siteDescription =
-  "Boutiko : créez votre boutique en ligne en Afrique francophone. E-commerce simple et abordable au Sénégal, Côte d'Ivoire, Cameroun, Mali, Togo, Bénin, Burkina Faso, Niger, Tchad, Guinée. Livraison Mobile Money. Essai gratuit.";
+  "Boutiko est la plateforme N°1 pour créer votre boutique en ligne en Côte d'Ivoire, Sénégal et Cameroun. Simple, rapide et abordable. Essai gratuit.";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -37,53 +37,19 @@ export const metadata: Metadata = {
   description: siteDescription,
   keywords: [
     "boutique en ligne",
-    "créer boutique en ligne",
-    "e-commerce Afrique",
-    "e-commerce Sénégal",
-    "e-commerce Côte d'Ivoire",
-    "e-commerce Cameroun",
-    "e-commerce Mali",
-    "e-commerce Togo",
-    "e-commerce Bénin",
-    "e-commerce Burkina Faso",
-    "e-commerce Niger",
-    "e-commerce Tchad",
-    "e-commerce Guinée",
-    "boutique en ligne Afrique",
-    "vente en ligne Afrique",
-    "créer boutique Sénégal",
-    "créer boutique Côte d'Ivoire",
-    "créer boutique Cameroun",
-    "créer boutique Mali",
-    "créer boutique Togo",
-    "créer boutique Bénin",
-    "créer boutique Burkina Faso",
-    "créer boutique Niger",
-    "créer boutique Tchad",
-    "créer boutique Guinée",
-    "site e-commerce Afrique",
-    "plateforme e-commerce Afrique",
-    "boutique en ligne gratuite",
-    "vendre en ligne Afrique",
-    "vendre sur WhatsApp",
-    "Mobile Money Afrique",
-    "paiement Mobile Money",
+    "créer boutique afrique",
+    "e-commerce côte d'ivoire",
+    "e-commerce sénégal",
     "boutiko",
     "linktree boutique",
-    "boutique WhatsApp",
-    "catalogue en ligne",
-    "marché en ligne Afrique",
-    "shopping en ligne Afrique",
-    "magasin en ligne",
-    "boutique en ligne francophone",
-    "e-commerce francophone Afrique",
+    "vente en ligne afrique",
   ],
   authors: [{ name: "Boutiko" }],
   creator: "Boutiko",
   metadataBase: new URL("https://boutiko.pro"),
   openGraph: {
     type: "website",
-    locale: "fr_FR",
+    locale: "fr_CI",
     url: "https://boutiko.pro",
     siteName: "Boutiko",
     title: "Boutiko — Créez votre boutique en ligne en Afrique",
@@ -130,13 +96,8 @@ const jsonLd = {
   url: "https://boutiko.pro",
   logo: "https://boutiko.pro/pwa-icons/icon-512x512.png",
   description:
-    "Plateforme N°1 de création de boutiques en ligne en Afrique francophone. E-commerce au Sénégal, Côte d'Ivoire, Cameroun, Mali, Togo, Bénin, Burkina Faso, Niger, Tchad, Guinée.",
-  areaServed: ["CI", "SN", "CM", "ML", "TG", "BJ", "BF", "NE", "TD", "GN"],
-  contactPoint: {
-    "@type": "ContactPoint",
-    contactType: "customer service",
-    availableLanguage: ["fr"],
-  },
+    "Plateforme de création de boutiques en ligne en Afrique",
+  areaServed: ["CI", "SN", "CM"],
   sameAs: [],
 };
 
@@ -148,36 +109,13 @@ export default function RootLayout({
   return (
     <html lang="fr" suppressHydrationWarning>
       <script dangerouslySetInnerHTML={{ __html: `
-        // ═══════════════════════════════════════════════════════════
-        // BOOTSTRAP: runs BEFORE React hydrates.
-        // 1. Clean stale navigation keys from localStorage (prevents
-        //    old 'view:dashboard' from hijacking shop-slug URLs).
-        // 2. Hide page for shop slugs to prevent flash of landing.
-        // ═══════════════════════════════════════════════════════════
+        // Prevent flash of landing page when visiting /shop-slug directly
+        // Only hide paths that look like shop slugs (not known app routes)
         (function() {
-          // ── Clean stale navigation state ──
-          try {
-            var raw = localStorage.getItem('boutiko-storage');
-            if (raw) {
-              var parsed = JSON.parse(raw);
-              var state = parsed && parsed.state;
-              if (state) {
-                var dirty = false;
-                ['view','dashboardTab','adminTab','shopSlug','publicShop','publicProducts','publicCategories','selectedShippingZone'].forEach(function(k) {
-                  if (state[k] !== undefined) { delete state[k]; dirty = true; }
-                });
-                if (dirty) {
-                  localStorage.setItem('boutiko-storage', JSON.stringify({ state: state, version: parsed.version }));
-                }
-              }
-            }
-          } catch(e) {}
-
-          // ── Hide page for shop slugs ──
           var p = window.location.pathname.replace(/\\/$/, '');
           var slug = p.slice(1).toLowerCase();
-          var APP_ROUTES = ['login','connexion','inscription','register','onboarding','dashboard','reseller','revendeur','admin','about','a-propos','tarifs','pricing','contact','contactez-nous','faq','aide','privacy','confidentialite','terms','conditions','offline','menu','boutique','go'];
-          var isAppRoute = APP_ROUTES.indexOf(slug) !== -1 || slug.startsWith('p/') || slug.startsWith('go/') || slug.startsWith('boutique/');
+          var APP_ROUTES = ['login','connexion','inscription','register','onboarding','dashboard','reseller','revendeur','admin','about','a-propos','tarifs','pricing','contact','contactez-nous','faq','aide','privacy','confidentialite','terms','conditions','offline','menu'];
+          var isAppRoute = APP_ROUTES.indexOf(slug) !== -1 || slug.startsWith('p/');
           if (p !== '/' && p !== '' && !isAppRoute) {
             document.documentElement.style.visibility = 'hidden';
             document.documentElement.classList.add('ws-loading-shop');
@@ -192,27 +130,22 @@ export default function RootLayout({
             }
           } catch(e) {}
         `}} />
-        {/* Service Worker registration with update handling.
-             When a new SW is detected, skip waiting and reload to ensure
-             the user always gets the latest code. */}
+        {/* Service Worker auto-update: force new SW to activate on every page load */}
         <script dangerouslySetInnerHTML={{ __html: `
           if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js').then(function(reg) {
-              if (reg.waiting) {
-                reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-              }
               reg.addEventListener('updatefound', function() {
                 var newWorker = reg.installing;
+                if (!newWorker) return;
                 newWorker.addEventListener('statechange', function() {
-                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                    newWorker.postMessage({ type: 'SKIP_WAITING' });
+                  if (newWorker.state === 'activated') {
+                    window.location.reload();
                   }
                 });
               });
+              // Force check for updates on every page load
+              reg.update();
             }).catch(function() {});
-            navigator.serviceWorker.addEventListener('controllerchange', function() {
-              window.location.reload();
-            });
           }
         `}} />
         <script

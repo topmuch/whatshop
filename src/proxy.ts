@@ -16,16 +16,8 @@ const APP_ROUTES = new Set([
   'faq', 'aide',
   'privacy', 'confidentialite',
   'terms', 'conditions',
-  'offline',
-  'boutique',
-  'go',
-  'menu',
   // Reserved for product URL pattern
   'p',
-  'custom-domain',
-  // Static resources
-  'og-default.png', 'og-boutiko.png', 'favicon', 'manifest.json',
-  'sw.js', 'workbox', 'sitemap.xml', 'robots.txt',
 ])
 
 // Routes that require authentication
@@ -136,27 +128,29 @@ export async function proxy(request: NextRequest) {
     return withVisitorCookies(request, response)
   }
 
-  // ─── SEO: Redirect product URL pattern to /boutique/ (301) ───────
-  // /shop-slug/p/product-slug → /boutique/shop-slug/p/product-slug
+  // Product URL pattern: /shop-slug/p/product-slug
   const productMatch = slug.match(/^([a-z0-9][a-z0-9-]*)\/p\/([a-z0-9][a-z0-9-]*)$/)
   if (productMatch) {
     const [, shopSlug, productSlug] = productMatch
     const url = request.nextUrl.clone()
-    url.pathname = `/boutique/${shopSlug}/p/${productSlug}`
-    return withVisitorCookies(request, NextResponse.redirect(url, 301))
+    url.pathname = '/'
+    url.searchParams.set('shop', shopSlug)
+    url.searchParams.set('product', productSlug)
+    return withVisitorCookies(request, NextResponse.rewrite(url))
   }
 
-  // ─── SEO: Redirect shop slug to /boutique/ (301) ─────────────────
-  // /shop-slug → /boutique/shop-slug
-  // This ensures Google indexes the canonical URL with full server-rendered SEO
+  // If the path looks like a shop slug
   if (/^[a-zA-Z0-9][a-zA-Z0-9-]*$/.test(slug)) {
     const url = request.nextUrl.clone()
-    url.pathname = `/boutique/${slug}`
-    return withVisitorCookies(request, NextResponse.redirect(url, 301))
+    url.pathname = '/'
+    url.searchParams.set('shop', slug)
+    return withVisitorCookies(request, NextResponse.rewrite(url))
   }
 
-  // For any other unknown path, redirect to home
-  return withVisitorCookies(request, NextResponse.redirect(new URL('/', request.url), 301))
+  // For any other unknown path, rewrite to /
+  const url = request.nextUrl.clone()
+  url.pathname = '/'
+  return withVisitorCookies(request, NextResponse.rewrite(url))
 }
 
 export const config = {

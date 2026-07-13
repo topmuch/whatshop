@@ -223,28 +223,6 @@ export const TEMPLATE_DISPLAY: Record<string, TemplateDisplayInfo> = {
       emoji: '✨',
     },
   },
-  'breezel': {
-    displayName: 'Breezel',
-    tagline: 'Landing page produit épurée',
-    description:
-      'Template landing page inspiré de BreezeL : slider hero full-width, page produit détaillée avec galerie, design navy/white minimaliste. Parfait pour les produits uniques, gadgets et vente directe.',
-    features: [
-      'Slider hero full-width avec auto-défilement',
-      'Page produit avec galerie d\'images',
-      'Sélecteur quantité',
-      'Bouton Ajouter au panier + WhatsApp',
-      'Section FAQ accordéon',
-      'Design navy blue / white épuré',
-      'Barre promo en-tête',
-      'Footer sombre',
-      'Optimisé conversion',
-    ],
-    style: {
-      primaryColor: '#1A365D',
-      badge: 'Landing',
-      emoji: '🌊',
-    },
-  },
 }
 
 /**

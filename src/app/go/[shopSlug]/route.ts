@@ -34,8 +34,8 @@ export async function GET(
 
     if (featuredProduct) {
       return NextResponse.redirect(
-        `${baseUrl}/boutique/${shop.slug}/p/${featuredProduct.slug || featuredProduct.id}`,
-        301
+        `${baseUrl}/${shop.slug}/p/${featuredProduct.slug || featuredProduct.id}`,
+        302
       )
     }
 
@@ -52,14 +52,14 @@ export async function GET(
       })
       if (pinned) {
         return NextResponse.redirect(
-          `${baseUrl}/boutique/${shop.slug}/p/${pinned.slug || pinned.id}`,
-          301
+          `${baseUrl}/${shop.slug}/p/${pinned.slug || pinned.id}`,
+          302
         )
       }
     }
 
     // 3. Fallback to shop page
-    return NextResponse.redirect(`${baseUrl}/boutique/${shop.slug}`, 301)
+    return NextResponse.redirect(`${baseUrl}/${shop.slug}`, 302)
   } catch {
     return NextResponse.redirect(new URL('/', request.url))
   }

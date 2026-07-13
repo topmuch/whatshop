@@ -994,7 +994,6 @@ export function ResellerDashboard() {
             setUser(data.user)
           } else {
             setView('landing')
-            window.history.replaceState(null, '', '/')
             return
           }
         }

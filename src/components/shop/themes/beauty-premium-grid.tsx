@@ -1591,7 +1591,7 @@ export function BeautyPremiumShopPage() {
             Cette boutique n&apos;existe pas ou a été désactivée.
           </p>
           <Button
-            onClick={() => { window.history.pushState(null, '', '/'); setView('landing') }}
+            onClick={() => setView('landing')}
             className="text-white font-semibold rounded-full px-6"
             style={{ background: `linear-gradient(135deg, ${ROSE.primary} 0%, ${ROSE.dustyPink} 100%)` }}
           >

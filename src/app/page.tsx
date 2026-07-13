@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import { useAppStore, AppView } from '@/lib/store'
-import { useEffect, useLayoutEffect, useRef, useSyncExternalStore } from 'react'
+import { useEffect, useSyncExternalStore } from 'react'
 import { ErrorBoundary } from '@/components/error-boundary'
 import { NAVIGATE_EVENT } from '@/lib/navigation'
 import { LandingPage } from '@/components/landing'
@@ -152,9 +152,8 @@ function PageSkeleton() {
   )
 }
 
-// Views that are safe to render during SSR/hydration.
-// Only pure client-only views with no dependency on persisted store state.
-const IMMEDIATE_VIEWS: AppView[] = ['login', 'register', 'onboarding']
+// Views that are safe to render during SSR/hydration (client-only auth views)
+const IMMEDIATE_VIEWS: AppView[] = ['login', 'register', 'dashboard', 'admin', 'reseller', 'onboarding']
 
 /**
  * Returns true only on the client after hydration.
@@ -169,138 +168,125 @@ function useIsMounted() {
 }
 
 export default function Home() {
-  const view = useAppStore(s => s.view)
-  const shopSlug = useAppStore(s => s.shopSlug)
-  const publicShop = useAppStore(s => s.publicShop)
-  const setUser = useAppStore(s => s.setUser)
-  const setShop = useAppStore(s => s.setShop)
-  const setShops = useAppStore(s => s.setShops)
-  const setView = useAppStore(s => s.setView)
-  const setShopSlug = useAppStore(s => s.setShopSlug)
-  const setPublicShop = useAppStore(s => s.setPublicShop)
-  const setPublicProducts = useAppStore(s => s.setPublicProducts)
-
+  const { view, setView, setUser, setShop, setShops, shopSlug, setShopSlug, setPublicShop, setPublicProducts, publicShop } = useAppStore()
   const pathname = useClientPathname()
   const mounted = useIsMounted()
 
   // Resolve view from the URL (used for shop slugs & initial page load)
   const urlView = resolveViewFromPath(pathname)
 
-  // ── LAYOUT EFFECT: Sync URL → store BEFORE browser paints ──
-  // useLayoutEffect runs synchronously after render but before paint,
-  // so the store is updated before the user sees anything.
-  // This is the ONLY effect that modifies view/shopSlug based on the URL.
-  useLayoutEffect(() => {
+  /* ── MOUNT SYNC: URL → store (for direct navigation / refresh) ── */
+  useEffect(() => {
     if (!mounted) return
 
     // Remove the visibility:hidden set by layout.tsx inline script
+    // This prevents flash of landing page when visiting /shop-slug directly
     if (document.documentElement.classList.contains('ws-loading-shop')) {
       document.documentElement.style.visibility = ''
       document.documentElement.classList.remove('ws-loading-shop')
     }
 
-    const realPath = window.location.pathname
-    const resolved = resolveViewFromPath(realPath)
+    const realUrl = window.location.pathname
+    const resolved = resolveViewFromPath(realUrl).view
 
-    // Always sync the URL-derived view into the store.
-    // For shop URLs, this ensures the store matches the URL immediately.
-    if (resolved.view === 'shop') {
-      // For shops, always set both view and slug together.
-      // Only clear shop data if navigating to a DIFFERENT shop.
-      const slugChanged = resolved.shopSlug !== shopSlug
-      useAppStore.setState({
-        view: 'shop',
-        shopSlug: resolved.shopSlug,
-        ...(slugChanged ? { publicShop: null, publicProducts: [] } : {}),
-      })
-    } else if (view !== resolved.view) {
-      // For non-shop views, only update if store doesn't match.
-      // Don't override auth views (dashboard/admin/reseller) that were set
-      // by the session check effect.
+    // If store view doesn't match the actual URL, sync it.
+    // This handles: direct URL entry, browser refresh, back/forward.
+    if (view !== resolved) {
+      // Don't override auth views that were set by the session check
       const isAuthView = ['dashboard', 'admin', 'reseller'].includes(view)
       if (!isAuthView) {
-        useAppStore.setState({ view: resolved.view })
+        if (resolved === 'shop') {
+          useAppStore.setState({ view: 'shop', shopSlug: '', publicShop: null, publicProducts: [] })
+        } else {
+          useAppStore.setState({ view: resolved })
+        }
       }
     }
-  }, [mounted, pathname, view, shopSlug])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mounted])
 
   /* ── EFFECTIVE VIEW ── */
-  // The URL is ALWAYS the primary source of truth.
-  // 1. If the URL resolves to 'shop', the shop view wins unconditionally.
-  //    This prevents ANY store state (stale persisted view, auth redirect, etc.)
-  //    from hijacking a shop URL.
-  // 2. If the store says 'shop' but the URL disagrees, trust the URL
-  //    (handles browser back from a shop to another page).
-  // 3. If the store is still 'landing' (initial default), trust the URL
-  //    so that /dashboard, /pricing etc. render immediately.
-  // 4. Otherwise trust the store (handles SPA nav & auth redirects).
-  const effectiveView: AppView = urlView.view === 'shop'
+  // For shop views, ALWAYS trust the URL-derived view to prevent flashing the
+  // landing page when the user directly navigates to /shop-slug.
+  // For all other views, trust the Zustand store (handles auth redirects, etc.).
+  const effectiveView = urlView.view === 'shop'
     ? 'shop'
-    : (view === 'shop' ? urlView.view : (view === 'landing' ? urlView.view : view))
+    : (view === 'shop' ? urlView.view : view)
 
   // Before mount: only render known auth routes (they're client-only anyway).
-  // For everything else, show a skeleton to prevent flash.
+  // For everything else (landing, shop, public pages), show a skeleton to
+  // prevent the flash of the landing page when the real URL is a shop slug.
   const safeToRender = mounted || IMMEDIATE_VIEWS.includes(effectiveView)
 
+  // Sync shop slug from URL into store
+  useEffect(() => {
+    if (urlView.shopSlug && shopSlug !== urlView.shopSlug) {
+      setShopSlug(urlView.shopSlug)
+    }
+  }, [urlView.shopSlug, shopSlug])
+
   // Reset SEO meta tags when navigating away from a shop
+  // Shop-specific SEO (JSON-LD, OG, title) is handled by the JsonLd component in public-shop.tsx
   useEffect(() => {
     if (!publicShop) {
       resetMeta()
     }
   }, [publicShop])
 
-  // ── SESSION CHECK ──
-  // Uses a ref to completely prevent this effect from interfering with shop views.
-  // Even if the async fetch completes after a URL change, the guard ensures
-  // we never redirect away from a shop.
-  const sessionCheckedRef = useRef(false)
+  // Check for existing session — NON-BLOCKING
+  // Landing page and public pages render immediately
   useEffect(() => {
-    // ABSOLUTE GUARD: if the current URL is a shop, NEVER run session check
-    const realView = resolveViewFromPath(window.location.pathname).view
-    if (realView === 'shop') return
-
-    // If we already checked and the URL hasn't changed, skip
+    // For shop views, skip session check entirely
     if (effectiveView === 'shop') return
 
+    // Pages where we should NOT redirect authenticated users
     const isPublicView = ['landing', 'about', 'pricing', 'contact', 'faq', 'privacy', 'terms'].includes(effectiveView)
 
     const checkSession = async () => {
       try {
         const res = await fetch('/api/auth/session')
-        if (!res.ok) return
-        const data = await res.json()
-        if (!data.user) return
+        if (res.ok) {
+          const data = await res.json()
+          if (data.user) {
+            // Always populate user data regardless of current page
+            setUser(data.user)
+            if (data.shops) setShops(data.shops)
+            if (data.shop) setShop(data.shop)
 
-        // Populate user data
-        setUser(data.user)
-        if (data.shops) setShops(data.shops)
-        if (data.shop) setShop(data.shop)
+            // Re-resolve the current view from the REAL URL (not the stale
+            // hydration value captured in `urlView`). During hydration the
+            // pathname snapshot is "/", so urlView.view is "landing" even when
+            // the user actually opened a public shop URL (e.g. via the
+            // "Voir ma boutique" link). By the time this async fetch resolves,
+            // window.location.pathname is guaranteed to be the real one.
+            // If the user is viewing a public shop page, do NOT redirect them.
+            const currentView = resolveViewFromPath(window.location.pathname).view
+            if (currentView === 'shop') return
 
-        // RE-CHECK the URL after async fetch completes.
-        // The URL might have changed while we were fetching.
-        const currentView = resolveViewFromPath(window.location.pathname).view
-        if (currentView === 'shop') return  // NEVER redirect from a shop
+            // ── PUBLIC PAGES: only load session, do NOT redirect ──
+            if (isPublicView) return
 
-        // Public pages: just load session data, don't redirect
-        if (isPublicView) return
-
-        // Auth & private pages: redirect based on role
-        if (data.user.role === 'ADMIN' || data.user.role === 'SUPER_ADMIN') {
-          setView('admin')
-          if (effectiveView === 'login' || effectiveView === 'register') {
-            window.history.replaceState(null, '', '/admin')
+            // ── AUTH & PRIVATE PAGES: redirect based on role ──
+            // Route based on role
+            if (data.user.role === 'ADMIN' || data.user.role === 'SUPER_ADMIN') {
+              setView('admin')
+              if (urlView.view === 'login' || urlView.view === 'register') {
+                window.history.replaceState(null, '', '/admin')
+              }
+            } else if (data.user.role === 'RESELLER') {
+              setView('reseller')
+              if (urlView.view === 'login' || urlView.view === 'register') {
+                window.history.replaceState(null, '', '/reseller')
+              }
+            } else if (!data.shop || (data.shops && data.shops.length === 0)) {
+              setView('onboarding')
+              window.history.replaceState(null, '', '/onboarding')
+            } else if (urlView.view === 'login' || urlView.view === 'register' || urlView.view === 'onboarding') {
+              setView('dashboard')
+              window.history.replaceState(null, '', '/dashboard')
+            }
+            // For dashboard/admin/reseller views, stay — the page handles its own auth
           }
-        } else if (data.user.role === 'RESELLER') {
-          setView('reseller')
-          if (effectiveView === 'login' || effectiveView === 'register') {
-            window.history.replaceState(null, '', '/reseller')
-          }
-        } else if (!data.shop || (data.shops && data.shops.length === 0)) {
-          setView('onboarding')
-          window.history.replaceState(null, '', '/onboarding')
-        } else if (effectiveView === 'login' || effectiveView === 'register' || effectiveView === 'onboarding') {
-          setView('dashboard')
-          window.history.replaceState(null, '', '/dashboard')
         }
       } catch {
         // Not authenticated, stay on current view
@@ -308,11 +294,11 @@ export default function Home() {
     }
 
     checkSession()
-  }, [effectiveView])
+  }, [urlView.view])
 
   const showWhatsApp = mounted && ['landing', 'about', 'pricing', 'contact', 'faq', 'privacy', 'terms'].includes(effectiveView)
 
-  // Before mount, show skeleton for non-immediate views
+  // Before mount, show skeleton for non-immediate views (landing, shop, public pages)
   if (!safeToRender) {
     return (
       <ErrorBoundary>

@@ -451,7 +451,7 @@ export function ElegancePlusTemplate() {
           </div>
           <h2 className="text-xl font-bold mb-2" style={{ color: colors.text }}>Boutique introuvable</h2>
           <p className="text-sm mb-4 text-gray-500">Cette boutique n&apos;existe pas ou a été désactivée.</p>
-          <Button onClick={() => { window.history.pushState(null, '', '/'); setView('landing') }} className="font-semibold rounded-xl" style={{ background: colors.primary, color: colors.ctaText }}>
+          <Button onClick={() => setView('landing')} className="font-semibold rounded-xl" style={{ background: colors.primary, color: colors.ctaText }}>
             Retour à l&apos;accueil
           </Button>
         </div>

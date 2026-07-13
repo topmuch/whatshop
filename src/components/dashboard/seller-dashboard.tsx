@@ -124,7 +124,7 @@ function getNavItems(businessType?: string | null, sector?: string | null, planT
     { id: 'live', label: 'Live TikTok', icon: <Radio className="h-5 w-5" /> },
     { id: 'marketing-kit', label: 'Kit Marketing', icon: <Megaphone className="h-5 w-5" />, hidden: simplified },
     { id: 'integrations', label: 'Intégrations', icon: <Plug className="h-5 w-5" />, hidden: simplified },
-    { id: 'templates', label: 'Templates', icon: <Palette className="h-5 w-5" /> },
+    { id: 'templates', label: 'Templates', icon: <Palette className="h-5 w-5" />, hidden: simplified },
     { id: 'single-product', label: 'Single Produit', icon: <Target className="h-5 w-5" />, hidden: simplified },
     { id: 'settings', label: 'Paramètres', icon: <Settings className="h-5 w-5" /> },
   ]
@@ -663,7 +663,6 @@ export function SellerDashboard() {
             }
           } else {
             setView('landing')
-            window.history.replaceState(null, '', '/')
           }
         }
       } catch {

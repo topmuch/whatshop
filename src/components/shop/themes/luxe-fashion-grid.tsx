@@ -1346,7 +1346,7 @@ export function LuxeFashionShopPage() {
           <h2 className="font-serif text-xl font-bold mb-2 tracking-wide" style={{ color: THEME.text }}>Boutique introuvable</h2>
           <p className="text-sm mb-4" style={{ color: THEME.textMuted }}>Cette boutique n&apos;existe pas ou a été désactivée.</p>
           <Button
-            onClick={() => { window.history.pushState(null, '', '/'); setView('landing') }}
+            onClick={() => setView('landing')}
             className="text-white font-semibold rounded-full"
             style={{ background: `linear-gradient(135deg, ${THEME.gold}, ${THEME.goldDark})` }}
           >

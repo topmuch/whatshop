@@ -51,7 +51,6 @@ const ModernStore2Template = dynamic(() => import('@/components/modern-store/mod
 const CosmikaDarkTemplate = dynamic(() => import('@/components/cosmika-dark/cosmika-dark-template').then(m => ({ default: m.CosmikaDarkTemplate })), { loading: () => <ShopSkeleton /> })
 const FreshMarketTemplate = dynamic(() => import('@/components/templates/fresh-market/fresh-market-template').then(m => ({ default: m.FreshMarketTemplate })), { loading: () => <ShopSkeleton /> })
 const MinimalisteTemplate = dynamic(() => import('@/components/minimaliste/minimaliste-template').then(m => ({ default: m.MinimalisteTemplate })), { loading: () => <ShopSkeleton /> })
-const BreezelTemplate = dynamic(() => import('@/components/breezel/breezel-template').then(m => ({ default: m.BreezelTemplate })), { loading: () => <ShopSkeleton /> })
 
 /** Minimal loading skeleton shown while a template loads via dynamic import */
 function ShopSkeleton() {
@@ -379,11 +378,9 @@ function ShopContent({ initialShopSlug, initialProductSlug }: { initialShopSlug?
   const [detailImageIndex, setDetailImageIndex] = useState(0)
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  // Effective slug: prefer the prop (comes directly from URL resolution,
-  // never stale), fall back to the store value (set by SPA navigation).
-  // This ensures that on direct URL entry (/cereales-de-anta), the slug
-  // is always correct even if the store hasn't synced yet.
-  const effectiveSlug = initialShopSlug || shopSlug || ''
+  // Effective slug: prefer the store value (may be set by navigation),
+  // fall back to the prop (set immediately from URL on direct navigation).
+  const effectiveSlug = shopSlug || initialShopSlug || ''
 
   // ─── URL-based product navigation ───
   const selectProductWithUrl = useCallback((product: Product | null) => {
@@ -478,10 +475,7 @@ function ShopContent({ initialShopSlug, initialProductSlug }: { initialShopSlug?
   }, [resetFavicon])
 
   const fetchShop = useCallback(async () => {
-    if (!effectiveSlug) {
-      setLoading(false)
-      return
-    }
+    if (!effectiveSlug) return
     setLoading(true)
     try {
       const shopRes = await fetch(`/api/shops/${effectiveSlug}`)
@@ -694,17 +688,6 @@ function ShopContent({ initialShopSlug, initialProductSlug }: { initialShopSlug?
     )
   }
 
-  // ── Breezel template ──
-  // Landing page produit épurée : slider full-width, page produit détaillée, design navy/white.
-  if (publicShop?.templateType === 'BREEZEL') {
-    return (
-      <>
-        <JsonLd shop={publicShop} products={publicProducts} categories={publicCategories} />
-        <BreezelTemplate />
-      </>
-    )
-  }
-
   // ── Live template ──
   // Live commerce template with animated LIVE badge, gradient hero, WhatsApp direct.
   if (['live-template', 'live-1', 'live-2', 'live-3'].includes(template.id)) {
@@ -758,7 +741,7 @@ function ShopContent({ initialShopSlug, initialProductSlug }: { initialShopSlug?
           <Package className="h-12 w-12 text-muted-foreground/40 mx-auto mb-4" />
           <h2 className="text-xl font-bold mb-2">Boutique introuvable</h2>
           <p className="text-muted-foreground mb-4">Cette boutique n&apos;existe pas ou a été désactivée.</p>
-          <Button onClick={() => { window.history.pushState(null, '', '/'); setView('landing') }}>Retour à l&apos;accueil</Button>
+          <Button onClick={() => setView('landing')}>Retour à l&apos;accueil</Button>
         </Card>
       </div>
     )
@@ -787,7 +770,7 @@ function ShopContent({ initialShopSlug, initialProductSlug }: { initialShopSlug?
         }}
       >
         <div className="max-w-5xl mx-auto px-4 py-2.5 flex items-center gap-3">
-          <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => selectedProduct ? deselectProductWithUrl() : (window.history.pushState(null, '', '/'), setView('landing'))}>
+          <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => selectedProduct ? deselectProductWithUrl() : setView('landing')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
 
