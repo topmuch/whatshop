@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
 import { getAuthUser } from '@/lib/auth'
+import { UPLOADS_DIR } from '@/lib/storage'
 
-const UPLOAD_DIR = join(process.cwd(), 'uploads', 'images')
+const UPLOAD_DIR = join(UPLOADS_DIR, 'images')
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5 MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml']
 

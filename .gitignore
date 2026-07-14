@@ -60,7 +60,7 @@ db/*.db
 db/*.db-journal
 
 # Uploaded files (stored in /app/uploads in production, ./uploads in dev)
-uploads/
+/uploads/
 
 # Worklog
 worklog.md
