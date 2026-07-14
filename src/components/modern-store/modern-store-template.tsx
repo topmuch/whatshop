@@ -110,6 +110,7 @@ export function ModernStoreTemplate({ videoHero: forceVideoHero }: { videoHero?:
   )
   const [loading, setLoading] = useState(true)
   const [testimonials, setTestimonials] = useState<Testimonial[]>([])
+  const [shopCategories, setShopCategories] = useState<{ id: string; name: string; image?: string | null }[]>([])
   // searchQuery removed — search bar removed from header
 
   // Product view state
@@ -135,14 +136,16 @@ export function ModernStoreTemplate({ videoHero: forceVideoHero }: { videoHero?:
     async function load() {
       setLoading(true)
       try {
-        const [configRes, productsRes, testimonialsRes] = await Promise.all([
+        const [configRes, productsRes, testimonialsRes, categoriesRes] = await Promise.all([
           fetch(`/api/shops/${shop!.slug}/modern-store-config`),
           fetch(`/api/shops/${shop!.slug}/products`),
           fetch(`/api/shops/${shop!.slug}/testimonials`),
+          fetch(`/api/shops/${shop!.slug}/categories`),
         ])
         const configData = await configRes.json()
         const productsData = await productsRes.json()
         const testimonialsData = await testimonialsRes.json()
+        const categoriesData = await categoriesRes.json()
         if (!cancelled) {
           setConfig(
             configData.config
@@ -151,6 +154,7 @@ export function ModernStoreTemplate({ videoHero: forceVideoHero }: { videoHero?:
           )
           setProducts(Array.isArray(productsData) ? productsData : [])
           setTestimonials(Array.isArray(testimonialsData) ? testimonialsData : [])
+          setShopCategories(Array.isArray(categoriesData) ? categoriesData : [])
         }
       } catch {
         if (!cancelled) toast.error('Erreur de chargement de la boutique')
@@ -307,8 +311,8 @@ export function ModernStoreTemplate({ videoHero: forceVideoHero }: { videoHero?:
   // ─── Loading state ───
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-white">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-gray-200 border-t-gray-900" />
+      <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#082231' }}>
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/20 border-t-white" />
       </div>
     )
   }
@@ -341,6 +345,7 @@ export function ModernStoreTemplate({ videoHero: forceVideoHero }: { videoHero?:
           promoProducts={promoProducts}
           bestSellers={bestSellers}
           testimonials={testimonials}
+          shopCategories={shopCategories}
           onProductClick={handleProductClick}
           onSeeProducts={() => {
             document
@@ -392,7 +397,7 @@ export function ModernStoreTemplate({ videoHero: forceVideoHero }: { videoHero?:
         shop={shop}
         shopName={shopName}
         accent={accent}
-        categories={categories}
+        categories={shopCategories.map(c => ({ name: c.name, id: c.id }))}
         products={products}
         onProductClick={handleProductClick}
         whatsapp={whatsapp}
@@ -434,7 +439,7 @@ function Header({
   logoH: number | null
 }) {
   return (
-    <header className="sticky top-0 z-30 border-b border-gray-100 bg-white/95 backdrop-blur-md shadow-sm">
+    <header className="sticky top-0 z-30 backdrop-blur-md shadow-sm" style={{ backgroundColor: '#082231' }}>
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
         {/* Logo — well-dimensioned uploaded logo */}
         <button
@@ -462,7 +467,7 @@ function Header({
               >
                 <Store className="h-4 w-4" />
               </div>
-              <span className="text-base font-bold text-gray-900">
+              <span className="text-base font-bold text-white">
                 {shop.name}
               </span>
             </div>
@@ -474,7 +479,7 @@ function Header({
           type="button"
           onClick={() => { window.location.href = '/login' }}
           aria-label="Connexion"
-          className="flex h-11 items-center justify-center gap-0 rounded-full px-3 text-gray-700 transition-colors hover:bg-gray-100"
+          className="flex h-11 items-center justify-center gap-0 rounded-full px-3 text-white/80 transition-colors hover:bg-white/10"
         >
           <LogIn className="h-4 w-4" />
           <span className="hidden sm:inline ml-1.5">Connexion</span>
@@ -485,7 +490,7 @@ function Header({
           type="button"
           onClick={onCartClick}
           aria-label={`Voir le panier (${itemCount} article${itemCount > 1 ? 's' : ''})`}
-          className="relative flex h-11 w-11 items-center justify-center rounded-full text-gray-700 transition-colors hover:bg-gray-100"
+          className="relative flex h-11 w-11 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/10"
         >
           <ShoppingBag className="h-5 w-5" />
           {itemCount > 0 && (
@@ -518,6 +523,7 @@ interface HomeViewProps {
   promoProducts: ModernStoreProduct[]
   bestSellers: ModernStoreProduct[]
   testimonials: Testimonial[]
+  shopCategories: { id: string; name: string; image?: string | null }[]
   onProductClick: (p: ModernStoreProduct) => void
   onSeeProducts: () => void
   forceVideoHero?: boolean
@@ -536,6 +542,7 @@ function HomeView(props: HomeViewProps) {
     promoProducts,
     bestSellers,
     testimonials,
+    shopCategories,
     onProductClick,
     onSeeProducts,
     forceVideoHero,
@@ -682,7 +689,52 @@ function HomeView(props: HomeViewProps) {
         )
       )}
 
-      {/* ─── SECTION B: EXCLUSIVE DEALS ─── */}
+      {/* ─── SECTION B: CATEGORIES WITH IMAGES ─── */}
+      {shopCategories.length > 0 && (
+        <section className="mx-auto max-w-6xl px-4 py-12">
+          <div className="mb-6">
+            <p
+              className="mb-1 text-xs font-bold uppercase tracking-widest"
+              style={{ color: accent }}
+            >
+              Nos catégories
+            </p>
+            <h2 className="text-2xl font-bold text-gray-900 md:text-3xl">
+              Parcourir par catégorie
+            </h2>
+          </div>
+          <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-6">
+            {shopCategories.map((cat) => (
+              <div
+                key={cat.id}
+                className="group flex flex-col items-center gap-2"
+              >
+                <div className="relative h-20 w-20 overflow-hidden rounded-full border-2 border-gray-100 bg-gray-50 transition-all group-hover:border-gray-300 group-hover:shadow-md sm:h-24 sm:w-24">
+                  {cat.image ? (
+                    <Image
+                      src={cat.image}
+                      alt={cat.name}
+                      fill
+                      unoptimized
+                      className="object-cover"
+                      sizes="96px"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-2xl text-gray-400">
+                      📁
+                    </div>
+                  )}
+                </div>
+                <span className="text-center text-xs font-medium text-gray-700 line-clamp-2 sm:text-sm">
+                  {cat.name}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ─── SECTION C: EXCLUSIVE DEALS ─── */}
       {promoProducts.length > 0 && (
         <section className="mx-auto max-w-6xl px-4 py-12">
           <div className="mb-6 flex items-center gap-2">
@@ -761,9 +813,9 @@ function HomeView(props: HomeViewProps) {
 
       {/* ─── SECTION D: BENEFITS ─── */}
       {config.benefits.length > 0 && (
-        <section className="border-y border-gray-100 bg-gray-50 py-12">
+        <section className="border-y border-white/10 py-12" style={{ backgroundColor: '#082231' }}>
           <div className="mx-auto max-w-6xl px-4">
-            <TrustBadges badges={config.benefits} accent={accent} />
+            <TrustBadges badges={config.benefits} accent={accent} dark />
           </div>
         </section>
       )}
@@ -1428,7 +1480,7 @@ function ModernStoreFooter({
     .slice(0, 6)
 
   return (
-    <footer className="mt-auto bg-gray-900 text-gray-300">
+    <footer className="mt-auto text-gray-300" style={{ backgroundColor: '#082231' }}>
       {/* ── Top: 4 columns ── */}
       <div className="mx-auto max-w-6xl px-4 py-12 md:py-16">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
@@ -1567,7 +1619,7 @@ function ModernStoreFooter({
                 type="email"
                 placeholder="Votre email"
                 required
-                className="h-10 flex-1 rounded-l-lg rounded-r-none border-gray-600 bg-gray-800 text-sm text-white placeholder:text-gray-500 focus:ring-0 focus:border-gray-500"
+                className="h-10 flex-1 rounded-l-lg rounded-r-none border-white/20 bg-white/10 text-sm text-white placeholder:text-gray-400 focus:ring-0 focus:border-white/30"
               />
               <button
                 type="submit"
@@ -1596,7 +1648,7 @@ function ModernStoreFooter({
       </div>
 
       {/* ── Bottom: Copyright ── */}
-      <div className="border-t border-gray-800">
+      <div className="border-t border-white/10">
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-2 px-4 py-6 text-center text-xs text-gray-500 sm:flex-row sm:justify-between">
           <p>
             © {year} {shopName}. Tous droits réservés.
