@@ -3,6 +3,11 @@ import withPWA from "@ducanh2912/next-pwa";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  experimental: {
+    // Disable output file tracing to prevent OOM during build on constrained servers.
+    // The Dockerfile manually copies all required files (standalone, static, public, prisma, sharp).
+    outputFileTracing: false,
+  },
   images: {
     unoptimized: true,
   },
@@ -11,14 +16,6 @@ const nextConfig: NextConfig = {
   },
   reactStrictMode: false,
   turbopack: {},
-  // Reduce memory during build trace collection (prevents OOM in Docker)
-  outputFileTracingExcludes: {
-    '*': [
-      './node_modules/.prisma/**',
-      './node_modules/sharp/**',
-      './node_modules/@img/**',
-    ],
-  },
   // Rewrite legacy /uploads/xxx URLs to /api/uploads/xxx
   async rewrites() {
     return [
