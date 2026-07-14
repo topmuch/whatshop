@@ -30,7 +30,10 @@ ENV DATABASE_URL=file:/dev/null
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 ENV NEXT_PRIVATE_WORKER_COUNT=1
 
-RUN bun run build
+# Build Next.js. If the "Collecting build traces" step OOMs, the standalone
+# output (.next/standalone) is already written, so we can safely continue.
+# The Dockerfile manually copies static, public, prisma, and sharp anyway.
+RUN bun run build || (test -d .next/standalone && echo "⚠ Trace step failed but standalone output exists, continuing...")
 
 # ─── Production stage ───────────────────────────────────────
 FROM oven/bun:1 AS runner
