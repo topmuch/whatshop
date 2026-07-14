@@ -49,7 +49,7 @@ const SingleProductTemplate = dynamic(() => import('@/components/single-product/
 const ModernStoreTemplate = dynamic(() => import('@/components/modern-store/modern-store-template').then(m => ({ default: m.ModernStoreTemplate })), { loading: () => <ShopSkeleton /> })
 const ModernStore2Template = dynamic(() => import('@/components/modern-store/modern-store-2-template').then(m => ({ default: m.ModernStore2Template })), { loading: () => <ShopSkeleton /> })
 const CosmikaDarkTemplate = dynamic(() => import('@/components/cosmika-dark/cosmika-dark-template').then(m => ({ default: m.CosmikaDarkTemplate })), { loading: () => <ShopSkeleton /> })
-const VitrineTemplate = dynamic(() => import('@/components/vitrine/vitrine-template').then(m => ({ default: m.VitrineTemplate })), { loading: () => <ShopSkeleton /> })
+const VitrineTemplate = dynamic(() => import('@/components/templates/vitrine/vitrine-template').then(m => ({ default: m.VitrineTemplate })), { loading: () => <ShopSkeleton /> })
 const FreshMarketTemplate = dynamic(() => import('@/components/templates/fresh-market/fresh-market-template').then(m => ({ default: m.FreshMarketTemplate })), { loading: () => <ShopSkeleton /> })
 const MinimalisteTemplate = dynamic(() => import('@/components/minimaliste/minimaliste-template').then(m => ({ default: m.MinimalisteTemplate })), { loading: () => <ShopSkeleton /> })
 
