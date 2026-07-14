@@ -158,6 +158,28 @@ export const TEMPLATE_DISPLAY: Record<string, TemplateDisplayInfo> = {
       emoji: '💎',
     },
   },
+  'vitrine': {
+    displayName: 'Vitrine',
+    tagline: 'Élégant avec bouton Réserver',
+    description:
+      "Template vitrine élégant avec design #082231, boutons de réservation au lieu d'ajout au panier, catégories visuelles et marquee animé. Idéal pour les boutiques de luxe, showrooms et produits exclusifs.",
+    features: [
+      "Design élégant avec couleurs #082231",
+      'Boutons « Réserver » au lieu d\'ajout au panier',
+      'Barre défilante animée (marquee) en haut',
+      'Catégories avec images en cercles',
+      'Grille produits responsive avec effets hover',
+      'Fiches produit avec galerie, variantes et similaires',
+      'Panier persistant + checkout formulaire',
+      'Bouton « Acheter maintenant » WhatsApp',
+      'Footer multi-colonnes sur fond #082231',
+    ],
+    style: {
+      primaryColor: '#082231',
+      badge: 'Vitrine',
+      emoji: '🏪',
+    },
+  },
   'single-product': {
     displayName: 'Single Produit',
     tagline: 'Landing page optimisée conversion',
