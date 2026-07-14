@@ -121,7 +121,7 @@ export const DEFAULT_MODERN_STORE_CONFIG: ModernStoreConfig = {
     enabled: false,
   },
   marquee: {
-    enabled: true,
+    enabled: false,
     text: 'BIENVENUE DANS NOTRE BOUTIQUE ★ PAIEMENT À LA LIVRAISON ★ RETOURS SOUS 7 JOURS ★ SERVICE CLIENT 24/7',
     separator: ' ★ ',
     speed: 25,

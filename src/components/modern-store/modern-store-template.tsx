@@ -452,10 +452,10 @@ function Header({
             <Image
               src={shop.logo}
               alt={shop.name}
-              width={200}
-              height={53}
+              width={300}
+              height={80}
               unoptimized
-              className='h-16 md:h-20 w-auto max-w-[240px] md:max-w-[300px] object-contain'
+              className='h-20 md:h-28 w-auto max-w-[280px] md:max-w-[360px] object-contain'
               style={logoH ? { height: logoH } : undefined}
               priority
             />
@@ -692,24 +692,16 @@ function HomeView(props: HomeViewProps) {
       {/* ─── SECTION B: CATEGORIES WITH IMAGES ─── */}
       {shopCategories.length > 0 && (
         <section className="mx-auto max-w-6xl px-4 py-12">
-          <div className="mb-6">
-            <p
-              className="mb-1 text-xs font-bold uppercase tracking-widest"
-              style={{ color: accent }}
-            >
-              Nos catégories
-            </p>
-            <h2 className="text-2xl font-bold text-gray-900 md:text-3xl">
-              Parcourir par catégorie
-            </h2>
-          </div>
-          <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-6">
+          <h2 className="mb-8 text-2xl font-bold text-gray-900 md:text-3xl">
+            Nos catégories
+          </h2>
+          <div className="grid grid-cols-3 gap-5 sm:grid-cols-4 md:grid-cols-6">
             {shopCategories.map((cat) => (
               <div
                 key={cat.id}
-                className="group flex flex-col items-center gap-2"
+                className="group flex flex-col items-center gap-3"
               >
-                <div className="relative h-20 w-20 overflow-hidden rounded-full border-2 border-gray-100 bg-gray-50 transition-all group-hover:border-gray-300 group-hover:shadow-md sm:h-24 sm:w-24">
+                <div className="relative h-28 w-28 overflow-hidden rounded-full border-2 border-gray-100 bg-gray-50 transition-all group-hover:border-gray-300 group-hover:shadow-lg sm:h-32 sm:w-32">
                   {cat.image ? (
                     <Image
                       src={cat.image}
@@ -717,15 +709,15 @@ function HomeView(props: HomeViewProps) {
                       fill
                       unoptimized
                       className="object-cover"
-                      sizes="96px"
+                      sizes="128px"
                     />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center text-2xl text-gray-400">
+                    <div className="flex h-full w-full items-center justify-center text-3xl text-gray-400">
                       📁
                     </div>
                   )}
                 </div>
-                <span className="text-center text-xs font-medium text-gray-700 line-clamp-2 sm:text-sm">
+                <span className="text-center text-sm font-medium text-gray-700 line-clamp-2">
                   {cat.name}
                 </span>
               </div>
