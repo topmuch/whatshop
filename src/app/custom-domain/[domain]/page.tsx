@@ -1,9 +1,21 @@
 import { db } from '@/lib/db'
+import { redirect } from 'next/navigation'
 
 export const dynamic = 'force-dynamic'
 
 export default async function CustomDomainPage({ params }: { params: Promise<{ domain: string }> }) {
   const { domain } = await params
+
+  // Safety net: if a known non-custom-domain host somehow ends up here
+  // (e.g. a Z.ai preview host), bounce to the homepage instead of showing
+  // a misleading "Domaine non trouvé" page.
+  const isSpaceZPreview =
+    domain.endsWith('.space-z.ai') ||
+    domain === 'space-z.ai' ||
+    /^preview-[a-z0-9-]+\.space-z\.ai$/.test(domain)
+  if (isSpaceZPreview) {
+    redirect('/')
+  }
 
   // Find the shop with this custom domain
   const shop = await db.shop.findFirst({

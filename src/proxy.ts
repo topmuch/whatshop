@@ -71,13 +71,40 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // ─── CUSTOM DOMAIN ROUTING ──────────────────────────────────────────
-  // If the host is not boutiko.pro (or localhost), it might be a custom domain
+  // If the host is not the app's main host (or localhost), it might be a custom domain.
   const host = request.headers.get('host')?.split(':')[0] || ''
   const appHost = process.env.NEXT_PUBLIC_APP_URL
     ? new URL(process.env.NEXT_PUBLIC_APP_URL).hostname
     : 'boutiko.pro'
 
-  if (host !== appHost && host !== 'localhost' && host !== '127.0.0.1') {
+  // Hosts that should NEVER be treated as custom domains:
+  //   - the app's main host (boutiko.pro)
+  //   - localhost / 127.0.0.1 (dev)
+  //   - IPv4 / IPv6 literals
+  //   - the Z.ai dev preview host and any *.space-z.ai subdomain
+  //     (used by the dev sandbox; treating them as custom domains made every
+  //      non-API route return 404 on the public preview URL)
+  //   - any host explicitly listed in CUSTOM_DOMAIN_ALLOWLIST_SKIP (csv)
+  const isIpLiteral = /^(\d{1,3}\.){3}\d{1,3}$/.test(host) || host === '[::1]'
+  const isLocalhost = host === 'localhost' || host === '127.0.0.1' || host.endsWith('.localhost')
+  const isSpaceZPreview =
+    host.endsWith('.space-z.ai') ||
+    host === 'space-z.ai' ||
+    /^preview-[a-z0-9-]+\.space-z\.ai$/.test(host)
+  const skipHosts = (process.env.CUSTOM_DOMAIN_ALLOWLIST_SKIP || '')
+    .split(',')
+    .map((h) => h.trim().toLowerCase())
+    .filter(Boolean)
+
+  const isCustomDomainCandidate =
+    host !== appHost &&
+    host !== '' &&
+    !isLocalhost &&
+    !isIpLiteral &&
+    !isSpaceZPreview &&
+    !skipHosts.includes(host.toLowerCase())
+
+  if (isCustomDomainCandidate) {
     // Custom domain → rewrite to server-side resolver page
     const response = NextResponse.rewrite(
       new URL(`/custom-domain/${host}${pathname}${request.nextUrl.search}`, request.url)
