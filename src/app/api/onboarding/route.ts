@@ -5,22 +5,6 @@ import { createNotification } from '@/lib/notifications'
 import { generateSlug } from '@/lib/utils'
 import { dispatchWelcomeEmail, dispatchAdminNewShopEmail } from '@/lib/email-dispatch'
 
-// Sector → Template mapping
-const sectorTemplateMap: Record<string, string> = {
-  // ECOMMERCE sectors
-  beaute: 'xstore-electro',
-  mode: 'xstore-electro',
-  electronique: 'xstore-electro',
-  alimentation: 'xstore-electro',
-  autre: 'xstore-electro',
-  // SERVICE sectors
-  'beaute-service': 'xstore-electro',
-  restaurant: 'xstore-electro',
-  consulting: 'xstore-electro',
-  artisanat: 'xstore-electro',
-  sante: 'xstore-electro',
-}
-
 // Sector → Default categories
 const sectorCategoriesMap: Record<string, string[]> = {
   beaute: ['Maquillage', 'Soins', 'Parfums', 'Accessoires Beauté'],
@@ -109,9 +93,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Auto-assign template based on plan, then sector, then override
-    const LIVE_ALLOWED = new Set(['live-template', 'live-1', 'live-2', 'live-3', 'xstore-electro'])
-    let template = templateOverride || sectorTemplateMap[sector] || 'xstore-electro'
+    // Auto-assign template — cosmika-dark par défaut (sélection de template supprimée de l'onboarding).
+    // Override client accepté si fourni (utile pour réintroduire le choix plus tard).
+    // Pour les plans LIVE/LIVE_PRO, on garde le whitelist historique ; cosmika-dark y est ajouté
+    // pour ne pas écraser la valeur par défaut.
+    const LIVE_ALLOWED = new Set(['live-template', 'live-1', 'live-2', 'live-3', 'xstore-electro', 'cosmika-dark'])
+    let template = templateOverride || 'cosmika-dark'
     // LIVE/LIVE_PRO plans: enforce allowed templates, default to live-template
     if ((finalPlan === 'LIVE' || finalPlan === 'LIVE_PRO') && !LIVE_ALLOWED.has(template)) {
       template = 'live-template'

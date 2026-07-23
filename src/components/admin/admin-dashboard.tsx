@@ -185,12 +185,15 @@ interface AdminSubscription {
   shopId: string
   shopName: string
   shopSlug: string
+  ownerId: string
   ownerName: string
   ownerEmail: string
   plan: string
   status: string
-  endDate: string
-  trialEndDate: string
+  endDate: string | null
+  trialEndDate: string | null
+  isActive: boolean
+  createdAt: string
 }
 
 interface AdminDomain {
@@ -1550,9 +1553,12 @@ function AdminOverview() {
 function AdminSubscriptions() {
   const [subscriptions, setSubscriptions] = useState<AdminSubscription[]>([])
   const [statusFilter, setStatusFilter] = useState('all')
+  const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [upgradeDialog, setUpgradeDialog] = useState<{ open: boolean; shopId: string; shopName: string; currentPlan: string }>({ open: false, shopId: '', shopName: '', currentPlan: '' })
+  // Confirmation dialog for destructive actions (suspend / delete / cancel)
+  const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; shopId: string; shopName: string; action: 'suspend' | 'reactivate' | 'cancel' | 'delete' }>({ open: false, shopId: '', shopName: '', action: 'suspend' })
 
   const loadSubscriptions = useCallback(async (status: string) => {
     setLoading(true)
@@ -1622,28 +1628,131 @@ function AdminSubscriptions() {
     }
   }
 
+  // Run a destructive action after the user confirmed via AlertDialog
+  async function handleConfirmedAction() {
+    const { shopId, action } = confirmDialog
+    setConfirmDialog({ open: false, shopId: '', shopName: '', action: 'suspend' })
+    await handleAction(shopId, action)
+  }
+
+  // ─── Derived stats ───
+  const stats = {
+    total: subscriptions.length,
+    active: subscriptions.filter((s) => s.status === 'ACTIVE').length,
+    trial: subscriptions.filter((s) => s.status === 'TRIAL').length,
+    suspended: subscriptions.filter((s) => s.status === 'SUSPENDED').length,
+    cancelled: subscriptions.filter((s) => s.status === 'CANCELLED').length,
+    expired: subscriptions.filter((s) => s.status === 'EXPIRED').length,
+  }
+
+  // ─── Search filter (client-side) ───
+  const filteredSubs = searchQuery.trim()
+    ? subscriptions.filter((s) => {
+        const q = searchQuery.toLowerCase().trim()
+        return (
+          s.shopName.toLowerCase().includes(q) ||
+          s.ownerName.toLowerCase().includes(q) ||
+          s.ownerEmail.toLowerCase().includes(q) ||
+          s.shopSlug.toLowerCase().includes(q)
+        )
+      })
+    : subscriptions
+
+  // ─── Confirm dialog copy per action ───
+  const confirmCopy: Record<typeof confirmDialog.action, { title: string; description: string; confirmLabel: string; destructive: boolean }> = {
+    suspend: {
+      title: 'Suspendre cet abonnement ?',
+      description: 'La boutique sera désactivée immédiatement. Le propriétaire ne pourra plus accéder à son dashboard ni vendre. L\'abonnement peut être réactivé à tout moment.',
+      confirmLabel: 'Suspendre',
+      destructive: true,
+    },
+    reactivate: {
+      title: 'Réactiver cet abonnement ?',
+      description: 'La boutique sera de nouveau accessible. Si l\'abonnement avait expiré, une nouvelle période de 1 an sera offerte.',
+      confirmLabel: 'Réactiver',
+      destructive: false,
+    },
+    cancel: {
+      title: 'Annuler cet abonnement ?',
+      description: 'L\'abonnement sera marqué comme "Annulé". La boutique restera visible mais ne sera plus active.',
+      confirmLabel: 'Annuler l\'abonnement',
+      destructive: true,
+    },
+    delete: {
+      title: 'Supprimer cet abonnement ?',
+      description: '⚠️ Action irréversible. L\'abonnement sera totalement supprimé (statut, dates, enregistrement Subscription). La boutique sera désactivée. Pour supprimer complètement la boutique, utilisez la section Boutiques.',
+      confirmLabel: 'Supprimer définitivement',
+      destructive: true,
+    },
+  }
+
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Abonnements</h2>
+      {/* ── Header ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-bold">Abonnements</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Gérez les abonnements des boutiques : validation des paiements, suspension, réactivation, suppression.
+          </p>
+        </div>
+      </div>
 
-      {/* Filter */}
+      {/* ── Stats cards ── */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        <Card className="p-4">
+          <div className="text-xs text-muted-foreground">Total</div>
+          <div className="text-2xl font-bold mt-1">{stats.total}</div>
+        </Card>
+        <Card className="p-4 border-emerald-200 bg-emerald-50/50">
+          <div className="text-xs text-emerald-700">Actifs</div>
+          <div className="text-2xl font-bold mt-1 text-emerald-700">{stats.active}</div>
+        </Card>
+        <Card className="p-4 border-sky-200 bg-sky-50/50">
+          <div className="text-xs text-sky-700">Essai</div>
+          <div className="text-2xl font-bold mt-1 text-sky-700">{stats.trial}</div>
+        </Card>
+        <Card className="p-4 border-amber-200 bg-amber-50/50">
+          <div className="text-xs text-amber-700">Suspendus</div>
+          <div className="text-2xl font-bold mt-1 text-amber-700">{stats.suspended}</div>
+        </Card>
+        <Card className="p-4 border-red-200 bg-red-50/50">
+          <div className="text-xs text-red-700">Expirés</div>
+          <div className="text-2xl font-bold mt-1 text-red-700">{stats.expired}</div>
+        </Card>
+        <Card className="p-4 border-gray-200 bg-gray-50/50">
+          <div className="text-xs text-gray-700">Annulés</div>
+          <div className="text-2xl font-bold mt-1 text-gray-700">{stats.cancelled}</div>
+        </Card>
+      </div>
+
+      {/* ── Filters bar ── */}
       <div className="flex flex-col sm:flex-row gap-3">
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-[180px]">
+          <SelectTrigger className="w-full sm:w-[200px]">
             <SelectValue placeholder="Statut" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tous les statuts</SelectItem>
-            <SelectItem value="ACTIVE">Actif</SelectItem>
-            <SelectItem value="SUSPENDED">Suspendu</SelectItem>
-            <SelectItem value="EXPIRED">Expiré</SelectItem>
-            <SelectItem value="CANCELLED">Annulé</SelectItem>
-            <SelectItem value="TRIAL">Essai</SelectItem>
+            <SelectItem value="ACTIVE">✅ Actif</SelectItem>
+            <SelectItem value="TRIAL">⏳ Essai</SelectItem>
+            <SelectItem value="SUSPENDED">⏸ Suspendu</SelectItem>
+            <SelectItem value="EXPIRED">⌛ Expiré</SelectItem>
+            <SelectItem value="CANCELLED">❌ Annulé</SelectItem>
           </SelectContent>
         </Select>
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Rechercher par boutique, propriétaire ou email…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
       </div>
 
-      {/* Table */}
+      {/* ── Table ── */}
       {loading ? (
         <Card>
           <CardContent className="p-4 space-y-3">
@@ -1652,11 +1761,13 @@ function AdminSubscriptions() {
             ))}
           </CardContent>
         </Card>
-      ) : subscriptions.length === 0 ? (
+      ) : filteredSubs.length === 0 ? (
         <Card>
           <CardContent className="p-8 text-center">
             <CreditCard className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
-            <p className="text-muted-foreground">Aucun abonnement trouvé</p>
+            <p className="text-muted-foreground">
+              {searchQuery ? 'Aucun abonnement ne correspond à votre recherche' : 'Aucun abonnement trouvé'}
+            </p>
           </CardContent>
         </Card>
       ) : (
@@ -1669,115 +1780,183 @@ function AdminSubscriptions() {
                   <TableHead>Propriétaire</TableHead>
                   <TableHead>Plan</TableHead>
                   <TableHead>Statut</TableHead>
-                  <TableHead>Date fin</TableHead>
-                  <TableHead className="hidden md:table-cell">Fin essai</TableHead>
+                  <TableHead className="hidden md:table-cell">Fin abonnement</TableHead>
+                  <TableHead className="hidden lg:table-cell">Fin essai</TableHead>
+                  <TableHead className="hidden lg:table-cell">Inscrit le</TableHead>
                   <TableHead className="text-center">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {subscriptions.map((sub) => (
-                  <TableRow key={sub.id}>
-                    <TableCell className="font-medium">{sub.shopName}</TableCell>
+                {filteredSubs.map((sub) => (
+                  <TableRow key={sub.shopId} className={!sub.isActive ? 'opacity-60' : ''}>
+                    {/* Boutique */}
                     <TableCell>
-                      <div>
-                        <p className="text-sm">{sub.ownerName}</p>
-                        <p className="text-xs text-muted-foreground">{sub.ownerEmail}</p>
+                      <div className="flex items-center gap-2">
+                        <div className={`h-2 w-2 rounded-full shrink-0 ${sub.isActive ? 'bg-emerald-500' : 'bg-gray-400'}`} title={sub.isActive ? 'Boutique active' : 'Boutique désactivée'} />
+                        <div className="min-w-0">
+                          <p className="font-medium truncate">{sub.shopName}</p>
+                          <p className="text-xs text-muted-foreground truncate">/{sub.shopSlug}</p>
+                        </div>
                       </div>
                     </TableCell>
+
+                    {/* Propriétaire */}
+                    <TableCell>
+                      <div className="min-w-0">
+                        <p className="text-sm truncate">{sub.ownerName}</p>
+                        <p className="text-xs text-muted-foreground truncate">{sub.ownerEmail}</p>
+                      </div>
+                    </TableCell>
+
+                    {/* Plan */}
                     <TableCell>
                       <Badge variant={planVariant(sub.plan)}>{sub.plan.replace(/_/g, ' ')}</Badge>
                     </TableCell>
+
+                    {/* Statut */}
                     <TableCell>{subscriptionStatusBadge(sub.status)}</TableCell>
-                    <TableCell className="text-muted-foreground">
+
+                    {/* Fin abonnement */}
+                    <TableCell className="text-muted-foreground hidden md:table-cell">
                       {sub.endDate ? formatDate(sub.endDate) : '—'}
                     </TableCell>
-                    <TableCell className="text-muted-foreground hidden md:table-cell">
+
+                    {/* Fin essai */}
+                    <TableCell className="text-muted-foreground hidden lg:table-cell">
                       {sub.trialEndDate ? (
                         <span className={sub.status === 'TRIAL' ? 'text-amber-600 font-medium' : ''}>
                           {formatDate(sub.trialEndDate)}
                         </span>
                       ) : '—'}
                     </TableCell>
+
+                    {/* Inscrit le */}
+                    <TableCell className="text-muted-foreground text-xs hidden lg:table-cell">
+                      {sub.createdAt ? formatDate(sub.createdAt) : '—'}
+                    </TableCell>
+
+                    {/* Actions */}
                     <TableCell>
-                      <div className="flex items-center gap-1 flex-wrap">
-                        {/* Trial-specific actions */}
+                      <div className="flex items-center gap-1 flex-wrap justify-center">
+                        {/* ───── TRIAL-specific actions ───── */}
                         {sub.status === 'TRIAL' && (
                           <>
                             <Button
-                              variant="ghost"
-                              size="sm"
+                              variant="ghost" size="sm"
                               className="h-8 text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 font-semibold"
                               onClick={() => handleAction(sub.shopId, 'validate_payment')}
                               disabled={actionLoading === `${sub.shopId}-validate_payment`}
+                              title="Valider le paiement — passer d'essai à actif"
                             >
                               {actionLoading === `${sub.shopId}-validate_payment` ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Check className="h-3 w-3 mr-1" />}
                               Valider
                             </Button>
                             <Button
-                              variant="ghost"
-                              size="sm"
+                              variant="ghost" size="sm"
                               className="h-8 text-xs text-amber-600 hover:text-amber-700 hover:bg-amber-50"
                               onClick={() => handleAction(sub.shopId, 'extend_trial')}
                               disabled={actionLoading === `${sub.shopId}-extend_trial`}
+                              title="Prolonger l'essai de 7 jours"
                             >
                               {actionLoading === `${sub.shopId}-extend_trial` ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Plus className="h-3 w-3 mr-1" />}
-                              +7j essai
+                              +7j
                             </Button>
                           </>
                         )}
-                        {/* Active subscription actions */}
-                        {sub.status !== 'TRIAL' && (
-                          <>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 text-xs text-amber-600 hover:text-amber-700 hover:bg-amber-50"
-                              onClick={() => handleAction(sub.shopId, 'suspend')}
-                              disabled={actionLoading === `${sub.shopId}-suspend`}
-                            >
-                              {actionLoading === `${sub.shopId}-suspend` ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <XCircle className="h-3 w-3 mr-1" />}
-                              Suspendre
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
-                              onClick={() => handleAction(sub.shopId, 'cancel')}
-                              disabled={actionLoading === `${sub.shopId}-cancel`}
-                            >
-                              {actionLoading === `${sub.shopId}-cancel` ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <XCircle className="h-3 w-3 mr-1" />}
-                              Annuler
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 text-xs text-sky-600 hover:text-sky-700 hover:bg-sky-50"
-                              onClick={() => handleAction(sub.shopId, 'extend')}
-                              disabled={actionLoading === `${sub.shopId}-extend`}
-                            >
-                              {actionLoading === `${sub.shopId}-extend` ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Plus className="h-3 w-3 mr-1" />}
-                              +1 an
-                            </Button>
-                          </>
+
+                        {/* ───── Suspend (only if active) ───── */}
+                        {(sub.status === 'ACTIVE' || sub.status === 'TRIAL') && (
+                          <Button
+                            variant="ghost" size="sm"
+                            className="h-8 text-xs text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                            onClick={() => setConfirmDialog({ open: true, shopId: sub.shopId, shopName: sub.shopName, action: 'suspend' })}
+                            disabled={actionLoading === `${sub.shopId}-suspend`}
+                            title="Suspendre la boutique"
+                          >
+                            {actionLoading === `${sub.shopId}-suspend` ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Power className="h-3 w-3 mr-1" />}
+                            Suspendre
+                          </Button>
                         )}
+
+                        {/* ───── Reactivate (if suspended or cancelled) ───── */}
+                        {(sub.status === 'SUSPENDED' || sub.status === 'CANCELLED' || sub.status === 'EXPIRED') && (
+                          <Button
+                            variant="ghost" size="sm"
+                            className="h-8 text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                            onClick={() => setConfirmDialog({ open: true, shopId: sub.shopId, shopName: sub.shopName, action: 'reactivate' })}
+                            disabled={actionLoading === `${sub.shopId}-reactivate`}
+                            title="Réactiver la boutique"
+                          >
+                            {actionLoading === `${sub.shopId}-reactivate` ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Power className="h-3 w-3 mr-1" />}
+                            Réactiver
+                          </Button>
+                        )}
+
+                        {/* ───── Extend (+1 an) — only for active ───── */}
+                        {sub.status === 'ACTIVE' && (
+                          <Button
+                            variant="ghost" size="sm"
+                            className="h-8 text-xs text-sky-600 hover:text-sky-700 hover:bg-sky-50"
+                            onClick={() => handleAction(sub.shopId, 'extend')}
+                            disabled={actionLoading === `${sub.shopId}-extend`}
+                            title="Prolonger l'abonnement d'1 an"
+                          >
+                            {actionLoading === `${sub.shopId}-extend` ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Plus className="h-3 w-3 mr-1" />}
+                            +1 an
+                          </Button>
+                        )}
+
+                        {/* ───── Upgrade plan ───── */}
                         <Button
-                          variant="ghost"
-                          size="sm"
+                          variant="ghost" size="sm"
                           className="h-8 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50 gap-1"
                           onClick={() => setUpgradeDialog({ open: true, shopId: sub.shopId, shopName: sub.shopName, currentPlan: sub.plan })}
+                          title="Changer de forfait"
                         >
                           <ArrowUpRight className="h-3 w-3" />
                           Plan
                         </Button>
+
+                        {/* ───── View shop ───── */}
                         <Button
-                          variant="ghost"
-                          size="icon"
+                          variant="ghost" size="icon"
                           className="h-8 w-8"
                           title="Voir la boutique"
                           onClick={() => window.open(`/${sub.shopSlug}`, '_blank')}
                         >
                           <Eye className="h-4 w-4 text-muted-foreground" />
                         </Button>
+
+                        {/* ───── DELETE (always available, destructive) ───── */}
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost" size="icon"
+                              className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                              disabled={actionLoading === `${sub.shopId}-delete`}
+                              title="Supprimer l'abonnement"
+                            >
+                              {actionLoading === `${sub.shopId}-delete` ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Supprimer l'abonnement de « {sub.shopName} » ?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                ⚠️ Action irréversible. L'abonnement sera totalement supprimé (statut, dates, enregistrement Subscription). La boutique sera désactivée. Pour supprimer complètement la boutique elle-même, utilisez la section « Boutiques ».
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Annuler</AlertDialogCancel>
+                              <AlertDialogAction
+                                className="bg-red-600 hover:bg-red-700 text-white"
+                                onClick={() => handleAction(sub.shopId, 'delete')}
+                              >
+                                Supprimer définitivement
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -1788,7 +1967,26 @@ function AdminSubscriptions() {
         </Card>
       )}
 
-      {/* Upgrade Dialog */}
+      {/* ── Generic confirm dialog (suspend / reactivate / cancel) ── */}
+      <AlertDialog open={confirmDialog.open} onOpenChange={(open) => !open && setConfirmDialog({ open: false, shopId: '', shopName: '', action: 'suspend' })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{confirmCopy[confirmDialog.action].title}</AlertDialogTitle>
+            <AlertDialogDescription>{confirmCopy[confirmDialog.action].description}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              className={confirmCopy[confirmDialog.action].destructive ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-emerald-600 hover:bg-emerald-700 text-white'}
+              onClick={handleConfirmedAction}
+            >
+              {confirmCopy[confirmDialog.action].confirmLabel}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* ── Upgrade Dialog ── */}
       <Dialog open={upgradeDialog.open} onOpenChange={(open) => !open && setUpgradeDialog({ open: false, shopId: '', shopName: '', currentPlan: '' })}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>

@@ -229,12 +229,13 @@ export async function PATCH(request: NextRequest) {
     }
 
     // ─── Legacy actions ───
-    const validActions = ['activate', 'suspend', 'cancel', 'extend']
+    const validActions = ['activate', 'suspend', 'reactivate', 'cancel', 'extend', 'delete']
     if (!validActions.includes(action)) {
-      return NextResponse.json({ error: 'Action invalide. Utilisez: validate_payment, extend_trial, upgrade, activate, suspend, cancel, extend' }, { status: 400 })
+      return NextResponse.json({ error: 'Action invalide. Utilisez: validate_payment, extend_trial, upgrade, activate, suspend, reactivate, cancel, extend, delete' }, { status: 400 })
     }
 
     let updateData: Record<string, unknown> = {}
+    let deleteSubscriptionRecord = false
 
     switch (action) {
       case 'activate': {
@@ -252,6 +253,20 @@ export async function PATCH(request: NextRequest) {
         updateData = {
           subscriptionStatus: 'SUSPENDED',
           isActive: false,
+        }
+        break
+      }
+      case 'reactivate': {
+        // Réactive une boutique suspendue ou annulée. Si la fin d'abonnement
+        // est dans le passé, on offre 1 an à partir d'aujourd'hui.
+        const baseDate = shop.subscriptionEndDate ? new Date(shop.subscriptionEndDate) : null
+        const endDate = (!baseDate || baseDate < new Date())
+          ? (() => { const d = new Date(); d.setFullYear(d.getFullYear() + 1); return d })()
+          : baseDate
+        updateData = {
+          subscriptionStatus: 'ACTIVE',
+          subscriptionEndDate: endDate,
+          isActive: true,
         }
         break
       }
@@ -276,6 +291,20 @@ export async function PATCH(request: NextRequest) {
         }
         break
       }
+      case 'delete': {
+        // "Supprimer l'abonnement" = réinitialiser les champs d'abonnement
+        // de la boutique ET supprimer l'enregistrement Subscription lié.
+        // La boutique elle-même n'est PAS supprimée (pour cela, utiliser
+        // /api/admin/shops/[id] en DELETE).
+        updateData = {
+          subscriptionStatus: null,
+          subscriptionEndDate: null,
+          trialEndDate: null,
+          isActive: false,
+        }
+        deleteSubscriptionRecord = true
+        break
+      }
     }
 
     const updated = await db.shop.update({
@@ -283,12 +312,25 @@ export async function PATCH(request: NextRequest) {
       data: updateData,
     })
 
+    if (deleteSubscriptionRecord) {
+      try {
+        await db.subscription.deleteMany({ where: { userId: shop.ownerId } })
+      } catch {
+        // Non-critical : si pas de Subscription record, on continue
+      }
+    }
+
     return NextResponse.json({
       id: updated.id,
       name: updated.name,
       subscriptionStatus: updated.subscriptionStatus,
       subscriptionEndDate: updated.subscriptionEndDate?.toISOString() ?? null,
       isActive: updated.isActive,
+      message: action === 'delete'
+        ? `Abonnement de "${shop.name}" supprimé. La boutique est désactivée.`
+        : action === 'reactivate'
+          ? `Boutique "${shop.name}" réactivée.`
+          : undefined,
     })
   } catch (error) {
     console.error('Admin subscription update error:', error)

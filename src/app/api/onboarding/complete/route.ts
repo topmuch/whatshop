@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { requireAuth } from '@/lib/auth'
 import { createNotification } from '@/lib/notifications'
-import { getDefaultCategories, getTemplateForSector, SECTORS, type Sector } from '@/lib/sector-config'
+import { getDefaultCategories, SECTORS, type Sector } from '@/lib/sector-config'
 import { generateSlug } from '@/lib/utils'
 
 // ─── VALID SETS ─────────────────────────────────────────────────────────
@@ -68,6 +68,7 @@ export async function POST(request: NextRequest) {
     const {
       businessType,
       sector,
+      template: templateOverride,
       name,
       whatsapp,
       description,
@@ -76,6 +77,7 @@ export async function POST(request: NextRequest) {
     } = body as {
       businessType?: string
       sector?: string
+      template?: string
       name?: string
       whatsapp?: string
       description?: string
@@ -178,8 +180,14 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // ── Template from sector-config ──
-    const template = getTemplateForSector(sector)
+    // ── Template ──
+    // L'onboarding ne propose plus de sélection de template : toutes les nouvelles
+    // boutiques démarrent sur cosmika-dark. Le client peut quand même envoyer un
+    // override `template` dans le body (utilisé pour conserver le comportement
+    // si on réintroduit le choix plus tard).
+    const template = (typeof templateOverride === 'string' && templateOverride.trim().length > 0)
+      ? templateOverride.trim()
+      : 'cosmika-dark'
 
     // ── Trial end date ──
     const finalPlan = plan || 'TRIAL'

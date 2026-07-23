@@ -8,10 +8,9 @@ import { Progress } from '@/components/ui/progress'
 import { ArrowLeft, ArrowRight, Loader2, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { SessionInit } from '@/components/session-init'
-import { getTemplateForSector, type BusinessType } from '@/lib/sector-config'
+import { type BusinessType } from '@/lib/sector-config'
 import { Step1BusinessType } from '@/components/onboarding/step-1-business-type'
 import { Step2Sector } from '@/components/onboarding/step-2-sector'
-import { Step3Template } from '@/components/onboarding/step-3-template'
 import { Step4Customization } from '@/components/onboarding/step-4-customization'
 import Step5Offer from '@/components/onboarding/step-5-offer'
 
@@ -31,7 +30,24 @@ interface OnboardingState {
   plan: Plan | null
 }
 
-const TOTAL_STEPS = 5
+/**
+ * Template unique attribué automatiquement à toutes les nouvelles boutiques.
+ * La sélection de template a été supprimée de l'onboarding pour simplifier
+ * le parcours — toutes les boutiques démarrent sur le template cosmika-dark.
+ */
+const DEFAULT_TEMPLATE = 'cosmika-dark'
+
+/**
+ * Onboarding simplifié : 4 étapes (au lieu de 5 auparavant).
+ *   1. Type d'activité (ECOMMERCE / SERVICE)
+ *   2. Secteur
+ *   3. Personnalisation (nom, WhatsApp, logo, description)
+ *   4. Choix du forfait + soumission
+ *
+ * Le template (cosmika-dark) est attribué automatiquement dès le choix du
+ * secteur — aucune action utilisateur nécessaire.
+ */
+const TOTAL_STEPS = 4
 
 /* ──────────────────────── ANIMATION ──────────────────────── */
 
@@ -62,7 +78,14 @@ export default function OnboardingPage() {
       if (saved) {
         const parsed = JSON.parse(saved)
         const s = parsed.step
-        if (typeof s === 'number' && s >= 1 && s <= TOTAL_STEPS) return s
+        // Migration : si l'ancien step 3 (template) était sauvegardé, on saute au nouveau step 3 (customization)
+        if (typeof s === 'number' && s >= 1) {
+          // Ancien step 3 (template) n'existe plus — mapper vers le nouveau step 3 (customization)
+          if (s === 3) return 3 // customization
+          if (s === 4) return 3 // ancien customization -> nouveau step 3
+          if (s === 5) return 4 // ancien offer -> nouveau step 4
+          if (s <= TOTAL_STEPS) return s
+        }
       }
     } catch { /* ignore */ }
     return 1
@@ -86,7 +109,8 @@ export default function OnboardingPage() {
         return {
           businessType: parsed.businessType ?? null,
           sector: parsed.sector ?? null,
-          template: parsed.template ?? null,
+          // Force le template par défaut (ignore l'ancienne valeur sauvegardée)
+          template: DEFAULT_TEMPLATE,
           name: parsed.name ?? '',
           whatsapp: parsed.whatsapp ?? '',
           countryCode: parsed.countryCode ?? '+225',
@@ -128,14 +152,13 @@ export default function OnboardingPage() {
   }, [step])
 
   /* ──────── Step validation ──────── */
-
+  // 4 étapes (template supprimé — cosmika-dark attribué auto)
   const canProceed = (): boolean => {
     switch (step) {
       case 1: return form.businessType !== null
       case 2: return form.sector !== null
-      case 3: return form.template !== null
-      case 4: return form.name.trim().length > 0 && form.whatsapp.replace(/\s/g, '').length >= 8
-      case 5: return form.plan !== null
+      case 3: return form.name.trim().length > 0 && form.whatsapp.replace(/\s/g, '').length >= 8
+      case 4: return form.plan !== null
       default: return false
     }
   }
@@ -143,18 +166,12 @@ export default function OnboardingPage() {
   /* ──────── Step-specific handlers ──────── */
 
   const handleBusinessTypeSelect = useCallback((type: BusinessType) => {
-    setForm((prev) => ({ ...prev, businessType: type, sector: null, template: null }))
+    setForm((prev) => ({ ...prev, businessType: type, sector: null }))
   }, [])
 
   const handleSectorSelect = useCallback((sector: string) => {
-    setForm((prev) => {
-      const template = getTemplateForSector(sector)
-      return { ...prev, sector, template }
-    })
-  }, [])
-
-  const handleTemplateSelect = useCallback((templateId: string) => {
-    setForm((prev) => ({ ...prev, template: templateId }))
+    // Template cosmika-dark attribué automatiquement — pas de step de sélection
+    setForm((prev) => ({ ...prev, sector, template: DEFAULT_TEMPLATE }))
   }, [])
 
   const handlePlanSelect = useCallback((plan: Plan) => {
@@ -175,6 +192,7 @@ export default function OnboardingPage() {
         body: JSON.stringify({
           businessType: form.businessType,
           sector: form.sector,
+          template: DEFAULT_TEMPLATE, // envoyé pour surcharger la valeur par défaut côté serveur
           name: form.name.trim(),
           whatsapp: `${form.countryCode}${form.whatsapp.trim()}`,
           description: form.description.trim() || undefined,
@@ -194,19 +212,19 @@ export default function OnboardingPage() {
           // Conflict: shop already exists or slug taken
           setSubmitError('Ce nom de boutique est déjà utilisé. Essayez un autre nom.')
           toast.error('Nom déjà pris — modifiez le nom de votre activité')
-          // Go back to step 4 so user can change the name
+          // Go back to step 3 (customization) so user can change the name
           setDirection(-1)
-          setStep(4)
+          setStep(3)
         } else if (errorField === 'whatsapp') {
           setSubmitError(errorMsg)
           toast.error(errorMsg)
           setDirection(-1)
-          setStep(4)
+          setStep(3)
         } else if (errorField === 'name') {
           setSubmitError(errorMsg)
           toast.error(errorMsg)
           setDirection(-1)
-          setStep(4)
+          setStep(3)
         } else {
           setSubmitError(errorMsg)
           toast.error(errorMsg)
@@ -236,9 +254,9 @@ export default function OnboardingPage() {
 
   const progressPercent = (step / TOTAL_STEPS) * 100
 
-  /* ──────── Step 4 validation ──────── */
+  /* ──────── Step 3 validation (customization) ──────── */
 
-  const step4Valid = form.name.trim().length > 0 && form.whatsapp.replace(/\s/g, '').length >= 8
+  const step3Valid = form.name.trim().length > 0 && form.whatsapp.replace(/\s/g, '').length >= 8
 
   /* ──────── Render ──────── */
 
@@ -300,17 +318,7 @@ export default function OnboardingPage() {
                   />
                 )}
 
-                {step === 3 && form.sector && (
-                  <Step3Template
-                    sector={form.sector}
-                    businessType={form.businessType!}
-                    template={form.template}
-                    onSelect={handleTemplateSelect}
-                    onConfirm={goNext}
-                  />
-                )}
-
-                {step === 4 && (
+                {step === 3 && (
                   <div className="space-y-6">
                     <div className="text-center">
                       <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
@@ -331,7 +339,7 @@ export default function OnboardingPage() {
                       onCountryCodeChange={(v) => setForm((p) => ({ ...p, countryCode: v }))}
                       onDescriptionChange={(v) => setForm((p) => ({ ...p, description: v }))}
                       onLogoChange={(v) => setForm((p) => ({ ...p, logo: v }))}
-                      isValid={step4Valid}
+                      isValid={step3Valid}
                     />
                   </div>
                 )}
@@ -361,11 +369,11 @@ export default function OnboardingPage() {
                   </motion.div>
                 )}
 
-                {step === 5 && (
+                {step === 4 && (
                   <Step5Offer
                     shopName={form.name}
                     sector={form.sector || ''}
-                    template={form.template || 'xstore-electro'}
+                    template={DEFAULT_TEMPLATE}
                     selectedPlan={form.plan}
                     isSubmitting={isSubmitting}
                     onPlanSelect={handlePlanSelect}
@@ -377,8 +385,8 @@ export default function OnboardingPage() {
           </div>
         </main>
 
-        {/* ── Bottom navigation (steps 1–4 only; step 5 has its own confirm) ── */}
-        {step < 5 && (
+        {/* ── Bottom navigation (steps 1–3 only; step 4 has its own confirm) ── */}
+        {step < 4 && (
           <footer className="sticky bottom-0 z-50 border-t bg-background/80 backdrop-blur-sm">
             <div className="mx-auto max-w-4xl px-4 py-4 flex justify-end">
               <Button

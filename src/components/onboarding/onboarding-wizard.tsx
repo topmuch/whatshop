@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
 import { ImageWithFallback } from '@/components/ui/image-with-fallback'
 import { generateSlug } from '@/lib/utils'
-import { templateList, type TemplateId } from '@/lib/templates'
+import { type TemplateId } from '@/lib/templates'
 import { getTemplateDisplayInfo } from '@/lib/template-display'
 import {
   ArrowRight,
@@ -88,7 +88,20 @@ const SECTOR_SUGGESTION: Partial<Record<Sector, TemplateId>> = {
   sante: 'cosmika-dark',
 }
 
-const TOTAL_STEPS = 5
+/**
+ * Template unique attribué à toutes les nouvelles boutiques. La sélection
+ * de template a été supprimée de l'onboarding pour simplifier le parcours.
+ */
+const DEFAULT_TEMPLATE: TemplateId = 'cosmika-dark'
+
+/**
+ * Onboarding simplifié : 4 étapes (au lieu de 5 auparavant).
+ *   1. Type d'activité (ECOMMERCE / SERVICE)
+ *   2. Secteur
+ *   3. Personnalisation (nom, WhatsApp, logo, description)
+ *   4. Choix du forfait + soumission
+ */
+const TOTAL_STEPS = 4
 
 /* ──────────────────────── HELPERS ──────────────────────── */
 
@@ -136,7 +149,7 @@ export function OnboardingWizard() {
       return {
         businessType: null,
         sector: null,
-        template: null,
+        template: DEFAULT_TEMPLATE,
         name: '',
         whatsapp: '',
         countryCode: '+225',
@@ -152,7 +165,8 @@ export function OnboardingWizard() {
         return {
           businessType: parsed.businessType ?? null,
           sector: parsed.sector ?? null,
-          template: parsed.template ?? null,
+          // Force le template par défaut (cosmika-dark) — ignore l'ancienne valeur sauvegardée
+          template: DEFAULT_TEMPLATE,
           name: parsed.name ?? '',
           whatsapp: parsed.whatsapp ?? '',
           countryCode: parsed.countryCode ?? '+225',
@@ -167,7 +181,7 @@ export function OnboardingWizard() {
     return {
       businessType: null,
       sector: null,
-      template: null,
+      template: DEFAULT_TEMPLATE,
       name: '',
       whatsapp: '',
       countryCode: '+225',
@@ -184,7 +198,13 @@ export function OnboardingWizard() {
       if (saved) {
         const parsed = JSON.parse(saved)
         const s = parsed.step
-        if (typeof s === 'number' && s >= 1 && s <= TOTAL_STEPS) return s
+        if (typeof s === 'number' && s >= 1) {
+          // Migration ancien schéma 5 étapes -> nouveau 4 étapes (template supprimé)
+          if (s === 3) return 3 // ancien template -> nouveau step 3 (customization)
+          if (s === 4) return 3 // ancien customization -> nouveau step 3
+          if (s === 5) return 4 // ancien offer -> nouveau step 4
+          if (s <= TOTAL_STEPS) return s
+        }
       }
     } catch {
       // Ignore parse errors
@@ -229,14 +249,10 @@ export function OnboardingWizard() {
   const sectors = form.businessType === 'SERVICE' ? SERVICE_SECTORS : ECOMMERCE_SECTORS
   const canProceedStep2 = form.sector !== null
 
-  /* ──────── Step 3: Template ──────── */
-
-  const canProceedStep3 = form.template !== null
-
-  /* ──────── Step 4: Customization ──────── */
+  /* ──────── Step 3: Customization ──────── */
 
   const slug = generateSlug(form.name)
-  const canProceedStep4 = form.name.trim().length > 0 && form.whatsapp.trim().length >= 8
+  const canProceedStep3 = form.name.trim().length > 0 && form.whatsapp.trim().length >= 8
 
   /* ──────── Step 5: Plan ──────── */
 
@@ -290,7 +306,7 @@ export function OnboardingWizard() {
   const handleSubmit = useCallback(
     async (e?: FormEvent) => {
       if (e) e.preventDefault()
-      if (!form.plan || !form.businessType || !form.sector || !form.template || !form.name) return
+      if (!form.plan || !form.businessType || !form.sector || !form.name) return
 
       setIsSubmitting(true)
 
@@ -597,115 +613,6 @@ export function OnboardingWizard() {
     )
   }
 
-  function renderStep3() {
-    const suggestedId = form.sector ? SECTOR_SUGGESTION[form.sector] : null
-
-    return (
-      <motion.div
-        key="step3"
-        custom={direction}
-        variants={slideVariants}
-        initial="enter"
-        animate="center"
-        exit="exit"
-        transition={{ duration: 0.3, ease: 'easeInOut' }}
-      >
-        <div className="text-center mb-8">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-            Choisissez votre design
-          </h2>
-          <p className="text-muted-foreground">
-            Sélectionnez le template qui correspond le mieux à votre activité
-          </p>
-        </div>
-
-        <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1 custom-scrollbar">
-          {templateList.map((tpl, index) => {
-            const display = getTemplateDisplayInfo(tpl.id)
-            const isSuggested = suggestedId === tpl.id
-            const isSelected = form.template === tpl.id
-
-            return (
-              <motion.div
-                key={tpl.id}
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2, delay: index * 0.05 }}
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
-              >
-                <Card
-                  className={`cursor-pointer transition-all duration-200 hover:shadow-xl ${
-                    isSelected
-                      ? 'ring-2 ring-rose-600 shadow-lg bg-rose-50/50'
-                      : 'hover:border-rose-300'
-                  }`}
-                  onClick={() => {
-                    setForm((prev) => ({ ...prev, template: tpl.id }))
-                  }}
-                >
-                  <CardContent className="p-4 sm:p-5">
-                    <div className="flex items-start gap-3">
-                      <span className="text-3xl shrink-0">{display.style.emoji}</span>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="font-bold text-gray-900">{display.displayName}</h3>
-                          {isSuggested && (
-                            <span className="text-[10px] font-semibold text-rose-600 bg-rose-100 px-2 py-0.5 rounded-full">
-                              Recommandé
-                            </span>
-                          )}
-                          <span className="text-[10px] font-medium text-muted-foreground bg-gray-100 px-2 py-0.5 rounded-full">
-                            {display.style.badge}
-                          </span>
-                          {isSelected && (
-                            <span className="text-[10px] font-semibold text-rose-600 bg-rose-100 px-2 py-0.5 rounded-full ml-auto">
-                              ✓ Sélectionné
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-1">{display.tagline}</p>
-                        <ul className="mt-2 space-y-1">
-                          {display.features.slice(0, 3).map((f, fi) => (
-                            <li key={fi} className="flex items-start gap-1.5 text-xs text-muted-foreground">
-                              <Check className="w-3 h-3 text-rose-500 mt-0.5 shrink-0" />
-                              {f}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )
-          })}
-        </div>
-
-        <div className="mt-8 flex justify-between">
-          <Button
-            variant="outline"
-            onClick={goBack}
-            className="rounded-xl px-6"
-            size="lg"
-          >
-            <ArrowLeft className="mr-2 w-4 h-4" />
-            Retour
-          </Button>
-          <Button
-            onClick={goNext}
-            disabled={!canProceedStep3}
-            className="bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white rounded-xl px-8 font-semibold"
-            size="lg"
-          >
-            Suivant
-            <ArrowRight className="ml-2 w-4 h-4" />
-          </Button>
-        </div>
-      </motion.div>
-    )
-  }
-
   function renderStep4() {
     return (
       <motion.div
@@ -885,7 +792,7 @@ export function OnboardingWizard() {
           </Button>
           <Button
             onClick={goNext}
-            disabled={!canProceedStep4}
+            disabled={!canProceedStep3}
             className="bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white rounded-xl px-8 font-semibold"
             size="lg"
           >
@@ -897,17 +804,10 @@ export function OnboardingWizard() {
     )
   }
 
-  function renderStep5() {
-    const LIVE_ALLOWED_TEMPLATES = new Set(['live-template', 'live-1', 'live-2', 'live-3', 'xstore-electro'])
-
+  function renderStep4() {
     const selectPlan = (plan: Plan) => {
-      setForm((prev) => {
-        // LIVE/LIVE_PRO plans only allow live-template and xstore-electro
-        if ((plan === 'LIVE' || plan === 'LIVE_PRO') && prev.template && !LIVE_ALLOWED_TEMPLATES.has(prev.template)) {
-          return { ...prev, plan, template: 'live-template' as TemplateId }
-        }
-        return { ...prev, plan }
-      })
+      // Template fixe (cosmika-dark) — pas de surcharge par plan
+      setForm((prev) => ({ ...prev, plan }))
     }
 
     const plans: { id: Plan; emoji: string; name: string; price: string; priceNote: string; recommended?: boolean; features: string[]; btnClass: string; selectedClass: string; btnText: string }[] = [
@@ -1158,9 +1058,8 @@ export function OnboardingWizard() {
         <AnimatePresence mode="wait" custom={direction}>
           {step === 1 && renderStep1()}
           {step === 2 && renderStep2()}
-          {step === 3 && renderStep3()}
-          {step === 4 && renderStep4()}
-          {step === 5 && renderStep5()}
+          {step === 3 && renderStep4()}
+          {step === 4 && renderStep5()}
         </AnimatePresence>
       </main>
     </div>
